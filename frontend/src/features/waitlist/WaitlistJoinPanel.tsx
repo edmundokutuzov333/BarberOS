@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { BellRing, Check, Clock3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
-import { Field } from '@/components/ui/Field';
 import { Panel } from '@/components/ui/States';
 import { humanError } from '@/lib/utils';
 import { normalizeMozPhone } from '@/features/booking/api';
@@ -119,31 +118,21 @@ export function WaitlistJoinPanel({ slug, serviceId, haircutId, barberId, date, 
       </p>
 
       <div className="grid sm:grid-cols-2 gap-4">
-        <Field label="Nome">
-          <input className="field" value={name} maxLength={120} onChange={(event) => setName(event.target.value)} data-testid="waitlist-name" autoComplete="name" />
-        </Field>
-        <Field label="Telefone">
-          <input className="field" value={phone} onChange={(event) => setPhone(event.target.value)} inputMode="tel" maxLength={20} placeholder="84 000 0000" data-testid="waitlist-phone" autoComplete="tel" />
-        </Field>
-        <Field label="Email (opcional)">
-          <input className="field" value={email} onChange={(event) => setEmail(event.target.value)} inputMode="email" maxLength={254} data-testid="waitlist-email" autoComplete="email" />
-        </Field>
+        <label className="block"><span className="t-label text-ink-mid block mb-1.5">Nome</span><input className="field" value={name} maxLength={120} onChange={(event) => setName(event.target.value)} data-testid="waitlist-name" autoComplete="name" /></label>
+        <label className="block"><span className="t-label text-ink-mid block mb-1.5">Telefone</span><input className="field" value={phone} onChange={(event) => setPhone(event.target.value)} inputMode="tel" maxLength={20} placeholder="84 000 0000" data-testid="waitlist-phone" autoComplete="tel" /></label>
+        <label className="block"><span className="t-label text-ink-mid block mb-1.5">Email (opcional)</span><input className="field" value={email} onChange={(event) => setEmail(event.target.value)} inputMode="email" maxLength={254} data-testid="waitlist-email" autoComplete="email" /></label>
         <label>
           <span className="t-label text-ink-mid block mb-1.5">Período</span>
           <select className="field w-full" value={period} onChange={(event) => setPeriod(event.target.value)} data-testid="waitlist-period">
             {periods.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </label>
-        <Field label="A partir de">
-          <input type="date" className="field" value={dateFrom} min={date} max={maxDate} onChange={(event) => {
+        <label className="block"><span className="t-label text-ink-mid block mb-1.5">A partir de</span><input type="date" className="field" value={dateFrom} min={date} max={maxDate} onChange={(event) => {
             const value = event.target.value;
             setDateFrom(value);
             if (value > dateTo) setDateTo(value);
-          }} data-testid="waitlist-date-from" />
-        </Field>
-        <Field label="Até">
-          <input type="date" className="field" value={dateTo} min={dateFrom || date} max={maxDate} onChange={(event) => setDateTo(event.target.value)} data-testid="waitlist-date-to" />
-        </Field>
+          }} data-testid="waitlist-date-from" /></label>
+        <label className="block"><span className="t-label text-ink-mid block mb-1.5">Até</span><input type="date" className="field" value={dateTo} min={dateFrom || date} max={maxDate} onChange={(event) => setDateTo(event.target.value)} data-testid="waitlist-date-to" /></label>
       </div>
 
       <div className="mt-5 rounded-2xl border border-white/10 bg-white/[.03] p-4 flex items-start gap-3">
