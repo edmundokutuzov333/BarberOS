@@ -142,7 +142,7 @@ export function DepositForm() {
         <Field data-testid="deposit-value-input" label={f.mode === 'percent' ? 'Percentagem (%)' : 'Valor (MT)'} name="d_value" inputMode="decimal" value={f.value} onChange={(e) => setF({ ...f, value: e.target.value })} />
         <Field data-testid="deposit-hold-input" label="Reserva sem pagar (min)" name="d_hold" inputMode="numeric" value={f.hold} onChange={(e) => setF({ ...f, hold: e.target.value })} hint="Passado este tempo, a marcação é cancelada." />
       </div>
-      <p className="t-body text-ink-mid">O pagamento por M-Pesa e e-Mola liga-se na Fase 6. Até lá, as marcações com sinal ficam pendentes e a barbearia confirma manualmente.</p>
+      <p className="t-body text-ink-mid">Depois de configurar M-Pesa ou e-Mola em Pagamentos, o cliente poderá pagar o sinal no próprio link da marcação. Sem provider configurado, o sinal continua pendente até à operação da barbearia.</p>
       <div className="flex justify-end"><Button data-testid="deposit-save-btn" type="submit" loading={m.isPending}>Guardar sinal</Button></div>
     </form>
   );
