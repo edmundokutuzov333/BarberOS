@@ -14,13 +14,21 @@ export type TokenRescheduleInput =
 export type RescheduleSlot =
   Database['public']['Functions']['get_reschedule_slots_by_token']['Returns'][number];
 
+const TOKEN_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function assertToken(token: string): void {
+  if (!TOKEN_PATTERN.test(token)) throw new Error('APPOINTMENT_NOT_FOUND');
+}
+
 export async function getAppointmentByToken(token: string): Promise<AppointmentTokenView | null> {
+  assertToken(token);
   const { data, error } = await supabase.rpc('get_appointment_by_token', { p_token: token });
   if (error) throw error;
   return data?.[0] ?? null;
 }
 
 export async function getRescheduleSlotsByToken(token: string, date: string): Promise<RescheduleSlot[]> {
+  assertToken(token);
   const { data, error } = await supabase.rpc('get_reschedule_slots_by_token', { p_token: token, p_date: date });
   if (error) throw error;
   return data ?? [];
@@ -41,6 +49,8 @@ export async function rescheduleAppointmentByToken(input: TokenRescheduleInput):
   if (!row) throw new Error('RESCHEDULE_EMPTY_RESPONSE');
   return row;
 }
+
+export { assertToken };
 
 export function useAppointmentByToken(token?: string) {
   return useQuery({
