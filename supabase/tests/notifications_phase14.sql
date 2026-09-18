@@ -154,6 +154,26 @@ begin
   end if;
 
   delete from public.notifications where id=v_notification;
-end $$;
+
+  insert into public.notifications(
+    barbershop_id,channel,template_key,recipient,scheduled_for,status,attempts
+  )
+  values(
+    v_shop,'whatsapp','appointment_confirmed','+258841234567',now(),'failed',5
+  )
+  returning id into v_notification;
+
+  if not exists (
+    select 1
+    from public.retry_notification(v_shop,v_notification)
+    where notification_id=v_notification
+      and status='queued'
+      and attempts=0
+  ) then
+    raise exception 'FAIL: operator retry did not requeue failed notification';
+  end if;
+
+  delete from public.notifications where id=v_notification;
+end $;
 
 rollback;
