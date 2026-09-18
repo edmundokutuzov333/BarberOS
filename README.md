@@ -40,6 +40,15 @@ A cadeia actual é:
 11. `20260918141851_20260918162700_booking_engine_2_0_phone_normalization.sql`
 12. `20260918141926_20260918163000_booking_engine_2_0_returning_fix.sql`
 13. `20260918142515_booking_engine_2_0_indexes.sql`
+14. `20260918143050_appointment_token_view.sql`
+15. `20260918143124_appointment_token_cancel.sql`
+16. `20260918143139_appointment_token_reschedule.sql`
+17. `20260918143239_appointment_token_view_customer_name.sql`
+18. `20260918143317_appointment_token_cancel_returning_fix.sql`
+19. `20260918143353_appointment_token_public_boundary.sql`
+20. `20260918143427_appointment_token_slots.sql`
+21. `20260918143814_appointment_token_cancel_lock.sql`
+22. `20260918144500_appointment_token_cancel_returning_fix.sql`
 
 Future schema changes must be a new timestamped migration. Never rename an applied migration.
 
@@ -100,3 +109,7 @@ O browser não implementa uma segunda regra de disponibilidade. `frontend/src/fe
 A criação de marcações online vive no PostgreSQL através de `book_appointment`. O fluxo valida tenant, serviço, corte, barbeiro, horário e disponibilidade; usa advisory lock transaccional; faz customer upsert; calcula sinal quando aplicável; cria a marcação; enfileira notificações e regista audit log.
 
 A concorrência usa `SLOT_TAKEN` como contrato de negócio e mantém `appointments_no_overlap` como barreira final. O frontend consome este contrato através de `frontend/src/features/booking/api.ts`, sem INSERT directo em `appointments`.
+
+## Fase 6: gestão da marcação por token
+
+A rota `/marcacao/:token` permite ao cliente consultar a marcação sem conta, cancelar ou remarcar dentro da política da barbearia, adicionar o evento ao calendário e contactar a loja por WhatsApp. O frontend usa apenas os RPCs públicos da feature de appointments; IDs internos não fazem parte do DTO público.
