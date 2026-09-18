@@ -122,7 +122,7 @@ export default function AppointmentManage() {
 
       <main className="max-w-3xl mx-auto pt-8 pb-16">
         <div className="mb-6">
-          <p className="t-label text-accent-soft">'BARBEROS BY ORYON'</p>
+          <p className="t-label text-accent-soft">BARBEROS BY ORYON</p>
           <h1 className="t-title text-ink-hi mt-2">A sua marcação</h1>
           <p className="t-body text-ink-mid mt-1">Olá, {data.customer_name}. Pode consultar e gerir esta marcação neste link.</p>
         </div>
