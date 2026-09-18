@@ -164,6 +164,7 @@ begin
         where a.barbershop_id=c.barbershop_id
           and a.customer_id=c.id
           and a.status='completed'
+          and (not v_is_barber or a.barber_id=v_barber_id)
         order by a.starts_at desc
         limit 1
       ) as last_service,
@@ -175,6 +176,7 @@ begin
           and a.customer_id=c.id
           and a.status='completed'
           and h.id is not null
+          and (not v_is_barber or a.barber_id=v_barber_id)
         order by a.starts_at desc
         limit 1
       ) as last_haircut,
@@ -184,6 +186,7 @@ begin
         where a.barbershop_id=c.barbershop_id
           and a.customer_id=c.id
           and a.status='completed'
+          and (not v_is_barber or a.barber_id=v_barber_id)
       ) as spend
     from public.customers c
     where c.barbershop_id=p_shop
