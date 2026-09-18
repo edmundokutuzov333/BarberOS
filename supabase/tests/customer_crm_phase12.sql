@@ -178,7 +178,7 @@ begin
   from public.get_customer(v_shop,v_customer);
 
   if v_detail_name <> 'Phase12 CRM Fixture'
-     or v_detail_phone <> '+258841234561'
+     or v_detail_phone <> '841234561'
      or v_detail_notes <> 'nota inicial'
      or v_detail_tags->'tags' <> '["cliente novo","preferência"]'::jsonb then
     raise exception 'CRM_DETAIL_FAILED';
