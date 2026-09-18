@@ -15,6 +15,8 @@ import PublicBarbershop from './pages/PublicBarbershop';
 import BookingWizard from './pages/BookingWizard';
 import { ServicosPage, CortesPage, BarbeirosPage, HorariosPage } from './pages/app/ConfigPages';
 import AgendaPage from './pages/app/Agenda';
+import Clientes from './pages/app/Clientes';
+import ClienteDetalhe from './pages/app/ClienteDetalhe';
 
 export default function App() {
   return (
@@ -32,6 +34,9 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="onboarding" element={<Onboarding />} />
           <Route path="agenda" element={<AgendaPage />} />
+          <Route path="marcacoes" element={<NotYet />} />
+          <Route path="clientes" element={<Clientes />} />
+          <Route path="clientes/:customerId" element={<ClienteDetalhe />} />
           <Route path="servicos" element={<ServicosPage />} />
           <Route path="cortes" element={<CortesPage />} />
           <Route path="barbeiros" element={<BarbeirosPage />} />
