@@ -253,6 +253,7 @@ export default function BookingWizard() {
   );
   const barber = data?.barbers.find((item) => item.id === barberParam);
   const selectedBarberId = barberParam === 'any' ? null : barber?.id ?? null;
+  const selectableService = service && eligibleBarbers.length ? service : undefined;
 
   const today = data ? todayInZone(data.shop.timezone) : null;
   const maxDate = data && today ? addDaysISO(today, data.shop.max_advance_days) : null;
@@ -308,10 +309,10 @@ export default function BookingWizard() {
     return <div className="min-h-screen px-5 py-10 grid place-items-center"><div className="w-full max-w-lg"><ErrorState message={humanError(query.error ?? new Error('BARBERSHOP_NOT_FOUND'))} onRetry={() => query.refetch()} /></div></div>;
   }
 
-  const effectiveStep = !service ? 1 : currentStep;
+  const effectiveStep = !selectableService ? 1 : Math.min(currentStep, start ? 6 : date ? 5 : 4);
   const depositCents = service ? getDepositCents(service, data.shop) : 0;
   const depositConfigValid = !service || depositCents <= service.price_cents;
-  const canBook = Boolean(service && start && (barberParam === 'any' || barber) && depositConfigValid);
+  const canBook = Boolean(selectableService && start && (barberParam === 'any' || barber) && depositConfigValid);
 
   const setStep = (step: number) => updateSearchParams(searchParams, setSearchParams, { step: String(step) });
 
@@ -346,7 +347,7 @@ export default function BookingWizard() {
 
   const goNext = () => {
     setBookingError(null);
-    if (effectiveStep === 1 && !service) return;
+    if (effectiveStep === 1 && !selectableService) return;
     if (effectiveStep === 2) {
       setStep(3);
       return;
@@ -367,7 +368,7 @@ export default function BookingWizard() {
   };
 
   const submitBooking = async () => {
-    if (!canBook || !slug || !service || !start) return;
+    if (!canBook || !slug || !selectableService || !start) return;
 
     const nextErrors: Record<string, string> = {};
     const name = form.name.trim();
@@ -384,7 +385,7 @@ export default function BookingWizard() {
     try {
       const result = await bookMutation.mutateAsync({
         p_slug: slug,
-        p_service_id: service.id,
+        p_service_id: selectableService.id,
         p_haircut_id: haircut?.id ?? null,
         p_barber_id: selectedBarberId,
         p_start: start,
@@ -425,16 +426,21 @@ export default function BookingWizard() {
               <Panel title="Escolha o serviço" testId="booking-step-service">
                 {data.services.length ? (
                   <div className="grid sm:grid-cols-2 gap-3">
-                    {data.services.map((item) => (
-                      <ChoiceCard
-                        key={item.id}
-                        title={item.name}
-                        meta={formatMT(item.price_cents) + ' · ' + item.duration_min + ' min'}
-                        selected={item.id === service?.id}
-                        onClick={() => chooseService(item.id)}
-                        testId={`booking-service-${item.id}`}
-                      />
-                    ))}
+                    {data.services.map((item) => {
+                      const bookable = data.barbers.some((barberItem) => barberItem.service_ids.includes(item.id));
+                      return (
+                        <ChoiceCard
+                          key={item.id}
+                          title={item.name}
+                          body={bookable ? null : 'Sem barbeiro disponível para este serviço.'}
+                          meta={formatMT(item.price_cents) + ' · ' + item.duration_min + ' min'}
+                          selected={item.id === service?.id && bookable}
+                          disabled={!bookable}
+                          onClick={() => { if (bookable) chooseService(item.id); }}
+                          testId={`booking-service-${item.id}`}
+                        />
+                      );
+                    })}
                   </div>
                 ) : (
                   <EmptyState title="Marcação online indisponível" body="Esta barbearia ainda não publicou serviços activos." />
@@ -632,7 +638,7 @@ export default function BookingWizard() {
           <aside className="lg:sticky lg:top-6">
             <Summary
               shopName={data.shop.name}
-              service={service}
+              service={selectableService}
               haircut={haircut}
               barber={barber}
               date={date}
