@@ -24,28 +24,76 @@ export function MembersEditor() {
   const isOwner = role === 'owner';
 
   const add = useMutation({
-    mutationFn: async () => { const r = await supabase.rpc('add_member_by_email', { p_shop: shop!.id, p_email: email.trim(), p_role: newRole }); if (r.error) throw r.error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: key }); setEmail(''); toast.success('Membro adicionado'); },
-    onError: (e) => toast.error(String((e as Error).message).includes('USER_NOT_FOUND') ? 'Não há conta com esse email. A pessoa tem de se registar primeiro em /registar.' : humanError(e)),
+    mutationFn: async () => {
+      const r = await supabase.rpc('add_member_by_email', {
+        p_shop: shop!.id,
+        p_email: email.trim(),
+        p_role: newRole,
+      });
+      if (r.error) throw r.error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: key });
+      setEmail('');
+      toast.success('Membro adicionado');
+    },
+    onError: (e) => toast.error(
+      String((e as Error).message).includes('USER_NOT_FOUND')
+        ? 'Não há conta com esse email. A pessoa tem de se registar primeiro em /registar.'
+        : humanError(e),
+    ),
   });
+
   const remove = useMutation({
-    mutationFn: async (m: Member) => { const r = await supabase.from('barbershop_members').delete().eq('id', m.id); if (r.error) throw r.error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: key }); toast.success('Membro removido'); }, onError: (e) => toast.error(humanError(e)),
+    mutationFn: async (m: Member) => {
+      const r = await supabase.rpc('remove_barbershop_member', {
+        p_shop: shop!.id,
+        p_member: m.id,
+      });
+      if (r.error) throw r.error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: key });
+      toast.success('Membro removido');
+    },
+    onError: (e) => toast.error(humanError(e)),
   });
 
   return (
     <div className="space-y-5" data-testid="members-editor">
-      {q.isLoading ? <Skeleton className="h-28" lines={2} /> : q.error ? <ErrorState message={humanError(q.error)} onRetry={() => q.refetch()} /> : (
+      {q.isLoading ? (
+        <Skeleton className="h-28" lines={2} />
+      ) : q.error ? (
+        <ErrorState message={humanError(q.error)} onRetry={() => q.refetch()} />
+      ) : (
         <ul className="divide-y divide-white/5">
           {q.data!.map((m) => (
             <li key={m.id} data-testid={`member-row-${m.user_id}`} className="flex items-center gap-3 py-3">
-              <div className="flex-1 min-w-0"><p className="text-sm font-normal truncate">{m.full_name ?? m.email}{m.user_id === user?.id && <span className="text-ink-mid"> · tu</span>}</p><p className="t-label text-ink-mid truncate">{m.email}</p></div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-normal truncate">
+                  {m.full_name ?? m.email}
+                  {m.user_id === user?.id && <span className="text-ink-mid"> · tu</span>}
+                </p>
+                <p className="t-label text-ink-mid truncate">{m.email}</p>
+              </div>
               <span className="rounded-full border border-white/10 px-2.5 py-0.5 t-label">{ROLE_LABEL[m.role]}</span>
-              {isOwner && m.user_id !== user?.id && <button data-testid={`member-remove-${m.user_id}`} onClick={() => confirm(`Remover ${m.email}?`) && remove.mutate(m)} aria-label="Remover" className="p-2 text-ink-lo hover:text-st-noshow transition-colors"><Trash2 size={15} /></button>}
+              {isOwner && m.user_id !== user?.id && (
+                <button
+                  data-testid={`member-remove-${m.user_id}`}
+                  type="button"
+                  onClick={() => window.confirm(`Remover ${m.email}?`) && remove.mutate(m)}
+                  aria-label={`Remover ${m.email}`}
+                  className="p-2 text-ink-lo hover:text-st-noshow transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent-soft rounded-xl"
+                  disabled={remove.isPending}
+                >
+                  <Trash2 size={15} />
+                </button>
+              )}
             </li>
           ))}
         </ul>
       )}
+
       {isOwner && (
         <form onSubmit={(e: FormEvent) => { e.preventDefault(); add.mutate(); }} className="grid sm:grid-cols-[1fr_160px_auto] gap-3 items-end">
           <Field data-testid="member-email-input" label="Adicionar por email" name="m_email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="barbeiro@exemplo.mz" hint="A pessoa precisa de ter conta criada." />
