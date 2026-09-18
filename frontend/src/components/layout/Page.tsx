@@ -5,7 +5,12 @@ import { cn } from '@/lib/utils';
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export function Page({ children, className, title, subtitle, actions, testId }: {
-  children: ReactNode; className?: string; title?: string; subtitle?: string; actions?: ReactNode; testId?: string;
+  children: ReactNode;
+  className?: string;
+  title?: string;
+  subtitle?: string;
+  actions?: ReactNode;
+  testId?: string;
 }) {
   const reduce = useReducedMotion();
   const v = reduce
@@ -15,15 +20,21 @@ export function Page({ children, className, title, subtitle, actions, testId }: 
         animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
         exit: { opacity: 0, y: -6, filter: 'blur(4px)' },
       };
+
   return (
-    <motion.div data-testid={testId} {...v} transition={{ duration: 0.28, ease }} className={cn('w-full', className)}>
+    <motion.div
+      data-testid={testId}
+      {...v}
+      transition={{ duration: 0.28, ease }}
+      className={cn('w-full', className)}
+    >
       {(title || actions) && (
-        <header className="flex flex-wrap items-end justify-between gap-4 mb-6">
-          <div>
+        <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-7 sm:mb-8">
+          <div className="min-w-0">
             {title && <h1 className="t-title text-ink-hi">{title}</h1>}
-            {subtitle && <p className="t-body text-ink-mid mt-1">{subtitle}</p>}
+            {subtitle && <p className="t-body text-ink-mid mt-1.5 max-w-3xl">{subtitle}</p>}
           </div>
-          {actions && <div className="flex items-center gap-2">{actions}</div>}
+          {actions && <div className="page-actions shrink-0">{actions}</div>}
         </header>
       )}
       {children}

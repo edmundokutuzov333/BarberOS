@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { buildWhatsAppLink } from '@/lib/calendar';
 import { formatMT, humanError } from '@/lib/utils';
+import { applyTheme } from '@/themes';
 import { usePublicBarbershop, type PublicBarber, type PublicHaircut, type PublicService, type PublicWorkingHour } from '@/features/public-shop/api';
 
 const WEEKDAYS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
@@ -80,6 +81,13 @@ export default function PublicBarbershop() {
   const { slug } = useParams<{ slug: string }>();
   const query = usePublicBarbershop(slug);
   const data = query.data;
+
+  useEffect(() => {
+    if (!data?.shop.theme_key) return;
+    const previousTheme = document.documentElement.getAttribute('data-theme');
+    applyTheme(data.shop.theme_key);
+    return () => applyTheme(previousTheme);
+  }, [data?.shop.theme_key]);
 
   useEffect(() => {
     if (!data) return;
