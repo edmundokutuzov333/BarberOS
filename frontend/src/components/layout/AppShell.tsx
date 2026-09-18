@@ -2,11 +2,11 @@ import { Navigate, Outlet, useLocation, useOutlet } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/auth';
 import { useShop } from '@/lib/shop';
+import { can, type Permission } from '@/lib/permissions';
 import { Sidebar } from './Sidebar';
 import { MobileDock } from './MobileDock';
 import { Skeleton } from '@/components/ui/States';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { SkipLink } from '@/components/ui/SkipLink';
 import { SkipLink } from '@/components/ui/SkipLink';
 
 function FullSkeleton() {
@@ -15,6 +15,19 @@ function FullSkeleton() {
       <Skeleton className="h-16" lines={1} />
       <Skeleton className="h-64" />
     </div>
+  );
+}
+
+function AccessDenied({ permission }: { permission: Permission }) {
+  return (
+    <section className="min-h-[60vh] grid place-items-center px-4" data-testid="permission-denied">
+      <div className="glass max-w-lg w-full rounded-3xl p-7 text-center">
+        <span className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 t-label text-ink-mid">Acesso controlado</span>
+        <h1 className="t-card text-ink-hi mt-4">Esta área não está disponível para o seu perfil.</h1>
+        <p className="t-body text-ink-mid mt-2">A sua conta mantém acesso às operações que correspondem ao seu papel na barbearia.</p>
+        <p className="t-label text-ink-lo mt-4">Permissão: {permission}</p>
+      </div>
+    </section>
   );
 }
 
@@ -30,6 +43,13 @@ export function RequireAdmin() {
   const { profile, loading } = useAuth();
   if (loading) return <FullSkeleton />;
   if (!profile?.is_platform_admin) return <Navigate to="/app" replace />;
+  return <Outlet />;
+}
+
+export function RequirePermission({ permission }: { permission: Permission }) {
+  const { role, loading, shop } = useShop();
+  if (loading) return <FullSkeleton />;
+  if (!shop || !can(role, permission)) return <AccessDenied permission={permission} />;
   return <Outlet />;
 }
 
