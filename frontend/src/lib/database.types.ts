@@ -1611,6 +1611,116 @@ export type Database = {
           slot_start: string
         }[]
       }
+      get_report_summary: {
+        Args: {
+          p_barber_id?: string | null
+          p_from: string
+          p_shop: string
+          p_to: string
+        }
+        Returns: {
+          appointment_count: number
+          average_completed_ticket_cents: number
+          booked_minutes: number
+          cancelled_count: number
+          capacity_minutes: number
+          completed_count: number
+          confirmed_count: number
+          estimated_revenue_cents: number
+          from_date: string
+          in_progress_count: number
+          new_customers_count: number
+          no_show_count: number
+          occupancy_percent: number
+          paid_deposit_cents: number
+          pending_count: number
+          refunded_deposit_cents: number
+          to_date: string
+        }[]
+      }
+      get_report_daily: {
+        Args: {
+          p_barber_id?: string | null
+          p_from: string
+          p_shop: string
+          p_to: string
+        }
+        Returns: {
+          appointment_count: number
+          booked_minutes: number
+          cancelled_count: number
+          capacity_minutes: number
+          completed_count: number
+          confirmed_count: number
+          estimated_revenue_cents: number
+          in_progress_count: number
+          no_show_count: number
+          occupancy_percent: number
+          paid_deposit_cents: number
+          pending_count: number
+          report_date: string
+        }[]
+      }
+      get_report_services: {
+        Args: {
+          p_barber_id?: string | null
+          p_from: string
+          p_shop: string
+          p_to: string
+        }
+        Returns: {
+          appointment_count: number
+          average_completed_ticket_cents: number
+          booked_minutes: number
+          cancelled_count: number
+          completed_count: number
+          estimated_revenue_cents: number
+          no_show_count: number
+          paid_deposit_cents: number
+          service_id: string
+          service_name: string
+        }[]
+      }
+      get_report_haircuts: {
+        Args: {
+          p_barber_id?: string | null
+          p_from: string
+          p_shop: string
+          p_to: string
+        }
+        Returns: {
+          appointment_count: number
+          booked_minutes: number
+          cancelled_count: number
+          completed_count: number
+          estimated_revenue_cents: number
+          haircut_id: string | null
+          haircut_name: string
+          no_show_count: number
+        }[]
+      }
+      get_report_barbers: {
+        Args: {
+          p_barber_id?: string | null
+          p_from: string
+          p_shop: string
+          p_to: string
+        }
+        Returns: {
+          appointment_count: number
+          booked_minutes: number
+          barber_id: string
+          barber_name: string
+          cancelled_count: number
+          capacity_minutes: number
+          completed_count: number
+          estimated_revenue_cents: number
+          no_show_count: number
+          occupancy_percent: number
+          rating_avg: number
+          rating_count: number
+        }[]
+      }
       get_review_by_token: {
         Args: { p_token: string }
         Returns: {
