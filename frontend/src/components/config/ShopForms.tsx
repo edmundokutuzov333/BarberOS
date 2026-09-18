@@ -72,8 +72,8 @@ export function ProfileForm({ onDone, compact }: { onDone?: () => void; compact?
       <Field data-testid="profile-name-input" label="Nome" name="p_name" value={f.name} onChange={set('name')} />
       <Textarea data-testid="profile-description-input" label="Descrição curta" value={f.description} onChange={set('description')} placeholder="O que faz a tua barbearia diferente, em duas frases." />
       <div className="grid sm:grid-cols-2 gap-3">
-        <Field data-testid="profile-phone-input" label="Telemóvel" name="p_phone" type="tel" prefix="+258" value={f.phone.replace(/^+258/, '')} onChange={set('phone')} placeholder="84 000 0000" />
-        <Field data-testid="profile-whatsapp-input" label="WhatsApp" name="p_whatsapp" type="tel" prefix="+258" value={f.whatsapp.replace(/^+258/, '')} onChange={set('whatsapp')} placeholder="84 000 0000" />
+        <Field data-testid="profile-phone-input" label="Telemóvel" name="p_phone" type="tel" prefix="+258" value={f.phone.startsWith('+258') ? f.phone.slice(4) : f.phone} onChange={set('phone')} placeholder="84 000 0000" />
+        <Field data-testid="profile-whatsapp-input" label="WhatsApp" name="p_whatsapp" type="tel" prefix="+258" value={f.whatsapp.startsWith('+258') ? f.whatsapp.slice(4) : f.whatsapp} onChange={set('whatsapp')} placeholder="84 000 0000" />
       </div>
       {!compact && (
         <>
