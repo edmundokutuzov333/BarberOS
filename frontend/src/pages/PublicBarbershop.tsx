@@ -121,6 +121,8 @@ export default function PublicBarbershop() {
   const hasWhatsApp = Boolean(shop.whatsapp);
   const hasPhone = Boolean(shop.phone);
   const hasInstagram = Boolean(shop.instagram);
+  const bookableServiceCount = services.filter((service) => barbers.some((barber) => barber.service_ids.includes(service.id))).length;
+  const bookingReady = bookableServiceCount > 0;
 
   return (
     <div className="min-h-screen">
@@ -128,9 +130,13 @@ export default function PublicBarbershop() {
         <Link to="/" aria-label="BarberOS"><span className="t-card text-ink-hi">BarberOS <span className="font-light text-ink-mid">by Oryon</span></span></Link>
         <div className="flex items-center gap-4">
           <a href="#contacto" className="hidden sm:block t-label text-ink-mid hover:text-ink-hi transition-colors">Contactos</a>
-          <Link to={services.length && barbers.length ? `/barbearia/${shop.slug}/marcar` : '#'} aria-disabled={!services.length || !barbers.length} tabIndex={!services.length || !barbers.length ? -1 : 0}>
-            <Button size="sm" disabled={!services.length || !barbers.length}>Marcar agora</Button>
-          </Link>
+          {bookingReady ? (
+            <Link to={`/barbearia/${shop.slug}/marcar`}>
+              <Button size="sm">Marcar agora</Button>
+            </Link>
+          ) : (
+            <Button size="sm" disabled>Marcação indisponível</Button>
+          )}
         </div>
       </header>
 
@@ -231,7 +237,7 @@ export default function PublicBarbershop() {
                 <Scissors size={18} className="text-accent-soft mt-0.5" />
                 <div>
                   <p className="t-card text-ink-hi">Marcação sem conta</p>
-                  <p className="t-body text-ink-mid mt-1">Escolha serviço, corte, barbeiro, data e hora sem criar uma conta. A disponibilidade é calculada em tempo real.</p>
+                  <p className="t-body text-ink-mid mt-1">{bookingReady ? 'Escolha serviço, corte, barbeiro, data e hora sem criar uma conta. A disponibilidade é calculada em tempo real.' : 'Esta barbearia ainda não tem um serviço associado a um barbeiro activo para marcação online.'}</p>
                 </div>
               </div>
             </div>
