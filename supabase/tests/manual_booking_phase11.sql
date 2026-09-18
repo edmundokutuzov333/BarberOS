@@ -1,6 +1,8 @@
 -- BarberOS Phase 11: manual booking acceptance suite.
 -- All booking fixtures are created inside transactions and rolled back.
 
+begin;
+set local role authenticated;
 do $$
 declare
   v_owner uuid;
@@ -87,7 +89,6 @@ begin
     raise exception 'MANUAL_BOOKING_FIXTURE_UNAVAILABLE';
   end if;
 
-  set local role authenticated;
   perform set_config(
     'request.jwt.claims',
     jsonb_build_object('sub',v_owner::text,'role','authenticated')::text,
@@ -122,7 +123,6 @@ begin
   if v_note <> 'Cliente no balcão' then raise exception 'MANUAL_INTERNAL_NOTE_INVALID'; end if;
   if v_notifs < 1 then raise exception 'MANUAL_NOTIFICATION_QUEUE_MISSING'; end if;
 
-  set local role postgres;
 
   select gd.day
   into v_day
@@ -164,7 +164,7 @@ begin
   raise notice 'PASS | manual source=% actor=% note=% notifications=%; online source=% actor=%',
     'manual',v_owner,v_note,v_notifs,'online',coalesce(v_created_by::text,'null');
 end
-$$;
+$$;rollback;
 
 select
   has_function_privilege('authenticated','public.book_appointment_manual(uuid,uuid,uuid,uuid,timestamptz,text,text,text,text)','EXECUTE') as auth_manual_execute,
