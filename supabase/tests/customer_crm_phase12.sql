@@ -205,7 +205,7 @@ begin
     raise exception 'INVALID_CUSTOMER_VIEW_CONTRACT_FAILED: %',v_error;
   end if;
 
-  select *
+  select name,phone,notes
   into v_detail_name,v_detail_phone,v_detail_notes
   from public.update_customer(
     v_shop,
