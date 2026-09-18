@@ -9,6 +9,8 @@ declare
   v_other_shop uuid;
   v_actor uuid;
   v_owner uuid;
+  v_admin uuid;
+  v_slug text;
   v_barber uuid;
   v_customer_own uuid;
   v_customer_other uuid;
@@ -57,6 +59,18 @@ begin
   if v_actor is null then
     raise exception 'PHASE22_NONADMIN_ACTOR_UNAVAILABLE';
   end if;
+
+  select p.id into v_admin from public.profiles p where p.is_platform_admin limit 1;
+  if v_admin is null then raise exception 'PHASE22_PLATFORM_ADMIN_UNAVAILABLE'; end if;
+
+  select s.slug into v_slug from public.barbershops s where s.id=v_shop;
+
+  reset role;
+  set local role anon;
+  perform set_config('request.jwt.claim.sub','',true);
+  perform public.get_public_barbershop(v_slug);
+
+  reset role;
 
   select m.user_id into v_owner
   from public.barbershop_members m
@@ -123,13 +137,15 @@ begin
   perform public.list_members(v_shop);
   perform public.get_dashboard_snapshot(v_shop);
 
+  v_error := null;
   begin
     perform public.get_dashboard_snapshot(v_other_shop);
-    raise exception 'CROSS_TENANT_OWNER_ACCESS_BREACHED';
   exception when others then
     get stacked diagnostics v_error=message_text;
-    if v_error<>'SHOP_OPERATOR_REQUIRED' then raise; end if;
   end;
+  if coalesce(v_error,'')<>'SHOP_OPERATOR_REQUIRED' then
+    raise exception 'CROSS_TENANT_OWNER_ACCESS_BREACHED: %',coalesce(v_error,'NO_ERROR');
+  end if;
 
   reset role;
   update public.barbershop_members
@@ -146,13 +162,15 @@ begin
   perform public.get_agenda_appointments(v_shop,timestamptz '2099-01-01 00:00:00+00',timestamptz '2099-01-02 00:00:00+00');
   perform public.get_payments(v_shop,null,10,0);
 
+  v_error := null;
   begin
     perform public.list_members(v_shop);
-    raise exception 'MANAGER_LIST_MEMBERS_BREACHED';
   exception when others then
     get stacked diagnostics v_error=message_text;
-    if v_error<>'OWNER_REQUIRED' then raise; end if;
   end;
+  if coalesce(v_error,'')<>'OWNER_REQUIRED' then
+    raise exception 'MANAGER_LIST_MEMBERS_BREACHED: %',coalesce(v_error,'NO_ERROR');
+  end if;
 
   reset role;
   update public.barbershop_members
@@ -186,39 +204,54 @@ begin
   perform public.get_reviews(v_shop,null,null,'all',50,0);
   perform public.get_report_summary(v_shop,date '2099-01-01',date '2099-01-02',null);
 
+  v_error := null;
   begin
     perform public.get_waitlist(v_shop,'active',null,50,0);
-    raise exception 'BARBER_WAITLIST_RPC_BREACHED';
   exception when others then
     get stacked diagnostics v_error=message_text;
-    if v_error<>'SHOP_OPERATOR_REQUIRED' then raise; end if;
   end;
+  if coalesce(v_error,'')<>'SHOP_OPERATOR_REQUIRED' then
+    raise exception 'BARBER_WAITLIST_RPC_BREACHED: %',coalesce(v_error,'NO_ERROR');
+  end if;
 
+  v_error := null;
   begin
     perform public.get_payments(v_shop,null,10,0);
-    raise exception 'BARBER_PAYMENT_RPC_BREACHED';
   exception when others then
     get stacked diagnostics v_error=message_text;
-    if v_error<>'SHOP_OPERATOR_REQUIRED' then raise; end if;
   end;
+  if coalesce(v_error,'')<>'SHOP_OPERATOR_REQUIRED' then
+    raise exception 'BARBER_PAYMENT_RPC_BREACHED: %',coalesce(v_error,'NO_ERROR');
+  end if;
 
+  v_error := null;
   begin
     perform public.get_notification_metrics(v_shop);
-    raise exception 'BARBER_NOTIFICATION_RPC_BREACHED';
   exception when others then
     get stacked diagnostics v_error=message_text;
-    if v_error<>'SHOP_OPERATOR_REQUIRED' then raise; end if;
   end;
+  if coalesce(v_error,'')<>'SHOP_OPERATOR_REQUIRED' then
+    raise exception 'BARBER_NOTIFICATION_RPC_BREACHED: %',coalesce(v_error,'NO_ERROR');
+  end if;
 
+  v_error := null;
   begin
     perform public.list_members(v_shop);
-    raise exception 'BARBER_LIST_MEMBERS_BREACHED';
   exception when others then
     get stacked diagnostics v_error=message_text;
-    if v_error<>'OWNER_REQUIRED' then raise; end if;
   end;
+  if coalesce(v_error,'')<>'OWNER_REQUIRED' then
+    raise exception 'BARBER_LIST_MEMBERS_BREACHED: %',coalesce(v_error,'NO_ERROR');
+  end if;
 
   reset role;
-end $$;
+
+  -- Platform admin
+  set local role authenticated;
+  perform set_config('request.jwt.claim.sub',v_admin::text,true);
+  perform public.admin_get_overview();
+
+  reset role;
+end $;
 
 rollback;
