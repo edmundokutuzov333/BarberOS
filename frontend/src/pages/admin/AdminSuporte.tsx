@@ -4,7 +4,7 @@ import { Page } from '@/components/layout/Page';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { fmt, humanError } from '@/lib/utils';
-import { useAdminPlans, useAdminShops, useAdminSupport, useAdminUsers, useCreateAdminSupport, useUpdateAdminSupport, type SupportPriority, type SupportStatus } from '@/features/admin/api';
+import { useAdminShops, useAdminSupport, useAdminUsers, useCreateAdminSupport, useUpdateAdminSupport, type SupportPriority, type SupportStatus } from '@/features/admin/api';
 import { AdminStatus, Pager, SearchToolbar } from '@/features/admin/AdminComponents';
 
 const PAGE_SIZE=25;
