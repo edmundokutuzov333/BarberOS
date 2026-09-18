@@ -41,7 +41,7 @@ begin
     where n.nspname='private'
       and p.proname='book_appointment_core'
       and p.prosecdef
-      and p.proconfig @> array['search_path=']
+      and p.proconfig @> array['search_path=""']
   )
   into v_has_scope_guard;
 
