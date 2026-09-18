@@ -1,0 +1,162 @@
+name: BarberOS Phase 23 Test Suite
+
+on:
+  pull_request:
+    paths:
+      - "frontend/**"
+      - "tests/**"
+      - "supabase/tests/**"
+      - "scripts/test_database_phase23.py"
+      - "scripts/test_booking_concurrency_phase23.py"
+      - "frontend/tests/e2e/phase23-full-lifecycle.spec.mjs"
+      - "docs/TESTING.md"
+      - ".github/workflows/phase23-tests.yml"
+  push:
+    branches:
+      - main
+      - "phase-*"
+    paths:
+      - "frontend/**"
+      - "tests/**"
+      - "supabase/tests/**"
+      - "scripts/test_database_phase23.py"
+      - "docs/TESTING.md"
+      - ".github/workflows/phase23-tests.yml"
+
+jobs:
+  frontend:
+    name: Frontend quality gates
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Accessibility audit
+        run: yarn a11y:phase21
+      - name: Typecheck
+        run: yarn typecheck
+      - name: Production build
+        env:
+          VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
+        run: yarn build
+
+  unit-components:
+    name: Unit and component tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install dependencies
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+      - name: Unit tests
+        working-directory: frontend
+        run: yarn test:unit:phase23
+      - name: Component tests
+        working-directory: frontend
+        run: yarn test:components:phase23
+      - name: Page contracts
+        working-directory: frontend
+        run: yarn test:contracts:phase23
+
+  e2e:
+    name: Browser E2E
+    runs-on: ubuntu-latest
+    needs:
+      - frontend
+    env:
+      BARBEROS_E2E_FULL: ${{ secrets.BARBEROS_E2E_FULL }}
+      BARBEROS_E2E_FULL_RESET_URL: ${{ secrets.BARBEROS_E2E_FULL_RESET_URL }}
+      BARBEROS_E2E_EMAIL: ${{ secrets.BARBEROS_E2E_EMAIL }}
+      BARBEROS_E2E_PASSWORD: ${{ secrets.BARBEROS_E2E_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enable Corepack
+        working-directory: frontend
+        run: corepack enable
+      - name: Install frontend
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+      - name: Build production app
+        working-directory: frontend
+        env:
+          VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
+        run: yarn build
+      - name: Start preview
+        working-directory: frontend
+        run: nohup yarn preview --host 127.0.0.1 --port 4173 > /tmp/barberos-preview.log 2>&1 &
+      - name: Install Playwright
+        working-directory: frontend
+        run: npm install --no-save --package-lock=false --legacy-peer-deps @playwright/test@1.56.1
+      - name: Install Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Run smoke E2E
+        working-directory: frontend
+        env:
+          VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
+          BARBEROS_E2E_SHOP_SLUG: oryon
+          BARBEROS_E2E_EMAIL: ${{ secrets.BARBEROS_E2E_EMAIL }}
+          BARBEROS_E2E_PASSWORD: ${{ secrets.BARBEROS_E2E_PASSWORD }}
+        run: npx playwright test tests/e2e/phase23.spec.mjs --config=playwright.config.mjs
+      - name: Run full lifecycle E2E when dedicated environment is provisioned
+        if: ${{ env.BARBEROS_E2E_FULL == '1' && env.BARBEROS_E2E_FULL_RESET_URL != '' && env.BARBEROS_E2E_EMAIL != '' && env.BARBEROS_E2E_PASSWORD != '' }}
+        working-directory: frontend
+        env:
+          VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
+        run: npx playwright test tests/e2e/phase23-full-lifecycle.spec.mjs --config=playwright.config.mjs
+      - name: Preview logs
+        if: failure()
+        run: cat /tmp/barberos-preview.log
+
+  database:
+    name: Database acceptance suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install psycopg
+        run: pip install "psycopg[binary]==3.2.12"
+      - name: Run database suite
+        env:
+          BARBEROS_TEST_DATABASE_URL: ${{ secrets.BARBEROS_TEST_DATABASE_URL }}
+          BARBEROS_TEST_ALLOW_MUTATION: '1'
+        run: python scripts/test_database_phase23.py
+      - name: Booking concurrency
+        env:
+          BARBEROS_TEST_DATABASE_URL: ${{ secrets.BARBEROS_TEST_DATABASE_URL }}
+          BARBEROS_TEST_ALLOW_MUTATION: '1'
+        run: python scripts/test_booking_concurrency_phase23.py
