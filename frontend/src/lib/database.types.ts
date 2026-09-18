@@ -1011,7 +1011,7 @@ export type Database = {
       }
       book_appointment: {
         Args: {
-          p_barber_id: string
+          p_barber_id: string | null
           p_email?: string | null
           p_haircut_id: string | null
           p_name: string
@@ -1051,7 +1051,7 @@ export type Database = {
         }[]
       }
       cancel_appointment_by_token: {
-        Args: { p_reason?: string; p_token: string }
+        Args: { p_reason?: string | null; p_token: string }
         Returns: {
           cancelled_at: string
         }[]
@@ -1430,7 +1430,7 @@ export type Database = {
       save_barber: {
         Args: {
           p_barber_id: string | null
-          p_bio: string
+          p_bio: string | null
           p_display_name: string
           p_photo_url: string | null
           p_service_ids: string[]
