@@ -205,7 +205,6 @@ function DayGrid({
 
   const dropOnColumn = (event: DragEvent<HTMLDivElement>, barberId: string) => {
     event.preventDefault();
-    const sourceBarber = event.dataTransfer.getData('application/x-barberos-barber');
     const appointmentId = event.dataTransfer.getData('text/plain');
     if (!appointmentId) return;
     const rect = event.currentTarget.getBoundingClientRect();
