@@ -87,7 +87,7 @@ Deno.serve(async(req)=>{
       p_provider_transaction_id:result.providerTransactionId||null,
       p_provider_status:result.providerStatus||null,
       p_provider_message:result.providerMessage||null,
-      p_raw:{webhook:JSON.parse(raw||"null")??raw.slice(0,2000),query:result.raw||{}},
+      p_raw:{webhook:(()=>{try{return JSON.parse(raw)}catch{return raw.slice(0,2000)}})(),query:result.raw||{}},
     });
   }else{
     await admin.rpc("mark_payment_provider_started",{
