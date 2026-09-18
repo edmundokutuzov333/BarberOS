@@ -258,6 +258,7 @@ begin
   end if;
 
   -- Re-entering the same request must not create another active queue entry.
+  set local role postgres;
   select count(*)
   into v_waiting_count
   from public.waitlist_entries
@@ -337,6 +338,7 @@ begin
     raise exception 'WAITLIST_CLAIM_FAILED';
   end if;
 
+  set local role postgres;
   if not exists (
     select 1
     from public.waitlist_entries
@@ -379,6 +381,7 @@ begin
   end if;
 
   -- Expiry rotates to the third customer.
+  set local role postgres;
   update public.waitlist_entries
   set offer_expires_at=now()-interval '1 minute'
   where id=v_offer2;
@@ -393,6 +396,7 @@ begin
     raise exception 'WAITLIST_EXPIRE_FAILED';
   end if;
 
+  set local role postgres;
   select w.id,w.offer_token
   into v_offer3,v_offer_token3
   from public.waitlist_entries w
