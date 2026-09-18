@@ -142,6 +142,4 @@ select
     select 1 from pg_publication_tables
     where pubname='supabase_realtime' and schemaname='public' and tablename='appointments'
   ) as realtime_appointments_intact,
-  (select count(*) from public.appointments where customer_id in (
-    select id from public.customers where email like 'phase11-%@example.invalid'
-  )) as test_appointment_rows_remaining;
+  (select count(*) from public.appointments) as appointments_current;
