@@ -26,7 +26,11 @@ export function SortableList<T extends Sortable>({ items, shopId, rpcName, query
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey }),
-    onError: (e) => { toast.error(humanError(e)); setLocal(items); },
+    onError: (e) => {
+      toast.error(humanError(e));
+      setLocal(items);
+      qc.invalidateQueries({ queryKey });
+    },
   });
 
   return (
