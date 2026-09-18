@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Copy, ExternalLink, LockKeyhole, Smartphone } from 'lucide-react';
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
+import { Copy, LockKeyhole, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
 import { useShop } from '@/lib/shop';
 import { humanError } from '@/lib/utils';
@@ -54,13 +54,13 @@ function AccountCard({
     setCredentials({});
   }, [account?.id, account?.enabled, account?.account_reference, account?.public_config, provider]);
 
-  const setPublic = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const setPublic = (key: string) => (e: ChangeEvent<HTMLInputElement>) =>
     setPublicConfig((old) => ({ ...old, [key]: e.target.value }));
 
-  const setCredential = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const setCredential = (key: string) => (e: ChangeEvent<HTMLInputElement>) =>
     setCredentials((old) => ({ ...old, [key]: e.target.value }));
 
-  const submit = async (e: React.FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     try {
       await configure.mutateAsync({
@@ -261,9 +261,6 @@ function AccountCard({
             >
               <Copy size={14} />
             </Button>
-            <a href={webhook} target="_blank" rel="noreferrer" aria-label={'Abrir URL de callback ' + providerLabel}>
-              <Button type="button" size="sm" variant="secondary"><ExternalLink size={14} /></Button>
-            </a>
           </div>
           <p className="t-label text-ink-mid mt-2">Use este endereço apenas no painel de integração do provider.</p>
         </div>
