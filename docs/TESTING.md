@@ -1,0 +1,37 @@
+# BarberOS FASE 23: Test Architecture
+
+A FASE 23 cria uma pirâmide de testes executável, mantendo o PostgreSQL como fonte de verdade.
+
+## Database
+
+`supabase/tests/phase23_contract.sql` é read-only e valida schema, RLS, grants, RPCs, overlap e Realtime.
+
+`supabase/tests/phase23_behavior.sql` é rollback-only e prova availability -> booking -> slot invalidation.
+
+As acceptance suites das fases anteriores continuam como provas de domínio especializadas e passam a ser executadas pelo runner dedicado quando existe uma base de testes isolada.
+
+## Unit
+
+`scripts/test-unit-phase23.mjs` carrega os módulos TypeScript reais através do Vite SSR e testa Meticais, slug, erros, calendário, WhatsApp e permissões.
+
+## Components
+
+`scripts/test-components-phase23.mjs` carrega componentes React reais e verifica semântica renderizada de Button, StatusChip, Skeleton, EmptyState, ErrorState, Panel, Page e SkipLink.
+
+## E2E
+
+`tests/e2e/phase23.spec.mjs` usa Playwright em Chromium desktop e mobile.
+
+O smoke é sempre executado contra o build de produção local. Página pública e booking são executados quando existe um ambiente E2E dedicado. O percurso autenticado usa apenas credenciais dedicadas.
+
+Não existem testes mutáveis contra produção.
+
+## CI
+
+`.github/workflows/phase23-tests.yml` executa accessibility, typecheck, production build, unit, component e browser E2E. A suite de database entra quando o secret `BARBEROS_TEST_DATABASE_URL` está configurado.
+
+A ausência desse secret não é transformada numa falsa aprovação de database.
+
+## Release Gate
+
+A FASE 23 só fica fechada quando a pirâmide de testes está instalada e as suites que tenham ambiente dedicado executam contra esse ambiente.
