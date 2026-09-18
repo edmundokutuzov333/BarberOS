@@ -151,3 +151,9 @@ Os tipos e o consumidor React estão em `frontend/src/features/booking/api.ts`. 
 A public capability token is backed by `appointments.manage_token`. The token RPCs expose only customer-safe fields, cancellation/rescheduling flags and slot starts. Anonymous direct SELECT on `appointments` is revoked; public reads and mutations use SECURITY DEFINER functions with `search_path=""`.
 
 Rescheduling uses the same availability engine and the same barber advisory lock as booking. Cancellation also acquires that lock before changing the appointment state, preventing stale reminder work and reducing race windows with new bookings.
+
+## Phase 7: public barbershop surface
+
+`get_public_barbershop(p_slug)` is the read boundary for the public tenant page. It returns a single JSON payload containing the public shop profile, active services, active haircuts, active barbers, weekly shop hours and published reviews.
+
+Anonymous direct SELECT was revoked from the domain tables used by the public page. Public publication is now exposed through the dedicated SECURITY DEFINER RPC with `search_path=""`. Booking and availability RPCs remain the authoritative operational boundaries.
