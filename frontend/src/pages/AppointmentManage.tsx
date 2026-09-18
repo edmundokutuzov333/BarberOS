@@ -112,6 +112,7 @@ export default function AppointmentManage() {
 
   const canActions = data.appointment_status === 'pending' || data.appointment_status === 'confirmed';
   const hasContact = Boolean(data.shop_whatsapp || data.shop_phone);
+  const todayInShop = localDate(new Date().toISOString(), data.timezone);
 
   return (
     <div className="min-h-screen px-5 py-8 sm:px-8">
@@ -202,7 +203,7 @@ export default function AppointmentManage() {
                 <Button variant="ghost" size="sm" onClick={() => { setMode('view'); setSelectedStart(null); }}>Fechar</Button>
               </div>
               <div className="mt-5">
-                <Field label="Nova data" name="reschedule-date" type="date" value={date} onChange={(e) => { setDate(e.target.value); setSelectedStart(null); }} min={new Date().toISOString().slice(0, 10)} />
+                <Field label="Nova data" name="reschedule-date" type="date" value={date} onChange={(e) => { setDate(e.target.value); setSelectedStart(null); }} min={todayInShop} />
               </div>
               <div className="mt-5" aria-live="polite" aria-busy={slotQuery.isLoading}>
                 {slotQuery.isLoading ? (
