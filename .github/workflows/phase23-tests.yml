@@ -111,7 +111,7 @@ jobs:
       - name: Install Chromium
         working-directory: frontend
         run: npx playwright install --with-deps chromium
-      - name: Run E2E
+      - name: Run smoke E2E
         working-directory: frontend
         env:
           VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
@@ -120,6 +120,17 @@ jobs:
           BARBEROS_E2E_EMAIL: ${{ secrets.BARBEROS_E2E_EMAIL }}
           BARBEROS_E2E_PASSWORD: ${{ secrets.BARBEROS_E2E_PASSWORD }}
         run: npx playwright test tests/e2e/phase23.spec.mjs --config=playwright.config.mjs
+      - name: Run full lifecycle E2E when dedicated environment is provisioned
+        if: ${{ env.BARBEROS_E2E_FULL == '1' && env.BARBEROS_E2E_FULL_RESET_URL != '' }}
+        working-directory: frontend
+        env:
+          VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
+          BARBEROS_E2E_FULL: ${{ secrets.BARBEROS_E2E_FULL }}
+          BARBEROS_E2E_EMAIL: ${{ secrets.BARBEROS_E2E_EMAIL }}
+          BARBEROS_E2E_PASSWORD: ${{ secrets.BARBEROS_E2E_PASSWORD }}
+          BARBEROS_E2E_FULL_RESET_URL: ${{ secrets.BARBEROS_E2E_FULL_RESET_URL }}
+        run: npx playwright test tests/e2e/phase23-full-lifecycle.spec.mjs --config=playwright.config.mjs
       - name: Preview logs
         if: failure()
         run: cat /tmp/barberos-preview.log
