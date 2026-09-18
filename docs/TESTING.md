@@ -39,3 +39,7 @@ A FASE 23 só fica fechada quando a pirâmide de testes está instalada e as sui
 ## Booking concurrency
 
 `scripts/test_booking_concurrency_phase23.py` opens two PostgreSQL transactions against the same slot and asserts one successful booking plus one `SLOT_TAKEN` or `SLOT_UNAVAILABLE`. Cleanup removes only the dedicated fixture appointments.
+
+## Full lifecycle E2E
+
+`frontend/tests/e2e/phase23-full-lifecycle.spec.mjs` cobre registo, onboarding, configuração, página pública, booking sem conta, agenda, atendimento concluído e CRM. Exige `BARBEROS_E2E_FULL=1`, credenciais dedicadas e um reset endpoint privado do ambiente de teste. Nunca aponta para produção.
