@@ -1,4 +1,4 @@
-import { useEffect, useDeferredValue, useState } from 'react';
+import { useDeferredValue, useEffect, useState, type ReactNode } from 'react';
 import { BellRing, CalendarClock, ChevronLeft, ChevronRight, Clock3, Hourglass, Search, UserCheck, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 import { Page } from '@/components/layout/Page';
@@ -259,7 +259,7 @@ export default function ListaEspera() {
   );
 }
 
-function MetricCard({ icon, label, value, loading }: { icon: React.ReactNode; label: string; value: number; loading: boolean }) {
+function MetricCard({ icon, label, value, loading }: { icon: ReactNode; label: string; value: number; loading: boolean }) {
   return (
     <Panel className="p-4">
       <div className="flex items-center gap-2 text-ink-mid">{icon}<span className="t-label">{label}</span></div>
