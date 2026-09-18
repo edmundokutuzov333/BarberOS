@@ -18,6 +18,7 @@ import AgendaPage from './pages/app/Agenda';
 import Clientes from './pages/app/Clientes';
 import ClienteDetalhe from './pages/app/ClienteDetalhe';
 import ListaEspera from './pages/app/ListaEspera';
+import Notificacoes from './pages/app/Notificacoes';
 import Vaga from './pages/Vaga';
 
 export default function App() {
