@@ -69,7 +69,10 @@ export function AppShell() {
 
   if (loading) return <FullSkeleton />;
   if (!shop && pathname !== '/app/onboarding') return <Navigate to="/app/onboarding" replace />;
-  if (pathname === '/app/onboarding') return <div className="min-h-screen" id="main-content"><SkipLink /><AnimatedOutlet /></div>;
+  if (pathname === '/app/onboarding') {
+    if (shop && !(role === 'owner' || role === 'manager')) return <RoleDenied pathname={pathname} />;
+    return <div className="min-h-screen" id="main-content"><SkipLink /><AnimatedOutlet /></div>;
+  }
 
   if (!canAccessAppRoute(role, pathname)) {
     return <RoleDenied pathname={pathname} />;
