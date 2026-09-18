@@ -1,0 +1,21 @@
+import { useState } from 'react';
+import { RefreshCw, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Page } from '@/components/layout/Page';
+import { Button } from '@/components/ui/Button';
+import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
+import { fmt, formatMT, humanError } from '@/lib/utils';
+import { useAdminPayments, type PaymentProvider, type PaymentState } from '@/features/admin/api';
+import { AdminStatus, Pager, SearchToolbar } from '@/features/admin/AdminComponents';
+
+const PAGE_SIZE=25;
+export default function AdminPagamentos(){
+  const [search,setSearch]=useState('');const [applied,setApplied]=useState('');const [status,setStatus]=useState<PaymentState|null>(null);const [provider,setProvider]=useState<PaymentProvider|null>(null);const [offset,setOffset]=useState(0);
+  const q=useAdminPayments({search:applied,status,provider,limit:PAGE_SIZE,offset});const total=q.data?.[0]?.total_count??0;
+  const apply=()=>{setOffset(0);setApplied(search.trim())};
+  return <Page title="Pagamentos" subtitle={total+' pagamento'+(Number(total)===1?'':'s')+' na plataforma'} actions={<Button variant="secondary" size="sm" onClick={()=>void q.refetch()} disabled={q.isFetching}><RefreshCw size={14} className={q.isFetching?'animate-spin':''}/>Actualizar</Button>}>
+    <SearchToolbar><div className="relative flex-1"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-lo"/><input className="field pl-9 w-full" value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')apply()}} placeholder="Barbearia ou referência do provider" aria-label="Pesquisar pagamentos"/></div><select className="field lg:w-40" value={status??''} onChange={e=>{setStatus((e.target.value||null) as PaymentState|null);setOffset(0)}}><option value="">Todos</option><option value="pending">Pendentes</option><option value="paid">Pagos</option><option value="failed">Falhados</option><option value="refunded">Devolvidos</option></select><select className="field lg:w-36" value={provider??''} onChange={e=>{setProvider((e.target.value||null) as PaymentProvider|null);setOffset(0)}}><option value="">Providers</option><option value="mpesa">M-Pesa</option><option value="emola">e-Mola</option></select><Button size="sm" onClick={apply}><Search size={14}/>Pesquisar</Button></SearchToolbar>
+    {q.isLoading?<Skeleton className="h-72"/>:q.error?<ErrorState message={humanError(q.error)} onRetry={()=>void q.refetch()}/>:q.data?.length===0?<EmptyState title="Nenhum pagamento encontrado." body="Os pagamentos são mostrados sem expor credenciais ou payload bruto do provider."/>:<Panel className="p-0 overflow-hidden"><div className="overflow-x-auto"><table className="w-full min-w-[1060px] text-sm"><thead><tr className="border-b border-white/10 t-label text-ink-lo text-left"><th className="px-5 py-3">Barbearia</th><th className="px-5 py-3">Provider</th><th className="px-5 py-3">Valor</th><th className="px-5 py-3">Estado</th><th className="px-5 py-3">Referência</th><th className="px-5 py-3">Criado</th><th className="px-5 py-3">Pago</th></tr></thead><tbody>{q.data?.map(p=><tr key={p.id} className="border-b border-white/5 last:border-0"><td className="px-5 py-4"><Link className="text-ink-hi hover:underline" to={'/admin/barbearias/'+p.shop_id}>{p.shop_name}</Link></td><td className="px-5 py-4 text-ink-mid uppercase">{p.provider==='mpesa'?'M-Pesa':'e-Mola'}</td><td className="px-5 py-4 text-ink-hi">{formatMT(p.amount_cents)}</td><td className="px-5 py-4"><div className="flex flex-wrap items-center gap-2"><AdminStatus kind="payment" value={p.status}/>{p.requires_refund&&<span className="t-label text-st-noshow">Reembolso necessário</span>}</div></td><td className="px-5 py-4 text-ink-mid font-mono text-xs">{p.provider_ref||p.provider_transaction_id||'—'}</td><td className="px-5 py-4 text-ink-mid">{fmt(p.created_at,'dd MMM yyyy, HH:mm')}</td><td className="px-5 py-4 text-ink-mid">{p.paid_at?fmt(p.paid_at,'dd MMM yyyy, HH:mm'):'—'}</td></tr>)}</tbody></table></div></Panel>}
+    {!q.isLoading&&!q.error&&<Pager offset={offset} pageSize={PAGE_SIZE} total={Number(total)} onPrev={()=>setOffset(Math.max(0,offset-PAGE_SIZE))} onNext={()=>setOffset(offset+PAGE_SIZE)}/>}
+  </Page>
+}

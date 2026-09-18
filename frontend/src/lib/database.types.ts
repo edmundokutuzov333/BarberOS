@@ -916,6 +916,70 @@ export type Database = {
           },
         ]
       }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          barbershop_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          priority: Database["public"]["Enums"]["support_ticket_priority"]
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["support_ticket_status"]
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          barbershop_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          priority?: Database["public"]["Enums"]["support_ticket_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["support_ticket_status"]
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          barbershop_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["support_ticket_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["support_ticket_status"]
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       time_blocks: {
         Row: {
           barber_id: string | null
@@ -1107,6 +1171,200 @@ export type Database = {
           p_shop: string
         }
         Returns: string
+      }
+      admin_get_activity: {
+        Args: { p_limit?: number }
+        Returns: {
+          action: string
+          actor_id: string
+          barbershop_id: string
+          created_at: string
+          diff: Json
+          entity: string
+          entity_id: string
+          id: string
+          shop_name: string
+        }[]
+      }
+      admin_get_barbershop: { Args: { p_shop: string }; Returns: Json }
+      admin_get_metrics: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
+      admin_get_overview: { Args: never; Returns: Json }
+      admin_list_barbershops: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_status?: Database["public"]["Enums"]["shop_status"]
+        }
+        Returns: {
+          appointment_count: number
+          barber_count: number
+          created_at: string
+          customer_count: number
+          id: string
+          member_count: number
+          name: string
+          plan_code: string
+          plan_id: string
+          plan_name: string
+          plan_price_cents: number
+          slug: string
+          status: Database["public"]["Enums"]["shop_status"]
+          total_count: number
+        }[]
+      }
+      admin_list_payments: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_provider?: Database["public"]["Enums"]["payment_provider"]
+          p_search?: string
+          p_status?: Database["public"]["Enums"]["payment_state"]
+        }
+        Returns: {
+          amount_cents: number
+          appointment_id: string
+          created_at: string
+          failed_at: string
+          id: string
+          paid_at: string
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_ref: string
+          provider_transaction_id: string
+          requires_refund: boolean
+          shop_id: string
+          shop_name: string
+          status: Database["public"]["Enums"]["payment_state"]
+          total_count: number
+        }[]
+      }
+      admin_list_plans: {
+        Args: never
+        Returns: {
+          assigned_shops: number
+          code: string
+          features: Json
+          id: string
+          is_active: boolean
+          max_barbers: number
+          name: string
+          price_cents: number
+        }[]
+      }
+      admin_list_support_tickets: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_priority?: Database["public"]["Enums"]["support_ticket_priority"]
+          p_search?: string
+          p_status?: Database["public"]["Enums"]["support_ticket_status"]
+        }
+        Returns: {
+          assigned_to: string
+          assigned_to_name: string
+          barbershop_id: string
+          created_at: string
+          created_by: string
+          created_by_name: string
+          description: string
+          id: string
+          priority: Database["public"]["Enums"]["support_ticket_priority"]
+          resolved_at: string
+          shop_name: string
+          status: Database["public"]["Enums"]["support_ticket_status"]
+          subject: string
+          total_count: number
+          updated_at: string
+        }[]
+      }
+      admin_list_users: {
+        Args: { p_limit?: number; p_offset?: number; p_search?: string }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_confirmed: boolean
+          is_platform_admin: boolean
+          last_sign_in_at: string
+          phone: string
+          shop_count: number
+          shop_roles: Json
+          total_count: number
+        }[]
+      }
+      admin_set_barbershop_status: {
+        Args: {
+          p_shop: string
+          p_status: Database["public"]["Enums"]["shop_status"]
+        }
+        Returns: {
+          id: string
+          status: Database["public"]["Enums"]["shop_status"]
+        }[]
+      }
+      admin_assign_barbershop_plan: {
+        Args: { p_plan: string; p_shop: string }
+        Returns: {
+          plan_code: string
+          plan_id: string
+          plan_name: string
+          shop_id: string
+        }[]
+      }
+      admin_update_plan: {
+        Args: {
+          p_features: Json
+          p_is_active: boolean
+          p_max_barbers: number
+          p_name: string
+          p_plan: string
+          p_price_cents: number
+        }
+        Returns: {
+          code: string
+          features: Json
+          id: string
+          is_active: boolean
+          max_barbers: number
+          name: string
+          price_cents: number
+        }[]
+      }
+      admin_create_support_ticket: {
+        Args: {
+          p_description: string
+          p_priority?: Database["public"]["Enums"]["support_ticket_priority"]
+          p_shop: string
+          p_subject: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          priority: Database["public"]["Enums"]["support_ticket_priority"]
+          status: Database["public"]["Enums"]["support_ticket_status"]
+          subject: string
+        }[]
+      }
+      admin_update_support_ticket: {
+        Args: {
+          p_assigned_to?: string
+          p_clear_assignee?: boolean
+          p_priority?: Database["public"]["Enums"]["support_ticket_priority"]
+          p_status?: Database["public"]["Enums"]["support_ticket_status"]
+          p_ticket: string
+        }
+        Returns: {
+          assigned_to: string
+          id: string
+          priority: Database["public"]["Enums"]["support_ticket_priority"]
+          status: Database["public"]["Enums"]["support_ticket_status"]
+          updated_at: string
+        }[]
       }
       book_appointment: {
         Args: {
@@ -2134,6 +2392,8 @@ export type Database = {
       payment_provider: "mpesa" | "emola"
       payment_state: "pending" | "paid" | "failed" | "refunded"
       shop_status: "trial" | "active" | "suspended" | "cancelled"
+      support_ticket_priority: "low" | "normal" | "high" | "urgent"
+      support_ticket_status: "open" | "in_progress" | "resolved" | "closed"
       waitlist_status:
         | "waiting"
         | "offered"

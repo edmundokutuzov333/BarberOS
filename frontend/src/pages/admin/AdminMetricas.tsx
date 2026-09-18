@@ -1,0 +1,26 @@
+import { useMemo, useState } from 'react';
+import { Activity, Building2, CalendarDays, RefreshCw, TrendingUp, Users } from 'lucide-react';
+import { Page } from '@/components/layout/Page';
+import { Button } from '@/components/ui/Button';
+import { ErrorState, EmptyState, Panel, Skeleton } from '@/components/ui/States';
+import { fmt, formatMT, humanError, nowTz } from '@/lib/utils';
+import { useAdminMetrics } from '@/features/admin/api';
+import { AdminMetricCard, AdminStatus } from '@/features/admin/AdminComponents';
+
+function today(){return fmt(nowTz(),'yyyy-MM-dd')}
+function shift(date:string,days:number){const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+days);return d.toISOString().slice(0,10)}
+export default function AdminMetricas(){
+  const t=today();const [range,setRange]=useState({from:shift(t,-6),to:t});const [from,setFrom]=useState(shift(t,-6));const [to,setTo]=useState(t);
+  const q=useAdminMetrics(range.from,range.to);
+  const preset=(k:'today'|'week'|'month')=>{const next=k==='today'?{from:t,to:t}:k==='week'?{from:shift(t,-6),to:t}:{from:t.slice(0,7)+'-01',to:t};setRange(next);setFrom(next.from);setTo(next.to)};
+  const valid=from<=to;
+  const max=useMemo(()=>Math.max(1,...(q.data?.daily??[]).map(d=>Number(d.revenue_cents))),[q.data]);
+  return <Page title="Métricas" subtitle="Visão de produto e operação da plataforma BarberOS." actions={<Button variant="secondary" size="sm" onClick={()=>void q.refetch()} disabled={q.isFetching}><RefreshCw size={14} className={q.isFetching?'animate-spin':''}/>Actualizar</Button>}>
+    <Panel className="mb-4 p-3"><div className="flex flex-wrap gap-2 items-center"><button onClick={()=>preset('today')} className="px-3.5 py-2 rounded-full text-sm bg-white/5 text-ink-mid">Hoje</button><button onClick={()=>preset('week')} className="px-3.5 py-2 rounded-full text-sm bg-white/5 text-ink-mid">Semana</button><button onClick={()=>preset('month')} className="px-3.5 py-2 rounded-full text-sm bg-white/5 text-ink-mid">Mês</button><span className="hidden sm:block h-6 w-px bg-white/10 mx-1"/><label className="flex items-center gap-2"><span className="t-label text-ink-lo">De</span><input className="field !py-2" type="date" value={from} max={to} onChange={e=>setFrom(e.target.value)}/></label><label className="flex items-center gap-2"><span className="t-label text-ink-lo">Até</span><input className="field !py-2" type="date" value={to} min={from} onChange={e=>setTo(e.target.value)}/></label><Button size="sm" disabled={!valid} onClick={()=>setRange({from,to})}>Aplicar</Button></div></Panel>
+    {q.isLoading?<div className="grid grid-cols-2 xl:grid-cols-4 gap-3"><Skeleton className="h-32"/><Skeleton className="h-32"/><Skeleton className="h-32"/><Skeleton className="h-32"/></div>:q.error?<ErrorState message={humanError(q.error)} onRetry={()=>void q.refetch()}/>:q.data?<><section className="grid grid-cols-2 xl:grid-cols-4 gap-3"><AdminMetricCard label="Marcações" value={q.data.summary.appointments} detail={q.data.summary.completed+' concluídas'} icon={CalendarDays}/><AdminMetricCard label="Receita" value={formatMT(q.data.summary.revenue_cents)} detail={formatMT(q.data.summary.payments_paid_cents)+' pagos em providers'} icon={TrendingUp}/><AdminMetricCard label="Novos clientes" value={q.data.summary.new_customers} detail={q.data.summary.new_users+' novos utilizadores'} icon={Users}/><AdminMetricCard label="Novas barbearias" value={q.data.summary.new_shops} detail={q.data.summary.cancelled+' canceladas no período'} icon={Building2}/></section>
+      <section className="grid xl:grid-cols-[1.3fr_.7fr] gap-3 mt-3"><Panel title="Evolução diária"><div className="space-y-3">{q.data.daily.map(d=><div key={d.date}><div className="flex items-center justify-between mb-1.5"><span className="t-label text-ink-mid">{d.date}</span><span className="t-label text-ink-hi">{formatMT(d.revenue_cents)}</span></div><div className="h-2 rounded-full bg-white/5 overflow-hidden"><div className="h-full rounded-full bg-accent-soft" style={{width:(Number(d.revenue_cents)/max*100)+'%'}}/></div><p className="t-label text-ink-lo mt-1">{d.appointments} marcações · {d.completed} concluídas</p></div>)}</div></Panel>
+      <Panel title="Distribuição por plano"><div className="space-y-2">{q.data.plans.map(p=><div key={p.code} className="rounded-2xl bg-white/5 p-3 flex items-center justify-between"><div><p className="text-sm text-ink-hi">{p.name}</p><p className="t-label text-ink-lo">{formatMT(p.price_cents)}</p></div><span className="t-card text-ink-hi">{p.shops}</span></div>)}</div></Panel></section>
+      <Panel className="mt-3" title="Estado da plataforma"><div className="grid sm:grid-cols-4 gap-3">{Object.entries(q.data.shop_status).map(([s,n])=><div key={s} className="rounded-2xl bg-white/5 p-4 flex items-center justify-between"><AdminStatus kind="shop" value={s}/><span className="t-card text-ink-hi">{n}</span></div>)}</div></Panel>
+    </>:<EmptyState title="Sem métricas no intervalo seleccionado."/>}
+  </Page>
+}
