@@ -61,6 +61,20 @@ begin
   perform public.get_public_barbershop(v_slug);
   reset role;
 
+  -- Cross-tenant rejection before the fixture user is attached to the target shop.
+  set local role authenticated;
+  perform set_config('request.jwt.claim.sub',v_actor::text,true);
+  v_error := null;
+  begin
+    perform public.get_dashboard_snapshot(v_shop);
+  exception when others then
+    get stacked diagnostics v_error=message_text;
+  end;
+  if coalesce(v_error,'')<>'SHOP_OPERATOR_REQUIRED' then
+    raise exception 'CROSS_TENANT_ANONYMOUS_TO_TARGET_BREACHED: %',coalesce(v_error,'NO_ERROR');
+  end if;
+  reset role;
+
   insert into public.barbershop_members(barbershop_id,user_id,role)
   values(v_shop,v_actor,'owner');
 
@@ -114,14 +128,6 @@ begin
   perform set_config('request.jwt.claim.sub',v_actor::text,true);
   perform public.list_members(v_shop);
   perform public.get_dashboard_snapshot(v_shop);
-
-  v_error := null;
-  begin
-    perform public.get_dashboard_snapshot(v_other_shop);
-  exception when others then
-    get stacked diagnostics v_error=message_text;
-  end;
-  if coalesce(v_error,'')<>'SHOP_OPERATOR_REQUIRED' then raise exception 'CROSS_TENANT_OWNER_ACCESS_BREACHED: %',coalesce(v_error,'NO_ERROR'); end if;
 
   reset role;
   update public.barbershop_members set role='manager' where barbershop_id=v_shop and user_id=v_actor;
