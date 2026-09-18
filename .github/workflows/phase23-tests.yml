@@ -1,0 +1,83 @@
+name: BarberOS Phase 23 Test Suite
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  frontend:
+    name: Frontend quality gates
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - run: corepack enable
+      - run: yarn install --frozen-lockfile
+      - run: yarn a11y:phase21
+      - run: yarn typecheck
+      - run: yarn build
+
+  unit-components:
+    name: Unit and component tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - run: corepack enable
+      - working-directory: frontend
+        run: yarn install --frozen-lockfile
+      - run: node scripts/test-unit-phase23.mjs
+      - run: node scripts/test-components-phase23.mjs
+
+  e2e:
+    name: Browser E2E
+    runs-on: ubuntu-latest
+    needs: [frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - working-directory: frontend
+        run: corepack enable && yarn install --frozen-lockfile
+      - working-directory: frontend
+        run: yarn build
+      - working-directory: frontend
+        run: |
+          nohup yarn preview --host 127.0.0.1 --port 4173 > /tmp/barberos-preview.log 2>&1 &
+      - run: npx --yes @playwright/test@1.56.1 install --with-deps chromium
+      - run: npx --yes @playwright/test@1.56.1 test tests/e2e/phase23.spec.mjs --config=playwright.config.mjs
+        env:
+          BARBEROS_E2E_BASE_URL: http://127.0.0.1:4173
+          BARBEROS_E2E_SHOP_SLUG: ${{ secrets.BARBEROS_E2E_SHOP_SLUG }}
+          BARBEROS_E2E_EMAIL: ${{ secrets.BARBEROS_E2E_EMAIL }}
+          BARBEROS_E2E_PASSWORD: ${{ secrets.BARBEROS_E2E_PASSWORD }}
+      - if: failure()
+        run: cat /tmp/barberos-preview.log
+
+  database:
+    name: Database acceptance suite
+    runs-on: ubuntu-latest
+    if: ${{ secrets.BARBEROS_TEST_DATABASE_URL != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install "psycopg[binary]==3.2.12"
+      - run: python scripts/test_database_phase23.py
+        env:
+          BARBEROS_TEST_DATABASE_URL: ${{ secrets.BARBEROS_TEST_DATABASE_URL }}
+          BARBEROS_TEST_ALLOW_MUTATION: '1'
