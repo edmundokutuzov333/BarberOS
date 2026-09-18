@@ -143,7 +143,7 @@ export function BlocksEditor() {
                 <p className="text-sm font-normal">{BLOCK_REASONS[b.reason]} · <span className="text-ink-mid">{barberName(b.barber_id)}</span></p>
                 <p className="t-label text-ink-mid">{fmt(b.starts_at, "EEE d MMM, HH:mm")} – {fmt(b.ends_at, fmt(b.starts_at, 'yyyy-MM-dd') === fmt(b.ends_at, 'yyyy-MM-dd') ? 'HH:mm' : "EEE d MMM, HH:mm")}{b.note && ` · ${b.note}`}</p>
               </div>
-              <button data-testid={`block-delete-${b.id}`} onClick={() => remove.mutate(b.id)} aria-label="Remover bloqueio" className="p-2 text-ink-lo hover:text-st-noshow transition-colors"><Trash2 size={15} /></button>
+              <button type="button" data-testid={`block-delete-${b.id}`} onClick={() => remove.mutate(b.id)} aria-label="Remover bloqueio" className="p-2 text-ink-lo hover:text-st-noshow transition-colors"><Trash2 size={15} /></button>
             </li>
           ))}
         </ul>
