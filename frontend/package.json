@@ -68,7 +68,8 @@
     "typecheck": "tsc --noEmit",
     "a11y:phase21": "node ../scripts/a11y-phase21.mjs",
     "test:unit:phase23": "node tests/unit/phase23-domain.mjs",
-    "test:components:phase23": "node tests/components/phase23-components.mjs"
+    "test:components:phase23": "node tests/components/phase23-components.mjs",
+    "test:contracts:phase23": "node tests/components/phase23-page-contracts.mjs"
   },
   "browserslist": {
     "production": [
