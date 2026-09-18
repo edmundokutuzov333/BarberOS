@@ -59,6 +59,14 @@ function formatTime(value: string, timezone: string): string {
   return new Intl.DateTimeFormat('pt-PT', { timeZone: timezone, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value));
 }
 
+function localISO(value: string | Date, timezone: string): string {
+  const parts = new Intl.DateTimeFormat('en', {
+    timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(typeof value === 'string' ? new Date(value) : value);
+  const p = Object.fromEntries(parts.filter((x) => x.type !== 'literal').map((x) => [x.type, x.value]));
+  return p.year + '-' + p.month + '-' + p.day;
+}
+
 function timeParts(value: string, timezone: string) {
   const parts = new Intl.DateTimeFormat('en', { timeZone: timezone, hour: '2-digit', minute: '2-digit', hour12: false })
     .formatToParts(new Date(value));
@@ -138,9 +146,9 @@ function AppointmentCard({
       <div className="flex items-center gap-2 mt-2"><StatusChip status={appointment.status} />{appointment.deposit_status === 'awaiting' && <span className="t-label text-st-pending">Sinal</span>}</div>
       <div className="flex items-center gap-1 mt-2">
         {allowed(appointment.status, 'confirm') && appointment.deposit_status !== 'awaiting' && <ActionButton label="Confirmar" onClick={() => onAction('confirm', appointment)} busy={busy}><CheckCircle2 size={14} /></ActionButton>}
-        {allowed(appointment.status, 'start') && <ActionButton label="Iniciar atendimento" onClick={() => onAction('start', appointment)} busy={busy}><Play size={14} /></ActionButton>}
+        {allowed(appointment.status, 'start') && new Date(appointment.starts_at).getTime() <= Date.now() + 30 * 60 * 1000 && <ActionButton label="Iniciar atendimento" onClick={() => onAction('start', appointment)} busy={busy}><Play size={14} /></ActionButton>}
         {allowed(appointment.status, 'complete') && <ActionButton label="Concluir atendimento" onClick={() => onAction('complete', appointment)} busy={busy}><CheckCircle2 size={14} /></ActionButton>}
-        {allowed(appointment.status, 'no_show') && <ActionButton label="Marcar falta" onClick={() => onAction('no_show', appointment)} busy={busy}><UserX size={14} /></ActionButton>}
+        {allowed(appointment.status, 'no_show') && new Date(appointment.starts_at).getTime() <= Date.now() + 30 * 60 * 1000 && <ActionButton label="Marcar falta" onClick={() => onAction('no_show', appointment)} busy={busy}><UserX size={14} /></ActionButton>}
         {allowed(appointment.status, 'cancel') && <ActionButton label="Cancelar marcação" onClick={() => onAction('cancel', appointment)} busy={busy}><X size={14} /></ActionButton>}
         {allowed(appointment.status, 'reschedule') && <ActionButton label="Remarcar" onClick={() => onReschedule(appointment)} busy={busy}><RefreshCw size={14} /></ActionButton>}
         {appointment.customer_phone && (
@@ -267,7 +275,7 @@ function WeekBoard({
     <div className="overflow-x-auto rounded-3xl border border-white/10">
       <div className="grid grid-cols-7 min-w-[980px]">
         {days.map((day) => {
-          const items = appointments.filter((a) => a.starts_at.slice(0, 10) === day);
+          const items = appointments.filter((a) => localISO(a.starts_at, timezone) === day);
           return (
             <section key={day} className="min-h-[34rem] border-l first:border-l-0 border-white/5 p-3 bg-white/[.015]">
               <header className="pb-3 border-b border-white/5">
@@ -384,7 +392,7 @@ export default function AgendaPage() {
 
   const openReschedule = (appointment: AgendaAppointment) => {
     setRescheduleAppointment(appointment);
-    setRescheduleDate(appointment.starts_at.slice(0, 10));
+    setRescheduleDate(localISO(appointment.starts_at, timezone));
   };
 
   return (
