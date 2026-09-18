@@ -71,7 +71,7 @@ export function ServicesEditor() {
       {q.isLoading ? <Skeleton className="h-40" /> : q.error ? <ErrorState message={humanError(q.error)} onRetry={() => q.refetch()} /> : q.data!.length === 0 ? (
         <EmptyState testId="services-empty" title="Cria o primeiro serviço para abrir a agenda." body="Ex.: Corte, Barba, Corte + barba." action={<Button data-testid="services-empty-add-btn" size="sm" pill onClick={() => open('new')}>Criar serviço</Button>} />
       ) : (
-        <SortableList items={q.data!} table="services" queryKey={key} testId="services-list" render={(s) => (
+        <SortableList items={q.data!} shopId={shop!.id} rpcName="reorder_services" queryKey={key} testId="services-list" render={(s) => (
           <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className={`text-sm font-normal truncate ${!s.is_active && 'text-ink-mid line-through'}`}>{s.name}</p>
