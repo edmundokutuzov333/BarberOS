@@ -7,6 +7,7 @@ import { MobileDock } from './MobileDock';
 import { Skeleton } from '@/components/ui/States';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { SkipLink } from '@/components/ui/SkipLink';
+import { SkipLink } from '@/components/ui/SkipLink';
 
 function FullSkeleton() {
   return (
