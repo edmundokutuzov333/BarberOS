@@ -21,10 +21,21 @@ function compressed(file) {
   };
 }
 
-function collect(key, visited = new Set()) {
+function resolveManifestKey(source) {
+  if (manifest[source]) return source;
+  const found = Object.entries(manifest).find(([key, entry]) =>
+    key === source ||
+    entry.src === source ||
+    entry.name === source
+  );
+  if (!found) throw new Error('PERF_MANIFEST_ENTRY_MISSING:' + source);
+  return found[0];
+}
+
+function collect(source, visited = new Set()) {
+  const key = resolveManifestKey(source);
   if (visited.has(key)) return [];
   const entry = manifest[key];
-  if (!entry) throw new Error('PERF_MANIFEST_ENTRY_MISSING:' + key);
   visited.add(key);
 
   const files = [{ file: entry.file, ...compressed(entry.file) }];
