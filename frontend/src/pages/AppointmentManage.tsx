@@ -55,10 +55,9 @@ export default function AppointmentManage() {
   const cancelMutation = useTokenCancellation();
   const rescheduleMutation = useTokenReschedule();
   const slotQuery = useRescheduleSlotsByToken(token, date, mode === 'reschedule');
+  const data = query.data;
   const paymentPolling = Boolean(data?.deposit_status === 'awaiting' && (data.latest_payment_status === 'pending' || paymentStarted));
   const paymentStatus = usePaymentStatus(token, paymentPolling);
-
-  const data = query.data;
   const manageUrl = window.location.href;
 
   useEffect(() => {
