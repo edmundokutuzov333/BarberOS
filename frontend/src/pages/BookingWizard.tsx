@@ -420,7 +420,7 @@ export default function BookingWizard() {
       navigate(`/marcacao/${result.manage_token}`, { replace: true });
     } catch (error) {
       const message = String(error).includes('SLOT_TAKEN') || String(error).includes('SLOT_UNAVAILABLE')
-        ? 'Esse horário acabou de ser ocupado. Escolhe outro horário.'
+        ? 'Este horário acabou de ser ocupado. Escolha outro horário.'
         : humanError(error);
       setBookingError(message);
       if (String(error).includes('SLOT_TAKEN') || String(error).includes('SLOT_UNAVAILABLE')) {

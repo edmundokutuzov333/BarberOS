@@ -1,0 +1,157 @@
+name: BarberOS Phase 24 Concurrency Gate
+
+on:
+  pull_request:
+    paths:
+      - "frontend/src/features/booking/**"
+      - "frontend/src/pages/BookingWizard.tsx"
+      - "frontend/src/lib/utils.ts"
+      - "frontend/tests/unit/phase24-concurrency.mjs"
+      - "frontend/tests/components/phase24-concurrency-contracts.mjs"
+      - "frontend/tests/e2e/phase24-http-concurrency.spec.mjs"
+      - "supabase/functions/booking-create/**"
+      - "supabase/tests/phase24_concurrency_contract.sql"
+      - "scripts/test_booking_concurrency_phase24.py"
+      - "docs/PHASE24-CONCURRENCY.md"
+      - "frontend/package.json"
+      - ".github/workflows/phase24-concurrency.yml"
+  push:
+    branches:
+      - main
+      - "phase-*"
+    paths:
+      - "frontend/src/features/booking/**"
+      - "frontend/src/pages/BookingWizard.tsx"
+      - "frontend/src/lib/utils.ts"
+      - "frontend/tests/unit/phase24-concurrency.mjs"
+      - "frontend/tests/components/phase24-concurrency-contracts.mjs"
+      - "frontend/tests/e2e/phase24-http-concurrency.spec.mjs"
+      - "supabase/functions/booking-create/**"
+      - "supabase/tests/phase24_concurrency_contract.sql"
+      - "scripts/test_booking_concurrency_phase24.py"
+      - "docs/PHASE24-CONCURRENCY.md"
+      - "frontend/package.json"
+      - ".github/workflows/phase24-concurrency.yml"
+
+jobs:
+  frontend:
+    name: Phase 24 frontend concurrency contracts
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Unit concurrency tests
+        run: yarn test:unit:phase24
+      - name: Page concurrency contracts
+        run: yarn test:contracts:phase24
+      - name: Typecheck
+        run: yarn typecheck
+      - name: Production build
+        env:
+          VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
+        run: yarn build
+
+  edge-function-contract:
+    name: Phase 24 Edge Function contract
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Run booking conflict contract tests
+        working-directory: supabase/functions/booking-create
+        run: deno test --no-check contract.test.ts
+
+  database-concurrency:
+    name: Phase 24 database concurrency
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install psycopg
+        run: pip install "psycopg[binary]==3.2.12"
+      - name: Run read-only database concurrency contract
+        env:
+          BARBEROS_TEST_DATABASE_URL: ${{ secrets.BARBEROS_TEST_DATABASE_URL }}
+        run: |
+          if [ -z "$BARBEROS_TEST_DATABASE_URL" ]; then
+            echo "SKIP: BARBEROS_TEST_DATABASE_URL não está configurado."
+            exit 0
+          fi
+          python - <<'PY'
+          import os
+          import psycopg
+          db = os.environ["BARBEROS_TEST_DATABASE_URL"]
+          sql = open("supabase/tests/phase24_concurrency_contract.sql", encoding="utf-8").read()
+          with psycopg.connect(db, autocommit=True) as conn:
+              with conn.cursor() as cur:
+                  cur.execute(sql)
+          print("PASS | Phase 24 database concurrency contract")
+          PY
+      - name: Run deterministic concurrent booking acceptance
+        env:
+          BARBEROS_TEST_DATABASE_URL: ${{ secrets.BARBEROS_TEST_DATABASE_URL }}
+          BARBEROS_TEST_ALLOW_MUTATION: "1"
+        run: |
+          if [ -z "$BARBEROS_TEST_DATABASE_URL" ]; then
+            echo "SKIP: dedicated PostgreSQL environment is required for mutating concurrency acceptance."
+            exit 0
+          fi
+          python scripts/test_booking_concurrency_phase24.py
+
+  http-concurrency:
+    name: Phase 24 HTTP 200/409 concurrency
+    runs-on: ubuntu-latest
+    needs:
+      - frontend
+    env:
+      BARBEROS_E2E_CONCURRENCY_URL: ${{ secrets.BARBEROS_E2E_CONCURRENCY_URL }}
+      BARBEROS_E2E_CONCURRENCY_SLUG: ${{ secrets.BARBEROS_E2E_CONCURRENCY_SLUG }}
+      BARBEROS_E2E_CONCURRENCY_SERVICE_ID: ${{ secrets.BARBEROS_E2E_CONCURRENCY_SERVICE_ID }}
+      BARBEROS_E2E_CONCURRENCY_BARBER_ID: ${{ secrets.BARBEROS_E2E_CONCURRENCY_BARBER_ID }}
+      BARBEROS_E2E_CONCURRENCY_START: ${{ secrets.BARBEROS_E2E_CONCURRENCY_START }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright runner
+        working-directory: frontend
+        run: npm install --no-save --package-lock=false --legacy-peer-deps @playwright/test@1.56.1
+      - name: Install Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Run HTTP concurrency acceptance in dedicated environment
+        working-directory: frontend
+        run: |
+          if [ -z "$BARBEROS_E2E_CONCURRENCY_URL" ]; then
+            echo "SKIP: dedicated concurrency HTTP environment is not configured."
+            exit 0
+          fi
+          npx playwright test tests/e2e/phase24-http-concurrency.spec.mjs --config=playwright.config.mjs
