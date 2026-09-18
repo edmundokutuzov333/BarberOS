@@ -6,6 +6,8 @@ import { Sidebar } from './Sidebar';
 import { MobileDock } from './MobileDock';
 import { Skeleton } from '@/components/ui/States';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { SkipLink } from '@/components/ui/SkipLink';
+import { SkipLink } from '@/components/ui/SkipLink';
 
 function FullSkeleton() {
   return (
@@ -44,12 +46,13 @@ export function AppShell() {
 
   if (loading) return <FullSkeleton />;
   if (!shop && pathname !== '/app/onboarding') return <Navigate to="/app/onboarding" replace />;
-  if (pathname === '/app/onboarding') return <div className="min-h-screen"><AnimatedOutlet /></div>;
+  if (pathname === '/app/onboarding') return <div className="min-h-screen" id="main-content"><SkipLink /><AnimatedOutlet /></div>;
 
   return (
     <div className="min-h-screen md:flex md:gap-6 md:p-6 md:pr-8">
+      <SkipLink />
       {desktop && <Sidebar />}
-      <main className="flex-1 min-w-0 px-4 pt-5 pb-28 md:p-0 max-w-[1400px]">
+      <main id="main-content" tabIndex={-1} aria-label="Conteúdo principal" className="flex-1 min-w-0 px-4 pt-5 pb-28 md:p-0 max-w-[1400px]">
         <AnimatedOutlet />
       </main>
       {!desktop && <MobileDock />}

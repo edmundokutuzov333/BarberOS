@@ -27,12 +27,13 @@ export interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'ref'> {
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', pill, loading, full, children, disabled, ...rest }, ref) => {
+  ({ className, variant = 'primary', size = 'md', pill, loading, full, children, disabled, type = 'button', ...rest }, ref) => {
     const reduce = useReducedMotion();
 
     return (
       <motion.button
         ref={ref}
+        type={type}
         whileTap={reduce ? undefined : { scale: 0.97 }}
         disabled={disabled || loading}
         aria-busy={loading || undefined}
@@ -47,7 +48,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         )}
         {...(rest as HTMLMotionProps<'button'>)}
       >
-        {loading && <span className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin opacity-70" aria-hidden />}
+        {loading && (
+          <span
+            className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin opacity-70"
+            aria-hidden="true"
+          />
+        )}
         {children as ReactNode}
       </motion.button>
     );

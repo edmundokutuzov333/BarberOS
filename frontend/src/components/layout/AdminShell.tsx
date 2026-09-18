@@ -4,6 +4,7 @@ import { Building2, Users, CreditCard, Wallet, LifeBuoy, LineChart, LayoutDashbo
 import { AnimatedOutlet } from './AppShell';
 import { Brand } from '@/components/ui/Brand';
 import { cn } from '@/lib/utils';
+import { SkipLink } from '@/components/ui/SkipLink';
 
 const ADMIN_NAV = [
   { to: '/admin', label: 'Visão geral', icon: LayoutDashboard, end: true },
@@ -22,6 +23,7 @@ export function AdminShell() {
 
   return (
     <div className="min-h-screen md:flex md:gap-6 md:p-6">
+      <SkipLink targetId="admin-main-content" />
       <aside
         data-testid="admin-sidebar"
         className="glass glass-2 md:sticky md:top-6 md:h-[calc(100vh-3rem)] md:w-64 shrink-0 flex flex-col m-4 md:m-0 overflow-hidden"
@@ -73,7 +75,7 @@ export function AdminShell() {
         </div>
       </aside>
 
-      <main className="flex-1 min-w-0 px-4 pb-10 md:p-0">
+      <main id="admin-main-content" tabIndex={-1} aria-label="Conteúdo principal da administração" className="flex-1 min-w-0 px-4 pb-10 md:p-0">
         <AnimatedOutlet />
       </main>
     </div>

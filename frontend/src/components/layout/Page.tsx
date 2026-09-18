@@ -1,4 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion';
+import { useId } from 'react';
+import { useId } from 'react';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +15,8 @@ export function Page({ children, className, title, subtitle, actions, testId }: 
   testId?: string;
 }) {
   const reduce = useReducedMotion();
+  const titleId = useId();
+  const titleId = useId();
   const v = reduce
     ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
     : {
@@ -27,11 +31,13 @@ export function Page({ children, className, title, subtitle, actions, testId }: 
       {...v}
       transition={{ duration: 0.28, ease }}
       className={cn('w-full', className)}
+      aria-labelledby={title ? titleId : undefined}
+      tabIndex={-1}
     >
       {(title || actions) && (
         <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-7 sm:mb-8">
           <div className="min-w-0">
-            {title && <h1 className="t-title text-ink-hi">{title}</h1>}
+            {title && <h1 id={titleId} className="t-title text-ink-hi">{title}</h1>}
             {subtitle && <p className="t-body text-ink-mid mt-1.5 max-w-3xl">{subtitle}</p>}
           </div>
           {actions && <div className="page-actions shrink-0">{actions}</div>}
