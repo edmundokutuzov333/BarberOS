@@ -1044,6 +1044,38 @@ export type Database = {
         Args: { p_appt: string }
         Returns: undefined
       }
+      cancel_appointment_by_token: {
+        Args: { p_reason?: string; p_token: string }
+        Returns: { cancelled_at: string }[]
+      }
+      get_appointment_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          action_deadline: string | null
+          appointment_ends_at: string
+          appointment_starts_at: string
+          appointment_status: Database["public"]["Enums"]["appointment_status"]
+          barber_name: string
+          barber_photo_url: string | null
+          can_cancel: boolean
+          can_reschedule: boolean
+          cancellation_rule: Database["public"]["Enums"]["cancellation_rule"]
+          customer_name: string
+          deposit_cents: number
+          deposit_status: Database["public"]["Enums"]["deposit_state"]
+          haircut_name: string | null
+          service_duration_min: number
+          service_name: string
+          service_price_cents: number
+          shop_address: string | null
+          shop_maps_url: string | null
+          shop_name: string
+          shop_phone: string | null
+          shop_slug: string
+          shop_whatsapp: string | null
+          timezone: string
+        }[]
+      }
       get_available_days: {
         Args: {
           p_barber_id?: string
@@ -1069,6 +1101,10 @@ export type Database = {
           barber_ids: string[]
           slot_start: string
         }[]
+      }
+      get_reschedule_slots_by_token: {
+        Args: { p_date: string; p_token: string }
+        Returns: { slot_start: string }[]
       }
       is_member: {
         Args: {
@@ -1105,6 +1141,10 @@ export type Database = {
       replace_working_hours: {
         Args: { p_barber_id?: string; p_rows: Json; p_shop: string }
         Returns: undefined
+      }
+      reschedule_appointment_by_token: {
+        Args: { p_new_start: string; p_token: string }
+        Returns: { new_ends_at: string; new_starts_at: string }[]
       }
       save_barber: {
         Args: {
