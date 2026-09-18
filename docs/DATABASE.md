@@ -176,3 +176,7 @@ The public payload now includes only the booking configuration needed for UX: ma
 ## Phase 9: operational agenda
 
 The operational agenda is backed by tenant-scoped PostgreSQL read models and transactional appointment state changes. Day view renders barber timelines and supports drag reschedule, including cross-barber moves. Week view provides a seven-day operational board.
+
+## Phase 10: Realtime
+
+Supabase Postgres Changes is enabled for `public.appointments` only. The frontend subscribes per tenant and re-fetches the tenant-scoped agenda read model on INSERT/UPDATE events.
