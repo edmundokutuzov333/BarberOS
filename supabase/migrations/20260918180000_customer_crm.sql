@@ -4,13 +4,13 @@
 -- SECURITY DEFINER ability to create/update customers during booking lifecycle operations.
 
 create index if not exists customers_name_trgm_idx
-  on public.customers using gin (lower(name) gin_trgm_ops);
+  on public.customers using gin (lower(name) extensions.gin_trgm_ops);
 
 create index if not exists customers_phone_trgm_idx
-  on public.customers using gin (phone gin_trgm_ops);
+  on public.customers using gin (phone extensions.gin_trgm_ops);
 
 create index if not exists customers_email_trgm_idx
-  on public.customers using gin (lower(coalesce(email,'')) gin_trgm_ops);
+  on public.customers using gin (lower(coalesce(email,'')) extensions.gin_trgm_ops);
 
 create or replace function public.get_customer_metrics(
   p_shop uuid
