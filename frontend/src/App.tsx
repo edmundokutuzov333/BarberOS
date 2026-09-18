@@ -19,6 +19,7 @@ import Clientes from './pages/app/Clientes';
 import ClienteDetalhe from './pages/app/ClienteDetalhe';
 import ListaEspera from './pages/app/ListaEspera';
 import Notificacoes from './pages/app/Notificacoes';
+import Pagamentos from './pages/app/Pagamentos';
 import Vaga from './pages/Vaga';
 
 export default function App() {
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="clientes/:customerId" element={<ClienteDetalhe />} />
           <Route path="lista-espera" element={<ListaEspera />} />
           <Route path="notificacoes" element={<Notificacoes />} />
+          <Route path="pagamentos" element={<Pagamentos />} />
           <Route path="servicos" element={<ServicosPage />} />
           <Route path="cortes" element={<CortesPage />} />
           <Route path="barbeiros" element={<BarbeirosPage />} />
