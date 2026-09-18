@@ -50,13 +50,11 @@ export default function Pagamentos() {
       testId="pagamentos-page"
       title="Pagamentos"
       subtitle="Sinais, estados de pagamento e configuração dos providers da sua barbearia."
-      actions={
-        {canConfigure && (
-          <Link to="/app/definicoes/pagamentos">
-            <Button variant="secondary" size="sm"><CreditCard size={15} />Configurar pagamentos</Button>
-          </Link>
-        )}
-      }
+      actions={canConfigure ? (
+        <Link to="/app/definicoes/pagamentos">
+          <Button variant="secondary" size="sm"><CreditCard size={15} />Configurar pagamentos</Button>
+        </Link>
+      ) : undefined}
     >
       <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
         <MetricCard
