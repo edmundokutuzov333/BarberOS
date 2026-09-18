@@ -33,6 +33,8 @@ A ordem actual é:
 23. `20260918144319_public_barbershop_surface.sql`
 24. `20260918144500_appointment_token_cancel_returning_fix.sql`
 25. `20260918144535_public_barbershop_anon_boundary.sql`
+26. `20260918145000_public_booking_config.sql`
+27. `20260918145020_public_booking_deposit_config.sql`
 
 As versões 1 a 3 foram reconciliadas com o estado que já existia na base viva. A versão 4 já estava aplicada e foi mantida com a mesma versão no histórico Supabase.
 
@@ -159,3 +161,9 @@ Rescheduling uses the same availability engine and the same barber advisory lock
 `get_public_barbershop(p_slug)` is the read boundary for the public tenant page. It returns a single JSON payload containing the public shop profile, active services, active haircuts, active barbers, weekly shop hours and published reviews.
 
 Anonymous direct SELECT was revoked from the domain tables used by the public page. Public publication is now exposed through the dedicated SECURITY DEFINER RPC with `search_path=""`. Booking and availability RPCs remain the authoritative operational boundaries.
+
+## Phase 8: public booking wizard
+
+`/barbearia/:slug/marcar` is the public six-step booking flow. The frontend consumes the public shop contract, `get_available_days`, `get_available_slots` and finally `book_appointment`. It never inserts directly into appointments.
+
+The public payload now includes only the booking configuration needed for UX: max advance, lead time, slot interval and deposit rules. The database remains authoritative for the final deposit value and slot acceptance.
