@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ComponentType, type ReactNode } from 'react';
 import {
   BarChart3, CalendarDays, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight,
-  Clock3, Download, RefreshCw, Scissors, TrendingUp, UserCheck, UserPlus, UserX,
+  Clock3, Download, RefreshCw, Scissors, TrendingUp, UserCheck, UserPlus,
 } from 'lucide-react';
 import { Page } from '@/components/layout/Page';
 import { Button } from '@/components/ui/Button';
@@ -50,7 +50,7 @@ function num(value: number) {
   return new Intl.NumberFormat('pt-PT', { maximumFractionDigits: 0 }).format(Number(value || 0));
 }
 
-function RangeButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function RangeButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
@@ -66,7 +66,7 @@ function RangeButton({ active, onClick, children }: { active: boolean; onClick: 
 }
 
 function MetricCard({ label, value, detail, icon: Icon }: {
-  label: string; value: string; detail?: string; icon: React.ComponentType<{ size?: number; className?: string }>;
+  label: string; value: string; detail?: string; icon: ComponentType<{ size?: number; className?: string }>;
 }) {
   return (
     <Panel className="p-4 sm:p-5">
@@ -95,7 +95,7 @@ function OccupancyBar({ value }: { value: number }) {
   );
 }
 
-function Overview({ summary }: { summary: ReturnType<typeof Object.assign> & any }) {
+function Overview({ summary }: { summary: import('@/features/reports/api').ReportData['summary'] }) {
   return (
     <>
       <section className="grid grid-cols-2 lg:grid-cols-3 gap-3">
@@ -149,10 +149,11 @@ function Overview({ summary }: { summary: ReturnType<typeof Object.assign> & any
 }
 
 function Stat({ label, value }: { label: string; value: number | string }) {
+  const display = typeof value === 'number' ? num(value) : value;
   return (
     <div className="rounded-2xl bg-white/5 border border-white/5 p-3">
       <p className="t-label text-ink-lo">{label}</p>
-      <p className="t-card text-ink-hi mt-1">{num(Number(value))}</p>
+      <p className="t-card text-ink-hi mt-1">{display}</p>
     </div>
   );
 }
@@ -264,7 +265,7 @@ function BarberTable({ rows }: { rows: ReportBarberRow[] }) {
 function ReportTable({ title, subtitle, icon: Icon, headers, rows, emptyTitle, emptyBody }: {
   title: string;
   subtitle: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: ComponentType<{ size?: number; className?: string }>;
   headers: string[];
   rows: Array<Array<unknown>>;
   emptyTitle: string;
