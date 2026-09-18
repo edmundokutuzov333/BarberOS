@@ -33,6 +33,7 @@ A cadeia actual é:
 4. `20260918132513_security_hardening.sql`
 5. `20260918134600_domain_integrity.sql`
 6. `20260918134657_domain_integrity_contract.sql`
+7. `20260918135712_atomic_barber_save.sql`
 
 Future schema changes must be a new timestamped migration. Never rename an applied migration.
 
@@ -77,3 +78,5 @@ As mudanças de schema entram através de migrations.
 ## Fase 3: integridade do domínio
 
 A base PostgreSQL impõe invariantes para horários, limites de domínio e relações entre entidades do mesmo tenant. Reordenação e grelha de horários são persistidas por RPCs transaccionais e tipadas no frontend.
+
+A configuração de barbeiros usa o RPC transaccional save_barber para evitar estados parciais entre o barbeiro e os seus serviços.
