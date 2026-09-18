@@ -35,3 +35,7 @@ A ausência desse secret não é transformada numa falsa aprovação de database
 ## Release Gate
 
 A FASE 23 só fica fechada quando a pirâmide de testes está instalada e as suites que tenham ambiente dedicado executam contra esse ambiente.
+
+## Booking concurrency
+
+`scripts/test_booking_concurrency_phase23.py` opens two PostgreSQL transactions against the same slot and asserts one successful booking plus one `SLOT_TAKEN` or `SLOT_UNAVAILABLE`. Cleanup removes only the dedicated fixture appointments.
