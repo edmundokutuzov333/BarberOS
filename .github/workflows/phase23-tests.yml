@@ -71,6 +71,9 @@ jobs:
       - name: Component tests
         working-directory: frontend
         run: yarn test:components:phase23
+      - name: Page contracts
+        working-directory: frontend
+        run: yarn test:contracts:phase23
 
   e2e:
     name: Browser E2E
