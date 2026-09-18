@@ -1185,7 +1185,12 @@ export type Database = {
         Returns: undefined
       }
       reschedule_appointment_by_operator: {
-        Args: { p_appointment: string; p_new_start: string; p_shop: string }
+        Args: {
+          p_appointment: string
+          p_new_barber_id?: string
+          p_new_start: string
+          p_shop: string
+        }
         Returns: {
           appointment_id: string
           new_ends_at: string
