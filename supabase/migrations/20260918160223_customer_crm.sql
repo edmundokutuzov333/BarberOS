@@ -321,9 +321,9 @@ begin
     c.email,
     c.notes,
     c.preferences,
-    c.visits_count,
-    c.no_show_count,
-    c.last_visit_at,
+    case when v_is_barber then count(a.id) filter (where a.status='completed')::integer else c.visits_count end,
+    case when v_is_barber then count(a.id) filter (where a.status='no_show')::integer else c.no_show_count end,
+    case when v_is_barber then max(a.completed_at) filter (where a.status='completed') else c.last_visit_at end,
     (
       select a.starts_at
       from public.appointments a
