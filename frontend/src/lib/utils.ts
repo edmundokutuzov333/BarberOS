@@ -123,7 +123,6 @@ const ERRORS: Record<string, string> = {
   PAYMENT_REFERENCE_MISSING: 'O provider não devolveu uma referência de transação válida.',
   UNAUTHORIZED: 'Esta operação não está autorizada.',
   INVALID_CANCEL_REASON: 'O motivo do cancelamento é demasiado longo.',
-  BARBERSHOP_NOT_FOUND: 'Esta barbearia não está disponível.',
   PUBLIC_SHOP_INVALID_RESPONSE: 'Não foi possível carregar os dados públicos desta barbearia.',
   SERVICE_NOT_FOUND: 'Esse serviço já não está disponível.',
   INVALID_NAME: 'Escreve um nome com pelo menos 2 letras.',
