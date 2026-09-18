@@ -9,6 +9,7 @@ import { buildWhatsAppLink } from '@/lib/calendar';
 import { formatMT, humanError } from '@/lib/utils';
 import { useShop } from '@/lib/shop';
 import { useAvailableSlots } from '@/features/availability/api';
+import { useAgendaRealtime, type AgendaRealtimeStatus } from '@/features/agenda/realtime';
 import {
   useAgendaAppointments,
   useAgendaSchedule,
@@ -23,6 +24,26 @@ type ViewMode = 'day' | 'week';
 
 const PX_PER_MINUTE = 1.7;
 const GRID_STEP = 30;
+
+function RealtimeIndicator({ status }: { status: AgendaRealtimeStatus }) {
+  const connected = status === 'connected';
+  const label = connected ? 'Ao vivo' : status === 'connecting' ? 'A ligar…' : status === 'reconnecting' ? 'A reconectar…' : 'Ligação perdida';
+  return (
+    <span
+      data-testid="agenda-realtime-status"
+      aria-live="polite"
+      title={connected ? 'A agenda actualiza automaticamente.' : 'A agenda está a tentar restabelecer a ligação.'}
+      className="inline-flex items-center gap-2 t-label text-ink-mid"
+    >
+      <span
+        className="h-1.5 w-1.5 rounded-full"
+        style={{ background: connected ? 'var(--st-done)' : 'var(--st-pending)' }}
+        aria-hidden
+      />
+      {label}
+    </span>
+  );
+}
 
 function todayISO(timezone: string): string {
   const parts = new Intl.DateTimeFormat('en', {
@@ -315,6 +336,7 @@ export default function AgendaPage() {
   const scheduleQuery = useAgendaSchedule(shop?.id, range.start, addDays(range.start, view === 'day' ? 0 : 6));
   const actionMutation = useAppointmentAction();
   const rescheduleMutation = useOperatorReschedule();
+  const realtimeStatus = useAgendaRealtime(shop?.id);
 
   const rescheduleSlotsQuery = useAvailableSlots({
     slug: shop?.slug,
@@ -413,8 +435,14 @@ export default function AgendaPage() {
           <Button variant="ghost" size="sm" pill onClick={() => goPeriod(1)} aria-label="Período seguinte"><ChevronRight size={17} /></Button>
           <span className="t-body text-ink-hi capitalize">{label}</span>
         </div>
-        <div className="flex items-center gap-2 text-ink-mid"><Clock3 size={15} /><span className="t-label">{timezone}</span></div>
+        <div className="flex flex-wrap items-center justify-end gap-3 text-ink-mid"><RealtimeIndicator status={realtimeStatus} /><span className="inline-flex items-center gap-2 t-label"><Clock3 size={15} />{timezone}</span></div>
       </div>
+
+      {realtimeStatus === 'reconnecting' && (
+        <div className="mb-3 rounded-2xl border border-st-pending/20 bg-st-pending/10 px-4 py-3 t-label text-ink-mid" data-testid="agenda-realtime-reconnecting" aria-live="polite">
+          A ligação em tempo real foi interrompida. A agenda está a sincronizar novamente.
+        </div>
+      )}
 
       {appointmentsQuery.isLoading || scheduleQuery.isLoading ? (
         <div className="grid lg:grid-cols-[1fr_20rem] gap-4"><Skeleton className="h-[42rem]" lines={10} /><Skeleton className="h-64" lines={6} /></div>
