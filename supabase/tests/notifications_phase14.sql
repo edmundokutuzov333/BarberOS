@@ -49,7 +49,6 @@ declare
   v_failure record;
   v_sent public.notif_status;
   v_attempts integer;
-  v_retry timestamp with time zone;
 begin
   select id into v_shop from public.barbershops order by created_at limit 1;
   select id into v_appt from public.appointments order by created_at desc limit 1;
@@ -67,9 +66,12 @@ begin
   )
   returning id into v_notification;
 
-  select * into v_claim
-  from public.claim_notifications(1)
-  where id=v_notification;
+  perform 1 from public.claim_notifications(1) where id=v_notification;
+
+  select n.id,n.status,n.attempts
+  into v_claim
+  from public.notifications n
+  where n.id=v_notification;
 
   if v_claim.id is null or v_claim.status is distinct from 'processing' or v_claim.attempts <> 1 then
     raise exception 'FAIL: atomic claim did not move fixture to processing';
@@ -89,9 +91,12 @@ begin
   set next_attempt_at=now()-interval '1 second'
   where id=v_notification;
 
-  select * into v_claim
-  from public.claim_notifications(1)
-  where id=v_notification;
+  perform 1 from public.claim_notifications(1) where id=v_notification;
+
+  select n.id,n.status,n.attempts
+  into v_claim
+  from public.notifications n
+  where n.id=v_notification;
 
   if v_claim.id is null or v_claim.attempts <> 2 or v_claim.status is distinct from 'processing' then
     raise exception 'FAIL: second claim/backoff invalid';
