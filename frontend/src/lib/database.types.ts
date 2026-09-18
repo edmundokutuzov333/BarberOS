@@ -1353,6 +1353,7 @@ export type Database = {
       admin_update_support_ticket: {
         Args: {
           p_assigned_to?: string
+          p_clear_assignee?: boolean
           p_priority?: Database["public"]["Enums"]["support_ticket_priority"]
           p_status?: Database["public"]["Enums"]["support_ticket_status"]
           p_ticket: string
