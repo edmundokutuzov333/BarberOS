@@ -503,9 +503,8 @@ export default function AgendaPage() {
       <ManualBookingModal
         open={manualBookingOpen}
         onOpenChange={setManualBookingOpen}
-        onBooked={(result: ManualBookingResult) => {
+        onBooked={(_result: ManualBookingResult) => {
           void appointmentsQuery.refetch();
-          toast.success(result.status === 'confirmed' ? 'A nova marcação já está na agenda.' : 'A marcação foi criada e aguarda o sinal.');
         }}
       />
     </Page>
