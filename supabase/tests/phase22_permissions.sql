@@ -1,14 +1,13 @@
 -- BarberOS Phase 22 acceptance tests.
--- Runs inside one transaction and rolls back all temporary fixtures.
+-- All fixtures are temporary and are rolled back at the end.
 
 begin;
 
-do $$
+do $phase22$
 declare
   v_shop uuid;
   v_other_shop uuid;
   v_actor uuid;
-  v_owner uuid;
   v_admin uuid;
   v_slug text;
   v_barber uuid;
@@ -19,16 +18,8 @@ declare
   v_count bigint;
   v_error text;
 begin
-  select s.id into v_shop
-  from public.barbershops s
-  order by s.created_at
-  limit 1;
-
-  select s.id into v_other_shop
-  from public.barbershops s
-  where s.id<>v_shop
-  order by s.created_at
-  limit 1;
+  select s.id into v_shop from public.barbershops s order by s.created_at limit 1;
+  select s.id into v_other_shop from public.barbershops s where s.id<>v_shop order by s.created_at limit 1;
 
   if v_shop is null or v_other_shop is null then
     raise exception 'PHASE22_REQUIRES_TWO_SHOPS';
@@ -65,21 +56,10 @@ begin
 
   select s.slug into v_slug from public.barbershops s where s.id=v_shop;
 
-  reset role;
   set local role anon;
   perform set_config('request.jwt.claim.sub','',true);
   perform public.get_public_barbershop(v_slug);
-
   reset role;
-
-  select m.user_id into v_owner
-  from public.barbershop_members m
-  where m.barbershop_id=v_shop and m.role='owner'
-  limit 1;
-
-  if v_owner is null then
-    raise exception 'PHASE22_OWNER_UNAVAILABLE';
-  end if;
 
   insert into public.barbershop_members(barbershop_id,user_id,role)
   values(v_shop,v_actor,'owner');
@@ -90,9 +70,7 @@ begin
   order by sort_order,name
   limit 1;
 
-  if v_service is null then
-    raise exception 'PHASE22_SERVICE_FIXTURE_UNAVAILABLE';
-  end if;
+  if v_service is null then raise exception 'PHASE22_SERVICE_FIXTURE_UNAVAILABLE'; end if;
 
   insert into public.barbers(barbershop_id,user_id,display_name,is_active)
   values(v_shop,v_actor,'Phase 22 QA Barber',true)
@@ -131,9 +109,9 @@ begin
   if has_function_privilege('authenticated','public.finalize_payment_event(uuid,public.payment_state,text,text,text,jsonb)','EXECUTE') then raise exception 'CLIENT_PAYMENT_FINALIZE_EXPOSED'; end if;
   if has_function_privilege('authenticated','public.is_member(uuid,public.app_role[])','EXECUTE') then raise exception 'CLIENT_INTERNAL_ROLE_HELPER_EXPOSED'; end if;
 
+  -- Owner
   set local role authenticated;
   perform set_config('request.jwt.claim.sub',v_actor::text,true);
-
   perform public.list_members(v_shop);
   perform public.get_dashboard_snapshot(v_shop);
 
@@ -143,21 +121,16 @@ begin
   exception when others then
     get stacked diagnostics v_error=message_text;
   end;
-  if coalesce(v_error,'')<>'SHOP_OPERATOR_REQUIRED' then
-    raise exception 'CROSS_TENANT_OWNER_ACCESS_BREACHED: %',coalesce(v_error,'NO_ERROR');
-  end if;
+  if coalesce(v_error,'')<>'SHOP_OPERATOR_REQUIRED' then raise exception 'CROSS_TENANT_OWNER_ACCESS_BREACHED: %',coalesce(v_error,'NO_ERROR'); end if;
 
   reset role;
-  update public.barbershop_members
-  set role='manager'
-  where barbershop_id=v_shop and user_id=v_actor;
+  update public.barbershop_members set role='manager' where barbershop_id=v_shop and user_id=v_actor;
 
+  -- Manager
   set local role authenticated;
   perform set_config('request.jwt.claim.sub',v_actor::text,true);
-
   select count(*) into v_count from public.barbershop_members where barbershop_id=v_shop;
   if v_count<>1 then raise exception 'MANAGER_TEAM_ENUMERATION_BREACHED'; end if;
-
   perform public.get_dashboard_snapshot(v_shop);
   perform public.get_agenda_appointments(v_shop,timestamptz '2099-01-01 00:00:00+00',timestamptz '2099-01-02 00:00:00+00');
   perform public.get_payments(v_shop,null,10,0);
@@ -168,18 +141,14 @@ begin
   exception when others then
     get stacked diagnostics v_error=message_text;
   end;
-  if coalesce(v_error,'')<>'OWNER_REQUIRED' then
-    raise exception 'MANAGER_LIST_MEMBERS_BREACHED: %',coalesce(v_error,'NO_ERROR');
-  end if;
+  if coalesce(v_error,'')<>'OWNER_REQUIRED' then raise exception 'MANAGER_LIST_MEMBERS_BREACHED: %',coalesce(v_error,'NO_ERROR'); end if;
 
   reset role;
-  update public.barbershop_members
-  set role='barber'
-  where barbershop_id=v_shop and user_id=v_actor;
+  update public.barbershop_members set role='barber' where barbershop_id=v_shop and user_id=v_actor;
 
+  -- Barber
   set local role authenticated;
   perform set_config('request.jwt.claim.sub',v_actor::text,true);
-
   select count(*) into v_count from public.barbers where barbershop_id=v_shop and id=v_barber;
   if v_count<>1 then raise exception 'BARBER_OWN_PROFILE_NOT_VISIBLE'; end if;
   select count(*) into v_count from public.barbers where barbershop_id=v_shop and id<>v_barber;
@@ -187,7 +156,6 @@ begin
 
   select count(*) into v_count from public.customers where id=v_customer_own;
   if v_count<>1 then raise exception 'BARBER_OWN_CUSTOMER_NOT_VISIBLE'; end if;
-
   select count(*) into v_count from public.customers where id=v_customer_other;
   if v_count<>0 then raise exception 'BARBER_UNRELATED_CUSTOMER_VISIBLE'; end if;
 
@@ -210,9 +178,7 @@ begin
   exception when others then
     get stacked diagnostics v_error=message_text;
   end;
-  if coalesce(v_error,'')<>'SHOP_OPERATOR_REQUIRED' then
-    raise exception 'BARBER_WAITLIST_RPC_BREACHED: %',coalesce(v_error,'NO_ERROR');
-  end if;
+  if coalesce(v_error,'')<>'SHOP_OPERATOR_REQUIRED' then raise exception 'BARBER_WAITLIST_RPC_BREACHED: %',coalesce(v_error,'NO_ERROR'); end if;
 
   v_error := null;
   begin
@@ -220,9 +186,7 @@ begin
   exception when others then
     get stacked diagnostics v_error=message_text;
   end;
-  if coalesce(v_error,'')<>'SHOP_OPERATOR_REQUIRED' then
-    raise exception 'BARBER_PAYMENT_RPC_BREACHED: %',coalesce(v_error,'NO_ERROR');
-  end if;
+  if coalesce(v_error,'')<>'SHOP_OPERATOR_REQUIRED' then raise exception 'BARBER_PAYMENT_RPC_BREACHED: %',coalesce(v_error,'NO_ERROR'); end if;
 
   v_error := null;
   begin
@@ -230,9 +194,7 @@ begin
   exception when others then
     get stacked diagnostics v_error=message_text;
   end;
-  if coalesce(v_error,'')<>'SHOP_OPERATOR_REQUIRED' then
-    raise exception 'BARBER_NOTIFICATION_RPC_BREACHED: %',coalesce(v_error,'NO_ERROR');
-  end if;
+  if coalesce(v_error,'')<>'SHOP_OPERATOR_REQUIRED' then raise exception 'BARBER_NOTIFICATION_RPC_BREACHED: %',coalesce(v_error,'NO_ERROR'); end if;
 
   v_error := null;
   begin
@@ -240,18 +202,15 @@ begin
   exception when others then
     get stacked diagnostics v_error=message_text;
   end;
-  if coalesce(v_error,'')<>'OWNER_REQUIRED' then
-    raise exception 'BARBER_LIST_MEMBERS_BREACHED: %',coalesce(v_error,'NO_ERROR');
-  end if;
-
-  reset role;
+  if coalesce(v_error,'')<>'OWNER_REQUIRED' then raise exception 'BARBER_LIST_MEMBERS_BREACHED: %',coalesce(v_error,'NO_ERROR'); end if;
 
   -- Platform admin
+  reset role;
   set local role authenticated;
   perform set_config('request.jwt.claim.sub',v_admin::text,true);
   perform public.admin_get_overview();
-
   reset role;
-end $;
+end;
+$phase22$;
 
 rollback;
