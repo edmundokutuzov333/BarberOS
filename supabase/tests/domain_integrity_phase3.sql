@@ -1,0 +1,28 @@
+-- BarberOS Phase 3: read-only domain integrity acceptance
+with checks(name, ok) as (
+  values
+    ('migration_domain_integrity', exists(select 1 from supabase_migrations.schema_migrations where version='20260918134600' and name='domain_integrity')),
+    ('migration_domain_integrity_contract', exists(select 1 from supabase_migrations.schema_migrations where version='20260918134657' and name='domain_integrity_contract')),
+    ('working_hours_base_unique', exists(select 1 from pg_indexes where schemaname='public' and indexname='working_hours_base_unique')),
+    ('working_hours_barber_unique', exists(select 1 from pg_indexes where schemaname='public' and indexname='working_hours_barber_unique')),
+    ('barbers_shop_user_unique', exists(select 1 from pg_indexes where schemaname='public' and indexname='barbers_shop_user_unique')),
+    ('barber_services_service_idx', exists(select 1 from pg_indexes where schemaname='public' and indexname='barber_services_service_idx')),
+    ('domain_constraints', (select count(*)=15 from pg_constraint where connamespace='public'::regnamespace and conname in ('plans_price_nonnegative','plans_max_barbers_positive','barbershops_slot_interval_allowed','barbershops_lead_time_allowed','barbershops_advance_window_allowed','barbershops_deposit_hold_allowed','barbershops_deposit_value_allowed','haircuts_price_nonnegative','haircuts_duration_allowed','barbers_years_nonnegative','barbers_rating_allowed','barbers_rating_count_nonnegative','customers_visit_counts_nonnegative','appointments_duration_allowed','appointments_amounts_nonnegative'))),
+    ('waitlist_date_range_valid', exists(select 1 from pg_constraint where connamespace='public'::regnamespace and conname='waitlist_date_range_valid')),
+    ('payments_amount_nonnegative', exists(select 1 from pg_constraint where connamespace='public'::regnamespace and conname='payments_amount_nonnegative')),
+    ('reorder_services_function', exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname='reorder_services' and pg_get_function_identity_arguments(p.oid)='p_shop uuid, p_ids uuid[]')),
+    ('reorder_haircuts_function', exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname='reorder_haircuts' and pg_get_function_identity_arguments(p.oid)='p_shop uuid, p_ids uuid[]')),
+    ('reorder_barbers_function', exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname='reorder_barbers' and pg_get_function_identity_arguments(p.oid)='p_shop uuid, p_ids uuid[]')),
+    ('replace_working_hours_function', exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname='replace_working_hours' and pg_get_function_identity_arguments(p.oid)='p_shop uuid, p_rows jsonb, p_barber_id uuid')),
+    ('replace_working_hours_authenticated_only', has_function_privilege('authenticated','public.replace_working_hours(uuid,jsonb,uuid)','execute') and not has_function_privilege('anon','public.replace_working_hours(uuid,jsonb,uuid)','execute')),
+    ('reorder_services_authenticated_only', has_function_privilege('authenticated','public.reorder_services(uuid,uuid[])','execute') and not has_function_privilege('anon','public.reorder_services(uuid,uuid[])','execute')),
+    ('tenant_trigger_working_hours', exists(select 1 from pg_trigger t where t.tgrelid='public.working_hours'::regclass and t.tgname='validate_domain_tenant_integrity' and not t.tgisinternal)),
+    ('tenant_trigger_appointments', exists(select 1 from pg_trigger t where t.tgrelid='public.appointments'::regclass and t.tgname='validate_domain_tenant_integrity' and not t.tgisinternal)),
+    ('tenant_trigger_reviews', exists(select 1 from pg_trigger t where t.tgrelid='public.reviews'::regclass and t.tgname='validate_domain_tenant_integrity' and not t.tgisinternal)),
+    ('no_working_hours_duplicates', not exists(select 1 from public.working_hours group by barbershop_id, barber_id, weekday having count(*) > 1)),
+    ('no_cross_tenant_barber_services', not exists(select 1 from public.barber_services bs join public.barbers b on b.id=bs.barber_id join public.services s on s.id=bs.service_id where b.barbershop_id<>s.barbershop_id)),
+    ('no_cross_tenant_haircuts_services', not exists(select 1 from public.haircuts h join public.services s on s.id=h.service_id where h.service_id is not null and h.barbershop_id<>s.barbershop_id)),
+    ('no_cross_tenant_appointments', not exists(select 1 from public.appointments a left join public.barbers b on b.id=a.barber_id left join public.services s on s.id=a.service_id left join public.customers c on c.id=a.customer_id left join public.haircuts h on h.id=a.haircut_id where b.barbershop_id<>a.barbershop_id or s.barbershop_id<>a.barbershop_id or c.barbershop_id<>a.barbershop_id or (h.id is not null and h.barbershop_id<>a.barbershop_id))),
+    ('no_cross_tenant_waitlist', not exists(select 1 from public.waitlist_entries w left join public.services s on s.id=w.service_id left join public.barbers b on b.id=w.barber_id left join public.haircuts h on h.id=w.haircut_id where s.barbershop_id<>w.barbershop_id or (b.id is not null and b.barbershop_id<>w.barbershop_id) or (h.id is not null and h.barbershop_id<>w.barbershop_id)))
+)
+select bool_and(ok) as passed, coalesce(string_agg(name, ', ' order by name) filter (where not ok),'') as failures from checks;
