@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Mail, MessageCircle, Pencil, Phone, Plus, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate, useParams } from 'react-router-dom';
+import type { Json } from '@/lib/database.types';
 import { Page } from '@/components/layout/Page';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
@@ -20,8 +21,10 @@ function readPreferenceTags(value: unknown): string[] {
   return tags.filter((tag): tag is string => typeof tag === 'string').map((tag) => tag.trim()).filter(Boolean);
 }
 
-function buildPreferences(value: unknown, tags: string[]) {
-  const base = value && typeof value === 'object' && !Array.isArray(value) ? { ...(value as Record<string, unknown>) } : {};
+function buildPreferences(value: Json, tags: string[]): Json {
+  const base = value && typeof value === 'object' && !Array.isArray(value)
+    ? value as { [key: string]: Json | undefined }
+    : {};
   return { ...base, tags };
 }
 
