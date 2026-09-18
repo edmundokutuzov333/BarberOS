@@ -223,6 +223,7 @@ begin
     raise exception 'CRM_UPDATE_FAILED';
   end if;
 
+  v_error := null;
   begin
     perform public.update_customer(
       v_shop,
@@ -233,24 +234,33 @@ begin
       'nota actualizada',
       '{"tags":["VIP"]}'::jsonb
     );
-    raise exception 'CRM_PHONE_UNIQUENESS_NOT_ENFORCED';
+    v_error := 'SUCCESS';
   exception
     when others then
       v_error := sqlerrm;
   end;
+
+  if v_error='SUCCESS' then
+    raise exception 'CRM_PHONE_UNIQUENESS_NOT_ENFORCED';
+  end if;
 
   if position('CUSTOMER_PHONE_TAKEN' in coalesce(v_error,'')) = 0 then
     raise exception 'CRM_PHONE_CONFLICT_CONTRACT_FAILED: %',v_error;
   end if;
 
   if v_other_shop is not null then
+    v_error := null;
     begin
       perform public.get_customer(v_other_shop,v_customer);
-      raise exception 'CRM_CROSS_TENANT_READ_NOT_BLOCKED';
+      v_error := 'SUCCESS';
     exception
       when others then
         v_error := sqlerrm;
     end;
+
+    if v_error='SUCCESS' then
+      raise exception 'CRM_CROSS_TENANT_READ_NOT_BLOCKED';
+    end if;
 
     if position('CUSTOMER_NOT_FOUND' in coalesce(v_error,'')) = 0 then
       raise exception 'CRM_CROSS_TENANT_ERROR_CONTRACT_FAILED: %',v_error;
