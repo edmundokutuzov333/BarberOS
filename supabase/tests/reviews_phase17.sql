@@ -98,7 +98,7 @@ begin
   update public.appointments
   set status='completed',
       completed_at=now()-interval '30 minutes',
-      deposit_status=case when deposit_cents>0 then 'paid'::public.deposit_state else 'not_required'::public.deposit_state,
+      deposit_status=case when deposit_cents>0 then 'paid' else 'not_required' end,
       hold_expires_at=null
   where id=v_appt.id;
 
