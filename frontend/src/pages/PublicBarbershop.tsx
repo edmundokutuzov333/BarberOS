@@ -201,10 +201,10 @@ export default function PublicBarbershop() {
             <Panel title="Contacto" testId="public-shop-contact">
               <div id="contacto" className="space-y-2">
                 {shop.address && <div className="flex gap-3 rounded-2xl bg-white/5 p-4"><MapPin size={17} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Morada</p><p className="t-body text-ink-hi mt-1">{shop.address}</p></div></div>}
-                {hasWhatsApp && <a href={buildWhatsAppLink(shop.whatsapp!, 'Olá, gostaria de fazer uma marcação na ' + shop.name + '.')} target="_blank" rel="noreferrer" className="block"><Button full variant="primary"><MessageCircle size={16} />Marcar pelo WhatsApp</Button></a>}
-                {hasPhone && <a href={'tel:' + shop.phone} className="block"><Button full variant="secondary"><Phone size={16} />Ligar para a barbearia</Button></a>}
-                {shop.maps_url && <a href={shop.maps_url} target="_blank" rel="noreferrer" className="block"><Button full variant="secondary"><MapPin size={16} />Abrir no mapa</Button></a>}
-                {hasInstagram && <a href={socialInstagram(shop.instagram!)} target="_blank" rel="noreferrer" className="block"><Button full variant="ghost"><Instagram size={16} />Instagram</Button></a>}
+                {hasWhatsApp && <a href={buildWhatsAppLink(shop.whatsapp!, 'Olá, gostaria de fazer uma marcação na ' + shop.name + '.')} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 select-none w-full h-11 px-5 text-sm rounded-2xl border transition-colors duration-150" style={{ background: 'var(--accent-soft)', color: 'var(--accent-ink)', borderColor: 'transparent' }}><MessageCircle size={16} />Marcar pelo WhatsApp</a>}
+                {hasPhone && <a href={'tel:' + shop.phone} className="inline-flex items-center justify-center gap-2 select-none w-full h-11 px-5 text-sm rounded-2xl border transition-colors duration-150" style={{ background: 'var(--surface-2)', color: 'var(--text-hi)' , borderColor: 'rgba(255,255,255,.1)' }}><Phone size={16} />Ligar para a barbearia</a>}
+                {shop.maps_url && <a href={shop.maps_url} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 select-none w-full h-11 px-5 text-sm rounded-2xl border transition-colors duration-150" style={{ background: 'var(--surface-2)', color: 'var(--text-hi)', borderColor: 'rgba(255,255,255,.1)' }}><MapPin size={16} />Abrir no mapa</a>}
+                {hasInstagram && <a href={socialInstagram(shop.instagram!)} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 w-full h-11 px-5 text-sm rounded-2xl text-ink-mid hover:text-ink-hi hover:bg-white/5 transition-colors duration-150"><Instagram size={16} />Instagram</a>}
               </div>
             </Panel>
 
