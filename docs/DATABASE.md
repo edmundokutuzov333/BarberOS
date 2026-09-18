@@ -20,6 +20,7 @@ A ordem actual é:
 10. `20260918141607_booking_engine_2_0.sql`
 11. `20260918141851_20260918162700_booking_engine_2_0_phone_normalization.sql`
 12. `20260918141926_20260918163000_booking_engine_2_0_returning_fix.sql`
+13. `20260918142515_booking_engine_2_0_indexes.sql`
 
 As versões 1 a 3 foram reconciliadas com o estado que já existia na base viva. A versão 4 já estava aplicada e foi mantida com a mesma versão no histórico Supabase.
 
@@ -44,7 +45,7 @@ Estado verificado em 18 de Setembro de 2026:
 
 - 18 tabelas no schema public
 - 13 enums do domínio
-- 37 índices no schema public
+- 42 índices no schema public após a Fase 5
 - 94 constraints no schema public
 - 4 buckets de Storage
 - timezone padrão de negócio: Africa/Maputo
