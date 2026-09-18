@@ -1027,6 +1027,29 @@ export type Database = {
           needs_payment: boolean
         }[]
       }
+      book_appointment_manual: {
+        Args: {
+          p_barber_id: string
+          p_email?: string
+          p_haircut_id: string
+          p_internal_note?: string
+          p_name: string
+          p_phone: string
+          p_service_id: string
+          p_shop: string
+          p_start: string
+        }
+        Returns: {
+          appointment_id: string
+          barber_id: string
+          deposit_cents: number
+          ends_at: string
+          manage_token: string
+          needs_payment: boolean
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+        }[]
+      }
       cancel_appointment_by_token: {
         Args: { p_reason?: string; p_token: string }
         Returns: {
