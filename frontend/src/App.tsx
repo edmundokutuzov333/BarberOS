@@ -24,6 +24,13 @@ import Vaga from './pages/Vaga';
 import ReviewSubmit from './pages/ReviewSubmit';
 import Relatorios from './pages/app/Relatorios';
 import Avaliacoes from './pages/app/Avaliacoes';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminBarbeariaDetalhe from './pages/admin/AdminBarbeariaDetalhe';
+import AdminUtilizadores from './pages/admin/AdminUtilizadores';
+import AdminPlanos from './pages/admin/AdminPlanos';
+import AdminPagamentos from './pages/admin/AdminPagamentos';
+import AdminSuporte from './pages/admin/AdminSuporte';
+import AdminMetricas from './pages/admin/AdminMetricas';
 
 export default function App() {
   return (
@@ -61,8 +68,14 @@ export default function App() {
         </Route>
         <Route element={<RequireAdmin />}>
           <Route path="/admin" element={<AdminShell />}>
-            <Route index element={<Navigate to="/admin/barbearias" replace />} />
+            <Route index element={<AdminDashboard />} />
             <Route path="barbearias" element={<AdminBarbearias />} />
+            <Route path="barbearias/:shopId" element={<AdminBarbeariaDetalhe />} />
+            <Route path="utilizadores" element={<AdminUtilizadores />} />
+            <Route path="planos" element={<AdminPlanos />} />
+            <Route path="pagamentos" element={<AdminPagamentos />} />
+            <Route path="suporte" element={<AdminSuporte />} />
+            <Route path="metricas" element={<AdminMetricas />} />
             <Route path="*" element={<NotYet />} />
           </Route>
         </Route>
