@@ -112,7 +112,7 @@ function text(value: string | null, fallback = "cliente"): string {
   return value?.trim() || fallback;
 }
 
-function urls(job: DispatchJob): { manageUrl: string; offerUrl: string } {
+function urls(job: DispatchJob): { manageUrl: string; offerUrl: string; reviewUrl: string } {
   const base = publicUrl();
   return {
     manageUrl: base && job.manage_token ? base + "/marcacao/" + job.manage_token : "",
@@ -335,7 +335,7 @@ async function sendEmail(job: DispatchJob, message: string): Promise<string> {
       from,
       to: [job.customer_email || job.recipient],
       subject: subjectFor(job.template_key, job.shop_name),
-      html: emailHtml(message, job.offer_token ? "Aceitar vaga" : "Gerir marcação", actionUrl),
+      html: emailHtml(message, job.offer_token ? "Aceitar vaga" : job.template_key === "review_request" ? "Avaliar visita" : "Gerir marcação", actionUrl),
       text: message,
     }),
   });
