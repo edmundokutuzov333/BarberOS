@@ -1,6 +1,14 @@
 import { type LucideIcon, LayoutDashboard, CalendarDays, ClipboardList, Users, Scissors, Sparkles, UserRound, Clock, Hourglass, Bell, Star, BarChart3, Settings, CreditCard } from 'lucide-react';
+import type { Role } from '@/lib/shop';
+import { canAccessAppRoute } from '@/lib/permissions';
 
-export interface NavItem { to: string; label: string; icon: LucideIcon; end?: boolean; testId: string }
+export interface NavItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  end?: boolean;
+  testId: string;
+}
 
 export const NAV: NavItem[] = [
   { to: '/app', label: 'Início', icon: LayoutDashboard, end: true, testId: 'nav-dashboard' },
@@ -20,3 +28,7 @@ export const NAV: NavItem[] = [
 ];
 
 export const DOCK = ['/app/agenda', '/app/marcacoes', '/app/clientes', '/app/relatorios'];
+
+export function navForRole(role: Role | null): NavItem[] {
+  return NAV.filter((item) => canAccessAppRoute(role, item.to));
+}
