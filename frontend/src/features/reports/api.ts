@@ -34,7 +34,6 @@ export async function getReportData(shopId: string, range: ReportRange): Promise
     p_shop: shopId,
     p_from: range.from,
     p_to: range.to,
-    p_barber_id: null,
   };
 
   const [summary, daily, services, haircuts, barbers] = await Promise.all([
