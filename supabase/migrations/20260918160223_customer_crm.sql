@@ -134,7 +134,31 @@ begin
 
   return query
   with visible as (
-    select c.*,
+    select c.id,c.name,c.phone,c.email,c.notes,c.preferences,c.created_at,
+      case when v_is_barber then (
+        select count(*)::integer
+        from public.appointments a
+        where a.barbershop_id=c.barbershop_id
+          and a.customer_id=c.id
+          and a.status='completed'
+          and a.barber_id=v_barber_id
+      ) else c.visits_count end as effective_visits,
+      case when v_is_barber then (
+        select count(*)::integer
+        from public.appointments a
+        where a.barbershop_id=c.barbershop_id
+          and a.customer_id=c.id
+          and a.status='no_show'
+          and a.barber_id=v_barber_id
+      ) else c.no_show_count end as effective_no_shows,
+      case when v_is_barber then (
+        select max(a.completed_at)
+        from public.appointments a
+        where a.barbershop_id=c.barbershop_id
+          and a.customer_id=c.id
+          and a.status='completed'
+          and a.barber_id=v_barber_id
+      ) else c.last_visit_at end as effective_last_visit,
       (
         select a.starts_at
         from public.appointments a
@@ -213,8 +237,8 @@ begin
     where
       v_view='all'
       or (v_view='upcoming' and upcoming_at is not null)
-      or (v_view='no_show' and f.no_show_count > 0)
-      or (v_view='never_visited' and f.visits_count=0)
+      or (v_view='no_show' and f.effective_no_shows > 0)
+      or (v_view='never_visited' and f.effective_visits=0)
   )
   select
     f.id,
@@ -223,9 +247,9 @@ begin
     f.email,
     f.notes,
     f.preferences,
-    f.visits_count,
-    f.no_show_count,
-    f.last_visit_at,
+    f.effective_visits,
+    f.effective_no_shows,
+    f.effective_last_visit,
     f.upcoming_at,
     f.upcoming_status,
     f.last_service,
@@ -235,7 +259,7 @@ begin
   from filtered f
   order by
     (f.upcoming_at is not null) desc,
-    coalesce(f.last_visit_at, f.created_at) desc,
+    coalesce(f.effective_last_visit, f.created_at) desc,
     lower(f.name),
     f.id
   limit v_limit
