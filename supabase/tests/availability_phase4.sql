@@ -121,34 +121,45 @@ begin
     insert into public.barber_services(barber_id,service_id)
     values(v_barber,v_test_service);
 
-    select slot_interval_min into v_original_interval
-    from public.barbershops where id=v_shop;
+    insert into public.customers(barbershop_id,name,phone)
+    values(v_shop,'Phase 4 40min Customer','+258820000002')
+    returning id into v_customer;
 
-    update public.barbershops
-    set slot_interval_min=15
-    where id=v_shop;
+    update public.barbershops set slot_interval_min=15 where id=v_shop;
 
     perform public.save_schedule_override(
       v_shop,v_day,v_barber,false,'10:00','12:00','other','40min-test',null
     );
 
-    select slot_start into v_slot
-    from public.get_available_slots(v_slug,v_test_service,v_barber,v_day)
-    where slot_start=((v_day::timestamp + time '10:00') at time zone (select timezone from public.barbershops where id=v_shop))
-    limit 1;
-
-    if v_slot is null then raise exception 'FORTY_MINUTE_10_00_MISSING'; end if;
+    insert into public.appointments(
+      barbershop_id,barber_id,service_id,customer_id,starts_at,ends_at,
+      duration_min,price_cents,status,deposit_status,deposit_cents,source
+    )
+    values(
+      v_shop,v_barber,v_test_service,v_customer,
+      ((v_day::timestamp + time '10:00') at time zone v_tz),
+      ((v_day::timestamp + time '10:40') at time zone v_tz),
+      40,100,'confirmed','not_required',0,'manual'
+    )
+    returning id into v_appt;
 
     if exists (
       select 1
       from public.get_available_slots(v_slug,v_test_service,v_barber,v_day)
       where slot_start in (
-        ((v_day::timestamp + time '10:15') at time zone (select timezone from public.barbershops where id=v_shop)),
-        ((v_day::timestamp + time '10:30') at time zone (select timezone from public.barbershops where id=v_shop))
+        ((v_day::timestamp + time '10:15') at time zone v_tz),
+        ((v_day::timestamp + time '10:30') at time zone v_tz)
       )
     ) then
       raise exception 'FORTY_MINUTE_OVERLAP_FAILED';
     end if;
+
+    select slot_start into v_slot
+    from public.get_available_slots(v_slug,v_test_service,v_barber,v_day)
+    where slot_start=((v_day::timestamp + time '10:45') at time zone v_tz)
+    limit 1;
+
+    if v_slot is null then raise exception 'FORTY_MINUTE_10_45_SHOULD_BE_FREE'; end if;
 
     raise exception 'ROLLBACK_40MIN_TEST';
   exception when others then
