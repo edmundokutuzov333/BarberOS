@@ -512,6 +512,11 @@ declare
   v_email text;
   v_notes text;
   v_preferences jsonb;
+  v_old_name text;
+  v_old_phone text;
+  v_old_email text;
+  v_old_notes text;
+  v_old_preferences jsonb;
 begin
   perform private.require_agenda_access(p_shop);
 
@@ -562,22 +567,23 @@ begin
     end if;
   end if;
 
-  if not exists (
-    select 1
-    from public.customers c
-    where c.id=p_customer
-      and c.barbershop_id=p_shop
-      and (
-        not v_is_barber
-        or exists (
-          select 1
-          from public.appointments a
-          where a.barbershop_id=p_shop
-            and a.customer_id=p_customer
-            and a.barber_id=v_barber_id
-        )
+  select c.name,c.phone,c.email,c.notes,c.preferences
+  into v_old_name,v_old_phone,v_old_email,v_old_notes,v_old_preferences
+  from public.customers c
+  where c.id=p_customer
+    and c.barbershop_id=p_shop
+    and (
+      not v_is_barber
+      or exists (
+        select 1
+        from public.appointments a
+        where a.barbershop_id=p_shop
+          and a.customer_id=p_customer
+          and a.barber_id=v_barber_id
       )
-  ) then
+    );
+
+  if not found then
     raise exception 'CUSTOMER_NOT_FOUND';
   end if;
 
@@ -601,11 +607,11 @@ begin
   values (
     p_shop,auth.uid(),'customer_updated','customer',p_customer,
     jsonb_build_object(
-      'phone_changed',(v_phone is distinct from (select c.phone from public.customers c where c.id=p_customer)),
-      'name_changed',(btrim(p_name) is distinct from (select c.name from public.customers c where c.id=p_customer)),
-      'email_present',(v_email is not null),
-      'notes_present',(v_notes is not null),
-      'preferences_present',(v_preferences <> '{}'::jsonb)
+      'phone_changed',(v_phone is distinct from v_old_phone),
+      'name_changed',(btrim(p_name) is distinct from v_old_name),
+      'email_changed',(v_email is distinct from v_old_email),
+      'notes_changed',(v_notes is distinct from v_old_notes),
+      'preferences_changed',(v_preferences is distinct from v_old_preferences)
     )
   );
 
