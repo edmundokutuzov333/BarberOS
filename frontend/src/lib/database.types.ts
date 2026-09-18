@@ -492,11 +492,16 @@ export type Database = {
       notifications: {
         Row: {
           appointment_id: string | null
+          attempts: number
           barbershop_id: string
           channel: Database["public"]["Enums"]["notif_channel"]
           error: string | null
+          fallback_url: string | null
           id: string
+          last_attempt_at: string | null
+          next_attempt_at: string | null
           payload: Json
+          provider_message_id: string | null
           recipient: string
           scheduled_for: string
           sent_at: string | null
@@ -506,11 +511,16 @@ export type Database = {
         }
         Insert: {
           appointment_id?: string | null
+          attempts?: number
           barbershop_id: string
           channel: Database["public"]["Enums"]["notif_channel"]
           error?: string | null
+          fallback_url?: string | null
           id?: string
+          last_attempt_at?: string | null
+          next_attempt_at?: string | null
           payload?: Json
+          provider_message_id?: string | null
           recipient: string
           scheduled_for?: string
           sent_at?: string | null
@@ -520,11 +530,16 @@ export type Database = {
         }
         Update: {
           appointment_id?: string | null
+          attempts?: number
           barbershop_id?: string
           channel?: Database["public"]["Enums"]["notif_channel"]
           error?: string | null
+          fallback_url?: string | null
           id?: string
+          last_attempt_at?: string | null
+          next_attempt_at?: string | null
           payload?: Json
+          provider_message_id?: string | null
           recipient?: string
           scheduled_for?: string
           sent_at?: string | null
@@ -542,7 +557,7 @@ export type Database = {
           },
           {
             foreignKeyName: "notifications_barbershop_id_fkey"
-            columns: ["barbershop_id"]
+            columns: ["appointment_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
             referencedColumns: ["id"]
@@ -1528,7 +1543,7 @@ export type Database = {
         | "failed"
         | "refunded"
       notif_channel: "whatsapp" | "email"
-      notif_status: "queued" | "sent" | "failed" | "skipped"
+      notif_status: "queued" | "sent" | "failed" | "skipped" | "processing"
       payment_provider: "mpesa" | "emola"
       payment_state: "pending" | "paid" | "failed" | "refunded"
       shop_status: "trial" | "active" | "suspended" | "cancelled"
@@ -1693,7 +1708,7 @@ export const Constants = {
       deposit_mode: ["percent", "fixed"],
       deposit_state: ["not_required", "awaiting", "paid", "failed", "refunded"],
       notif_channel: ["whatsapp", "email"],
-      notif_status: ["queued", "sent", "failed", "skipped"],
+      notif_status: ["queued", "sent", "failed", "skipped", "processing"],
       payment_provider: ["mpesa", "emola"],
       payment_state: ["pending", "paid", "failed", "refunded"],
       shop_status: ["trial", "active", "suspended", "cancelled"],
