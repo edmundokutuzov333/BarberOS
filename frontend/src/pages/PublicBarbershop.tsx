@@ -44,7 +44,7 @@ function BarberCard({ barber }: { barber: PublicBarber }) {
     <article className="rounded-3xl border border-white/10 bg-white/5 p-5 h-full">
       <div className="flex items-center gap-4">
         {barber.photo_url ? (
-          <img src={barber.photo_url} alt={barber.display_name} className="h-16 w-16 rounded-2xl object-cover" loading="lazy" />
+          <img src={barber.photo_url} alt={barber.display_name} className="h-16 w-16 rounded-2xl object-cover" width="64" height="64" loading="lazy" decoding="async" />
         ) : (
           <div aria-hidden className="h-16 w-16 rounded-2xl bg-accent-soft/15 border border-accent-soft/15 grid place-items-center text-accent-soft text-xl">{barber.display_name.slice(0, 1).toUpperCase()}</div>
         )}
@@ -152,7 +152,7 @@ export default function PublicBarbershop() {
         <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
           <div className="relative min-h-[22rem] sm:min-h-[30rem]">
             {shop.cover_url ? (
-              <img src={shop.cover_url} alt={shop.name} className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" />
+              <img src={shop.cover_url} alt={shop.name} className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" decoding="async" />
             ) : (
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(var(--accent-rgb),.3),transparent_45%),linear-gradient(135deg,var(--surface-2),var(--canvas-void))]" aria-hidden />
             )}
@@ -160,7 +160,7 @@ export default function PublicBarbershop() {
             <div className="absolute inset-x-0 bottom-0 p-6 sm:p-9">
               <div className="flex flex-col sm:flex-row sm:items-end gap-5">
                 {shop.logo_url ? (
-                  <img src={shop.logo_url} alt="Logótipo da barbearia" className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl object-cover border border-white/15 bg-black/30" />
+                  <img src={shop.logo_url} alt="Logótipo da barbearia" className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl object-cover border border-white/15 bg-black/30" width="96" height="96" decoding="async" />
                 ) : (
                   <div aria-hidden className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl border border-white/15 bg-black/30 backdrop-blur-xl grid place-items-center text-3xl font-medium text-ink-hi">{shop.name.slice(0, 1).toUpperCase()}</div>
                 )}
@@ -178,18 +178,21 @@ export default function PublicBarbershop() {
 
         <section className="mt-6 grid lg:grid-cols-[1.5fr_.5fr] gap-6 items-start">
           <div className="space-y-6">
+            <div className="perf-deferred">
             <Panel title="Serviços" aside={<span className="t-label text-ink-mid">{services.length}</span>}>
               {services.length ? (
                 <div className="grid sm:grid-cols-2 gap-3">{services.map((service) => <ServiceCard key={service.id} service={service} />)}</div>
               ) : <EmptyState title="Ainda sem serviços publicados" body="A barbearia ainda não disponibilizou serviços para marcação online." />}
             </Panel>
+            </div>
 
+            <div className="perf-deferred">
             <Panel title="Cortes" aside={<span className="t-label text-ink-mid">{haircuts.length}</span>}>
               {haircuts.length ? (
                 <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
                   {haircuts.map((cut: PublicHaircut) => (
                     <article key={cut.id} className="rounded-3xl border border-white/10 bg-white/5 overflow-hidden">
-                      {cut.photo_url ? <img src={cut.photo_url} alt={cut.name} className="w-full aspect-[4/3] object-cover" loading="lazy" /> : null}
+                      {cut.photo_url ? <img src={cut.photo_url} alt={cut.name} className="w-full aspect-[4/3] object-cover" loading="lazy" decoding="async" /> : null}
                       <div className="p-4">
                         <h3 className="t-card text-ink-hi">{cut.name}</h3>
                         {cut.description && <p className="t-body text-ink-mid mt-1.5">{cut.description}</p>}
@@ -200,13 +203,17 @@ export default function PublicBarbershop() {
                 </div>
               ) : <EmptyState title="Ainda sem cortes publicados" body="Os cortes configurados pela barbearia aparecerão aqui." />}
             </Panel>
+            </div>
 
+            <div className="perf-deferred">
             <Panel title="A equipa" aside={<span className="t-label text-ink-mid">{barbers.length}</span>}>
               {barbers.length ? (
                 <div className="grid sm:grid-cols-2 gap-3">{barbers.map((barber) => <BarberCard key={barber.id} barber={barber} />)}</div>
               ) : <EmptyState title="Ainda sem barbeiros publicados" body="A equipa desta barbearia ainda não está disponível publicamente." />}
             </Panel>
+            </div>
 
+            <div className="perf-deferred">
             <Panel title="Avaliações">
               {reviews.items.length ? (
                 <div className="space-y-3">
@@ -222,6 +229,7 @@ export default function PublicBarbershop() {
                 </div>
               ) : <EmptyState title="Ainda sem avaliações" body="As avaliações publicadas pelos clientes aparecerão aqui." />}
             </Panel>
+            </div>
           </div>
 
           <aside className="space-y-6 lg:sticky lg:top-6">
