@@ -113,7 +113,7 @@ function AppointmentCard({
   timezone: string;
   gridStart: number;
   onAction: (action: 'confirm' | 'start' | 'complete' | 'no_show' | 'cancel', appointment: AgendaAppointment) => void;
-  onReschedule: (appointment: AgendaAppointment) => void;
+  onReschedule: (appointment: AgendaAppointment, targetBarberId?: string) => void;
   busy: boolean;
 }) {
   const canDrag = allowed(appointment.status, 'reschedule') && !busy;
@@ -188,7 +188,7 @@ function DayGrid({
   schedule: AgendaSchedule[];
   appointments: AgendaAppointment[];
   onAction: (action: 'confirm' | 'start' | 'complete' | 'no_show' | 'cancel', appointment: AgendaAppointment) => void;
-  onReschedule: (appointment: AgendaAppointment) => void;
+  onReschedule: (appointment: AgendaAppointment, targetBarberId?: string) => void;
   busyId: string | null;
 }) {
   const dayRows = schedule.filter((row) => row.schedule_date === date);
@@ -207,15 +207,12 @@ function DayGrid({
     event.preventDefault();
     const sourceBarber = event.dataTransfer.getData('application/x-barberos-barber');
     const appointmentId = event.dataTransfer.getData('text/plain');
-    if (!appointmentId || sourceBarber !== barberId) {
-      toast.error('O arrasto mantém o barbeiro da marcação.');
-      return;
-    }
+    if (!appointmentId) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const raw = gridStart + Math.round(((event.clientY - rect.top) / PX_PER_MINUTE) / GRID_STEP) * GRID_STEP;
     const targetMinute = Math.max(gridStart, Math.min(gridEnd - GRID_STEP, raw));
     const appointment = appointments.find((x) => x.appointment_id === appointmentId);
-    if (appointment) onReschedule({ ...appointment, starts_at: toZonedStart(date, targetMinute, timezone) });
+    if (appointment) onReschedule({ ...appointment, starts_at: toZonedStart(date, targetMinute, timezone) }, barberId);
   };
 
   return (
@@ -267,7 +264,7 @@ function WeekBoard({
   timezone: string;
   appointments: AgendaAppointment[];
   onAction: (action: 'confirm' | 'start' | 'complete' | 'no_show' | 'cancel', appointment: AgendaAppointment) => void;
-  onReschedule: (appointment: AgendaAppointment) => void;
+  onReschedule: (appointment: AgendaAppointment, targetBarberId?: string) => void;
   busyId: string | null;
 }) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
@@ -371,7 +368,7 @@ export default function AgendaPage() {
     }
   };
 
-  const submitReschedule = async (newStart: string) => {
+  const submitReschedule = async (newStart: string, newBarberId?: string | null) => {
     if (!rescheduleAppointment) return;
     setBusyId(rescheduleAppointment.appointment_id);
     try {
@@ -379,6 +376,7 @@ export default function AgendaPage() {
         shopId: shop.id,
         appointmentId: rescheduleAppointment.appointment_id,
         newStart,
+        newBarberId,
       });
       toast.success('Marcação remarcada.');
       setRescheduleAppointment(null);
