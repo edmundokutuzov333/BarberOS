@@ -144,7 +144,7 @@ begin
   select b.id into v_shop
   from public.barbershops b
   where b.status in ('trial','active')
-  order by b.sort_order,b.id
+  order by b.created_at,b.id
   limit 1;
 
   select s.id into v_service
@@ -157,7 +157,7 @@ begin
   from public.barbers b
   join public.barber_services bs on bs.barber_id=b.id and bs.service_id=v_service
   where b.barbershop_id=v_shop and b.is_active
-  order by b.created_at
+  order by b.sort_order,b.id
   limit 1;
 
   if v_shop is null or v_service is null or v_barber is null then
