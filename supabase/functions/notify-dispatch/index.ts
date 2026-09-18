@@ -43,6 +43,7 @@ type TemplateData = {
   price: string;
   manageUrl: string;
   offerUrl: string;
+  reviewUrl: string;
   expiresAt: string;
   shopPhone: string;
 };
@@ -111,11 +112,12 @@ function text(value: string | null, fallback = "cliente"): string {
   return value?.trim() || fallback;
 }
 
-function urls(job: DispatchJob): { manageUrl: string; offerUrl: string } {
+function urls(job: DispatchJob): { manageUrl: string; offerUrl: string; reviewUrl: string } {
   const base = publicUrl();
   return {
     manageUrl: base && job.manage_token ? base + "/marcacao/" + job.manage_token : "",
     offerUrl: base && job.offer_token ? base + "/vaga/" + job.offer_token : "",
+    reviewUrl: base && job.manage_token ? base + "/marcacao/" + job.manage_token + "/avaliar" : "",
   };
 }
 
@@ -132,6 +134,7 @@ function dataFor(job: DispatchJob): TemplateData {
     price: mzn(job.price_cents),
     manageUrl: u.manageUrl,
     offerUrl: u.offerUrl,
+    reviewUrl: u.reviewUrl,
     expiresAt: expiryText(job.offer_expires_at, job.timezone),
     shopPhone: job.shop_phone?.trim() || job.shop_whatsapp?.trim() || "",
   };
@@ -255,6 +258,7 @@ function waParam(key: string, d: TemplateData): string {
     case "price": return d.price;
     case "manage_url": return d.manageUrl;
     case "offer_url": return d.offerUrl;
+    case "review_url": return d.reviewUrl;
     case "expires_at": return d.expiresAt;
     case "shop_phone": return d.shopPhone;
     default: return "";
@@ -319,7 +323,7 @@ async function sendEmail(job: DispatchJob, message: string): Promise<string> {
   if (!key || !from) throw new Error("EMAIL_PROVIDER_NOT_CONFIGURED");
 
   const u = urls(job);
-  const actionUrl = u.offerUrl || u.manageUrl;
+  const actionUrl = u.offerUrl || u.reviewUrl || u.manageUrl;
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -331,7 +335,7 @@ async function sendEmail(job: DispatchJob, message: string): Promise<string> {
       from,
       to: [job.customer_email || job.recipient],
       subject: subjectFor(job.template_key, job.shop_name),
-      html: emailHtml(message, job.offer_token ? "Aceitar vaga" : "Gerir marcação", actionUrl),
+      html: emailHtml(message, job.offer_token ? "Aceitar vaga" : job.template_key === "review_request" ? "Avaliar visita" : "Gerir marcação", actionUrl),
       text: message,
     }),
   });

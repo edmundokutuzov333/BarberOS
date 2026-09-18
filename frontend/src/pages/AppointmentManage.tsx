@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { CalendarPlus, CheckCircle2, Clock3, CreditCard, MapPin, MessageCircle, Scissors, ShieldCheck, Smartphone, UserRound, XCircle } from 'lucide-react';
+import { CalendarPlus, CheckCircle2, Clock3, CreditCard, MapPin, MessageCircle, Scissors, ShieldCheck, Smartphone, UserRound, XCircle, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { Brand } from '@/components/ui/Brand';
 import { Button } from '@/components/ui/Button';
@@ -391,6 +391,21 @@ export default function AppointmentManage() {
                 <Button full variant="secondary"><MessageCircle size={16} />Falar com a barbearia</Button>
               </a>
             )}
+          </div>
+        )}
+
+        {data.appointment_status === 'completed' && (
+          <div className="mt-4 rounded-3xl border border-accent-soft/20 bg-accent-soft/10 p-5 sm:p-6">
+            <div className="flex items-start gap-3">
+              <Star size={20} className="text-accent-soft mt-0.5 shrink-0" fill="currentColor" aria-hidden />
+              <div className="flex-1">
+                <p className="t-card text-ink-hi">Como correu a sua visita?</p>
+                <p className="t-body text-ink-mid mt-1">Deixe a sua avaliação da experiência. A avaliação fica disponível uma hora depois de o atendimento ser concluído.</p>
+                <Link to={token ? '/marcacao/' + token + '/avaliar' : '#'} className="inline-block mt-4">
+                  <Button variant="secondary"><Star size={15} />Avaliar visita</Button>
+                </Link>
+              </div>
+            </div>
           </div>
         )}
 

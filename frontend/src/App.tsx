@@ -21,6 +21,8 @@ import ListaEspera from './pages/app/ListaEspera';
 import Notificacoes from './pages/app/Notificacoes';
 import Pagamentos from './pages/app/Pagamentos';
 import Vaga from './pages/Vaga';
+import ReviewSubmit from './pages/ReviewSubmit';
+import Avaliacoes from './pages/app/Avaliacoes';
 
 export default function App() {
   return (
@@ -30,6 +32,7 @@ export default function App() {
       <Route path="/registar" element={<Registar />} />
       <Route path="/recuperar" element={<Recuperar />} />
       <Route path="/marcacao/:token" element={<AppointmentManage />} />
+      <Route path="/marcacao/:token/avaliar" element={<ReviewSubmit />} />
       <Route path="/vaga/:token" element={<Vaga />} />
       <Route path="/barbearia/:slug" element={<PublicBarbershop />} />
       <Route path="/barbearia/:slug/marcar" element={<BookingWizard />} />
@@ -45,6 +48,7 @@ export default function App() {
           <Route path="lista-espera" element={<ListaEspera />} />
           <Route path="notificacoes" element={<Notificacoes />} />
           <Route path="pagamentos" element={<Pagamentos />} />
+          <Route path="avaliacoes" element={<Avaliacoes />} />
           <Route path="servicos" element={<ServicosPage />} />
           <Route path="cortes" element={<CortesPage />} />
           <Route path="barbeiros" element={<BarbeirosPage />} />
