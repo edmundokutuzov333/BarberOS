@@ -183,11 +183,19 @@ begin
     raise exception 'FAIL: repeat submission was not idempotent';
   end if;
 
-  select count(*)::int into v_before_reviews from public.reviews;
-  if v_before_reviews<>(select count(*) from public.reviews where appointment_id=v_appt.id)
-     + v_before_reviews - (select count(*) from public.reviews where appointment_id=v_appt.id) then
-    raise exception 'FAIL: unreachable review count assertion';
+  select m.user_id
+    into v_owner
+  from public.barbershop_members m
+  where m.barbershop_id=v_appt.barbershop_id
+    and m.role='owner'
+  order by m.created_at
+  limit 1;
+
+  if v_owner is null then
+    raise exception 'FAIL: owner fixture unavailable for moderation';
   end if;
+
+  perform set_config('request.jwt.claim.sub',v_owner::text,true);
 
   select * into v_view_row from public.get_review_by_token(v_appt.manage_token);
   if not v_view_row.has_review
@@ -253,16 +261,6 @@ begin
   ) then
     raise exception 'FAIL: review moderation audit missing';
   end if;
-
-  select m.user_id
-    into v_owner
-  from public.barbershop_members m
-  where m.barbershop_id=v_appt.barbershop_id
-    and m.role='owner'
-  order by m.created_at
-  limit 1;
-
-  perform set_config('request.jwt.claim.sub',v_owner::text,true);
 
   perform public.get_reviews(
     v_appt.barbershop_id,
