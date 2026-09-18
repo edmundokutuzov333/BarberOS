@@ -10,6 +10,14 @@ import { RouteAnnouncer } from './components/ui/RouteAnnouncer';
 import { ShopProvider } from './lib/shop';
 import './index.css';
 
+const pathname = window.location.pathname;
+if (pathname.startsWith('/barbearia/')) {
+  void import('./pages/PublicBarbershop');
+}
+if (pathname.startsWith('/barbearia/') && pathname.endsWith('/marcar')) {
+  void import('./pages/BookingWizard');
+}
+
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 15_000, retry: 1, refetchOnWindowFocus: false } } });
 
 createRoot(document.getElementById('root')!).render(
