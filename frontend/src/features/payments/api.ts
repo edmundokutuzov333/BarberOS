@@ -138,6 +138,13 @@ export function useConfigurePaymentProvider() {
   });
 }
 
+export function useInitiatePayment() {
+  return useMutation({
+    mutationFn: initiatePayment,
+    retry: false,
+  });
+}
+
 export function usePaymentStatus(token?: string, enabled = true) {
   return useQuery({
     queryKey: ['payment-status', token],
