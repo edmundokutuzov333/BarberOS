@@ -1,9 +1,4 @@
 -- BarberOS Phase 1: security hardening
--- This migration is intentionally additive and preserves the existing domain engine.
--- It moves policy helper logic behind a non-exposed schema, removes direct DML on
--- sensitive operational tables, pins tenant ownership, and restricts API function
--- execution to the roles that actually need it.
-
 create schema if not exists private;
 
 create or replace function private.is_member(
