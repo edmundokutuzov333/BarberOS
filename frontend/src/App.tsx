@@ -12,6 +12,7 @@ import AdminBarbearias from './pages/admin/AdminBarbearias';
 import Definicoes from './pages/app/Definicoes';
 import AppointmentManage from './pages/AppointmentManage';
 import PublicBarbershop from './pages/PublicBarbershop';
+import BookingWizard from './pages/BookingWizard';
 import { ServicosPage, CortesPage, BarbeirosPage, HorariosPage } from './pages/app/ConfigPages';
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
       <Route path="/recuperar" element={<Recuperar />} />
       <Route path="/marcacao/:token" element={<AppointmentManage />} />
       <Route path="/barbearia/:slug" element={<PublicBarbershop />} />
+      <Route path="/barbearia/:slug/marcar" element={<BookingWizard />} />
 
       <Route element={<RequireAuth />}>
         <Route path="/app" element={<AppShell />}>
