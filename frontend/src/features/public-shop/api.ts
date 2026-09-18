@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { Json } from '@/lib/database.types';
+import { z } from 'zod';
 import { supabase } from '@/lib/supabase';
 
 export type PublicShop = {
@@ -8,7 +8,6 @@ export type PublicShop = {
   address: string | null; maps_url: string | null; lat: number | null; lng: number | null;
   timezone: string; status: 'trial' | 'active'; deposit_enabled: boolean;
 };
-
 export type PublicService = { id: string; name: string; price_cents: number; duration_min: number; requires_deposit: boolean };
 export type PublicHaircut = { id: string; service_id: string | null; name: string; description: string | null; photo_url: string | null; price_cents: number | null; duration_min: number | null };
 export type PublicBarber = { id: string; display_name: string; photo_url: string | null; bio: string | null; years_experience: number; rating_avg: number; rating_count: number; service_ids: string[] };
@@ -17,16 +16,21 @@ export type PublicReview = { rating: number; comment: string | null; created_at:
 export type PublicReviews = { rating_avg: number; rating_count: number; items: PublicReview[] };
 export type PublicBarbershopPayload = { shop: PublicShop; services: PublicService[]; haircuts: PublicHaircut[]; barbers: PublicBarber[]; working_hours: PublicWorkingHour[]; reviews: PublicReviews };
 
-function isRecord(value: Json): value is { [key: string]: Json | undefined } {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function asPayload(value: Json): PublicBarbershopPayload {
-  if (!isRecord(value) || !isRecord(value.shop) || !Array.isArray(value.services) || !Array.isArray(value.haircuts) || !Array.isArray(value.barbers) || !Array.isArray(value.working_hours) || !isRecord(value.reviews)) {
-    throw new Error('PUBLIC_SHOP_INVALID_RESPONSE');
-  }
-  return value as unknown as PublicBarbershopPayload;
-}
+const nullableUrl = z.string().nullable();
+const publicPayloadSchema = z.object({
+  shop: z.object({
+    name: z.string().min(1), slug: z.string().min(1), description: z.string().nullable(),
+    logo_url: nullableUrl, cover_url: nullableUrl, theme_key: z.string().min(1),
+    phone: z.string().nullable(), whatsapp: z.string().nullable(), instagram: z.string().nullable(),
+    address: z.string().nullable(), maps_url: nullableUrl, lat: z.number().nullable(), lng: z.number().nullable(),
+    timezone: z.string().min(1), status: z.enum(['trial', 'active']), deposit_enabled: z.boolean(),
+  }),
+  services: z.array(z.object({ id: z.string().uuid(), name: z.string().min(1), price_cents: z.number().int().nonnegative(), duration_min: z.number().int().positive(), requires_deposit: z.boolean() })),
+  haircuts: z.array(z.object({ id: z.string().uuid(), service_id: z.string().uuid().nullable(), name: z.string().min(1), description: z.string().nullable(), photo_url: nullableUrl, price_cents: z.number().int().nonnegative().nullable(), duration_min: z.number().int().positive().nullable() })),
+  barbers: z.array(z.object({ id: z.string().uuid(), display_name: z.string().min(1), photo_url: nullableUrl, bio: z.string().nullable(), years_experience: z.number().int().nonnegative(), rating_avg: z.number().nonnegative(), rating_count: z.number().int().nonnegative(), service_ids: z.array(z.string().uuid()) })),
+  working_hours: z.array(z.object({ weekday: z.number().int().min(0).max(6), opens_at: z.string(), closes_at: z.string(), is_closed: z.boolean() })),
+  reviews: z.object({ rating_avg: z.number().nonnegative(), rating_count: z.number().int().nonnegative(), items: z.array(z.object({ rating: z.number().int().min(1).max(5), comment: z.string().nullable(), created_at: z.string() })) }),
+}).strict();
 
 export async function getPublicBarbershop(slug: string): Promise<PublicBarbershopPayload> {
   const normalized = slug.trim().toLowerCase();
@@ -34,7 +38,9 @@ export async function getPublicBarbershop(slug: string): Promise<PublicBarbersho
   const { data, error } = await supabase.rpc('get_public_barbershop', { p_slug: normalized });
   if (error) throw error;
   if (!data) throw new Error('BARBERSHOP_NOT_FOUND');
-  return asPayload(data);
+  const parsed = publicPayloadSchema.safeParse(data);
+  if (!parsed.success) throw new Error('PUBLIC_SHOP_INVALID_RESPONSE');
+  return parsed.data as PublicBarbershopPayload;
 }
 
 export function usePublicBarbershop(slug?: string) {
