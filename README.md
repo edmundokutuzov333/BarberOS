@@ -39,6 +39,7 @@ A cadeia actual é:
 10. `20260918141607_booking_engine_2_0.sql`
 11. `20260918141851_20260918162700_booking_engine_2_0_phone_normalization.sql`
 12. `20260918141926_20260918163000_booking_engine_2_0_returning_fix.sql`
+13. `20260918142515_booking_engine_2_0_indexes.sql`
 
 Future schema changes must be a new timestamped migration. Never rename an applied migration.
 
