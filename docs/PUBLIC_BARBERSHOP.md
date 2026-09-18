@@ -47,3 +47,6 @@ Os horários mostrados são os horários semanais da loja. Excepções de data e
 ## Booking
 
 A página não duplica o Booking Engine. A marcação online será acrescentada na Fase 8 através dos RPCs já existentes para disponibilidade e booking.
+## Fase 8: integração com a marcação
+
+A superfície pública inclui agora acesso à marcação online através de `/barbearia/:slug/marcar` quando existe pelo menos um serviço associado a um barbeiro activo. A página pública não promete booking quando essa condição real não existe.
