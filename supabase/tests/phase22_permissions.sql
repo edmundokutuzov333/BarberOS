@@ -162,11 +162,10 @@ begin
   set local role authenticated;
   perform set_config('request.jwt.claim.sub',v_actor::text,true);
 
-  select count(*) into v_count from public.barbers where barbershop_id=v_shop;
-  if v_count<>1 then raise exception 'BARBER_BARBER_DIRECTORY_BREACHED'; end if;
-
-  select count(*) into v_count from public.customers where barbershop_id=v_shop;
-  if v_count<>1 then raise exception 'BARBER_CUSTOMER_SCOPE_BREACHED'; end if;
+  select count(*) into v_count from public.barbers where barbershop_id=v_shop and id=v_barber;
+  if v_count<>1 then raise exception 'BARBER_OWN_PROFILE_NOT_VISIBLE'; end if;
+  select count(*) into v_count from public.barbers where barbershop_id=v_shop and id<>v_barber;
+  if v_count<>0 then raise exception 'BARBER_OTHER_PROFILES_VISIBLE'; end if;
 
   select count(*) into v_count from public.customers where id=v_customer_own;
   if v_count<>1 then raise exception 'BARBER_OWN_CUSTOMER_NOT_VISIBLE'; end if;
@@ -174,8 +173,10 @@ begin
   select count(*) into v_count from public.customers where id=v_customer_other;
   if v_count<>0 then raise exception 'BARBER_UNRELATED_CUSTOMER_VISIBLE'; end if;
 
-  select count(*) into v_count from public.appointments where barbershop_id=v_shop;
-  if v_count<>1 then raise exception 'BARBER_APPOINTMENT_SCOPE_BREACHED'; end if;
+  select count(*) into v_count from public.appointments where id=v_appointment;
+  if v_count<>1 then raise exception 'BARBER_OWN_APPOINTMENT_NOT_VISIBLE'; end if;
+  select count(*) into v_count from public.appointments where barbershop_id=v_shop and id<>v_appointment;
+  if v_count<>0 then raise exception 'BARBER_OTHER_APPOINTMENTS_VISIBLE'; end if;
 
   select count(*) into v_count from public.waitlist_entries where barbershop_id=v_shop;
   if v_count<>0 then raise exception 'BARBER_WAITLIST_DIRECT_READ_BREACHED'; end if;
