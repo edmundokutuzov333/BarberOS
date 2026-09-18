@@ -1032,6 +1032,22 @@ export type Database = {
         }[]
       }
       my_barber_id: { Args: { p_shop: string }; Returns: string }
+      reorder_barbers: {
+        Args: { p_ids: string[]; p_shop: string }
+        Returns: undefined
+      }
+      reorder_haircuts: {
+        Args: { p_ids: string[]; p_shop: string }
+        Returns: undefined
+      }
+      reorder_services: {
+        Args: { p_ids: string[]; p_shop: string }
+        Returns: undefined
+      }
+      replace_working_hours: {
+        Args: { p_barber_id?: string; p_rows: Json; p_shop: string }
+        Returns: undefined
+      }
       seed_haircut_catalogue: { Args: { p_shop: string }; Returns: number }
       shop_is_public: { Args: { p_shop: string }; Returns: boolean }
     }
