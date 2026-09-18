@@ -78,7 +78,7 @@ export async function getWaitlist(
   const { data, error } = await supabase.rpc('get_waitlist', {
     p_shop: shopId,
     p_status: status,
-    p_search: search.trim() || null,
+    p_search: search.trim() || undefined,
     p_limit: limit,
     p_offset: offset,
   });
