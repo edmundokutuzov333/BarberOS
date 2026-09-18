@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ArrowRight, CalendarClock, CheckCircle2, Clock3, MessageCircle, Scissors, UserRound, XCircle } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -193,7 +193,7 @@ export default function Vaga() {
   );
 }
 
-function Info({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function Info({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
       <div className="flex items-center gap-2 text-accent-soft"><span aria-hidden>{icon}</span><span className="t-label">{label}</span></div>
