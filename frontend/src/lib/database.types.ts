@@ -1029,10 +1029,10 @@ export type Database = {
       }
       book_appointment_manual: {
         Args: {
-          p_barber_id: string
-          p_email?: string
-          p_haircut_id: string
-          p_internal_note?: string
+          p_barber_id: string | null
+          p_email?: string | null
+          p_haircut_id: string | null
+          p_internal_note?: string | null
           p_name: string
           p_phone: string
           p_service_id: string
@@ -1059,9 +1059,9 @@ export type Database = {
       create_barbershop: {
         Args: {
           p_name: string
-          p_phone?: string
+          p_phone?: string | null
           p_slug: string
-          p_whatsapp?: string
+          p_whatsapp?: string | null
         }
         Returns: string
       }
@@ -1154,8 +1154,8 @@ export type Database = {
       }
       get_available_slots: {
         Args: {
-          p_barber_id?: string
-          p_date?: string
+          p_barber_id?: string | null
+          p_date?: string | null
           p_service_id: string
           p_slug: string
         }
@@ -1223,7 +1223,7 @@ export type Database = {
         Args: {
           p_limit?: number
           p_offset?: number
-          p_search?: string
+          p_search?: string | null
           p_shop: string
           p_view?: string
         }
@@ -1291,7 +1291,7 @@ export type Database = {
       reschedule_appointment_by_operator: {
         Args: {
           p_appointment: string
-          p_new_barber_id?: string
+          p_new_barber_id?: string | null
           p_new_start: string
           p_shop: string
         }
@@ -1310,25 +1310,25 @@ export type Database = {
       }
       save_barber: {
         Args: {
-          p_barber_id: string
+          p_barber_id: string | null
           p_bio: string
           p_display_name: string
-          p_photo_url: string
+          p_photo_url: string | null
           p_service_ids: string[]
           p_shop: string
-          p_user_id: string
+          p_user_id: string | null
           p_years_experience: number
         }
         Returns: string
       }
       save_schedule_override: {
         Args: {
-          p_barber_id?: string
-          p_closes_at?: string
-          p_id?: string
+          p_barber_id?: string | null
+          p_closes_at?: string | null
+          p_id?: string | null
           p_is_closed?: boolean
-          p_note?: string
-          p_opens_at?: string
+          p_note?: string | null
+          p_opens_at?: string | null
           p_override_date: string
           p_reason?: Database["public"]["Enums"]["block_reason"]
           p_shop: string
@@ -1341,7 +1341,7 @@ export type Database = {
         Args: {
           p_action: string
           p_appointment: string
-          p_reason?: string
+          p_reason?: string | null
           p_shop: string
         }
         Returns: {
@@ -1358,9 +1358,9 @@ export type Database = {
       update_customer: {
         Args: {
           p_customer: string
-          p_email?: string
+          p_email?: string | null
           p_name: string
-          p_notes?: string
+          p_notes?: string | null
           p_phone: string
           p_preferences?: Json
           p_shop: string
