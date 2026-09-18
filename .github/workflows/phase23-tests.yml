@@ -101,7 +101,7 @@ jobs:
         run: nohup yarn preview --host 127.0.0.1 --port 4173 > /tmp/barberos-preview.log 2>&1 &
       - name: Install Playwright
         working-directory: frontend
-        run: npm install --no-save --package-lock=false @playwright/test@1.56.1
+        run: npm install --no-save --package-lock=false --legacy-peer-deps @playwright/test@1.56.1
       - name: Install Chromium
         working-directory: frontend
         run: npx playwright install --with-deps chromium
