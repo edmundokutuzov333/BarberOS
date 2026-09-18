@@ -1150,7 +1150,7 @@ export type Database = {
         }[]
       }
       cancel_appointment_by_token: {
-        Args: { p_reason?: string; p_token: string }
+        Args: { p_reason?: string | null; p_token: string }
         Returns: {
           cancelled_at: string
         }[]
