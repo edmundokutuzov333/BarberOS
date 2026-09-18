@@ -174,6 +174,6 @@ begin
   end if;
 
   delete from public.notifications where id=v_notification;
-end $;
+end $$;
 
 rollback;
