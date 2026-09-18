@@ -88,7 +88,7 @@ export function BarbersEditor() {
       {q.isLoading ? <Skeleton className="h-40" /> : q.error ? <ErrorState message={humanError(q.error)} onRetry={() => q.refetch()} /> : q.data!.length === 0 ? (
         <EmptyState testId="barbers-empty" title="Ainda não tens barbeiros." body="Sem barbeiros activos, a agenda não abre." action={<Button data-testid="barbers-empty-add-btn" size="sm" pill onClick={() => open('new')}>Adicionar barbeiro</Button>} />
       ) : (
-        <SortableList items={q.data!} table="barbers" queryKey={key} testId="barbers-list" render={(b) => (
+        <SortableList items={q.data!} shopId={shop!.id} rpcName="reorder_barbers" queryKey={key} testId="barbers-list" render={(b) => (
           <div className="flex items-center gap-3">
             <div className="h-11 w-11 rounded-full overflow-hidden bg-[var(--surface-2)] grid place-items-center text-sm font-medium shrink-0">
               {b.photo_url ? <img src={b.photo_url} alt="" className="h-full w-full object-cover" /> : b.display_name.slice(0, 1)}
