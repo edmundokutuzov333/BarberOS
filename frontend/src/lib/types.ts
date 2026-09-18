@@ -8,6 +8,7 @@ export type Barber = Database['public']['Tables']['barbers']['Row'] & {
 export type WorkingHour = Database['public']['Tables']['working_hours']['Row'];
 export type BlockReason = Database['public']['Enums']['block_reason'];
 export type TimeBlock = Database['public']['Tables']['time_blocks']['Row'];
+export type ScheduleOverride = Database['public']['Tables']['schedule_overrides']['Row'];
 export type Member = Database['public']['Tables']['barbershop_members']['Row'] & {
   full_name: string | null;
   email: string;
