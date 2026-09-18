@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { RequireAuth, RequireAdmin, AppShell } from './components/layout/AppShell';
+import { RequireAuth, RequireAdmin, RequirePermission, AppShell } from './components/layout/AppShell';
 import { AdminShell } from './components/layout/AdminShell';
 import Landing from './pages/Landing';
 import Entrar from './pages/auth/Entrar';
@@ -8,7 +8,6 @@ import Recuperar from './pages/auth/Recuperar';
 import Dashboard from './pages/app/Dashboard';
 import Onboarding from './pages/app/Onboarding';
 import NotYet, { NotFound } from './pages/app/NotYet';
-import AdminBarbearias from './pages/admin/AdminBarbearias';
 import Definicoes from './pages/app/Definicoes';
 import AppointmentManage from './pages/AppointmentManage';
 import PublicBarbershop from './pages/PublicBarbershop';
@@ -25,6 +24,7 @@ import ReviewSubmit from './pages/ReviewSubmit';
 import Relatorios from './pages/app/Relatorios';
 import Avaliacoes from './pages/app/Avaliacoes';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminBarbearias from './pages/admin/AdminBarbearias';
 import AdminBarbeariaDetalhe from './pages/admin/AdminBarbeariaDetalhe';
 import AdminUtilizadores from './pages/admin/AdminUtilizadores';
 import AdminPlanos from './pages/admin/AdminPlanos';
@@ -49,23 +49,58 @@ export default function App() {
         <Route path="/app" element={<AppShell />}>
           <Route index element={<Dashboard />} />
           <Route path="onboarding" element={<Onboarding />} />
-          <Route path="agenda" element={<AgendaPage />} />
-          <Route path="marcacoes" element={<NotYet />} />
-          <Route path="clientes" element={<Clientes />} />
-          <Route path="clientes/:customerId" element={<ClienteDetalhe />} />
-          <Route path="lista-espera" element={<ListaEspera />} />
-          <Route path="notificacoes" element={<Notificacoes />} />
-          <Route path="pagamentos" element={<Pagamentos />} />
-          <Route path="avaliacoes" element={<Avaliacoes />} />
-          <Route path="relatorios" element={<Relatorios />} />
-          <Route path="servicos" element={<ServicosPage />} />
-          <Route path="cortes" element={<CortesPage />} />
-          <Route path="barbeiros" element={<BarbeirosPage />} />
-          <Route path="horarios" element={<HorariosPage />} />
-          <Route path="definicoes" element={<Navigate to="/app/definicoes/perfil" replace />} />
-          <Route path="definicoes/:tab" element={<Definicoes />} />
+
+          <Route element={<RequirePermission permission="view_agenda" />}>
+            <Route path="agenda" element={<AgendaPage />} />
+          </Route>
+
+          <Route element={<RequirePermission permission="view_appointments" />}>
+            <Route path="marcacoes" element={<NotYet />} />
+          </Route>
+
+          <Route element={<RequirePermission permission="view_customers" />}>
+            <Route path="clientes" element={<Clientes />} />
+            <Route path="clientes/:customerId" element={<ClienteDetalhe />} />
+          </Route>
+
+          <Route element={<RequirePermission permission="manage_waitlist" />}>
+            <Route path="lista-espera" element={<ListaEspera />} />
+          </Route>
+
+          <Route element={<RequirePermission permission="view_notifications" />}>
+            <Route path="notificacoes" element={<Notificacoes />} />
+          </Route>
+
+          <Route element={<RequirePermission permission="manage_payments" />}>
+            <Route path="pagamentos" element={<Pagamentos />} />
+          </Route>
+
+          <Route element={<RequirePermission permission="view_reviews" />}>
+            <Route path="avaliacoes" element={<Avaliacoes />} />
+          </Route>
+
+          <Route element={<RequirePermission permission="view_reports" />}>
+            <Route path="relatorios" element={<Relatorios />} />
+          </Route>
+
+          <Route element={<RequirePermission permission="manage_catalog" />}>
+            <Route path="servicos" element={<ServicosPage />} />
+            <Route path="cortes" element={<CortesPage />} />
+            <Route path="barbeiros" element={<BarbeirosPage />} />
+          </Route>
+
+          <Route element={<RequirePermission permission="manage_schedule" />}>
+            <Route path="horarios" element={<HorariosPage />} />
+          </Route>
+
+          <Route element={<RequirePermission permission="manage_settings" />}>
+            <Route path="definicoes" element={<Navigate to="/app/definicoes/perfil" replace />} />
+            <Route path="definicoes/:tab" element={<Definicoes />} />
+          </Route>
+
           <Route path="*" element={<NotYet />} />
         </Route>
+
         <Route element={<RequireAdmin />}>
           <Route path="/admin" element={<AdminShell />}>
             <Route index element={<AdminDashboard />} />
