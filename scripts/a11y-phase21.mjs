@@ -50,7 +50,7 @@ const cssPath = fs.existsSync(path.resolve('frontend/src/index.css'))
   : path.resolve('src/index.css');
 const css = fs.readFileSync(cssPath, 'utf8');
 for (const required of ['.skip-link', 'prefers-reduced-motion', 'focus-visible', 'env(safe-area-inset-bottom)']) {
-  if (!css.includes(required)) failures.push('frontend/src/index.css: missing ' + required);
+  if (!css.includes(required)) failures.push(path.relative(process.cwd(), cssPath) + ': missing ' + required);
 }
 
 if (failures.length) {
