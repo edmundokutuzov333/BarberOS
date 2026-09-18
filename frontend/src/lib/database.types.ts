@@ -1164,6 +1164,87 @@ export type Database = {
           slot_start: string
         }[]
       }
+      get_customer: {
+        Args: { p_customer: string; p_shop: string }
+        Returns: {
+          cancelled_appointments: number
+          completed_appointments: number
+          customer_id: string
+          email: string
+          last_barber_name: string
+          last_haircut_name: string
+          last_service_name: string
+          last_visit_at: string
+          name: string
+          next_appointment_at: string
+          next_appointment_status: Database["public"]["Enums"]["appointment_status"]
+          no_show_count: number
+          notes: string
+          phone: string
+          preferences: Json
+          total_appointments: number
+          total_spend_cents: number
+          visits_count: number
+        }[]
+      }
+      get_customer_appointments: {
+        Args: {
+          p_customer: string
+          p_limit?: number
+          p_offset?: number
+          p_shop: string
+        }
+        Returns: {
+          appointment_id: string
+          barber_name: string
+          deposit_cents: number
+          deposit_status: Database["public"]["Enums"]["deposit_state"]
+          ends_at: string
+          haircut_name: string
+          price_cents: number
+          service_name: string
+          source: Database["public"]["Enums"]["booking_source"]
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          total_count: number
+        }[]
+      }
+      get_customer_metrics: {
+        Args: { p_shop: string }
+        Returns: {
+          customers_visited_last_30d: number
+          customers_with_no_shows: number
+          customers_with_upcoming: number
+          returning_customers: number
+          total_customers: number
+        }[]
+      }
+      get_customers: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_shop: string
+          p_view?: string
+        }
+        Returns: {
+          customer_id: string
+          email: string
+          last_haircut_name: string
+          last_service_name: string
+          last_visit_at: string
+          name: string
+          next_appointment_at: string
+          next_appointment_status: Database["public"]["Enums"]["appointment_status"]
+          no_show_count: number
+          notes: string
+          phone: string
+          preferences: Json
+          total_count: number
+          total_spend_cents: number
+          visits_count: number
+        }[]
+      }
       get_public_barbershop: { Args: { p_slug: string }; Returns: Json }
       get_reschedule_slots_by_token: {
         Args: { p_date: string; p_token: string }
@@ -1272,6 +1353,28 @@ export type Database = {
           previous_status: Database["public"]["Enums"]["appointment_status"]
           started_at: string
           status: Database["public"]["Enums"]["appointment_status"]
+        }[]
+      }
+      update_customer: {
+        Args: {
+          p_customer: string
+          p_email?: string
+          p_name: string
+          p_notes?: string
+          p_phone: string
+          p_preferences?: Json
+          p_shop: string
+        }
+        Returns: {
+          customer_id: string
+          email: string
+          last_visit_at: string
+          name: string
+          no_show_count: number
+          notes: string
+          phone: string
+          preferences: Json
+          visits_count: number
         }[]
       }
     }
