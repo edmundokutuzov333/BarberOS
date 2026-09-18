@@ -4,6 +4,8 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { MoreHorizontal, LogOut, X } from 'lucide-react';
 import { NAV, DOCK } from './nav';
 import { useAuth } from '@/lib/auth';
+import { useShop } from '@/lib/shop';
+import { can } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
 
 export function MobileDock() {
@@ -11,12 +13,14 @@ export function MobileDock() {
   const reduce = useReducedMotion();
   const { pathname } = useLocation();
   const { signOut } = useAuth();
+  const { role } = useShop();
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const moreRef = useRef<HTMLButtonElement | null>(null);
 
-  const dockItems = NAV.filter((n) => DOCK.includes(n.to));
-  const rest = NAV.filter((n) => !DOCK.includes(n.to));
-  const activeTo = NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)))?.to;
+  const visibleNav = NAV.filter((n) => !n.permission || can(role, n.permission));
+  const dockItems = visibleNav.filter((n) => DOCK.includes(n.to));
+  const rest = visibleNav.filter((n) => !DOCK.includes(n.to));
+  const activeTo = visibleNav.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)))?.to;
   const moreActive = !!activeTo && !DOCK.includes(activeTo);
   const spring = reduce ? { duration: 0 } : { type: 'spring' as const, stiffness: 350, damping: 30 };
 
