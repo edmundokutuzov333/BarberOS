@@ -17,9 +17,9 @@ A ordem actual é:
 7. `20260918135712_atomic_barber_save.sql`
 8. `20260918140253_availability_engine_2.sql`
 9. `20260918140609_availability_security.sql`
-7. `20260918135712_atomic_barber_save.sql`
-8. `20260918140253_availability_engine_2.sql`
-9. `20260918140609_availability_security.sql`
+10. `20260918141607_booking_engine_2_0.sql`
+11. `20260918141851_20260918162700_booking_engine_2_0_phone_normalization.sql`
+12. `20260918141926_20260918163000_booking_engine_2_0_returning_fix.sql`
 
 As versões 1 a 3 foram reconciliadas com o estado que já existia na base viva. A versão 4 já estava aplicada e foi mantida com a mesma versão no histórico Supabase.
 
@@ -126,3 +126,11 @@ O motor de slots recusa datas passadas, respeita `max_advance_days` em data e em
 O acesso público recebe apenas a função de disponibilidade. A tabela `schedule_overrides` não é exposta ao cliente anónimo. Alterações de calendário usam `save_schedule_override` e `delete_schedule_override`, restritos a owner/manager.
 
 O contrato de consumo React está em `frontend/src/features/availability/api.ts`.
+
+## Phase 5: Booking Engine 2.0
+
+`book_appointment` é o limite transaccional para criação de marcações online. A função valida e resolve as entidades dentro do tenant, adquire `pg_advisory_xact_lock`, reconsulta `get_available_slots`, faz upsert do cliente, calcula o sinal, insere a marcação, enfileira notificações e cria o audit log na mesma unidade de trabalho.
+
+A tabela `appointments` continua sem INSERT directo para anon/authenticated. O conflito de concorrência é traduzido para `SLOT_TAKEN`, mantendo a exclusion constraint `appointments_no_overlap` como última barreira.
+
+Os tipos e o consumidor React estão em `frontend/src/features/booking/api.ts`. A suíte em `supabase/tests/booking_phase5.sql` usa apenas blocos rollback-only.
