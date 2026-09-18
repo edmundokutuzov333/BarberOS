@@ -32,7 +32,7 @@ export function useAgendaRealtime(shopId?: string): AgendaRealtimeStatus {
           filter: 'barbershop_id=eq.' + shopId,
         },
         () => {
-          void queryClient.invalidateQueries({ queryKey: ['agenda'] });
+          void queryClient.invalidateQueries({ queryKey: ['agenda', 'appointments'] });
           void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         },
       )
@@ -45,7 +45,7 @@ export function useAgendaRealtime(shopId?: string): AgendaRealtimeStatus {
           filter: 'barbershop_id=eq.' + shopId,
         },
         () => {
-          void queryClient.invalidateQueries({ queryKey: ['agenda'] });
+          void queryClient.invalidateQueries({ queryKey: ['agenda', 'appointments'] });
           void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         },
       )
@@ -54,13 +54,13 @@ export function useAgendaRealtime(shopId?: string): AgendaRealtimeStatus {
 
         if (nextStatus === 'SUBSCRIBED') {
           setStatus('connected');
-          void queryClient.invalidateQueries({ queryKey: ['agenda'] });
+          void queryClient.invalidateQueries({ queryKey: ['agenda', 'appointments'] });
           return;
         }
 
         if (nextStatus === 'CHANNEL_ERROR' || nextStatus === 'TIMED_OUT') {
           setStatus('reconnecting');
-          void queryClient.invalidateQueries({ queryKey: ['agenda'] });
+          void queryClient.invalidateQueries({ queryKey: ['agenda', 'appointments'] });
           return;
         }
 
