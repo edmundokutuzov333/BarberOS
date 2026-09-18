@@ -1,3 +1,7 @@
+drop function if exists public.get_waitlist(uuid,text,text,integer,integer);
+drop function if exists public.get_waitlist_metrics(uuid);
+drop function if exists public.get_waitlist_offer(uuid);
+
 -- BarberOS Phase 13: Waitlist operational read models.
 
 create or replace function public.get_waitlist(
