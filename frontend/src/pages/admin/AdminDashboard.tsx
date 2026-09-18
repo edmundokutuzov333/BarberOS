@@ -1,4 +1,4 @@
-import { Building2, TrendingUp, UserPlus, Users, WalletCards, Star, Activity } from 'lucide-react';
+import { Building2, TrendingUp, UserPlus, Users, WalletCards, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Page } from '@/components/layout/Page';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
