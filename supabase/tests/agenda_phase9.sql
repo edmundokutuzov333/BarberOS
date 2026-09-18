@@ -60,7 +60,7 @@ begin
 
   begin
     perform public.reschedule_appointment_by_operator(
-      v_shop,v_appt,v_start + interval '30 minutes'
+      v_shop,v_appt,v_start + interval '30 minutes',null
     );
     raise exception 'UNAUTHENTICATED_RESCHEDULE_ACCEPTED';
   exception when others then
