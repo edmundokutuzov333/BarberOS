@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { queryPayment, type PaymentProvider, type ProviderConfig } from "../_shared/payment-providers.ts";
+import { queryPayment, type PaymentProvider, type ProviderConfig } from "./payment-providers.ts";
 
 const cors={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
 function secretKey():string{
