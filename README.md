@@ -36,6 +36,9 @@ A cadeia actual é:
 7. `20260918135712_atomic_barber_save.sql`
 8. `20260918140253_availability_engine_2.sql`
 9. `20260918140609_availability_security.sql`
+10. `20260918141607_booking_engine_2_0.sql`
+11. `20260918141851_20260918162700_booking_engine_2_0_phone_normalization.sql`
+12. `20260918141926_20260918163000_booking_engine_2_0_returning_fix.sql`
 
 Future schema changes must be a new timestamped migration. Never rename an applied migration.
 
@@ -90,3 +93,9 @@ A disponibilidade é calculada no PostgreSQL e consumida pelo frontend através 
 Dias especiais suportam fecho completo ou horário especial e têm precedência sobre o horário semanal. Overrides específicos do barbeiro têm precedência sobre overrides da loja.
 
 O browser não implementa uma segunda regra de disponibilidade. `frontend/src/features/availability/api.ts` fornece o contrato de consumo para o booking público.
+
+## Fase 5: Booking Engine 2.0
+
+A criação de marcações online vive no PostgreSQL através de `book_appointment`. O fluxo valida tenant, serviço, corte, barbeiro, horário e disponibilidade; usa advisory lock transaccional; faz customer upsert; calcula sinal quando aplicável; cria a marcação; enfileira notificações e regista audit log.
+
+A concorrência usa `SLOT_TAKEN` como contrato de negócio e mantém `appointments_no_overlap` como barreira final. O frontend consome este contrato através de `frontend/src/features/booking/api.ts`, sem INSERT directo em `appointments`.
