@@ -13,3 +13,8 @@ Phase 2 baseline test:
 `migration_phase2.sql`
 
 This file is read-only and validates the current migration/schema contract.
+
+
+### Phase 8
+
+`booking_wizard_phase8.sql` valida o percurso backend usado pelo wizard público: dia realmente disponível, slot realmente disponível, resolução de "qualquer barbeiro", criação online com token, customer upsert, notification/audit queue, overlap protection e grants públicos sem INSERT directo em `appointments`. Os fixtures do teste são rollback-only.
