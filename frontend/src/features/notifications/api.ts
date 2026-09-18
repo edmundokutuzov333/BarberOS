@@ -43,6 +43,17 @@ export async function getNotificationMetrics(shopId: string): Promise<Notificati
   };
 }
 
+export async function retryNotification(shopId: string, notificationId: string) {
+  const { data, error } = await supabase.rpc("retry_notification", {
+    p_shop: shopId,
+    p_notification: notificationId,
+  });
+  if (error) throw error;
+  const row = data?.[0];
+  if (!row) throw new Error("NOTIFICATION_RETRY_EMPTY_RESPONSE");
+  return row;
+}
+
 export async function getNotifications(
   shopId: string,
   status: NotificationView = "active",
@@ -90,3 +101,19 @@ export function useNotifications(
     retry: false,
   });
 }
+
+export function useRetryNotification() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ shopId, notificationId }: { shopId: string; notificationId: string }) =>
+      retryNotification(shopId, notificationId),
+    retry: false,
+    onSuccess: async (_result, input) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["notifications", "list", input.shopId] }),
+        queryClient.invalidateQueries({ queryKey: ["notifications", "metrics", input.shopId] }),
+      ]);
+    },
+  });
+}
+
