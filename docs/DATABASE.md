@@ -39,6 +39,7 @@ A ordem actual é:
 29. `20260918150747_agenda_confirm_deposit_guard.sql`
 30. `20260918150955_agenda_argument_validation_order.sql`
 31. `20260918151118_agenda_cross_barber_reschedule.sql`
+32. `20260918151603_agenda_scope_and_index_hardening.sql`
 
 As versões 1 a 3 foram reconciliadas com o estado que já existia na base viva. A versão 4 já estava aplicada e foi mantida com a mesma versão no histórico Supabase.
 
