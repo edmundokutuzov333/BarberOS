@@ -41,7 +41,7 @@ begin
   from public.appointments a
   where a.barbershop_id=v_shop
     and a.manage_token is not null
-    and a.starts_at > now()+interval '1 day'
+    and a.starts_at > now()+interval '2 hours'
   order by a.created_at,a.id
   limit 1;
 
@@ -123,7 +123,7 @@ declare
 begin
   select a.* into v_appt
   from public.appointments a
-  where a.starts_at > now()+interval '1 day'
+  where a.starts_at > now()+interval '2 hours'
     and a.manage_token is not null
     and a.id <> (select appointment_id from public.payments where idempotency_key='11111111-1111-4111-8111-111111111111')
     and not exists (select 1 from public.payments p where p.appointment_id=a.id and p.status='pending')
@@ -167,7 +167,7 @@ declare
 begin
   select a.* into v_appt
   from public.appointments a
-  where a.starts_at > now()+interval '1 day'
+  where a.starts_at > now()+interval '2 hours'
     and a.manage_token is not null
   order by a.id asc limit 1;
 
@@ -212,7 +212,7 @@ declare
 begin
   select a.* into v_appt
   from public.appointments a
-  where a.starts_at > now()+interval '1 day'
+  where a.starts_at > now()+interval '2 hours'
     and a.manage_token is not null
   order by a.created_at desc limit 1;
   if v_appt.id is null then raise exception 'FAIL: reconciliation fixture unavailable'; end if;
