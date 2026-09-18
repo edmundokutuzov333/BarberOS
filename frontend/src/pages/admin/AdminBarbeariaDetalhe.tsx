@@ -30,7 +30,7 @@ export default function AdminBarbeariaDetalhe() {
   return <Page title={shop?.name??'Barbearia'} subtitle={shop?'/barbearia/'+shop.slug:undefined} actions={<div className="flex gap-2"><Link to="/admin/barbearias"><Button variant="secondary" size="sm"><ArrowLeft size={14}/>Voltar</Button></Link>{shop&&<a href={'/barbearia/'+shop.slug} target="_blank" rel="noreferrer"><Button variant="secondary" size="sm"><ExternalLink size={14}/>Página pública</Button></a>}</div>}>
     {q.isLoading?<><Skeleton className="h-40"/><Skeleton className="h-72 mt-3"/></>:q.error?<ErrorState message={humanError(q.error)} onRetry={()=>void q.refetch()}/>:q.data&&shop?<>
       <section className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-        {Object.entries(q.data.stats).map(([k,v])=><Panel key={k} className="p-4"><p className="t-label text-ink-lo">{({barbers:'Barbeiros',active_barbers:'Barbeiros activos',customers:'Clientes',appointments:'Marcações',completed_appointments:'Concluídas',reviews:'Avaliações',payments:'Pagamentos'})[k]??k}</p><p className="text-2xl font-medium text-ink-hi mt-2">{v}</p></Panel>)}
+        {Object.entries(q.data.stats).map(([k,v])=><Panel key={k} className="p-4"><p className="t-label text-ink-lo">{({barbers:'Barbeiros',active_barbers:'Barbeiros activos',customers:'Clientes',appointments:'Marcações',completed_appointments:'Concluídas',reviews:'Avaliações',payments:'Pagamentos'})[k]??k}</p><p className="text-2xl font-medium text-ink-hi mt-2">{Number(v)}</p></Panel>)}
       </section>
       <section className="grid xl:grid-cols-2 gap-3 mt-3">
         <Panel title="Estado da conta" aside={<AdminStatus kind="shop" value={shop.status}/>}>
