@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type CSSProperties, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
@@ -13,8 +13,15 @@ import { Switch, Select, Textarea, ImageUpload } from '@/components/ui/Primitive
 export function useUpdateShop(onDone?: () => void) {
   const { shop, refresh } = useShop();
   return useMutation({
-    mutationFn: async (patch: Partial<Shop>) => { const r = await supabase.from('barbershops').update(patch).eq('id', shop!.id); if (r.error) throw r.error; },
-    onSuccess: async () => { await refresh(); toast.success('Guardado'); onDone?.(); },
+    mutationFn: async (patch: Partial<Shop>) => {
+      const r = await supabase.from('barbershops').update(patch).eq('id', shop!.id);
+      if (r.error) throw r.error;
+    },
+    onSuccess: async () => {
+      await refresh();
+      toast.success('Guardado');
+      onDone?.();
+    },
     onError: (e) => toast.error(humanError(e)),
   });
 }
@@ -22,15 +29,40 @@ export function useUpdateShop(onDone?: () => void) {
 export function ProfileForm({ onDone, compact }: { onDone?: () => void; compact?: boolean }) {
   const { shop } = useShop();
   const s = shop!;
-  const [f, setF] = useState({ name: s.name, description: s.description ?? '', phone: s.phone ?? '', whatsapp: s.whatsapp ?? '', instagram: s.instagram ?? '', address: s.address ?? '', maps_url: s.maps_url ?? '', logo_url: s.logo_url, cover_url: s.cover_url });
+  const [f, setF] = useState({
+    name: s.name,
+    description: s.description ?? '',
+    phone: s.phone ?? '',
+    whatsapp: s.whatsapp ?? '',
+    instagram: s.instagram ?? '',
+    address: s.address ?? '',
+    maps_url: s.maps_url ?? '',
+    logo_url: s.logo_url,
+    cover_url: s.cover_url,
+  });
   const m = useUpdateShop(onDone);
-  const norm = (p: string) => { const d = p.replace(/\D/g, ''); return d ? (d.startsWith('258') ? `+${d}` : `+258${d}`) : null; };
+  const norm = (p: string) => {
+    const d = p.replace(/D/g, '');
+    return d ? (d.startsWith('258') ? `+${d}` : `+258${d}`) : null;
+  };
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (f.name.trim().length < 2) return toast.error('Escreve o nome da barbearia.');
-    m.mutate({ name: f.name.trim(), description: f.description.trim() || null, phone: norm(f.phone), whatsapp: norm(f.whatsapp), instagram: f.instagram.replace(/^@/, '').trim() || null, address: f.address.trim() || null, maps_url: f.maps_url.trim() || null, logo_url: f.logo_url, cover_url: f.cover_url });
+    m.mutate({
+      name: f.name.trim(),
+      description: f.description.trim() || null,
+      phone: norm(f.phone),
+      whatsapp: norm(f.whatsapp),
+      instagram: f.instagram.replace(/^@/, '').trim() || null,
+      address: f.address.trim() || null,
+      maps_url: f.maps_url.trim() || null,
+      logo_url: f.logo_url,
+      cover_url: f.cover_url,
+    });
   };
-  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value });
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setF({ ...f, [k]: e.target.value });
+
   return (
     <form onSubmit={submit} className="space-y-4" data-testid="profile-form">
       <div className="grid grid-cols-[120px_1fr] gap-4">
@@ -40,8 +72,8 @@ export function ProfileForm({ onDone, compact }: { onDone?: () => void; compact?
       <Field data-testid="profile-name-input" label="Nome" name="p_name" value={f.name} onChange={set('name')} />
       <Textarea data-testid="profile-description-input" label="Descrição curta" value={f.description} onChange={set('description')} placeholder="O que faz a tua barbearia diferente, em duas frases." />
       <div className="grid sm:grid-cols-2 gap-3">
-        <Field data-testid="profile-phone-input" label="Telemóvel" name="p_phone" type="tel" prefix="+258" value={f.phone.replace(/^\+258/, '')} onChange={set('phone')} placeholder="84 000 0000" />
-        <Field data-testid="profile-whatsapp-input" label="WhatsApp" name="p_whatsapp" type="tel" prefix="+258" value={f.whatsapp.replace(/^\+258/, '')} onChange={set('whatsapp')} placeholder="84 000 0000" />
+        <Field data-testid="profile-phone-input" label="Telemóvel" name="p_phone" type="tel" prefix="+258" value={f.phone.replace(/^+258/, '')} onChange={set('phone')} placeholder="84 000 0000" />
+        <Field data-testid="profile-whatsapp-input" label="WhatsApp" name="p_whatsapp" type="tel" prefix="+258" value={f.whatsapp.replace(/^+258/, '')} onChange={set('whatsapp')} placeholder="84 000 0000" />
       </div>
       {!compact && (
         <>
@@ -50,37 +82,89 @@ export function ProfileForm({ onDone, compact }: { onDone?: () => void; compact?
           <Field data-testid="profile-maps-input" label="Link do Google Maps" name="p_maps" type="url" value={f.maps_url} onChange={set('maps_url')} placeholder="https://maps.app.goo.gl/..." />
         </>
       )}
-      <div className="flex justify-end"><Button data-testid="profile-save-btn" type="submit" loading={m.isPending}>{onDone ? 'Guardar e continuar' : 'Guardar'}</Button></div>
+      <div className="flex justify-end">
+        <Button data-testid="profile-save-btn" type="submit" loading={m.isPending}>
+          {onDone ? 'Guardar e continuar' : 'Guardar'}
+        </Button>
+      </div>
     </form>
   );
 }
 
 export function ThemePicker({ onDone }: { onDone?: () => void }) {
   const { shop } = useShop();
-  const [sel, setSel] = useState(shop!.theme_key);
+  const s = shop!;
+  const [sel, setSel] = useState(s.theme_key);
   const m = useUpdateShop(onDone);
-  const pick = (k: string) => { setSel(k); applyTheme(k); };
+  const dirty = sel !== s.theme_key;
+
+  useEffect(() => {
+    return () => applyTheme(s.theme_key);
+  }, [s.theme_key]);
+
+  const pick = (k: string) => {
+    setSel(k);
+    applyTheme(k);
+  };
+
   return (
     <div className="space-y-5" data-testid="theme-picker">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <p className="t-card text-ink-hi">Tema visual</p>
+          <p className="t-body text-ink-mid mt-1">A pré-visualização é imediata. A escolha só fica activa na sua barbearia depois de guardar.</p>
+        </div>
+        <span data-testid="theme-save-state" className="t-label text-ink-mid" aria-live="polite">
+          {dirty ? 'Alteração por guardar' : 'Tema actual'}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" role="group" aria-label="Temas visuais">
         {THEMES.map((t) => {
-          const v = themeVars(t) as React.CSSProperties;
+          const v = themeVars(t) as CSSProperties;
           const active = sel === t.key;
           return (
-            <button key={t.key} type="button" data-testid={`theme-${t.key}`} onClick={() => pick(t.key)} aria-pressed={active}
-              className={`text-left rounded-2xl overflow-hidden border transition-colors ${active ? 'border-accent-soft' : 'border-white/10 hover:border-white/25'}`} style={v}>
+            <button
+              key={t.key}
+              type="button"
+              data-testid={`theme-${t.key}`}
+              onClick={() => pick(t.key)}
+              aria-pressed={active}
+              aria-label={`Tema ${t.name}${active ? ', seleccionado' : ''}`}
+              className={`text-left rounded-2xl overflow-hidden border transition-[border-color,transform,box-shadow] duration-150 outline-none focus-visible:ring-2 focus-visible:ring-accent-soft ${active ? 'border-accent-soft ring-1 ring-accent-soft/25 shadow-[0_12px_30px_-14px_rgba(var(--accent-rgb),.6)]' : 'border-white/10 hover:border-white/25 hover:-translate-y-px'}`}
+              style={v}
+            >
               <div className="aspect-[4/3] p-3 relative" style={{ background: `radial-gradient(120% 80% at 50% 100%, ${t.glowA} 0%, transparent 60%), #000` }}>
                 <div className="glass !rounded-xl h-full p-2.5 flex flex-col justify-between" style={{ boxShadow: 'none' }}>
-                  <div className="flex gap-1.5"><span className="h-2 w-8 rounded-full" style={{ background: t.accentSoft }} /><span className="h-2 w-5 rounded-full bg-white/15" /></div>
-                  <span className="h-6 w-16 rounded-lg grid place-items-center text-[9px] font-medium" style={{ background: t.accentSoft, color: t.accentInk }}>Marcar</span>
+                  <div className="flex gap-1.5">
+                    <span className="h-2 w-8 rounded-full" style={{ background: t.accentSoft }} aria-hidden />
+                    <span className="h-2 w-5 rounded-full bg-white/15" aria-hidden />
+                  </div>
+                  <span className="h-6 w-16 rounded-lg grid place-items-center text-[9px] font-medium" style={{ background: t.accentSoft, color: t.accentInk }}>
+                    Marcar
+                  </span>
                 </div>
               </div>
-              <div className="px-3 py-2 flex items-center justify-between"><span className="text-xs">{t.name}</span>{active && <span className="h-1.5 w-1.5 rounded-full bg-accent-soft" />}</div>
+              <div className="px-3 py-2.5 flex items-center justify-between gap-2">
+                <span className="text-xs truncate">{t.name}</span>
+                {active && <span className="h-1.5 w-1.5 rounded-full bg-accent-soft shrink-0" aria-hidden />}
+              </div>
             </button>
           );
         })}
       </div>
-      <div className="flex justify-end"><Button data-testid="theme-save-btn" loading={m.isPending} onClick={() => m.mutate({ theme_key: sel })}>{onDone ? 'Guardar e continuar' : 'Guardar tema'}</Button></div>
+
+      <div className="flex items-center justify-between gap-3">
+        <p className="t-label text-ink-lo">O tema aplica-se ao ecrã inteiro e à página pública.</p>
+        <Button
+          data-testid="theme-save-btn"
+          loading={m.isPending}
+          disabled={!dirty}
+          onClick={() => m.mutate({ theme_key: sel })}
+        >
+          {onDone ? 'Guardar e continuar' : 'Guardar tema'}
+        </Button>
+      </div>
     </div>
   );
 }
@@ -110,7 +194,7 @@ export function RulesForm({ onDone }: { onDone?: () => void }) {
         <div className="grid sm:grid-cols-2 gap-2">
           {CANCEL_RULES.map((r) => (
             <button key={r.value} type="button" data-testid={`rule-${r.value}`} onClick={() => setF({ ...f, rule: r.value })} aria-pressed={f.rule === r.value}
-              className={`text-left rounded-2xl border p-4 transition-colors ${f.rule === r.value ? 'border-accent-soft bg-accent/10' : 'border-white/10 hover:border-white/25'}`}>
+              className={`text-left rounded-2xl border p-4 min-h-24 outline-none focus-visible:ring-2 focus-visible:ring-accent-soft transition-[background-color,border-color] ${f.rule === r.value ? 'border-accent-soft bg-accent/10' : 'border-white/10 hover:border-white/25'}`}>
               <p className="text-sm font-medium">{r.label}</p><p className="t-label text-ink-mid mt-0.5">{r.body}</p>
             </button>
           ))}
