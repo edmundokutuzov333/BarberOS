@@ -43,6 +43,7 @@ end $$;
 do $$
 declare
   v_shop uuid;
+  v_actor uuid;
   v_appt uuid;
   v_notification uuid;
   v_claim record;
@@ -53,6 +54,17 @@ begin
   select id into v_shop from public.barbershops order by created_at limit 1;
   select id into v_appt from public.appointments order by created_at desc limit 1;
   if v_shop is null then raise exception 'FAIL: no real barbershop fixture'; end if;
+
+  select m.user_id
+  into v_actor
+  from public.barbershop_members m
+  where m.barbershop_id=v_shop
+    and m.role='owner'
+  order by m.created_at
+  limit 1;
+
+  if v_actor is null then raise exception 'FAIL: no owner fixture'; end if;
+  perform set_config('request.jwt.claim.sub',v_actor::text,true);
 
   update public.notifications
   set scheduled_for=now()+interval '7 days'
