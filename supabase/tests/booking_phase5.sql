@@ -214,6 +214,89 @@ begin
     if v_error <> 'INVALID_PHONE' then raise; end if;
   end;
 
+  begin
+    select id,customer_id into v_appt,v_customer_phone
+    from public.appointments
+    where barbershop_id=v_shop
+      and status='confirmed'
+    order by starts_at
+    limit 1;
+
+    if v_appt is null then raise exception 'NO_COMPLETION_FIXTURE'; end if;
+
+    declare
+      v_visits_before int;
+      v_review_before int;
+    begin
+      select visits_count into v_visits_before
+      from public.customers where id=(select customer_id from public.appointments where id=v_appt);
+
+      select count(*) into v_review_before
+      from public.notifications
+      where appointment_id=v_appt and template_key='review_request';
+
+      update public.appointments
+      set status='completed'
+      where id=v_appt;
+
+      if not exists(select 1 from public.appointments where id=v_appt and completed_at is not null) then
+        raise exception 'COMPLETION_TIMESTAMP_FAILED';
+      end if;
+
+      if (select visits_count from public.customers where id=(select customer_id from public.appointments where id=v_appt))
+         <> v_visits_before+1 then
+        raise exception 'CUSTOMER_VISIT_COUNTER_FAILED';
+      end if;
+
+      if (select count(*) from public.notifications where appointment_id=v_appt and template_key='review_request')
+         <> v_review_before+1 then
+        raise exception 'REVIEW_REQUEST_NOT_QUEUED';
+      end if;
+
+      raise exception 'ROLLBACK_COMPLETION_TRIGGER_TEST';
+    exception when others then
+      get stacked diagnostics v_error=message_text;
+      if v_error <> 'ROLLBACK_COMPLETION_TRIGGER_TEST' then raise; end if;
+    end;
+  end;
+
+  begin
+    select id into v_appt
+    from public.appointments
+    where barbershop_id=v_shop
+      and status='confirmed'
+    order by starts_at
+    limit 1;
+
+    if v_appt is null then raise exception 'NO_NO_SHOW_FIXTURE'; end if;
+
+    declare
+      v_no_show_before int;
+    begin
+      select no_show_count into v_no_show_before
+      from public.customers
+      where id=(select customer_id from public.appointments where id=v_appt);
+
+      update public.appointments
+      set status='no_show'
+      where id=v_appt;
+
+      if not exists(select 1 from public.appointments where id=v_appt and no_show_at is not null) then
+        raise exception 'NO_SHOW_TIMESTAMP_FAILED';
+      end if;
+
+      if (select no_show_count from public.customers where id=(select customer_id from public.appointments where id=v_appt))
+         <> v_no_show_before+1 then
+        raise exception 'CUSTOMER_NO_SHOW_COUNTER_FAILED';
+      end if;
+
+      raise exception 'ROLLBACK_NO_SHOW_TRIGGER_TEST';
+    exception when others then
+      get stacked diagnostics v_error=message_text;
+      if v_error <> 'ROLLBACK_NO_SHOW_TRIGGER_TEST' then raise; end if;
+    end;
+  end;
+
   if v_appt_baseline <> (select count(*) from public.appointments) then
     raise exception 'APPOINTMENT_FIXTURE_PERSISTED';
   end if;
