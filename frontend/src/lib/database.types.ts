@@ -722,6 +722,60 @@ export type Database = {
           },
         ]
       }
+      schedule_overrides: {
+        Row: {
+          barber_id: string | null
+          barbershop_id: string
+          closes_at: string | null
+          created_at: string
+          id: string
+          is_closed: boolean
+          note: string | null
+          opens_at: string | null
+          override_date: string
+          reason: Database["public"]["Enums"]["block_reason"]
+        }
+        Insert: {
+          barber_id?: string | null
+          barbershop_id: string
+          closes_at?: string | null
+          created_at?: string
+          id?: string
+          is_closed?: boolean
+          note?: string | null
+          opens_at?: string | null
+          override_date: string
+          reason?: Database["public"]["Enums"]["block_reason"]
+        }
+        Update: {
+          barber_id?: string | null
+          barbershop_id?: string
+          closes_at?: string | null
+          created_at?: string
+          id?: string
+          is_closed?: boolean
+          note?: string | null
+          opens_at?: string | null
+          override_date?: string
+          reason?: Database["public"]["Enums"]["block_reason"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_overrides_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_overrides_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           barbershop_id: string
@@ -982,6 +1036,10 @@ export type Database = {
         }
         Returns: string
       }
+      delete_schedule_override: {
+        Args: { p_id: string; p_shop: string }
+        Returns: boolean
+      }
       enqueue_appointment_notifications: {
         Args: { p_appt: string }
         Returns: undefined
@@ -1058,6 +1116,20 @@ export type Database = {
           p_shop: string
           p_user_id: string
           p_years_experience: number
+        }
+        Returns: string
+      }
+      save_schedule_override: {
+        Args: {
+          p_barber_id?: string
+          p_closes_at?: string
+          p_id?: string
+          p_is_closed?: boolean
+          p_note?: string
+          p_opens_at?: string
+          p_override_date: string
+          p_reason?: Database["public"]["Enums"]["block_reason"]
+          p_shop: string
         }
         Returns: string
       }
