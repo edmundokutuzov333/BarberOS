@@ -166,7 +166,7 @@ export function ScheduleOverridesEditor() {
                   {row.note ? ` · ${row.note}` : ''}
                 </p>
               </div>
-              <button
+              <button type="button"
                 data-testid={`schedule-override-edit-${row.id}`}
                 onClick={() => openEdit(row)}
                 aria-label={`Editar excepção de ${formatDate(row.override_date)}`}
@@ -174,7 +174,7 @@ export function ScheduleOverridesEditor() {
               >
                 <Pencil size={15} />
               </button>
-              <button
+              <button type="button"
                 data-testid={`schedule-override-delete-${row.id}`}
                 onClick={() => remove.mutate(row.id)}
                 aria-label={`Remover excepção de ${formatDate(row.override_date)}`}
