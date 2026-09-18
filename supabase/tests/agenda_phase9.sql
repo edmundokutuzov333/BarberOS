@@ -118,7 +118,7 @@ select
   has_function_privilege('authenticated','public.get_agenda_appointments(uuid,timestamptz,timestamptz)','execute') as auth_agenda_read,
   has_function_privilege('authenticated','public.get_agenda_schedule(uuid,date,date)','execute') as auth_schedule_read,
   has_function_privilege('authenticated','public.transition_appointment(uuid,uuid,text,text)','execute') as auth_transition,
-  has_function_privilege('authenticated','public.reschedule_appointment_by_operator(uuid,uuid,timestamptz)','execute') as auth_reschedule,
+  has_function_privilege('authenticated','public.reschedule_appointment_by_operator(uuid,uuid,timestamptz,uuid)','execute') as auth_reschedule,
   not has_function_privilege('anon','public.get_agenda_appointments(uuid,timestamptz,timestamptz)','execute') as anon_no_agenda_read,
   not has_function_privilege('anon','public.get_agenda_schedule(uuid,date,date)','execute') as anon_no_schedule_read,
   not has_function_privilege('anon','public.transition_appointment(uuid,uuid,text,text)','execute') as anon_no_transition,
