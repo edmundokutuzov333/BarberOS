@@ -126,3 +126,5 @@ jobs:
         run: pip install "psycopg[binary]==3.2.12"
       - name: Run database suite
         run: python scripts/test_database_phase23.py
+      - name: Booking concurrency
+        run: python scripts/test_booking_concurrency_phase23.py
