@@ -48,7 +48,8 @@ A cadeia actual é:
 19. `20260918143353_appointment_token_public_boundary.sql`
 20. `20260918143427_appointment_token_slots.sql`
 21. `20260918143814_appointment_token_cancel_lock.sql`
-22. `20260918144500_appointment_token_cancel_returning_fix.sql`
+22. `20260918143918_appointment_token_cancel_lock_order.sql`
+23. `20260918144500_appointment_token_cancel_returning_fix.sql`
 
 Future schema changes must be a new timestamped migration. Never rename an applied migration.
 
