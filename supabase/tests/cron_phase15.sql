@@ -144,7 +144,7 @@ begin
   select b.id into v_shop
   from public.barbershops b
   where b.status in ('trial','active')
-  order by b.created_at
+  order by b.sort_order,b.id
   limit 1;
 
   select s.id into v_service
