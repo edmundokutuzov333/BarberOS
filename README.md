@@ -114,3 +114,11 @@ A concorrência usa `SLOT_TAKEN` como contrato de negócio e mantém `appointmen
 ## Fase 6: gestão da marcação por token
 
 A rota `/marcacao/:token` permite ao cliente consultar a marcação sem conta, cancelar ou remarcar dentro da política da barbearia, adicionar o evento ao calendário e contactar a loja por WhatsApp. O frontend usa apenas os RPCs públicos da feature de appointments; IDs internos não fazem parte do DTO público.
+
+## Fase 7: área pública da barbearia
+
+A rota `/barbearia/:slug` agora é uma superfície pública real ligada ao Supabase. O frontend consulta o RPC `get_public_barbershop`, que devolve apenas dados de publicação do tenant: perfil, serviços activos, cortes activos, barbeiros activos, horário semanal e avaliações publicadas.
+
+O acesso anónimo directo às tabelas do domínio foi fechado para a superfície pública. A publicação é servida por RPC SECURITY DEFINER com `search_path=""`.
+
+A implementação está em `frontend/src/features/public-shop/api.ts` e `frontend/src/pages/PublicBarbershop.tsx`. A aceitação live está em `supabase/tests/public_barbershop_phase7.sql`.
