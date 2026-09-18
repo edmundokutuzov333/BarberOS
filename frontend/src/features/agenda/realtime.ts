@@ -26,7 +26,20 @@ export function useAgendaRealtime(shopId?: string): AgendaRealtimeStatus {
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
+          schema: 'public',
+          table: 'appointments',
+          filter: 'barbershop_id=eq.' + shopId,
+        },
+        () => {
+          void queryClient.invalidateQueries({ queryKey: ['agenda'] });
+          void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
           schema: 'public',
           table: 'appointments',
           filter: 'barbershop_id=eq.' + shopId,
