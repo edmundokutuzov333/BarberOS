@@ -101,6 +101,11 @@ button:disabled,
   pointer-events:none;
 }
 
+.perf-deferred{
+  content-visibility:auto;
+  contain-intrinsic-size:1px 520px;
+}
+
 .glass-2{ background:var(--surface-2); }
 .glass-3{ background:var(--surface-3); }
 
