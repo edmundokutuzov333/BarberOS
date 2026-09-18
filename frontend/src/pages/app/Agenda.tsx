@@ -1,4 +1,4 @@
-import { useMemo, useState, type DragEvent } from 'react';
+import { useMemo, useState, type DragEvent, type ReactNode } from 'react';
 import { CheckCircle2, ChevronLeft, ChevronRight, Clock3, MessageCircle, Move, Play, RefreshCw, UserX, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Page } from '@/components/layout/Page';
@@ -162,7 +162,7 @@ function AppointmentCard({
 
 function ActionButton({
   label, onClick, busy, children,
-}: { label: string; onClick: () => void; busy: boolean; children: React.ReactNode }) {
+}: { label: string; onClick: () => void; busy: boolean; children: ReactNode }) {
   return <button type="button" title={label} aria-label={label} onClick={onClick} disabled={busy} className="p-1.5 rounded-lg hover:bg-white/10 text-ink-mid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft disabled:opacity-50">{children}</button>;
 }
 
@@ -189,7 +189,6 @@ function DayGrid({
   const gridStart = Math.floor((Math.min(...openRows.map((x) => minutesOf(x.opens_at)), 8 * 60)) / GRID_STEP) * GRID_STEP;
   const gridEnd = Math.ceil((Math.max(...openRows.map((x) => minutesOf(x.closes_at)), 20 * 60)) / GRID_STEP) * GRID_STEP;
   const height = (gridEnd - gridStart) * PX_PER_MINUTE;
-  const selectedApps = appointments.filter((a) => timeParts(a.starts_at, timezone) >= gridStart - 24 * 60 && true);
   const today = todayISO(timezone);
   const nowMinute = today === date ? timeParts(new Date().toISOString(), timezone) : null;
   const gridSteps = Math.floor((gridEnd - gridStart) / GRID_STEP);
