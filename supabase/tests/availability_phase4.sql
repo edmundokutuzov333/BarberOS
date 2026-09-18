@@ -100,7 +100,7 @@ begin
     if v_slots<>0 or v_open then raise exception 'DAY_METADATA_CLOSED_OVERRIDE_FAILED'; end if;
 
     perform public.save_schedule_override(
-      v_shop,v_day,v_barber,false,'09:00','18:00','other','barber-open-test',v_override
+      v_shop,v_day,v_barber,false,'09:00','18:00','other','barber-open-test',null
     );
 
     select count(*) into v_slots
