@@ -126,7 +126,12 @@ export default function PublicBarbershop() {
     <div className="min-h-screen">
       <header className="max-w-6xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between gap-4">
         <Link to="/" aria-label="BarberOS"><span className="t-card text-ink-hi">BarberOS <span className="font-light text-ink-mid">by Oryon</span></span></Link>
-        <a href="#contacto" className="t-label text-ink-mid hover:text-ink-hi transition-colors">Contactos</a>
+        <div className="flex items-center gap-4">
+          <a href="#contacto" className="hidden sm:block t-label text-ink-mid hover:text-ink-hi transition-colors">Contactos</a>
+          <Link to={services.length && barbers.length ? `/barbearia/${shop.slug}/marcar` : '#'} aria-disabled={!services.length || !barbers.length} tabIndex={!services.length || !barbers.length ? -1 : 0}>
+            <Button size="sm" disabled={!services.length || !barbers.length}>Marcar agora</Button>
+          </Link>
+        </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-20">
@@ -149,7 +154,6 @@ export default function PublicBarbershop() {
                   <h1 className="text-3xl sm:text-5xl font-medium tracking-[-0.02em] text-white">{shop.name}</h1>
                   {shop.description && <p className="t-body text-white/75 mt-2 max-w-2xl">{shop.description}</p>}
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4">
-                    <span className="t-label text-white/70">{shop.timezone}</span>
                     {reviews.rating_count > 0 && <span className="inline-flex items-center gap-1.5 t-label text-white"><Star size={14} fill="currentColor" /> {reviews.rating_avg.toFixed(1)} · {reviews.rating_count} {reviews.rating_count === 1 ? 'avaliação' : 'avaliações'}</span>}
                   </div>
                 </div>
@@ -227,7 +231,7 @@ export default function PublicBarbershop() {
                 <Scissors size={18} className="text-accent-soft mt-0.5" />
                 <div>
                   <p className="t-card text-ink-hi">Marcação sem conta</p>
-                  <p className="t-body text-ink-mid mt-1">Quando a marcação online estiver activa, o cliente poderá escolher serviço, corte, barbeiro, data e hora sem criar uma conta.</p>
+                  <p className="t-body text-ink-mid mt-1">Escolha serviço, corte, barbeiro, data e hora sem criar uma conta. A disponibilidade é calculada em tempo real.</p>
                 </div>
               </div>
             </div>
