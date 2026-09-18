@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, Sparkles } from 'lucide-react';
+import { Plus, Pencil, Trash2, Sparkles, ArrowUp, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { useShop } from '@/lib/shop';
@@ -68,6 +68,25 @@ export function HaircutsEditor() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: key }); toast.success('Corte removido'); }, onError: (e) => toast.error(humanError(e)),
   });
 
+  const reorder = useMutation({
+    mutationFn: async ({ id, direction }: { id: string; direction: -1 | 1 }) => {
+      const list = [...(q.data ?? [])];
+      const index = list.findIndex((item) => item.id === id);
+      const nextIndex = index + direction;
+      if (index < 0 || nextIndex < 0 || nextIndex >= list.length) return;
+
+      [list[index], list[nextIndex]] = [list[nextIndex], list[index]];
+
+      const { error } = await supabase.rpc('reorder_haircuts', {
+        p_shop: shop!.id,
+        p_ids: list.map((item) => item.id),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: (e) => toast.error(humanError(e)),
+  });
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap justify-end gap-2">
@@ -78,12 +97,14 @@ export function HaircutsEditor() {
         <EmptyState testId="haircuts-empty" title="O catálogo está vazio." body="Semeia os 22 estilos mais pedidos e depois junta fotos dos teus próprios cortes." action={<Button data-testid="haircuts-empty-seed-btn" size="sm" pill loading={seed.isPending} onClick={() => seed.mutate()}>Semear catálogo</Button>} />
       ) : (
         <div data-testid="haircuts-grid" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-          {q.data!.map((h) => (
+          {q.data!.map((h, i) => (
             <div key={h.id} data-testid={`haircut-card-${h.id}`} className={`glass glass-3 !rounded-2xl overflow-hidden ${!h.is_active && 'opacity-50'}`} style={{ boxShadow: 'none' }}>
               <div className="aspect-[3/4] bg-[var(--surface-2)] relative">
                 {h.photo_url ? <img src={h.photo_url} alt={h.name} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                   : <div className="absolute inset-0 grid place-items-center text-ink-lo text-3xl font-medium">{h.name.slice(0, 1)}</div>}
                 <div className="absolute top-2 right-2 flex gap-1">
+                  <button data-testid={`haircut-move-up-${h.id}`} onClick={() => reorder.mutate({ id: h.id, direction: -1 })} disabled={i === 0 || reorder.isPending} aria-label={`Mover ${h.name} para cima`} title="Mover para cima" className="h-8 w-8 rounded-full bg-black/50 backdrop-blur grid place-items-center text-ink-hi hover:text-accent-soft disabled:opacity-30 disabled:cursor-not-allowed"><ArrowUp size={13} /></button>
+                  <button data-testid={`haircut-move-down-${h.id}`} onClick={() => reorder.mutate({ id: h.id, direction: 1 })} disabled={i === q.data!.length - 1 || reorder.isPending} aria-label={`Mover ${h.name} para baixo`} title="Mover para baixo" className="h-8 w-8 rounded-full bg-black/50 backdrop-blur grid place-items-center text-ink-hi hover:text-accent-soft disabled:opacity-30 disabled:cursor-not-allowed"><ArrowDown size={13} /></button>
                   <button data-testid={`haircut-edit-${h.id}`} onClick={() => open(h)} aria-label="Editar" className="h-8 w-8 rounded-full bg-black/50 backdrop-blur grid place-items-center text-ink-hi hover:text-accent-soft"><Pencil size={13} /></button>
                   <button data-testid={`haircut-delete-${h.id}`} onClick={() => confirm(`Remover "${h.name}"?`) && remove.mutate(h)} aria-label="Remover" className="h-8 w-8 rounded-full bg-black/50 backdrop-blur grid place-items-center text-ink-hi hover:text-st-noshow"><Trash2 size={13} /></button>
                 </div>
