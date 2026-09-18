@@ -99,3 +99,38 @@ A agenda inclui:
 - drag apenas para estados remarcáveis
 - timezone da própria loja
 - datas de agenda agrupadas pela timezone da loja
+
+## Realtime
+
+A agenda subscreve os eventos `INSERT` e `UPDATE` da tabela `appointments` através de Supabase Postgres Changes.
+
+O canal é único por loja:
+
+`barberos:agenda:<shop_id>`
+
+A subscrição usa o filtro:
+
+`barbershop_id=eq.<shop_id>`
+
+A publicação `supabase_realtime` contém apenas `public.appointments`. A autorização dos eventos continua a depender do acesso `SELECT` + RLS da sessão autenticada.
+
+Ao receber um evento, o frontend invalida apenas:
+
+- `agenda/appointments`
+- `dashboard`
+
+Depois o TanStack Query obtém um novo snapshot do read model PostgreSQL.
+
+Durante falhas ou timeout do canal, a interface mostra `A reconectar…` e dispara uma nova sincronização. Ao restabelecer `SUBSCRIBED`, a agenda é novamente sincronizada.
+
+Não se usa `REPLICA IDENTITY FULL` nesta fase porque a agenda não depende de `payload.old` e o domínio actual não remove appointments. Isto evita WAL adicional sem benefício funcional.
+
+### Publicação deliberadamente limitada
+
+Nesta fase apenas `appointments` é publicado.
+
+`waitlist_entries` será adicionado quando a lista de espera tiver a superfície operacional correspondente.
+
+`notifications` será adicionado quando existir o consumo de notificações em tempo real.
+
+Esta separação mantém a superfície Realtime mínima e tenant-scoped.
