@@ -1106,6 +1106,10 @@ export type Database = {
         Args: { p_date: string; p_token: string }
         Returns: { slot_start: string }[]
       }
+      get_public_barbershop: {
+        Args: { p_slug: string }
+        Returns: Json
+      }
       is_member: {
         Args: {
           p_roles?: Database["public"]["Enums"]["app_role"][]
