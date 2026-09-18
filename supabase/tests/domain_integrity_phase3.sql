@@ -3,6 +3,7 @@ with checks(name, ok) as (
   values
     ('migration_domain_integrity', exists(select 1 from supabase_migrations.schema_migrations where version='20260918134600' and name='domain_integrity')),
     ('migration_domain_integrity_contract', exists(select 1 from supabase_migrations.schema_migrations where version='20260918134657' and name='domain_integrity_contract')),
+    ('migration_atomic_barber_save', exists(select 1 from supabase_migrations.schema_migrations where version='20260918135712' and name='atomic_barber_save')),
     ('working_hours_base_unique', exists(select 1 from pg_indexes where schemaname='public' and indexname='working_hours_base_unique')),
     ('working_hours_barber_unique', exists(select 1 from pg_indexes where schemaname='public' and indexname='working_hours_barber_unique')),
     ('barbers_shop_user_unique', exists(select 1 from pg_indexes where schemaname='public' and indexname='barbers_shop_user_unique')),
