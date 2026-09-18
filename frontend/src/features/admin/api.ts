@@ -106,8 +106,13 @@ export async function createAdminSupport(input: { shopId: string | null; subject
 }
 
 export async function updateAdminSupport(input: { ticketId: string; status?: SupportStatus; priority?: SupportPriority; assignedTo?: string | null }) {
+  const clearAssignee = Object.prototype.hasOwnProperty.call(input, 'assignedTo') && input.assignedTo === null;
   return rpc('admin_update_support_ticket', {
-    p_ticket: input.ticketId, p_status: input.status ?? null, p_priority: input.priority ?? null, p_assigned_to: input.assignedTo ?? null,
+    p_ticket: input.ticketId,
+    p_status: input.status ?? undefined,
+    p_priority: input.priority ?? undefined,
+    p_assigned_to: clearAssignee ? undefined : input.assignedTo,
+    p_clear_assignee: clearAssignee,
   });
 }
 
