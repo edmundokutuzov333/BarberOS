@@ -292,7 +292,7 @@ export default function ClienteDetalhe() {
           <Panel title="Contacto">
             <div className="space-y-2">
               <a href={'tel:' + item.phone} className="flex items-center gap-2 text-sm text-ink-mid hover:text-ink-hi"><Phone size={15} /> Ligar</a>
-              <a href={buildWhatsAppLink(item.phone)} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-ink-mid hover:text-ink-hi"><MessageCircle size={15} /> WhatsApp</a>
+              <a href={buildWhatsAppLink(item.phone, 'Olá ' + item.name + ', estamos a acompanhar o seu atendimento na barbearia.')} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-ink-mid hover:text-ink-hi"><MessageCircle size={15} /> WhatsApp</a>
               {item.email && <a href={'mailto:' + item.email} className="flex items-center gap-2 text-sm text-ink-mid hover:text-ink-hi"><Mail size={15} /> Email</a>}
             </div>
           </Panel>
