@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { useId } from 'react';
+import { useId } from 'react';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -14,6 +15,7 @@ export function Page({ children, className, title, subtitle, actions, testId }: 
   testId?: string;
 }) {
   const reduce = useReducedMotion();
+  const titleId = useId();
   const titleId = useId();
   const v = reduce
     ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
