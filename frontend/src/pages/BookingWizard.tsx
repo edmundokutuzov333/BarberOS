@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check, Clock3, Mail, MessageCircle, Scissors, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { applyTheme } from '@/themes';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { Field } from '@/components/ui/Field';
 import { buildWhatsAppLink } from '@/lib/calendar';
@@ -229,6 +230,13 @@ export default function BookingWizard() {
   const navigate = useNavigate();
   const query = usePublicBarbershop(slug);
   const data = query.data;
+
+  useEffect(() => {
+    if (!data?.shop.theme_key) return;
+    applyTheme(data.shop.theme_key);
+    return () => applyTheme('violet-noir');
+  }, [data?.shop.theme_key]);
+
   const [form, setForm] = useState<CustomerForm>({ name: '', phone: '', email: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [bookingError, setBookingError] = useState<string | null>(null);
