@@ -207,3 +207,13 @@ begin
   raise notice 'PASS | Phase 4 Availability Engine 2.0 | baseline, advance window, overrides, day metadata, 40-minute overlap and appointment occupancy verified';
 end
 $$;
+
+select
+  exists(select 1 from supabase_migrations.schema_migrations where version='20260918140253' and name='availability_engine_2') as phase4_migration_present,
+  exists(select 1 from supabase_migrations.schema_migrations where version='20260918140609' and name='availability_security') as security_migration_present,
+  to_regclass('public.schedule_overrides') is not null as schedule_overrides_present,
+  has_function_privilege('anon','public.get_available_slots(text,uuid,uuid,date)','execute') as anon_slots_execute,
+  has_function_privilege('anon','public.get_available_days(text,uuid,uuid,date,date)','execute') as anon_days_execute,
+  has_table_privilege('anon','public.schedule_overrides','SELECT') as anon_override_select,
+  has_table_privilege('authenticated','public.schedule_overrides','SELECT') as auth_override_select,
+  (select count(*)=0 from public.schedule_overrides) as no_persisted_phase4_fixtures;
