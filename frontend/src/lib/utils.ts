@@ -42,6 +42,7 @@ const ERRORS: Record<string, string> = {
   OVERRIDE_NOT_FOUND: 'Essa excepção já não existe.',
   OVERRIDE_NOTE_TOO_LONG: 'A nota pode ter no máximo 500 caracteres.',
   TENANT_RELATION_MISMATCH: 'A configuração pertence a outra barbearia.',
+  TENANT_IMMUTABLE: 'Uma conta não pode mover dados de uma barbearia para outra.',
   POLICY_LOCKED: 'Já passou o prazo para alterar online. Fala com a barbearia.',
   INVALID_PHONE: 'Número inválido. Usa o formato 84 000 0000.',
   INVALID_EMAIL: 'Indica um email válido.',
@@ -105,6 +106,9 @@ const ERRORS: Record<string, string> = {
   REVIEW_NOT_FOUND: 'A avaliação não foi encontrada.',
   REPORT_EMPTY_RESPONSE: 'Os relatórios não devolveram dados válidos.',
   PLATFORM_ADMIN_REQUIRED: 'Esta área é reservada ao Admin Oryon.',
+  MEMBER_NOT_FOUND: 'O membro já não existe nesta barbearia.',
+  MEMBER_SELF_REMOVE: 'Não pode remover a sua própria conta desta barbearia.',
+  LAST_OWNER: 'A barbearia precisa de manter pelo menos um dono.',
   INVALID_LIMIT: 'O limite seleccionado não é válido.',
   INVALID_OFFSET: 'A página seleccionada não é válida.',
   BARBERSHOP_NOT_FOUND: 'A barbearia não foi encontrada.',
@@ -118,8 +122,6 @@ const ERRORS: Record<string, string> = {
   INVALID_PLAN_FEATURES: 'As funcionalidades do plano não são válidas.',
   SUPPORT_TICKET_NOT_FOUND: 'O ticket de suporte não foi encontrado.',
   SUPPORT_ASSIGNEE_INVALID: 'O responsável seleccionado não é um administrador válido.',
-
-
   PAYMENT_REFERENCE_MISSING: 'O provider não devolveu uma referência de transação válida.',
   UNAUTHORIZED: 'Esta operação não está autorizada.',
   INVALID_CANCEL_REASON: 'O motivo do cancelamento é demasiado longo.',
