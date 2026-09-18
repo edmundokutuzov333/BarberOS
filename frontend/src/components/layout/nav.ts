@@ -1,4 +1,4 @@
-import { type LucideIcon, LayoutDashboard, CalendarDays, ClipboardList, Users, Scissors, Sparkles, UserRound, Clock, Hourglass, Bell, Star, BarChart3, Settings } from 'lucide-react';
+import { type LucideIcon, LayoutDashboard, CalendarDays, ClipboardList, Users, Scissors, Sparkles, UserRound, Clock, Hourglass, Bell, Star, BarChart3, Settings, CreditCard } from 'lucide-react';
 
 export interface NavItem { to: string; label: string; icon: LucideIcon; end?: boolean; testId: string }
 
@@ -13,6 +13,7 @@ export const NAV: NavItem[] = [
   { to: '/app/horarios', label: 'Horários', icon: Clock, testId: 'nav-horarios' },
   { to: '/app/lista-espera', label: 'Lista de espera', icon: Hourglass, testId: 'nav-lista-espera' },
   { to: '/app/notificacoes', label: 'Notificações', icon: Bell, testId: 'nav-notificacoes' },
+  { to: '/app/pagamentos', label: 'Pagamentos', icon: CreditCard, testId: 'nav-pagamentos' },
   { to: '/app/avaliacoes', label: 'Avaliações', icon: Star, testId: 'nav-avaliacoes' },
   { to: '/app/relatorios', label: 'Relatórios', icon: BarChart3, testId: 'nav-relatorios' },
   { to: '/app/definicoes', label: 'Definições', icon: Settings, testId: 'nav-definicoes' },

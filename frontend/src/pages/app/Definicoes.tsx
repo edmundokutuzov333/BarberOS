@@ -4,6 +4,7 @@ import { Panel } from '@/components/ui/States';
 import { ProfileForm, ThemePicker, RulesForm, DepositForm } from '@/components/config/ShopForms';
 import { MembersEditor } from '@/components/config/MembersEditor';
 import { LinkQr } from '@/components/config/LinkQr';
+import PaymentSettingsForm from '@/features/payments/PaymentSettingsForm';
 import { cn } from '@/lib/utils';
 
 const TABS = [
@@ -11,6 +12,7 @@ const TABS = [
   { key: 'pagina', label: 'Página', title: 'Tema da página pública', body: 'Dez temas com a mesma gramática de vidro. Toca para ver ao vivo.' },
   { key: 'regras', label: 'Regras', title: 'Regras de marcação', body: 'Grelha, antecedência e política de cancelamento que o cliente lê.' },
   { key: 'sinal', label: 'Sinal', title: 'Sinal', body: 'Reserva com pagamento antecipado para reduzir faltas.' },
+  { key: 'pagamentos', label: 'Pagamentos', title: 'Pagamentos', body: 'Ligue M-Pesa e e-Mola para receber sinais de forma automática.' },
   { key: 'utilizadores', label: 'Utilizadores', title: 'Equipa com acesso', body: 'Donos gerem tudo, gerentes operam, barbeiros vêem a sua agenda.' },
   { key: 'link', label: 'Link e QR', title: 'Link e QR', body: 'O momento de contacto físico é onde a adopção acontece.' },
 ] as const;
@@ -36,6 +38,7 @@ export default function Definicoes() {
         {t.key === 'pagina' && <ThemePicker key="pagina" />}
         {t.key === 'regras' && <RulesForm key="regras" />}
         {t.key === 'sinal' && <DepositForm key="sinal" />}
+        {t.key === 'pagamentos' && <PaymentSettingsForm />}
         {t.key === 'utilizadores' && <MembersEditor />}
         {t.key === 'link' && <LinkQr />}
       </Panel>

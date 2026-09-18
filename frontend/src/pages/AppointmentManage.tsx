@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { CalendarPlus, CheckCircle2, Clock3, MapPin, MessageCircle, Scissors, UserRound, XCircle } from 'lucide-react';
+import { CalendarPlus, CheckCircle2, Clock3, CreditCard, MapPin, MessageCircle, Scissors, ShieldCheck, Smartphone, UserRound, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Brand } from '@/components/ui/Brand';
 import { Button } from '@/components/ui/Button';
@@ -8,6 +8,7 @@ import { ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { StatusChip, type ApptStatus } from '@/components/ui/StatusChip';
 import { Field } from '@/components/ui/Field';
 import { humanError, formatMT } from '@/lib/utils';
+import { useInitiatePayment, usePaymentStatus, type PaymentProvider } from '@/features/payments/api';
 import { buildWhatsAppLink, downloadAppointmentCalendar } from '@/lib/calendar';
 import {
   useAppointmentByToken,
@@ -46,17 +47,33 @@ export default function AppointmentManage() {
   const [cancelReason, setCancelReason] = useState('');
   const [date, setDate] = useState('');
   const [selectedStart, setSelectedStart] = useState<string | null>(null);
+  const [paymentProvider, setPaymentProvider] = useState<PaymentProvider | null>(null);
+  const [paymentPhone, setPaymentPhone] = useState('');
+  const [paymentStarted, setPaymentStarted] = useState(false);
+  const paymentMutation = useInitiatePayment();
   const query = useAppointmentByToken(token);
   const cancelMutation = useTokenCancellation();
   const rescheduleMutation = useTokenReschedule();
   const slotQuery = useRescheduleSlotsByToken(token, date, mode === 'reschedule');
-
   const data = query.data;
+  const paymentPolling = Boolean(data?.deposit_status === 'awaiting' && (data.latest_payment_status === 'pending' || paymentStarted));
+  const paymentStatus = usePaymentStatus(token, paymentPolling);
   const manageUrl = window.location.href;
 
   useEffect(() => {
-    if (data) setDate(localDate(data.appointment_starts_at, data.timezone));
-  }, [data]);
+    if (data) {
+      setDate(localDate(data.appointment_starts_at, data.timezone));
+      if (data.payment_methods?.length && !paymentProvider) setPaymentProvider(data.payment_methods[0] as PaymentProvider);
+    }
+  }, [data, paymentProvider]);
+
+  useEffect(() => {
+    const status = paymentStatus.data?.status;
+    if (status === 'paid' || status === 'failed' || status === 'refunded' || status === 'not_required') {
+      setPaymentStarted(false);
+      void query.refetch();
+    }
+  }, [paymentStatus.data?.status]);
 
   const whatsappMessage = useMemo(() => {
     if (!data) return '';
@@ -72,6 +89,22 @@ export default function AppointmentManage() {
       await query.refetch();
     } catch (error) {
       toast.error(humanError(error));
+    }
+  };
+
+  const submitPayment = async () => {
+    if (!token || !paymentProvider || !paymentPhone.trim()) return;
+    try {
+      await paymentMutation.mutateAsync({
+        token,
+        provider: paymentProvider,
+        msisdn: paymentPhone,
+      });
+      setPaymentStarted(true);
+      toast.success('Pedido de pagamento enviado. Confirma no seu telemóvel.');
+    } catch (error) {
+      toast.error(humanError(error));
+      setPaymentStarted(false);
     }
   };
 
@@ -158,6 +191,115 @@ export default function AppointmentManage() {
               {data.shop_maps_url && <a href={data.shop_maps_url} target="_blank" rel="noreferrer" className="t-label text-accent-soft hover:text-ink-hi inline-block mt-1">Abrir no mapa</a>}
             </div>
           </div>
+
+          {canActions && data.deposit_status === 'awaiting' && data.deposit_cents > 0 && (
+            <div className="mt-7 rounded-3xl border border-accent/25 bg-accent/10 p-5 sm:p-6" data-testid="payment-section">
+              <div className="flex items-start gap-3">
+                <CreditCard className="text-accent-soft mt-0.5 shrink-0" size={20} />
+                <div className="flex-1 min-w-0">
+                  <h2 className="t-card text-ink-hi">Pagar o sinal</h2>
+                  <p className="t-body text-ink-mid mt-1">
+                    {formatMT(data.deposit_cents)} para confirmar a sua marcação.
+                    {data.hold_expires_at ? ' O lugar fica reservado até ' + formatDateTime(data.hold_expires_at, data.timezone) + '.' : ''}
+                  </p>
+
+                  {data.payment_methods?.length ? (
+                    <>
+                      <div className="mt-4">
+                        <span className="t-label text-ink-mid mb-2 block">Método</span>
+                        <div className="grid sm:grid-cols-2 gap-2">
+                          {data.payment_methods.map((provider) => (
+                            <button
+                              key={provider}
+                              type="button"
+                              onClick={() => setPaymentProvider(provider as PaymentProvider)}
+                              aria-pressed={paymentProvider === provider}
+                              className={"rounded-2xl border p-3 text-left transition-colors " + (paymentProvider === provider ? 'border-accent-soft bg-accent-soft/10 text-ink-hi' : 'border-white/10 bg-white/5 text-ink-mid hover:border-white/20')}
+                            >
+                              <span className="flex items-center gap-2 text-sm font-medium">
+                                <Smartphone size={16} />
+                                {provider === 'mpesa' ? 'M-Pesa' : 'e-Mola'}
+                              </span>
+                              <span className="t-label text-ink-mid mt-1 block">
+                                {provider === 'mpesa' ? 'Receba o pedido de pagamento no M-Pesa.' : 'Receba o pedido de pagamento no e-Mola.'}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        <Field
+                          data-testid="payment-msisdn"
+                          label="Número para pagar"
+                          name="payment-msisdn"
+                          type="tel"
+                          inputMode="tel"
+                          prefix="+258"
+                          value={paymentPhone.replace(/^\+258/, '')}
+                          onChange={(e) => setPaymentPhone(e.target.value)}
+                          placeholder={paymentProvider === 'emola' ? '86 000 0000 ou 87 000 0000' : '84 000 0000'}
+                          autoComplete="tel"
+                        />
+                      </div>
+
+                      {data.latest_payment_status === 'failed' && data.latest_payment_failure_reason && (
+                        <div className="mt-4 rounded-2xl border border-st-noshow/25 bg-st-noshow/10 p-3" role="alert">
+                          <p className="t-label text-st-noshow">Última tentativa</p>
+                          <p className="t-body text-ink-mid mt-1">{data.latest_payment_failure_reason}</p>
+                        </div>
+                      )}
+
+                      {(paymentStatus.data?.status === 'pending' || data.latest_payment_status === 'pending') && (
+                        <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4" aria-live="polite">
+                          <div className="flex items-start gap-3">
+                            <ShieldCheck className="text-accent-soft mt-0.5 shrink-0" size={18} />
+                            <div>
+                              <p className="t-card text-ink-hi">Pagamento em verificação</p>
+                              <p className="t-body text-ink-mid mt-1">{paymentStatus.data?.message || 'Confirma o pedido no seu telemóvel. Não repitas o pagamento.'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {paymentStatus.data?.status === 'paid' && !paymentStatus.data.requires_refund && (
+                        <div className="mt-4 rounded-2xl border border-st-confirmed/25 bg-st-confirmed/10 p-4" role="status">
+                          <p className="t-card text-ink-hi">Sinal confirmado</p>
+                          <p className="t-body text-ink-mid mt-1">A sua marcação está confirmada.</p>
+                        </div>
+                      )}
+
+                      {paymentStatus.data?.status === 'paid' && paymentStatus.data.requires_refund && (
+                        <div className="mt-4 rounded-2xl border border-st-noshow/25 bg-st-noshow/10 p-4" role="alert">
+                          <p className="t-card text-ink-hi">Pagamento recebido depois do prazo</p>
+                          <p className="t-body text-ink-mid mt-1">A marcação não pôde ser recuperada. A barbearia precisa de reconciliar este pagamento.</p>
+                        </div>
+                      )}
+
+                      <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                        <Button
+                          full
+                          size="lg"
+                          onClick={submitPayment}
+                          loading={paymentMutation.isPending}
+                          disabled={!paymentProvider || !paymentPhone.trim() || paymentStatus.data?.status === 'pending' || data.latest_payment_status === 'pending'}
+                          data-testid="pay-deposit-btn"
+                        >
+                          Pagar {formatMT(data.deposit_cents)}
+                        </Button>
+                      </div>
+                      <p className="t-label text-ink-mid mt-3">Não precisa de criar conta. O pagamento fica associado a esta marcação.</p>
+                    </>
+                  ) : (
+                    <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <p className="t-card text-ink-hi">Pagamento ainda não disponível</p>
+                      <p className="t-body text-ink-mid mt-1">A barbearia ainda não configurou M-Pesa ou e-Mola. Fale com a equipa para concluir o sinal.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {canActions && (data.can_cancel || data.can_reschedule) && mode === 'view' && (
             <div className="mt-7 flex flex-col sm:flex-row gap-2">
