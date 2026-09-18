@@ -108,11 +108,13 @@ export async function rescheduleAppointmentByOperator(
   shopId: string,
   appointmentId: string,
   newStart: string,
+  newBarberId?: string | null,
 ): Promise<OperatorRescheduleResult> {
   const { data, error } = await supabase.rpc('reschedule_appointment_by_operator', {
     p_shop: shopId,
     p_appointment: appointmentId,
     p_new_start: newStart,
+    p_new_barber_id: newBarberId ?? null,
   });
   if (error) throw error;
   const result = data?.[0];
@@ -123,8 +125,8 @@ export async function rescheduleAppointmentByOperator(
 export function useOperatorReschedule() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { shopId: string; appointmentId: string; newStart: string }) =>
-      rescheduleAppointmentByOperator(input.shopId, input.appointmentId, input.newStart),
+    mutationFn: (input: { shopId: string; appointmentId: string; newStart: string; newBarberId?: string | null }) =>
+      rescheduleAppointmentByOperator(input.shopId, input.appointmentId, input.newStart, input.newBarberId),
     retry: false,
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ['agenda'] });
