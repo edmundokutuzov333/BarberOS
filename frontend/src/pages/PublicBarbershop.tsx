@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { Clock3, Instagram, MapPin, MessageCircle, Phone, Scissors, Star } from 'lucide-react';
+import { Instagram, MapPin, MessageCircle, Phone, Scissors, Star } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { buildWhatsAppLink } from '@/lib/calendar';
