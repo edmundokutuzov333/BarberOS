@@ -53,20 +53,18 @@ export function BarbersEditor() {
   const save = useMutation({
     mutationFn: async () => {
       if (form.display_name.trim().length < 2) throw new Error('INVALID_NAME');
-      const row = { display_name: form.display_name.trim(), bio: form.bio.trim() || null, years_experience: parseInt(form.years, 10) || 0, photo_url: form.photo_url, user_id: form.user_id || null };
-      let id: string;
-      if (editing === 'new') {
-        const r = await supabase.from('barbers').insert({ ...row, barbershop_id: shop!.id, sort_order: q.data?.length ?? 0 }).select('id').single();
-        if (r.error) throw r.error; id = r.data.id;
-      } else {
-        id = (editing as Barber).id;
-        const r = await supabase.from('barbers').update(row).eq('id', id); if (r.error) throw r.error;
-        const d = await supabase.from('barber_services').delete().eq('barber_id', id); if (d.error) throw d.error;
-      }
-      if (form.services.length) {
-        const r = await supabase.from('barber_services').insert(form.services.map((service_id) => ({ barber_id: id, service_id })));
-        if (r.error) throw r.error;
-      }
+      const { data: barberId, error } = await supabase.rpc('save_barber', {
+        p_shop: shop!.id,
+        p_barber_id: editing === 'new' ? null : (editing as Barber).id,
+        p_display_name: form.display_name.trim(),
+        p_bio: form.bio.trim() || null,
+        p_years_experience: parseInt(form.years, 10) || 0,
+        p_photo_url: form.photo_url,
+        p_user_id: form.user_id || null,
+        p_service_ids: form.services,
+      });
+      if (error) throw error;
+      if (!barberId) throw new Error('BARBER_SAVE_FAILED');
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: key }); setEditing(null); toast.success('Barbeiro guardado'); },
     onError: (e) => toast.error(humanError(e)),
