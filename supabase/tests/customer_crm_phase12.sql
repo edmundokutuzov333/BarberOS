@@ -18,6 +18,12 @@ declare
   v_customer uuid;
   v_appt uuid;
   v_price_cents integer;
+  v_needs_payment boolean;
+  v_customer_visits integer;
+  v_last_visit timestamptz;
+  v_last_service text;
+  v_total_spend bigint;
+  v_completed bigint;
   v_conflict_customer uuid;
   v_search_count bigint;
   v_detail_name text;
@@ -234,7 +240,7 @@ begin
   end if;
 
   select appointment_id,needs_payment
-  into v_appt,v_error
+  into v_appt,v_needs_payment
   from public.book_appointment_manual(
     v_shop,
     v_service,
@@ -271,14 +277,14 @@ begin
   );
 
   select visits_count,last_visit_at,last_service_name,total_spend_cents,completed_appointments
-  into v_search_count,v_detail_name,v_detail_notes,v_price_cents,v_history_count
+  into v_customer_visits,v_last_visit,v_last_service,v_total_spend,v_completed
   from public.get_customer(v_shop,v_customer);
 
-  if v_search_count < 1
-     or v_detail_name is null
-     or v_detail_notes is null
-     or v_price_cents < 0
-     or v_history_count < 1 then
+  if v_customer_visits < 1
+     or v_last_visit is null
+     or v_last_service is null
+     or v_total_spend <> v_price_cents
+     or v_completed < 1 then
     raise exception 'CRM_BOOKING_HISTORY_INTEGRATION_FAILED';
   end if;
 
