@@ -30,8 +30,8 @@ A ordem actual é:
 20. `20260918143427_appointment_token_slots.sql`
 21. `20260918143814_appointment_token_cancel_lock.sql`
 22. `20260918143918_appointment_token_cancel_lock_order.sql`
-23. `20260918144500_appointment_token_cancel_returning_fix.sql`
-24. `20260918144319_public_barbershop_surface.sql`
+23. `20260918144319_public_barbershop_surface.sql`
+24. `20260918144500_appointment_token_cancel_returning_fix.sql`
 25. `20260918144535_public_barbershop_anon_boundary.sql`
 
 As versões 1 a 3 foram reconciliadas com o estado que já existia na base viva. A versão 4 já estava aplicada e foi mantida com a mesma versão no histórico Supabase.
