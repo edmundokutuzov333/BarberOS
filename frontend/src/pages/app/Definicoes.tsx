@@ -5,6 +5,8 @@ import { ProfileForm, ThemePicker, RulesForm, DepositForm } from '@/components/c
 import { MembersEditor } from '@/components/config/MembersEditor';
 import { LinkQr } from '@/components/config/LinkQr';
 import PaymentSettingsForm from '@/features/payments/PaymentSettingsForm';
+import { useShop } from '@/lib/shop';
+import { can } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
 
 const TABS = [
@@ -19,14 +21,27 @@ const TABS = [
 
 export default function Definicoes() {
   const { tab } = useParams();
-  const t = TABS.find((x) => x.key === tab);
+  const { role } = useShop();
+  const visibleTabs = TABS.filter((item) => item.key !== 'utilizadores' || can(role, 'manage_team'));
+  const t = visibleTabs.find((x) => x.key === tab);
+
   if (!t) return <Navigate to="/app/definicoes/perfil" replace />;
+
   return (
     <Page testId="definicoes-page" title="Definições">
       <nav className="flex gap-1 overflow-x-auto no-scrollbar mb-5 -mx-1 px-1" aria-label="Secções">
-        {TABS.map((x) => (
-          <NavLink key={x.key} to={`/app/definicoes/${x.key}`} data-testid={`settings-tab-${x.key}`}
-            className={({ isActive }) => cn('rounded-full px-4 h-9 inline-flex items-center text-xs whitespace-nowrap border transition-colors', isActive ? 'bg-accent-soft text-accent-ink border-transparent font-medium' : 'border-white/10 text-ink-mid hover:text-ink-hi')}>
+        {visibleTabs.map((x) => (
+          <NavLink
+            key={x.key}
+            to={`/app/definicoes/${x.key}`}
+            data-testid={`settings-tab-${x.key}`}
+            className={({ isActive }) => cn(
+              'rounded-full px-4 h-9 inline-flex items-center text-xs whitespace-nowrap border transition-colors',
+              isActive
+                ? 'bg-accent-soft text-accent-ink border-transparent font-medium'
+                : 'border-white/10 text-ink-mid hover:text-ink-hi',
+            )}
+          >
             {x.label}
           </NavLink>
         ))}
