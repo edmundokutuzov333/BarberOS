@@ -11,7 +11,13 @@ declare
   v_other_shop uuid;
   v_service uuid;
   v_barber uuid;
+  v_haircut uuid;
+  v_slug text;
+  v_day date;
+  v_start timestamptz;
   v_customer uuid;
+  v_appt uuid;
+  v_price_cents integer;
   v_conflict_customer uuid;
   v_search_count bigint;
   v_detail_name text;
@@ -99,14 +105,42 @@ begin
   order by b.created_at
   limit 1;
 
-  select s.id, br.id
-  into v_service,v_barber
-  from public.services s
-  join public.barbers br on br.barbershop_id=s.barbershop_id and br.is_active
-  where s.barbershop_id=v_shop
-    and s.is_active
+  select s.id, br.id, b.slug
+  into v_service,v_barber,v_slug
+  from public.barbershops b
+  join public.services s on s.barbershop_id=b.id and s.is_active
+  join public.barber_services bs on bs.service_id=s.id
+  join public.barbers br on br.id=bs.barber_id and br.is_active
+  where b.id=v_shop
   order by s.sort_order,br.sort_order
   limit 1;
+
+  select h.id
+  into v_haircut
+  from public.haircuts h
+  where h.barbershop_id=v_shop
+    and h.is_active
+    and (h.service_id=v_service or h.service_id is null)
+  order by (h.service_id is null),h.sort_order
+  limit 1;
+
+  select gd.day
+  into v_day
+  from public.get_available_days(
+    v_slug,v_service,v_barber,current_date,current_date+30
+  ) gd
+  where gd.is_open
+    and gd.slots_count > 0
+  order by gd.day
+  limit 1;
+
+  if v_day is not null then
+    select gs.slot_start
+    into v_start
+    from public.get_available_slots(v_slug,v_service,v_barber,v_day) gs
+    order by gs.slot_start
+    limit 1;
+  end if;
 
   if v_service is null or v_barber is null then
     raise exception 'CRM_FIXTURE_SERVICE_OR_BARBER_UNAVAILABLE';
@@ -118,7 +152,7 @@ begin
   values (
     v_shop,
     'Phase12 CRM Fixture',
-    '841234561',
+    '+258841234561',
     'phase12-crm@example.invalid',
     'nota inicial',
     '{"tags":["cliente novo","preferência"]}'::jsonb
@@ -178,7 +212,7 @@ begin
   from public.get_customer(v_shop,v_customer);
 
   if v_detail_name <> 'Phase12 CRM Fixture'
-     or v_detail_phone <> '841234561'
+     or v_detail_phone <> '+258841234561'
      or v_detail_notes <> 'nota inicial'
      or v_detail_tags->'tags' <> '["cliente novo","preferência"]'::jsonb then
     raise exception 'CRM_DETAIL_FAILED';
@@ -191,6 +225,73 @@ begin
 
   if coalesce(v_history_count,0) <> 0 then
     raise exception 'CRM_EMPTY_HISTORY_EXPECTED';
+  end if;
+
+
+
+  if v_start is null then
+    raise exception 'CRM_BOOKING_FIXTURE_SLOT_UNAVAILABLE';
+  end if;
+
+  select appointment_id,needs_payment
+  into v_appt,v_error
+  from public.book_appointment_manual(
+    v_shop,
+    v_service,
+    v_haircut,
+    v_barber,
+    v_start,
+    'Phase12 CRM integration',
+    '+258841234561',
+    'phase12-crm@example.invalid',
+    'phase12 integration'
+  );
+
+  select price_cents
+  into v_price_cents
+  from public.appointments
+  where id=v_appt
+    and customer_id=v_customer
+    and barbershop_id=v_shop;
+
+  if v_appt is null or v_price_cents is null then
+    raise exception 'CRM_BOOKING_DID_NOT_ATTACH_CUSTOMER';
+  end if;
+
+  set local role postgres;
+  update public.appointments
+  set status='completed'
+  where id=v_appt
+    and barbershop_id=v_shop;
+  set local role authenticated;
+  perform set_config(
+    'request.jwt.claims',
+    jsonb_build_object('sub',v_owner::text,'role','authenticated')::text,
+    true
+  );
+
+  select visits_count,last_visit_at,last_service_name,total_spend_cents,completed_appointments
+  into v_search_count,v_detail_name,v_detail_notes,v_price_cents,v_history_count
+  from public.get_customer(v_shop,v_customer);
+
+  if v_search_count < 1
+     or v_detail_name is null
+     or v_detail_notes is null
+     or v_price_cents < 0
+     or v_history_count < 1 then
+    raise exception 'CRM_BOOKING_HISTORY_INTEGRATION_FAILED';
+  end if;
+
+  if not exists (
+    select 1
+    from public.get_customer_appointments(v_shop,v_customer,50,0) h
+    where h.appointment_id=v_appt
+      and h.status='completed'
+      and h.service_name is not null
+      and h.barber_name is not null
+      and h.price_cents=v_price_cents
+  ) then
+    raise exception 'CRM_APPOINTMENT_HISTORY_NOT_FOUND';
   end if;
 
   begin
