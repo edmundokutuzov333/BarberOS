@@ -37,6 +37,9 @@ jobs:
   frontend:
     name: Phase 24 frontend concurrency contracts
     runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
     defaults:
       run:
         working-directory: frontend
