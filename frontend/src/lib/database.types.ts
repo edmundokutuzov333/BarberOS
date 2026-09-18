@@ -492,11 +492,16 @@ export type Database = {
       notifications: {
         Row: {
           appointment_id: string | null
+          attempts: number
           barbershop_id: string
           channel: Database["public"]["Enums"]["notif_channel"]
           error: string | null
+          fallback_url: string | null
           id: string
+          last_attempt_at: string | null
+          next_attempt_at: string | null
           payload: Json
+          provider_message_id: string | null
           recipient: string
           scheduled_for: string
           sent_at: string | null
@@ -506,11 +511,16 @@ export type Database = {
         }
         Insert: {
           appointment_id?: string | null
+          attempts?: number
           barbershop_id: string
           channel: Database["public"]["Enums"]["notif_channel"]
           error?: string | null
+          fallback_url?: string | null
           id?: string
+          last_attempt_at?: string | null
+          next_attempt_at?: string | null
           payload?: Json
+          provider_message_id?: string | null
           recipient: string
           scheduled_for?: string
           sent_at?: string | null
@@ -520,11 +530,16 @@ export type Database = {
         }
         Update: {
           appointment_id?: string | null
+          attempts?: number
           barbershop_id?: string
           channel?: Database["public"]["Enums"]["notif_channel"]
           error?: string | null
+          fallback_url?: string | null
           id?: string
+          last_attempt_at?: string | null
+          next_attempt_at?: string | null
           payload?: Json
+          provider_message_id?: string | null
           recipient?: string
           scheduled_for?: string
           sent_at?: string | null
@@ -1086,6 +1101,106 @@ export type Database = {
         }
         Returns: string
       }
+      claim_notifications: {
+        Args: { p_limit?: number }
+        Returns: {
+          appointment_id: string | null
+          attempts: number
+          barber_name: string | null
+          barbershop_id: string
+          channel: Database["public"]["Enums"]["notif_channel"]
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          duration_min: number | null
+          ends_at: string | null
+          haircut_name: string | null
+          id: string
+          manage_token: string | null
+          offer_expires_at: string | null
+          offer_token: string | null
+          payload: Json
+          price_cents: number | null
+          recipient: string
+          scheduled_for: string
+          service_name: string | null
+          shop_name: string
+          shop_phone: string | null
+          shop_slug: string
+          shop_whatsapp: string | null
+          starts_at: string | null
+          template_key: string
+          timezone: string
+          waitlist_entry_id: string | null
+        }[]
+      }
+      get_notification_metrics: {
+        Args: { p_shop: string }
+        Returns: {
+          delivery_rate_7d: number
+          failed_count: number
+          processing_count: number
+          queued_count: number
+          sent_7d_count: number
+          sent_today_count: number
+        }[]
+      }
+      get_notifications: {
+        Args: {
+          p_channel?: string
+          p_limit?: number
+          p_offset?: number
+          p_shop: string
+          p_status?: string
+        }
+        Returns: {
+          attempts: number
+          channel: Database["public"]["Enums"]["notif_channel"]
+          fallback_url: string | null
+          last_error: string | null
+          next_attempt_at: string | null
+          notification_id: string
+          recipient_masked: string
+          scheduled_for: string
+          sent_at: string | null
+          status: Database["public"]["Enums"]["notif_status"]
+          template_key: string
+          total_count: number
+        }[]
+      }
+      mark_notification_failure: {
+        Args: {
+          p_error: string
+          p_fallback_url?: string | null
+          p_id: string
+          p_retryable?: boolean
+        }
+        Returns: {
+          attempts: number
+          retry_at: string | null
+          status: Database["public"]["Enums"]["notif_status"]
+        }[]
+      }
+      mark_notification_sent: {
+        Args: {
+          p_id: string
+          p_meta?: Json
+          p_provider_message_id?: string | null
+        }
+        Returns: Database["public"]["Enums"]["notif_status"]
+      }
+      recover_stuck_notifications: {
+        Args: { p_after?: string }
+        Returns: number
+      }
+      retry_notification: {
+        Args: { p_notification: string; p_shop: string }
+        Returns: {
+          attempts: number
+          notification_id: string
+          status: Database["public"]["Enums"]["notif_status"]
+        }[]
+      }
       delete_schedule_override: {
         Args: { p_id: string; p_shop: string }
         Returns: boolean
@@ -1528,7 +1643,7 @@ export type Database = {
         | "failed"
         | "refunded"
       notif_channel: "whatsapp" | "email"
-      notif_status: "queued" | "sent" | "failed" | "skipped"
+      notif_status: "queued" | "sent" | "failed" | "skipped" | "processing"
       payment_provider: "mpesa" | "emola"
       payment_state: "pending" | "paid" | "failed" | "refunded"
       shop_status: "trial" | "active" | "suspended" | "cancelled"
@@ -1693,7 +1808,7 @@ export const Constants = {
       deposit_mode: ["percent", "fixed"],
       deposit_state: ["not_required", "awaiting", "paid", "failed", "refunded"],
       notif_channel: ["whatsapp", "email"],
-      notif_status: ["queued", "sent", "failed", "skipped"],
+      notif_status: ["queued", "sent", "failed", "skipped", "processing"],
       payment_provider: ["mpesa", "emola"],
       payment_state: ["pending", "paid", "failed", "refunded"],
       shop_status: ["trial", "active", "suspended", "cancelled"],
