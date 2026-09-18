@@ -48,8 +48,16 @@ textarea{
   font:inherit;
 }
 
-button{
+button,
+a,
+[role="button"]{
   touch-action:manipulation;
+}
+
+button:not([disabled]),
+a[href],
+[role="button"]:not([aria-disabled="true"]){
+  -webkit-tap-highlight-color:transparent;
 }
 
 img{
