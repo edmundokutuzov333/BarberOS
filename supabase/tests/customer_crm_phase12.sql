@@ -131,7 +131,7 @@ begin
   values (
     v_shop,
     'Phase12 CRM Conflict',
-    '841234562',
+    '+258841234562',
     'phase12-crm-conflict@example.invalid'
   )
   returning id into v_conflict_customer;
