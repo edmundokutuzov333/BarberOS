@@ -244,7 +244,13 @@ export default function ManualBookingModal({
     setDate(today);
     setStart('');
     setForm({ name: '', phone: '', email: '', note: '' });
-  }, [open, role, ownBarber?.id, today]);
+  }, [open, role, today]);
+
+  useEffect(() => {
+    if (open && role === 'barber' && ownBarber?.id && !barberId) {
+      setBarberId(ownBarber.id);
+    }
+  }, [open, role, ownBarber?.id, barberId]);
 
   useEffect(() => {
     if (!serviceId) {
