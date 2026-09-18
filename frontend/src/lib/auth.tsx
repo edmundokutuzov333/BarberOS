@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let alive = true;
     supabase
       .from('profiles')
-      .select('*')
+      .select('id, full_name, phone, avatar_url, is_platform_admin')
       .eq('id', session.user.id)
       .maybeSingle()
       .then(({ data }) => {
