@@ -15,6 +15,7 @@ declare
   v_created_by uuid;
   v_note text;
   v_notifs int;
+  v_error text;
 begin
   if not has_function_privilege('authenticated','public.book_appointment_manual(uuid,uuid,uuid,uuid,timestamptz,text,text,text,text)','EXECUTE') then
     raise exception 'AUTH_MANUAL_BOOKING_EXECUTE_REQUIRED';
@@ -105,7 +106,29 @@ begin
   if v_note <> 'Cliente no balcão' then raise exception 'MANUAL_INTERNAL_NOTE_INVALID'; end if;
   if v_notifs < 1 then raise exception 'MANUAL_NOTIFICATION_QUEUE_MISSING'; end if;
 
-  raise notice 'PASS | manual source=% actor=% note_present=% notifications=%',
+  begin
+    perform public.book_appointment_manual(
+      v_shop,
+      v_service,
+      null,
+      v_barber,
+      v_start,
+      'Phase11 Collision Acceptance',
+      '842345678',
+      'phase11-collision@example.invalid',
+      'collision'
+    );
+    raise exception 'SECOND_BOOKING_UNEXPECTEDLY_SUCCEEDED';
+  exception
+    when others then
+      v_error := sqlerrm;
+  end;
+
+  if v_error is null or position('SLOT_TAKEN' in v_error) = 0 then
+    raise exception 'EXPECTED_SLOT_TAKEN_NOT_RETURNED: %',coalesce(v_error,'null');
+  end if;
+
+  raise notice 'PASS | manual source=% actor=% note_present=% notifications=% collision=SLOT_TAKEN',
     v_source,v_created_by,(v_note is not null),v_notifs;
 end
 $$;
