@@ -34,6 +34,8 @@ A cadeia actual é:
 5. `20260918134600_domain_integrity.sql`
 6. `20260918134657_domain_integrity_contract.sql`
 7. `20260918135712_atomic_barber_save.sql`
+8. `20260918140253_availability_engine_2.sql`
+9. `20260918140609_availability_security.sql`
 
 Future schema changes must be a new timestamped migration. Never rename an applied migration.
 
@@ -80,3 +82,11 @@ As mudanças de schema entram através de migrations.
 A base PostgreSQL impõe invariantes para horários, limites de domínio e relações entre entidades do mesmo tenant. Reordenação e grelha de horários são persistidas por RPCs transaccionais e tipadas no frontend.
 
 A configuração de barbeiros usa o RPC transaccional save_barber para evitar estados parciais entre o barbeiro e os seus serviços.
+
+## Fase 4: Availability Engine 2.0
+
+A disponibilidade é calculada no PostgreSQL e consumida pelo frontend através de RPCs tipadas. O motor considera timezone da loja, duração do serviço, barbeiro e associação ao serviço, horário semanal, override por barbeiro, dias especiais por data, lead time, janela máxima, marcações activas e bloqueios.
+
+Dias especiais suportam fecho completo ou horário especial e têm precedência sobre o horário semanal. Overrides específicos do barbeiro têm precedência sobre overrides da loja.
+
+O browser não implementa uma segunda regra de disponibilidade. `frontend/src/features/availability/api.ts` fornece o contrato de consumo para o booking público.
