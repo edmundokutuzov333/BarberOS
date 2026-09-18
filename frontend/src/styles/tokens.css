@@ -8,6 +8,7 @@
   --surface-1:rgba(15,12,22,.65);
   --surface-2:rgba(22,20,28,.80);
   --surface-3:rgba(30,26,40,.55);
+  --surface-hover:rgba(255,255,255,.045);
 
   /* acentos */
   --accent:#9d7bf5;
@@ -19,15 +20,31 @@
   --text-hi:#ffffff;
   --text-mid:#9b95a8;
   --text-lo:#5c5765;
+  --text-on-accent:#120c1f;
+
+  /* estrutura */
+  --border-subtle:rgba(255,255,255,.07);
+  --border-default:rgba(255,255,255,.10);
+  --border-strong:rgba(255,255,255,.18);
+  --focus-ring:#b59eff;
 
   /* estados */
   --st-pending:#e0b057;
+  --st-warning:#e0b057;
   --st-confirmed:#b59eff;
   --st-active:#7bd7f5;
+  --st-info:#7bd7f5;
   --st-done:#6ee7b7;
   --st-cancelled:#5c5765;
   --st-noshow:#f57b9d;
 
+  /* profundidade */
+  --shadow-panel:0 24px 60px -20px rgba(80,40,160,.45);
+  --shadow-float:0 16px 40px -10px rgba(80,40,160,.50);
+  --shadow-accent:0 8px 24px -6px rgba(var(--accent-rgb),.45);
+
+  /* geometria */
   --radius-panel:1.5rem;
   --radius-card:1rem;
+  --radius-pill:9999px;
 }
