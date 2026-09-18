@@ -12,15 +12,15 @@ As acceptance suites das fases anteriores continuam como provas de domínio espe
 
 ## Unit
 
-`scripts/test-unit-phase23.mjs` carrega os módulos TypeScript reais através do Vite SSR e testa Meticais, slug, erros, calendário, WhatsApp e permissões.
+`frontend/tests/unit/phase23-domain.mjs` carrega os módulos TypeScript reais através do Vite SSR e testa Meticais, slug, erros, calendário, WhatsApp e permissões.
 
 ## Components
 
-`scripts/test-components-phase23.mjs` carrega componentes React reais e verifica semântica renderizada de Button, StatusChip, Skeleton, EmptyState, ErrorState, Panel, Page e SkipLink.
+`frontend/tests/components/phase23-components.mjs` carrega componentes React reais e verifica semântica renderizada de Button, StatusChip, Skeleton, EmptyState, ErrorState, Panel, Page e SkipLink.
 
 ## E2E
 
-`tests/e2e/phase23.spec.mjs` usa Playwright em Chromium desktop e mobile.
+`frontend/tests/e2e/phase23.spec.mjs` usa Playwright em Chromium desktop e mobile.
 
 O smoke é sempre executado contra o build de produção local. Página pública e booking são executados quando existe um ambiente E2E dedicado. O percurso autenticado usa apenas credenciais dedicadas.
 
