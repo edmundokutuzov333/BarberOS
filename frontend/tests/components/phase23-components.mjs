@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 
 async function main() {
-  const server = await createServer({ root: process.cwd(), logLevel: 'error', server: { middlewareMode: true } });
+  const server = await createServer({ root: process.cwd(), logLevel: 'error', optimizeDeps: { noDiscovery: true }, server: { middlewareMode: true } });
   try {
     const { Button } = await server.ssrLoadModule('/src/components/ui/Button.tsx');
     const { StatusChip } = await server.ssrLoadModule('/src/components/ui/StatusChip.tsx');
