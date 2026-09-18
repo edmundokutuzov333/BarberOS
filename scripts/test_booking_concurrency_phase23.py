@@ -48,16 +48,16 @@ def fixture(conn):
             "where slot_start > now() + interval '20 minutes' order by slot_start limit 1",
             (slug, service_id, barber_id, date.today() + timedelta(days=1)),
         )
-        slot = cur.fetchone()
-        if not slot:
+        row = cur.fetchone()
+        if not row:
             raise RuntimeError("PHASE23_CONCURRENCY_SLOT_UNAVAILABLE")
-        return slug, service_id, barber_id, slot[0]
+        return slug, service_id, barber_id, row[0]
 
-def book_worker(result: Result, slug, service_id, barber_id, slot, name, phone, ready: threading.Barrier, hold: threading.Event, commit: bool):
+def book_worker(result, started, release_commit, slug, service_id, barber_id, slot, name, phone, commit):
     conn = psycopg.connect(DB, autocommit=False, prepare_threshold=None)
     try:
-        ready.wait()
         with conn.cursor() as cur:
+            started.set()
             try:
                 cur.execute(
                     "select public.book_appointment(%s,%s,%s,%s,%s,%s,%s,%s)",
@@ -66,7 +66,7 @@ def book_worker(result: Result, slug, service_id, barber_id, slot, name, phone, 
                 result.ok = True
                 result.value = cur.fetchone()
                 if commit:
-                    hold.wait(timeout=30)
+                    release_commit.wait(timeout=30)
                     conn.commit()
                 else:
                     conn.rollback()
@@ -79,26 +79,33 @@ def book_worker(result: Result, slug, service_id, barber_id, slot, name, phone, 
 with psycopg.connect(DB, autocommit=True, prepare_threshold=None) as setup:
     slug, service_id, barber_id, slot = fixture(setup)
 
-ready = threading.Barrier(2)
-release_first = threading.Event()
 a = Result()
 b = Result()
+a_started = threading.Event()
+b_started = threading.Event()
+release_a = threading.Event()
 
 ta = threading.Thread(
     target=book_worker,
-    args=(a, slug, service_id, barber_id, slot, "Phase 23 A", "+258841" + uuid.uuid4().hex[:7], ready, release_first, True),
+    args=(a, a_started, release_a, slug, service_id, barber_id, slot, "Phase 23 A", "+258841" + uuid.uuid4().hex[:7], True),
 )
+ta.start()
+if not a_started.wait(10):
+    raise SystemExit("PHASE23_CONCURRENCY_A_START_TIMEOUT")
+
+# A must reach the booking function first and keep its transaction open.
+# B then enters and blocks on the booking engine's advisory lock.
 tb = threading.Thread(
     target=book_worker,
-    args=(b, slug, service_id, barber_id, slot, "Phase 23 B", "+258842" + uuid.uuid4().hex[:7], ready, release_first, False),
+    args=(b, b_started, release_a, slug, service_id, barber_id, slot, "Phase 23 B", "+258842" + uuid.uuid4().hex[:7], True),
 )
-
-ta.start()
 tb.start()
+if not b_started.wait(10):
+    raise SystemExit("PHASE23_CONCURRENCY_B_START_TIMEOUT")
 
-# Both workers have entered the barrier. Release the first transaction only
-# after the second worker has had a chance to reach the advisory lock.
-release_first.set()
+# A can now commit. B's blocked transaction must re-check the slot and reject it.
+release_a.set()
+
 ta.join(45)
 tb.join(45)
 
@@ -111,7 +118,6 @@ failed = b if a.ok else a
 if not failed.error or ("SLOT_TAKEN" not in failed.error and "SLOT_UNAVAILABLE" not in failed.error):
     raise SystemExit(f"PHASE23_CONCURRENCY_WRONG_ERROR: {failed.error}")
 
-# Cleanup any appointment created by the successful side.
 with psycopg.connect(DB, autocommit=True, prepare_threshold=None) as cleanup:
     with cleanup.cursor() as cur:
         cur.execute(
@@ -121,4 +127,4 @@ with psycopg.connect(DB, autocommit=True, prepare_threshold=None) as cleanup:
             (slug,),
         )
 
-print("PASS | Phase 23 booking concurrency: exactly one transaction succeeded and the other was rejected.")
+print("PASS | Phase 23 booking concurrency: one booking committed, the concurrent booking was rejected.")
