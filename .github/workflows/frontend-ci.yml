@@ -36,6 +36,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Phase 21 accessibility audit
+        run: yarn a11y:phase21
+
       - name: Typecheck
         run: yarn typecheck
 
