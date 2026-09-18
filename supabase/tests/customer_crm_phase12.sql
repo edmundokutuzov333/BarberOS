@@ -272,7 +272,7 @@ begin
     from public.audit_logs
     where barbershop_id=v_shop
       and entity='customer'
-      and entity_id=v_customer::text
+      and entity_id=v_customer
       and action='customer_updated'
   ) then
     raise exception 'CRM_AUDIT_LOG_MISSING';
