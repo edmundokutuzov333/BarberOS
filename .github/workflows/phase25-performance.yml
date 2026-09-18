@@ -1,0 +1,113 @@
+name: BarberOS Phase 25 Performance Gate
+
+on:
+  pull_request:
+    paths:
+      - "frontend/**"
+      - "scripts/check-performance-budget.mjs"
+      - "supabase/migrations/*phase_25*"
+      - "supabase/tests/phase25_*"
+      - "docs/PHASE25-PERFORMANCE.md"
+      - ".github/workflows/phase25-performance.yml"
+  push:
+    branches:
+      - main
+      - "phase-*"
+    paths:
+      - "frontend/**"
+      - "scripts/check-performance-budget.mjs"
+      - "supabase/migrations/*phase_25*"
+      - "supabase/tests/phase25_*"
+      - "docs/PHASE25-PERFORMANCE.md"
+      - ".github/workflows/phase25-performance.yml"
+
+jobs:
+  build-budget:
+    name: Phase 25 asset budget
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - run: corepack enable
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - run: yarn perf:budget
+      - run: yarn test:contracts:phase25
+      - run: yarn typecheck
+
+  public-3g:
+    name: Phase 25 public Fast 3G
+    runs-on: ubuntu-latest
+    needs: build-budget
+    env:
+      VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
+      BARBEROS_E2E_SHOP_SLUG: oryon
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - working-directory: frontend
+        run: corepack enable
+      - working-directory: frontend
+        run: yarn install --frozen-lockfile
+      - working-directory: frontend
+        run: yarn build
+      - name: Start production preview
+        working-directory: frontend
+        run: nohup yarn preview --host 127.0.0.1 --port 4173 > /tmp/barberos-preview.log 2>&1 &
+      - name: Install Playwright
+        working-directory: frontend
+        run: npm install --no-save --package-lock=false --legacy-peer-deps @playwright/test@1.56.1
+      - name: Install Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Run public performance benchmark
+        working-directory: frontend
+        run: npx playwright test tests/e2e/phase25-performance.spec.mjs --config=playwright.config.mjs
+      - name: Preview logs
+        if: failure()
+        run: cat /tmp/barberos-preview.log
+
+  database-contract:
+    name: Phase 25 database performance contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "psycopg[binary]==3.2.12"
+      - name: Run read-only performance contract
+        env:
+          BARBEROS_TEST_DATABASE_URL: ${{ secrets.BARBEROS_TEST_DATABASE_URL }}
+        run: |
+          if [ -z "$BARBEROS_TEST_DATABASE_URL" ]; then
+            echo "SKIP: BARBEROS_TEST_DATABASE_URL não está configurado."
+            exit 0
+          fi
+          python - <<'PY'
+          import os
+          import psycopg
+          db = os.environ["BARBEROS_TEST_DATABASE_URL"]
+          for filename in [
+              "supabase/tests/phase25_performance_contract.sql",
+              "supabase/tests/phase25_public_rpc_benchmark.sql",
+          ]:
+              sql = open(filename, encoding="utf-8").read()
+              with psycopg.connect(db, autocommit=True) as conn:
+                  with conn.cursor() as cur:
+                      cur.execute(sql)
+              print("PASS | " + filename)
+          PY
