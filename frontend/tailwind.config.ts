@@ -5,17 +5,29 @@ export default {
   theme: {
     extend: {
       colors: {
-        canvas: { void: '#000000', glowA: '#1a102f', glowB: '#0c0614' },
+        canvas: { void: '#000000', glowA: 'var(--canvas-glow-a)', glowB: 'var(--canvas-glow-b)' },
         accent: { DEFAULT: 'var(--accent)', soft: 'var(--accent-soft)', ink: 'var(--accent-ink)' },
-        ink: { hi: '#ffffff', mid: '#9b95a8', lo: '#5c5765' },
+        ink: { hi: 'var(--text-hi)', mid: 'var(--text-mid)', lo: 'var(--text-lo)' },
         st: {
-          pending: '#e0b057', confirmed: '#b59eff', active: '#7bd7f5',
-          done: '#6ee7b7', cancelled: '#5c5765', noshow: '#f57b9d',
+          pending: 'var(--st-pending)',
+          warning: 'var(--st-warning)',
+          confirmed: 'var(--st-confirmed)',
+          active: 'var(--st-active)',
+          info: 'var(--st-info)',
+          done: 'var(--st-done)',
+          cancelled: 'var(--st-cancelled)',
+          noshow: 'var(--st-noshow)',
+        },
+        surface: {
+          1: 'var(--surface-1)',
+          2: 'var(--surface-2)',
+          3: 'var(--surface-3)',
+          hover: 'var(--surface-hover)',
         },
       },
-      fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'] },
+      fontFamily: { sans: ['Geist', 'Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'] },
       backdropBlur: { xs: '2px' },
-      borderRadius: { panel: 'var(--radius-panel)', card: 'var(--radius-card)' },
+      borderRadius: { panel: 'var(--radius-panel)', card: 'var(--radius-card)', pill: 'var(--radius-pill)' },
       keyframes: {
         aurora: {
           '0%,100%': { opacity: '.35', transform: 'translateX(-12%)' },
