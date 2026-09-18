@@ -57,7 +57,19 @@ test.describe('BarberOS Phase 25 public performance', () => {
     await expect(page.getByText('Serviços').first()).toBeVisible();
     await page.waitForTimeout(1200);
 
-    await page.mouse.click(400, 220);
+    await page.addInitScript(() => {
+      document.addEventListener('click', (event) => {
+        const link = (event.target instanceof Element) ? event.target.closest('a') : null;
+        if (link) event.preventDefault();
+      }, true);
+    });
+
+    const bookingCta = page.locator('a[href$="/marcar"]').first();
+    if (await bookingCta.count()) {
+      await bookingCta.click();
+    } else {
+      await page.mouse.click(400, 220);
+    }
     await page.waitForTimeout(300);
 
     const metrics = await page.evaluate(() => {
