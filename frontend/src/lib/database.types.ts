@@ -1048,6 +1048,19 @@ export type Database = {
         Args: { p_barber_id?: string; p_rows: Json; p_shop: string }
         Returns: undefined
       }
+      save_barber: {
+        Args: {
+          p_barber_id: string
+          p_bio: string
+          p_display_name: string
+          p_photo_url: string
+          p_service_ids: string[]
+          p_shop: string
+          p_user_id: string
+          p_years_experience: number
+        }
+        Returns: string
+      }
       seed_haircut_catalogue: { Args: { p_shop: string }; Returns: number }
       shop_is_public: { Args: { p_shop: string }; Returns: boolean }
     }
