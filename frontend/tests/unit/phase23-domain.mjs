@@ -2,7 +2,7 @@ import { strict as assert } from 'node:assert';
 import { createServer } from 'vite';
 
 async function main() {
-  const server = await createServer({ root: process.cwd(), logLevel: 'error', server: { middlewareMode: true } });
+  const server = await createServer({ root: process.cwd(), logLevel: 'error', optimizeDeps: { noDiscovery: true }, server: { middlewareMode: true } });
   try {
     const utils = await server.ssrLoadModule('/src/lib/utils.ts');
     const calendar = await server.ssrLoadModule('/src/lib/calendar.ts');
