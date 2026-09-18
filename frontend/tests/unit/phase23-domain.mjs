@@ -32,7 +32,7 @@ async function main() {
         const ics = calendar.buildAppointmentCalendar(appointment, 'https://example.test/marcacao/token');
         assert.match(ics, /^BEGIN:VCALENDAR\r\n/);
         assert.match(ics, /UID:barberos-central-/);
-        assert.match(ics, /SUMMARY:Corte\\; Premium \\; Barbearia\\, Central/);
+        assert.match(ics, /SUMMARY:Corte\\; Premium · Barbearia\\, Central/);
         assert.match(ics, /LOCATION:Av\. Julius Nyerere\\; Maputo/);
         assert.match(ics, /END:VCALENDAR$/);
       }],
