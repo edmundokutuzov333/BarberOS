@@ -123,7 +123,14 @@ select
   not has_function_privilege('anon','public.get_agenda_schedule(uuid,date,date)','execute') as anon_no_schedule_read,
   not has_function_privilege('anon','public.transition_appointment(uuid,uuid,text,text)','execute') as anon_no_transition,
   has_function_privilege('authenticated','public.reschedule_appointment_by_operator(uuid,uuid,timestamptz,uuid)','execute') as auth_cross_barber_reschedule,
-  not exists (select 1 from pg_proc where oid='public.reschedule_appointment_by_operator(uuid,uuid,timestamptz)'::regprocedure) as old_reschedule_signature_removed,
+  not exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public'
+      and p.proname='reschedule_appointment_by_operator'
+      and pg_get_function_identity_arguments(p.oid)='p_shop uuid, p_appointment uuid, p_new_start timestamp with time zone'
+  ) as old_reschedule_signature_removed,
   not has_function_privilege('anon','public.reschedule_appointment_by_operator(uuid,uuid,timestamptz,uuid)','execute') as anon_no_reschedule,
   not has_table_privilege('authenticated','public.appointments','UPDATE') as auth_no_direct_update,
   not has_table_privilege('anon','public.appointments','UPDATE') as anon_no_direct_update,
