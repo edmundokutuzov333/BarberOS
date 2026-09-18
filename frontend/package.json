@@ -65,7 +65,8 @@
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "a11y:phase21": "node ../scripts/a11y-phase21.mjs"
   },
   "browserslist": {
     "production": [
