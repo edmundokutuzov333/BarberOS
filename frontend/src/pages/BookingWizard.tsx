@@ -233,8 +233,9 @@ export default function BookingWizard() {
 
   useEffect(() => {
     if (!data?.shop.theme_key) return;
+    const previousTheme = document.documentElement.getAttribute('data-theme');
     applyTheme(data.shop.theme_key);
-    return () => applyTheme('violet-noir');
+    return () => applyTheme(previousTheme);
   }, [data?.shop.theme_key]);
 
   const [form, setForm] = useState<CustomerForm>({ name: '', phone: '', email: '' });
