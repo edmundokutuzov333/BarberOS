@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Instagram, MapPin, MessageCircle, Phone, Scissors, Star } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -79,6 +80,19 @@ export default function PublicBarbershop() {
   const { slug } = useParams<{ slug: string }>();
   const query = usePublicBarbershop(slug);
   const data = query.data;
+
+  useEffect(() => {
+    if (!data) return;
+    document.title = data.shop.name + ' · BarberOS';
+    const description = data.shop.description || 'Conheça os serviços, cortes, equipa e horário desta barbearia.';
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'description');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', description);
+  }, [data]);
 
   if (query.isLoading) {
     return (
@@ -180,7 +194,7 @@ export default function PublicBarbershop() {
                 <div className="space-y-3">
                   {reviews.items.map((review, index) => (
                     <article key={review.created_at + '-' + index} className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                      <div className="flex items-center gap-2 text-accent-soft" aria-label={review.rating + ' estrelas'}>
+                      <div className="flex items-center gap-2 text-accent-soft" role="img" aria-label={review.rating + ' estrelas'}>
                         {Array.from({ length: 5 }).map((_, starIndex) => <Star key={starIndex} size={14} fill={starIndex < review.rating ? 'currentColor' : 'none'} aria-hidden />)}
                         <span className="t-label text-ink-mid ml-1">{formatReviewDate(review.created_at, shop.timezone)}</span>
                       </div>
