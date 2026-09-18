@@ -1302,10 +1302,20 @@ export type Database = {
           offer_slot_start: string
           period: string
           phone: string
+          queue_position: number
           service_name: string
           status: Database["public"]["Enums"]["waitlist_status"]
           total_count: number
           waitlist_entry_id: string
+        }[]
+      }
+      get_waitlist_metrics: {
+        Args: { p_shop: string }
+        Returns: {
+          converted_30d: number
+          expiring_soon_count: number
+          offered_count: number
+          waiting_count: number
         }[]
       }
       get_waitlist_offer: {
@@ -1316,7 +1326,9 @@ export type Database = {
           customer_name: string
           haircut_name: string
           offer_expires_at: string
+          service_duration_min: number
           service_name: string
+          service_price_cents: number
           shop_name: string
           shop_phone: string
           shop_slug: string
