@@ -234,7 +234,7 @@ export default function BookingWizard() {
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   const rawStep = Number(searchParams.get('step') ?? '1');
-  const currentStep = Number.isFinite(rawStep) ? Math.min(6, Math.max(1, Math.round(rawStep))) : 1);
+  const currentStep = Number.isFinite(rawStep) ? Math.min(6, Math.max(1, Math.round(rawStep))) : 1;
   const serviceId = searchParams.get('service');
   const haircutId = searchParams.get('haircut');
   const barberParam = searchParams.get('barber') ?? 'any';
