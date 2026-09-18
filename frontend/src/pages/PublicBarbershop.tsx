@@ -104,11 +104,24 @@ export default function PublicBarbershop() {
 
   if (query.isLoading) {
     return (
-      <div className="min-h-screen px-5 pb-16 sm:px-8">
-        <div className="max-w-6xl mx-auto pt-6"><Skeleton className="h-80" lines={4} /></div>
-        <main className="max-w-6xl mx-auto mt-6 grid lg:grid-cols-[1.4fr_.6fr] gap-6">
-          <Skeleton className="h-[30rem]" lines={7} />
-          <div className="space-y-6"><Skeleton className="h-64" lines={5} /><Skeleton className="h-64" lines={5} /></div>
+      <div className="min-h-screen">
+        <header className="max-w-6xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between gap-4">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-10 w-28 rounded-2xl" />
+        </header>
+        <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-20">
+          <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
+            <div className="relative min-h-[22rem] sm:min-h-[30rem]">
+              <Skeleton className="absolute inset-0 h-full w-full rounded-none" lines={6} />
+            </div>
+          </section>
+          <section className="mt-6 grid lg:grid-cols-[1.5fr_.5fr] gap-6 items-start">
+            <Skeleton className="h-64" lines={6} />
+            <div className="space-y-6">
+              <Skeleton className="h-64" lines={6} />
+              <Skeleton className="h-48" lines={5} />
+            </div>
+          </section>
         </main>
       </div>
     );
