@@ -6,7 +6,7 @@ import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States'
 import { Field } from '@/components/ui/Field';
 import { buildWhatsAppLink } from '@/lib/calendar';
 import { formatMT, humanError } from '@/lib/utils';
-import { getAvailableDays, getAvailableSlots, useAvailableDays, useAvailableSlots } from '@/features/availability/api';
+import { useAvailableDays, useAvailableSlots } from '@/features/availability/api';
 import { normalizeMozPhone, useBookAppointment } from '@/features/booking/api';
 import {
   usePublicBarbershop,
@@ -49,12 +49,9 @@ function formatDate(iso: string, timezone: string, options: Intl.DateTimeFormatO
   return new Intl.DateTimeFormat('pt-PT', { timeZone: timezone, ...options }).format(new Date(iso + 'T00:00:00Z'));
 }
 
-function formatTime(value: string): string {
+function formatTime(value: string, timezone: string): string {
   return new Intl.DateTimeFormat('pt-PT', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: 'Africa/Maputo',
+    hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone,
   }).format(new Date(value));
 }
 
@@ -208,7 +205,7 @@ function Summary({
         <div className="flex gap-3"><Scissors size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Serviço</p><p className="t-body text-ink-hi mt-0.5">{service?.name ?? 'Por escolher'}</p></div></div>
         <div className="flex gap-3"><Scissors size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Corte</p><p className="t-body text-ink-hi mt-0.5">{haircut?.name ?? 'Sem preferência'}</p></div></div>
         <div className="flex gap-3"><UserRound size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Barbeiro</p><p className="t-body text-ink-hi mt-0.5">{barber?.display_name ?? 'Qualquer barbeiro'}</p></div></div>
-        <div className="flex gap-3"><Clock3 size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Data e hora</p><p className="t-body text-ink-hi mt-0.5">{date ? formatDate(date, timezone, { day: 'numeric', month: 'long', year: 'numeric' }) : 'Por escolher'}{start ? ' · ' + formatTime(start) : ''}</p></div></div>
+        <div className="flex gap-3"><Clock3 size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Data e hora</p><p className="t-body text-ink-hi mt-0.5">{date ? formatDate(date, timezone, { day: 'numeric', month: 'long', year: 'numeric' }) : 'Por escolher'}{start ? ' · ' + formatTime(start, timezone) : ''}</p></div></div>
         {service && (
           <div className="border-t border-white/10 pt-4 flex items-end justify-between gap-4">
             <div>
@@ -549,7 +546,7 @@ export default function BookingWizard() {
                           onClick={() => chooseStart(slot.slot_start)}
                           className={`h-12 rounded-2xl border t-body transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft ${slot.slot_start === start ? 'border-accent-soft bg-accent-soft/15 text-ink-hi' : 'border-white/10 bg-white/5 text-ink-hi hover:bg-white/[.07]'}`}
                         >
-                          {formatTime(slot.slot_start)}
+                          {formatTime(slot.slot_start, data.shop.timezone)}
                         </button>
                       ))}
                     </div>
