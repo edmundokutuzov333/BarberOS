@@ -73,7 +73,7 @@ begin
     from public.get_available_days(b.slug,s.id,br.id,current_date,current_date+30) gd
     where gd.is_open and gd.slots_count > 0
     order by gd.day
-    limit 1
+    offset 1 limit 1
   ) d
   cross join lateral (
     select gs.slot_start
@@ -124,10 +124,16 @@ begin
 
   set local role postgres;
 
+  select gd.day
+  into v_day
+  from public.get_available_days(v_slug,v_service,null,current_date,current_date+30) gd
+  where gd.is_open and gd.slots_count > 0
+  order by gd.day
+  offset 2 limit 1;
+
   select slot_start
   into v_start
   from public.get_available_slots(v_slug,v_service,null,v_day)
-  where slot_start is not null
   limit 1;
 
   if v_start is null then
