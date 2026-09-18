@@ -6,6 +6,7 @@ import { NAV } from './nav';
 import { Brand } from '@/components/ui/Brand';
 import { useAuth } from '@/lib/auth';
 import { useShop } from '@/lib/shop';
+import { can } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
 
 const KEY = 'barberos.sidebar';
@@ -15,10 +16,12 @@ export function Sidebar() {
   const reduce = useReducedMotion();
   const { pathname } = useLocation();
   const { signOut, profile } = useAuth();
-  const { shop, shops, setShopId } = useShop();
+  const { shop, shops, setShopId, role } = useShop();
+
+  const visibleNav = NAV.filter((item) => !item.permission || can(role, item.permission));
+  const active = visibleNav.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)));
 
   const toggle = () => { localStorage.setItem(KEY, collapsed ? '0' : '1'); setCollapsed(!collapsed); };
-  const active = NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)));
 
   return (
     <motion.aside
@@ -55,7 +58,7 @@ export function Sidebar() {
       )}
 
       <nav className="flex-1 overflow-y-auto no-scrollbar px-3 space-y-1" aria-label="Navegação principal">
-        {NAV.map((item) => {
+        {visibleNav.map((item) => {
           const isActive = active?.to === item.to;
           return (
             <NavLink key={item.to} to={item.to} end={item.end} data-testid={item.testId} title={collapsed ? item.label : undefined}
