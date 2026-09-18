@@ -180,3 +180,6 @@ The operational agenda is backed by tenant-scoped PostgreSQL read models and tra
 ## Phase 10: Realtime
 
 Supabase Postgres Changes is enabled for `public.appointments` only. The frontend subscribes per tenant and re-fetches the tenant-scoped agenda read model on INSERT/UPDATE events.
+## Phase 11: manual booking
+
+`public.book_appointment_manual` is the authenticated operator boundary for counter bookings. It delegates to `private.book_appointment_core`, so online and manual bookings share validation, availability recheck, advisory locking, customer upsert, deposit rules, overlap protection, notification queueing and audit semantics.
