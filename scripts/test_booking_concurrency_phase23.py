@@ -10,7 +10,7 @@ import os
 import threading
 import uuid
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import timedelta
 
 import psycopg
 
@@ -46,7 +46,7 @@ def fixture(conn):
         cur.execute(
             "select slot_start from public.get_available_slots(%s,%s,%s,%s) "
             "where slot_start > now() + interval '20 minutes' order by slot_start limit 1",
-            (slug, service_id, barber_id, date.today() + timedelta(days=1)),
+            (slug, service_id, barber_id, conn.execute("select ((now() at time zone 'Africa/Maputo')::date + 1)").fetchone()[0]),
         )
         row = cur.fetchone()
         if not row:
@@ -121,10 +121,14 @@ if not failed.error or ("SLOT_TAKEN" not in failed.error and "SLOT_UNAVAILABLE" 
 with psycopg.connect(DB, autocommit=True, prepare_threshold=None) as cleanup:
     with cleanup.cursor() as cur:
         cur.execute(
-            "delete from public.appointments "
+            "select id from public.customers "
             "where barbershop_id=(select id from public.barbershops where slug=%s) "
-            "and customer_id in (select id from public.customers where name in ('Phase 23 A','Phase 23 B'))",
+            "and name in ('Phase 23 A','Phase 23 B')",
             (slug,),
         )
+        customer_ids = [row[0] for row in cur.fetchall()]
+        if customer_ids:
+            cur.execute("delete from public.appointments where customer_id = any(%s)", (customer_ids,))
+            cur.execute("delete from public.customers where id = any(%s)", (customer_ids,))
 
 print("PASS | Phase 23 booking concurrency: one booking committed, the concurrent booking was rejected.")
