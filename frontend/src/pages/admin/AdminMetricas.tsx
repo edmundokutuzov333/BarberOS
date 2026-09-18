@@ -3,11 +3,11 @@ import { Activity, Building2, CalendarDays, RefreshCw, TrendingUp, Users } from 
 import { Page } from '@/components/layout/Page';
 import { Button } from '@/components/ui/Button';
 import { ErrorState, EmptyState, Panel, Skeleton } from '@/components/ui/States';
-import { formatMT, humanError } from '@/lib/utils';
+import { fmt, formatMT, humanError, nowTz } from '@/lib/utils';
 import { useAdminMetrics } from '@/features/admin/api';
 import { AdminMetricCard, AdminStatus } from '@/features/admin/AdminComponents';
 
-function today(){return new Date().toISOString().slice(0,10)}
+function today(){return fmt(nowTz(),'yyyy-MM-dd')}
 function shift(date:string,days:number){const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+days);return d.toISOString().slice(0,10)}
 export default function AdminMetricas(){
   const t=today();const [range,setRange]=useState({from:shift(t,-6),to:t});const [from,setFrom]=useState(shift(t,-6));const [to,setTo]=useState(t);
