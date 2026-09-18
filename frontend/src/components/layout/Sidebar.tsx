@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ChevronsLeft, ChevronsRight, LogOut, ChevronsUpDown } from 'lucide-react';
-import { NAV } from './nav';
+import { navForRole } from './nav';
 import { Brand } from '@/components/ui/Brand';
 import { useAuth } from '@/lib/auth';
 import { useShop } from '@/lib/shop';
@@ -15,10 +15,11 @@ export function Sidebar() {
   const reduce = useReducedMotion();
   const { pathname } = useLocation();
   const { signOut, profile } = useAuth();
-  const { shop, shops, setShopId } = useShop();
+  const { shop, shops, role, setShopId } = useShop();
+  const navItems = navForRole(role);
 
   const toggle = () => { localStorage.setItem(KEY, collapsed ? '0' : '1'); setCollapsed(!collapsed); };
-  const active = NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)));
+  const active = navItems.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)));
 
   return (
     <motion.aside
@@ -55,7 +56,7 @@ export function Sidebar() {
       )}
 
       <nav className="flex-1 overflow-y-auto no-scrollbar px-3 space-y-1" aria-label="Navegação principal">
-        {NAV.map((item) => {
+        {navItems.map((item) => {
           const isActive = active?.to === item.to;
           return (
             <NavLink key={item.to} to={item.to} end={item.end} data-testid={item.testId} title={collapsed ? item.label : undefined}
