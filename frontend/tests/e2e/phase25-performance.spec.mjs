@@ -57,10 +57,8 @@ test.describe('BarberOS Phase 25 public performance', () => {
     await expect(page.getByText('Serviços').first()).toBeVisible();
     await page.waitForTimeout(1200);
 
-    if ((await page.locator('a[href="#contacto"]').count()) > 0) {
-      await page.locator('a[href="#contacto"]').click();
-      await page.waitForTimeout(300);
-    }
+    await page.mouse.wheel(0, 520);
+    await page.waitForTimeout(300);
 
     const metrics = await page.evaluate(() => {
       const navigation = performance.getEntriesByType('navigation')[0];
