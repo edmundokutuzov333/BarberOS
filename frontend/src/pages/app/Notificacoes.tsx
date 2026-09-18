@@ -203,6 +203,7 @@ export default function Notificacoes() {
                             onClick={async () => {
                               try {
                                 await retry.mutateAsync({ shopId: shop!.id, notificationId: row.notification_id });
+                                toast.success("Notificação colocada novamente na fila.");
                               } catch (error) {
                                 toast.error(humanError(error));
                               }
@@ -252,7 +253,7 @@ export default function Notificacoes() {
                         try {
                           await retry.mutateAsync({ shopId: shop!.id, notificationId: row.notification_id });
                         } catch (error) {
-                          window.alert(humanError(error));
+                          toast.error(humanError(error));
                         }
                       }}
                       disabled={retry.isPending}
