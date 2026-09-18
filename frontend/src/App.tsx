@@ -42,6 +42,7 @@ export default function App() {
           <Route path="clientes" element={<Clientes />} />
           <Route path="clientes/:customerId" element={<ClienteDetalhe />} />
           <Route path="lista-espera" element={<ListaEspera />} />
+          <Route path="notificacoes" element={<Notificacoes />} />
           <Route path="servicos" element={<ServicosPage />} />
           <Route path="cortes" element={<CortesPage />} />
           <Route path="barbeiros" element={<BarbeirosPage />} />
