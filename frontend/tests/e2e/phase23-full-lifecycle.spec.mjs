@@ -22,13 +22,17 @@ test.describe('BarberOS Phase 23 full lifecycle', () => {
   const shopName = 'BarberOS QA ' + unique;
   const shopSlug = unique;
   const customerPhone = '84' + Math.floor(1000000 + Math.random() * 8999999).toString();
+  const configuredEmail = process.env.BARBEROS_E2E_EMAIL!;
+  const emailParts = configuredEmail.split('@');
+  const testEmail = emailParts.length === 2 ? emailParts[0] + '+' + unique + '@' + emailParts[1] : configuredEmail;
+  let manageUrl = '';
 
   test('register -> onboarding -> public page -> booking -> agenda -> CRM -> completion', async ({ page }) => {
     await page.goto('/registar');
 
     await page.getByLabel('O teu nome').fill('BarberOS QA Owner');
     await page.getByLabel('Telemóvel').fill(customerPhone);
-    await page.getByLabel('Email').fill(process.env.BARBEROS_E2E_EMAIL!);
+    await page.getByLabel('Email').fill(testEmail);
     await page.getByLabel('Palavra-passe').fill(process.env.BARBEROS_E2E_PASSWORD!);
     await page.getByTestId('register-submit-btn').click();
 
@@ -55,19 +59,26 @@ test.describe('BarberOS Phase 23 full lifecycle', () => {
     await page.getByTestId('service-duration-input').fill('30');
     await page.getByTestId('service-save-btn').click();
     await expect(page.getByText('Corte QA')).toBeVisible();
+    await page.getByTestId('onboarding-next-btn').click();
 
     await page.getByTestId('haircut-add-btn').click();
     await page.getByTestId('haircut-name-input').fill('Low fade QA');
+    await page.getByTestId('haircut-service-select').selectOption({ label: 'Corte QA' });
     await page.getByTestId('haircut-price-input').fill('500');
     await page.getByTestId('haircut-duration-input').fill('30');
     await page.getByTestId('haircut-save-btn').click();
+    await page.getByTestId('onboarding-next-btn').click();
 
     await page.getByTestId('barber-add-btn').click();
     await page.getByTestId('barber-name-input').fill('Nelson QA');
     await page.getByTestId('barber-years-input').fill('5');
+    const barberService = page.locator('[data-testid^="barber-service-chip-"]').first();
+    await barberService.click();
     await page.getByTestId('barber-save-btn').click();
+    await page.getByTestId('onboarding-next-btn').click();
 
     await page.getByTestId('hours-save-btn').click();
+    await page.getByTestId('onboarding-next-btn').click();
 
     await page.getByTestId('link-done-btn').click();
     await expect(page).toHaveURL(/\/app(?:\?|$|\/)/);
@@ -93,6 +104,7 @@ test.describe('BarberOS Phase 23 full lifecycle', () => {
     await page.getByRole('button', { name: /Confirmar marcação/i }).click();
 
     await expect(page).toHaveURL(/\/marcacao\/[0-9a-f-]+$/);
+    manageUrl = page.url();
 
     await page.goto('/app/agenda');
     await expect(page.getByTestId(/agenda-appointment-/).first()).toBeVisible();
@@ -114,19 +126,20 @@ test.describe('BarberOS Phase 23 full lifecycle', () => {
     await expect(page.getByText('1')).toBeVisible();
   });
 
-  test('review request surface is reachable from the completed appointment flow', async ({ page }) => {
-    test.skip(true, 'Review notification timing is controlled by the dedicated environment and is verified by the database notification suite.');
-  });
-
-  test.afterAll(async () => {
+  test.afterAll(async ({ browser }) => {
     const resetUrl = process.env.BARBEROS_E2E_FULL_RESET_URL!;
-    const response = await page.request.post(resetUrl, {
-      headers: {
-        'content-type': 'application/json',
-        'x-barberos-e2e-reset': process.env.BARBEROS_E2E_PASSWORD!,
-      },
-      data: { slug: shopSlug },
-    });
-    expect(response.ok()).toBeTruthy();
+    const context = await browser.newContext();
+    try {
+      const response = await context.request.post(resetUrl, {
+        headers: {
+          'content-type': 'application/json',
+          'x-barberos-e2e-reset': process.env.BARBEROS_E2E_PASSWORD!,
+        },
+        data: { slug: shopSlug },
+      });
+      expect(response.ok()).toBeTruthy();
+    } finally {
+      await context.close();
+    }
   });
 });
