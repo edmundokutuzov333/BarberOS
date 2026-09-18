@@ -17,6 +17,9 @@ A ordem actual é:
 7. `20260918135712_atomic_barber_save.sql`
 8. `20260918140253_availability_engine_2.sql`
 9. `20260918140609_availability_security.sql`
+7. `20260918135712_atomic_barber_save.sql`
+8. `20260918140253_availability_engine_2.sql`
+9. `20260918140609_availability_security.sql`
 
 As versões 1 a 3 foram reconciliadas com o estado que já existia na base viva. A versão 4 já estava aplicada e foi mantida com a mesma versão no histórico Supabase.
 
@@ -39,10 +42,10 @@ A tabela `supabase_migrations.schema_migrations` foi reconciliada para reflectir
 
 Estado verificado em 18 de Setembro de 2026:
 
-- 17 tabelas no schema public
+- 18 tabelas no schema public
 - 13 enums do domínio
-- 28 índices no schema public
-- 69 constraints no schema public
+- 37 índices no schema public
+- 94 constraints no schema public
 - 4 buckets de Storage
 - timezone padrão de negócio: Africa/Maputo
 - extensão btree_gist necessária à constraint de anti-overlap
