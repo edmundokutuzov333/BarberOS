@@ -1,5 +1,5 @@
 import { useMemo, useState, type DragEvent, type ReactNode } from 'react';
-import { CheckCircle2, ChevronLeft, ChevronRight, Clock3, MessageCircle, Move, Play, RefreshCw, UserX, X } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, ChevronRight, Clock3, MessageCircle, Move, Play, Plus, RefreshCw, UserX, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Page } from '@/components/layout/Page';
 import { Button } from '@/components/ui/Button';
@@ -8,6 +8,8 @@ import { StatusChip, type ApptStatus } from '@/components/ui/StatusChip';
 import { buildWhatsAppLink } from '@/lib/calendar';
 import { formatMT, humanError } from '@/lib/utils';
 import { useShop } from '@/lib/shop';
+import ManualBookingModal from '@/features/booking/ManualBookingModal';
+import type { ManualBookingResult } from '@/features/booking/manual-api';
 import { useAvailableSlots } from '@/features/availability/api';
 import { useAgendaRealtime, type AgendaRealtimeStatus } from '@/features/agenda/realtime';
 import {
@@ -156,7 +158,7 @@ function AppointmentCard({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-sm font-medium text-ink-hi truncate">{appointment.customer_name}</p>
-          <p className="t-label text-ink-mid truncate mt-0.5">{appointment.service_name}</p>
+          <p className="t-label text-ink-mid truncate mt-0.5">{appointment.service_name}{appointment.source === 'manual' ? ' · Presencial' : ''}</p>
         </div>
         {canDrag && <Move size={13} className="text-accent-soft shrink-0" aria-hidden />}
       </div>
@@ -304,7 +306,7 @@ function WeekBoard({
                 {items.length ? items.map((appointment) => (
                   <article key={appointment.appointment_id} className="rounded-2xl border border-white/10 bg-white/5 p-3">
                     <div className="flex items-start justify-between gap-2"><p className="text-sm font-medium text-ink-hi truncate">{appointment.customer_name}</p><span className="t-label text-ink-mid">{formatTime(appointment.starts_at, timezone)}</span></div>
-                    <p className="t-label text-ink-mid mt-1 truncate">{appointment.service_name} · {appointment.barber_name}</p>
+                    <p className="t-label text-ink-mid mt-1 truncate">{appointment.service_name} · {appointment.barber_name}{appointment.source === 'manual' ? ' · Presencial' : ''}</p>
                     <div className="mt-2"><StatusChip status={appointment.status} /></div>
                     <div className="flex gap-1 mt-2">
                       {appointment.customer_phone && <a href={buildWhatsAppLink(appointment.customer_phone, 'Olá ' + appointment.customer_name + ', falamos da sua marcação.')} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg text-accent-soft hover:bg-white/10" aria-label="Abrir WhatsApp"><MessageCircle size={14} /></a>}
@@ -330,6 +332,7 @@ export default function AgendaPage() {
   const [rescheduleAppointment, setRescheduleAppointment] = useState<AgendaAppointment | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState(selectedDate);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [manualBookingOpen, setManualBookingOpen] = useState(false);
 
   const range = useMemo(() => rangeFor(view, selectedDate, timezone), [view, selectedDate, timezone]);
   const appointmentsQuery = useAgendaAppointments(shop?.id, range.from, range.to);
@@ -421,6 +424,9 @@ export default function AgendaPage() {
       subtitle={label}
       actions={
         <div className="flex items-center gap-2">
+          <Button variant="secondary" size="sm" pill onClick={() => setManualBookingOpen(true)}>
+            <Plus size={15} />Nova marcação
+          </Button>
           <Button variant="secondary" size="sm" pill onClick={() => { setSelectedDate(today); setView('day'); }}>Hoje</Button>
           <div className="flex rounded-full border border-white/10 overflow-hidden" role="group" aria-label="Visualização da agenda">
             <button type="button" onClick={() => setView('day')} aria-pressed={view === 'day'} className={'px-3 h-9 t-label ' + (view === 'day' ? 'bg-white/10 text-ink-hi' : 'text-ink-mid')}>Dia</button>
@@ -494,6 +500,14 @@ export default function AgendaPage() {
           )}
         </>
       )}
+      <ManualBookingModal
+        open={manualBookingOpen}
+        onOpenChange={setManualBookingOpen}
+        onBooked={(result: ManualBookingResult) => {
+          void appointmentsQuery.refetch();
+          toast.success(result.status === 'confirmed' ? 'A nova marcação já está na agenda.' : 'A marcação foi criada e aguarda o sinal.');
+        }}
+      />
     </Page>
   );
 }
