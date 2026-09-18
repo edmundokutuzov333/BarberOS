@@ -7,6 +7,8 @@ export type PublicShop = {
   theme_key: string; phone: string | null; whatsapp: string | null; instagram: string | null;
   address: string | null; maps_url: string | null; lat: number | null; lng: number | null;
   timezone: string; status: 'trial' | 'active'; deposit_enabled: boolean;
+  deposit_mode: 'percent' | 'fixed'; deposit_value: number; deposit_hold_min: number;
+  slot_interval_min: number; min_lead_time_min: number; max_advance_days: number; cancellation_rule: 'flex_2h' | 'moderate_6h' | 'strict_24h' | 'contact_only';
 };
 export type PublicService = { id: string; name: string; price_cents: number; duration_min: number; requires_deposit: boolean };
 export type PublicHaircut = { id: string; service_id: string | null; name: string; description: string | null; photo_url: string | null; price_cents: number | null; duration_min: number | null };
@@ -24,6 +26,9 @@ const publicPayloadSchema = z.object({
     phone: z.string().nullable(), whatsapp: z.string().nullable(), instagram: z.string().nullable(),
     address: z.string().nullable(), maps_url: nullableUrl, lat: z.number().nullable(), lng: z.number().nullable(),
     timezone: z.string().min(1), status: z.enum(['trial', 'active']), deposit_enabled: z.boolean(),
+    deposit_mode: z.enum(['percent', 'fixed']), deposit_value: z.number().int().nonnegative(), deposit_hold_min: z.number().int().positive(),
+    slot_interval_min: z.number().int().positive(), min_lead_time_min: z.number().int().nonnegative(), max_advance_days: z.number().int().positive(),
+    cancellation_rule: z.enum(['flex_2h', 'moderate_6h', 'strict_24h', 'contact_only']),
   }),
   services: z.array(z.object({ id: z.string().uuid(), name: z.string().min(1), price_cents: z.number().int().nonnegative(), duration_min: z.number().int().positive(), requires_deposit: z.boolean() })),
   haircuts: z.array(z.object({ id: z.string().uuid(), service_id: z.string().uuid().nullable(), name: z.string().min(1), description: z.string().nullable(), photo_url: nullableUrl, price_cents: z.number().int().nonnegative().nullable(), duration_min: z.number().int().positive().nullable() })),
