@@ -1027,6 +1027,12 @@ export type Database = {
           needs_payment: boolean
         }[]
       }
+      cancel_appointment_by_token: {
+        Args: { p_reason?: string; p_token: string }
+        Returns: {
+          cancelled_at: string
+        }[]
+      }
       create_barbershop: {
         Args: {
           p_name: string
@@ -1044,35 +1050,68 @@ export type Database = {
         Args: { p_appt: string }
         Returns: undefined
       }
-      cancel_appointment_by_token: {
-        Args: { p_reason?: string; p_token: string }
-        Returns: { cancelled_at: string }[]
+      get_agenda_appointments: {
+        Args: { p_from: string; p_shop: string; p_to: string }
+        Returns: {
+          appointment_id: string
+          barber_id: string
+          barber_name: string
+          barber_photo_url: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          deposit_cents: number
+          deposit_status: Database["public"]["Enums"]["deposit_state"]
+          duration_min: number
+          ends_at: string
+          haircut_id: string
+          haircut_name: string
+          hold_expires_at: string
+          manage_token: string
+          price_cents: number
+          service_id: string
+          service_name: string
+          source: Database["public"]["Enums"]["booking_source"]
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+        }[]
+      }
+      get_agenda_schedule: {
+        Args: { p_from: string; p_shop: string; p_to: string }
+        Returns: {
+          barber_id: string
+          barber_name: string
+          closes_at: string
+          is_closed: boolean
+          opens_at: string
+          schedule_date: string
+        }[]
       }
       get_appointment_by_token: {
         Args: { p_token: string }
         Returns: {
-          action_deadline: string | null
+          action_deadline: string
           appointment_ends_at: string
           appointment_starts_at: string
           appointment_status: Database["public"]["Enums"]["appointment_status"]
           barber_name: string
-          barber_photo_url: string | null
+          barber_photo_url: string
           can_cancel: boolean
           can_reschedule: boolean
           cancellation_rule: Database["public"]["Enums"]["cancellation_rule"]
           customer_name: string
           deposit_cents: number
           deposit_status: Database["public"]["Enums"]["deposit_state"]
-          haircut_name: string | null
+          haircut_name: string
           service_duration_min: number
           service_name: string
           service_price_cents: number
-          shop_address: string | null
-          shop_maps_url: string | null
+          shop_address: string
+          shop_maps_url: string
           shop_name: string
-          shop_phone: string | null
+          shop_phone: string
           shop_slug: string
-          shop_whatsapp: string | null
+          shop_whatsapp: string
           timezone: string
         }[]
       }
@@ -1102,13 +1141,12 @@ export type Database = {
           slot_start: string
         }[]
       }
+      get_public_barbershop: { Args: { p_slug: string }; Returns: Json }
       get_reschedule_slots_by_token: {
         Args: { p_date: string; p_token: string }
-        Returns: { slot_start: string }[]
-      }
-      get_public_barbershop: {
-        Args: { p_slug: string }
-        Returns: Json
+        Returns: {
+          slot_start: string
+        }[]
       }
       is_member: {
         Args: {
@@ -1146,9 +1184,20 @@ export type Database = {
         Args: { p_barber_id?: string; p_rows: Json; p_shop: string }
         Returns: undefined
       }
+      reschedule_appointment_by_operator: {
+        Args: { p_appointment: string; p_new_start: string; p_shop: string }
+        Returns: {
+          appointment_id: string
+          new_ends_at: string
+          new_starts_at: string
+        }[]
+      }
       reschedule_appointment_by_token: {
         Args: { p_new_start: string; p_token: string }
-        Returns: { new_ends_at: string; new_starts_at: string }[]
+        Returns: {
+          new_ends_at: string
+          new_starts_at: string
+        }[]
       }
       save_barber: {
         Args: {
@@ -1179,6 +1228,24 @@ export type Database = {
       }
       seed_haircut_catalogue: { Args: { p_shop: string }; Returns: number }
       shop_is_public: { Args: { p_shop: string }; Returns: boolean }
+      transition_appointment: {
+        Args: {
+          p_action: string
+          p_appointment: string
+          p_reason?: string
+          p_shop: string
+        }
+        Returns: {
+          appointment_id: string
+          cancelled_at: string
+          completed_at: string
+          confirmed_at: string
+          no_show_at: string
+          previous_status: Database["public"]["Enums"]["appointment_status"]
+          started_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+        }[]
+      }
     }
     Enums: {
       app_role: "owner" | "manager" | "barber"
