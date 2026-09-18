@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const root = path.resolve('frontend/src');
+const root = fs.existsSync(path.resolve('frontend/src'))
+  ? path.resolve('frontend/src')
+  : path.resolve('src');
 const files = [];
 
 function walk(dir) {
@@ -43,9 +45,12 @@ for (const file of files) {
   }
 }
 
-const css = fs.readFileSync(path.resolve('frontend/src/index.css'), 'utf8');
+const cssPath = fs.existsSync(path.resolve('frontend/src/index.css'))
+  ? path.resolve('frontend/src/index.css')
+  : path.resolve('src/index.css');
+const css = fs.readFileSync(cssPath, 'utf8');
 for (const required of ['.skip-link', 'prefers-reduced-motion', 'focus-visible', 'env(safe-area-inset-bottom)']) {
-  if (!css.includes(required)) failures.push('frontend/src/index.css: missing ' + required);
+  if (!css.includes(required)) failures.push(path.relative(process.cwd(), cssPath) + ': missing ' + required);
 }
 
 if (failures.length) {

@@ -84,8 +84,8 @@ export default function Onboarding() {
       <header className="h-20 px-5 sm:px-8 flex items-center justify-between">
         <Brand />
         <div className="flex items-center gap-4">
-          {shop && <button data-testid="onboarding-skip" onClick={() => nav('/app')} className="t-label text-ink-mid hover:text-ink-hi transition-colors">Continuar depois</button>}
-          <button data-testid="onboarding-sign-out" onClick={signOut} className="t-label text-ink-mid hover:text-ink-hi transition-colors">Sair</button>
+          {shop && <button type="button" data-testid="onboarding-skip" onClick={() => nav('/app')} className="t-label text-ink-mid hover:text-ink-hi transition-colors">Continuar depois</button>}
+          <button type="button" data-testid="onboarding-sign-out" onClick={signOut} className="t-label text-ink-mid hover:text-ink-hi transition-colors">Sair</button>
         </div>
       </header>
       <div className="flex-1 flex items-start justify-center px-4 pb-16 pt-2 sm:pt-8">
@@ -93,7 +93,7 @@ export default function Onboarding() {
           <div className="h-0.5 w-full bg-white/5 rounded-full overflow-hidden mb-7" aria-hidden><div data-testid="onboarding-progress" className="h-full bg-accent-soft rounded-full transition-[width] duration-300" style={{ width: `${((step + 1) / 9) * 100}%` }} /></div>
           <div className="flex items-start justify-between gap-4">
             <div><h1 className="t-title">{STEPS[step].title}</h1><p className="t-body text-ink-mid mt-1.5">{STEPS[step].body}</p></div>
-            {step > 1 && <button data-testid="onboarding-back" onClick={() => go(step - 1)} className="t-label text-ink-mid hover:text-ink-hi transition-colors shrink-0">Anterior</button>}
+            {step > 1 && <button type="button" data-testid="onboarding-back" onClick={() => go(step - 1)} className="t-label text-ink-mid hover:text-ink-hi transition-colors shrink-0">Anterior</button>}
           </div>
           <div className="mt-7" data-testid={`onboarding-step-${step}`}>
             {step === 0 && <CreateShop />}

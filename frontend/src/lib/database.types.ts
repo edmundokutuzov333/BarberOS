@@ -1192,6 +1192,10 @@ export type Database = {
         Returns: Json
       }
       admin_get_overview: { Args: never; Returns: Json }
+      get_dashboard_snapshot: {
+        Args: { p_shop: string }
+        Returns: Json
+      }
       admin_list_barbershops: {
         Args: {
           p_limit?: number

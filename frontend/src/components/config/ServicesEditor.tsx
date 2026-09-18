@@ -78,8 +78,8 @@ export function ServicesEditor() {
               <p className="t-label text-ink-mid">{s.duration_min} min · {formatMT(s.price_cents)}{s.requires_deposit && ' · exige sinal'}</p>
             </div>
             <Switch testId={`service-toggle-${s.id}`} checked={s.is_active} onCheckedChange={() => toggle.mutate(s)} />
-            <button data-testid={`service-edit-${s.id}`} onClick={() => open(s)} aria-label="Editar" className="p-2 text-ink-lo hover:text-accent-soft transition-colors"><Pencil size={15} /></button>
-            <button data-testid={`service-delete-${s.id}`} onClick={() => confirm(`Remover "${s.name}"?`) && remove.mutate(s)} aria-label="Remover" className="p-2 text-ink-lo hover:text-st-noshow transition-colors"><Trash2 size={15} /></button>
+            <button type="button" data-testid={`service-edit-${s.id}`} onClick={() => open(s)} aria-label="Editar" className="p-2 text-ink-lo hover:text-accent-soft transition-colors"><Pencil size={15} /></button>
+            <button type="button" data-testid={`service-delete-${s.id}`} onClick={() => confirm(`Remover "${s.name}"?`) && remove.mutate(s)} aria-label="Remover" className="p-2 text-ink-lo hover:text-st-noshow transition-colors"><Trash2 size={15} /></button>
           </div>
         )} />
       )}

@@ -119,6 +119,25 @@ button:disabled,
   border-color:var(--border-default);
 }
 
+.skip-link{
+  position:fixed;
+  left:1rem;
+  top:1rem;
+  z-index:100;
+  transform:translateY(-160%);
+  padding:.7rem 1rem;
+  border-radius:999px;
+  background:var(--surface-3);
+  color:var(--text-hi);
+  border:1px solid var(--border-strong);
+  box-shadow:var(--shadow-float);
+  transition:transform .16s ease;
+}
+
+.skip-link:focus{
+  transform:translateY(0);
+}
+
 .icon-button{
   width:44px;
   min-width:44px;

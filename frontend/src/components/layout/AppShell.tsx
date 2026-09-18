@@ -7,13 +7,36 @@ import { MobileDock } from './MobileDock';
 import { Skeleton } from '@/components/ui/States';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { SkipLink } from '@/components/ui/SkipLink';
-import { SkipLink } from '@/components/ui/SkipLink';
+import { canAccessAppRoute } from '@/lib/permissions';
 
 function FullSkeleton() {
   return (
     <div className="min-h-screen p-6 max-w-5xl mx-auto space-y-4" data-testid="app-loading">
       <Skeleton className="h-16" lines={1} />
       <Skeleton className="h-64" />
+    </div>
+  );
+}
+
+function RoleDenied({ pathname }: { pathname: string }) {
+  return (
+    <div className="min-h-screen p-6 grid place-items-center" data-testid="role-access-denied">
+      <section className="glass w-full max-w-xl rounded-3xl p-6 sm:p-8" aria-labelledby="role-denied-title">
+        <p className="t-label text-ink-mid">Acesso restrito</p>
+        <h1 id="role-denied-title" className="text-2xl font-semibold text-ink-hi mt-2">
+          Esta área não faz parte do seu nível de acesso.
+        </h1>
+        <p className="t-body text-ink-mid mt-3">
+          A sua função nesta barbearia determina quais ferramentas pode consultar ou alterar.
+          O endereço solicitado não está disponível para a sua função.
+        </p>
+        <p className="t-label text-ink-lo mt-3 break-all">{pathname}</p>
+        <div className="mt-5">
+          <a href="/app" className="inline-flex min-h-11 items-center rounded-2xl bg-accent-soft px-4 text-sm font-medium text-accent-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft">
+            Ir para o início
+          </a>
+        </div>
+      </section>
     </div>
   );
 }
@@ -40,13 +63,20 @@ export function AnimatedOutlet() {
 }
 
 export function AppShell() {
-  const { shop, loading } = useShop();
+  const { shop, role, loading } = useShop();
   const { pathname } = useLocation();
   const desktop = useMediaQuery('(min-width: 768px)');
 
   if (loading) return <FullSkeleton />;
   if (!shop && pathname !== '/app/onboarding') return <Navigate to="/app/onboarding" replace />;
-  if (pathname === '/app/onboarding') return <div className="min-h-screen" id="main-content"><SkipLink /><AnimatedOutlet /></div>;
+  if (pathname === '/app/onboarding') {
+    if (shop && !(role === 'owner' || role === 'manager')) return <RoleDenied pathname={pathname} />;
+    return <div className="min-h-screen" id="main-content"><SkipLink /><AnimatedOutlet /></div>;
+  }
+
+  if (!canAccessAppRoute(role, pathname)) {
+    return <RoleDenied pathname={pathname} />;
+  }
 
   return (
     <div className="min-h-screen md:flex md:gap-6 md:p-6 md:pr-8">
