@@ -41,7 +41,7 @@ export function MembersEditor() {
             <li key={m.id} data-testid={`member-row-${m.user_id}`} className="flex items-center gap-3 py-3">
               <div className="flex-1 min-w-0"><p className="text-sm font-normal truncate">{m.full_name ?? m.email}{m.user_id === user?.id && <span className="text-ink-mid"> · tu</span>}</p><p className="t-label text-ink-mid truncate">{m.email}</p></div>
               <span className="rounded-full border border-white/10 px-2.5 py-0.5 t-label">{ROLE_LABEL[m.role]}</span>
-              {isOwner && m.user_id !== user?.id && <button data-testid={`member-remove-${m.user_id}`} onClick={() => confirm(`Remover ${m.email}?`) && remove.mutate(m)} aria-label="Remover" className="p-2 text-ink-lo hover:text-st-noshow transition-colors"><Trash2 size={15} /></button>}
+              {isOwner && m.user_id !== user?.id && <button type="button" data-testid={`member-remove-${m.user_id}`} onClick={() => confirm(`Remover ${m.email}?`) && remove.mutate(m)} aria-label="Remover" className="p-2 text-ink-lo hover:text-st-noshow transition-colors"><Trash2 size={15} /></button>}
             </li>
           ))}
         </ul>
