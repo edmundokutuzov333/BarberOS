@@ -213,8 +213,8 @@ begin
     where
       v_view='all'
       or (v_view='upcoming' and upcoming_at is not null)
-      or (v_view='no_show' and no_show_count > 0)
-      or (v_view='never_visited' and visits_count=0)
+      or (v_view='no_show' and f.no_show_count > 0)
+      or (v_view='never_visited' and f.visits_count=0)
   )
   select
     f.id,
