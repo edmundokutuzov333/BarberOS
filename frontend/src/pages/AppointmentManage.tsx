@@ -72,9 +72,9 @@ export default function AppointmentManage() {
     const status = paymentStatus.data?.status;
     if (status === 'paid' || status === 'failed' || status === 'refunded' || status === 'not_required') {
       setPaymentStarted(false);
-      if (status === 'paid' || status === 'refunded') void query.refetch();
+      void query.refetch();
     }
-  }, [paymentStatus.data?.status, paymentStatus.data?.updated_at, query]);
+  }, [paymentStatus.data?.status]);
 
   const whatsappMessage = useMemo(() => {
     if (!data) return '';
