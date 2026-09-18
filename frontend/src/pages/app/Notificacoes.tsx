@@ -7,6 +7,7 @@ import { EmptyState, ErrorState, Panel, Skeleton } from "@/components/ui/States"
 import { useShop } from "@/lib/shop";
 import { fmt, humanError } from "@/lib/utils";
 import {
+  useNotificationAutomationStatus,
   useNotificationMetrics,
   useNotifications,
   useRetryNotification,
@@ -72,6 +73,7 @@ export default function Notificacoes() {
   const [channel, setChannel] = useState<NotificationChannel>("all");
   const [page, setPage] = useState(0);
   const metrics = useNotificationMetrics(shop?.id);
+  const automation = useNotificationAutomationStatus(shop?.id);
   const rows = useNotifications(shop?.id, view, channel, page, PAGE_SIZE);
   const retry = useRetryNotification();
 
@@ -101,6 +103,39 @@ export default function Notificacoes() {
         <Metric icon={<CheckCircle2 size={17} />} label="Enviadas hoje" value={metrics.data?.sent_today_count ?? 0} loading={metrics.isLoading} />
         <Metric icon={<BellRing size={17} />} label="Entrega · 7 dias" value={(metrics.data?.delivery_rate_7d ?? 0).toLocaleString("pt-PT") + "%"} loading={metrics.isLoading} />
       </section>
+
+      <Panel className="mb-4" testId="notifications-automation">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 rounded-2xl bg-accent-soft/10 border border-accent-soft/20 p-2.5 text-accent-soft">
+              <ServerCog size={18} aria-hidden />
+            </div>
+            <div>
+              <p className="text-sm text-ink-hi font-medium">Entrega automática</p>
+              <p className="t-label text-ink-mid mt-1">
+                {automation.data?.dispatcher_active ? "Dispatcher agendado e activo." : "Dispatcher não está activo."}
+              </p>
+              {automation.data?.dispatcher_last_run_at && (
+                <p className="t-label text-ink-lo mt-1">
+                  Última execução: {fmt(automation.data.dispatcher_last_run_at, "dd MMM, HH:mm")}
+                  {automation.data.dispatcher_last_run_status ? " · " + automation.data.dispatcher_last_run_status : ""}
+                </p>
+              )}
+              {automation.data?.dispatcher_last_run_message && automation.data.dispatcher_last_run_status !== "succeeded" && (
+                <p className="t-label text-st-noshow mt-1 max-w-xl truncate" title={automation.data.dispatcher_last_run_message}>
+                  {automation.data.dispatcher_last_run_message}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className={automation.data?.dispatcher_active
+            ? "inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs bg-st-done/10 text-st-done border border-st-done/20"
+            : "inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs bg-st-noshow/10 text-st-noshow border border-st-noshow/20"}>
+            {automation.data?.dispatcher_active ? <CheckCircle2 size={14} /> : <TriangleAlert size={14} />}
+            {automation.data?.dispatcher_active ? "Activa" : "Atenção"}
+          </div>
+        </div>
+      </Panel>
 
       <Panel className="mb-4" testId="notifications-controls">
         <div className="flex flex-col gap-3">
