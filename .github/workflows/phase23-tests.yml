@@ -121,7 +121,7 @@ jobs:
           BARBEROS_E2E_PASSWORD: ${{ secrets.BARBEROS_E2E_PASSWORD }}
         run: npx playwright test tests/e2e/phase23.spec.mjs --config=playwright.config.mjs
       - name: Run full lifecycle E2E when dedicated environment is provisioned
-        if: ${{ env.BARBEROS_E2E_FULL == '1' && env.BARBEROS_E2E_FULL_RESET_URL != '' }}
+        if: ${{ secrets.BARBEROS_E2E_FULL == '1' && secrets.BARBEROS_E2E_FULL_RESET_URL != '' && secrets.BARBEROS_E2E_EMAIL != '' && secrets.BARBEROS_E2E_PASSWORD != '' }}
         working-directory: frontend
         env:
           VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
