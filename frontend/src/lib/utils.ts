@@ -97,7 +97,7 @@ const ERRORS: Record<string, string> = {
   PAYMENT_RUNTIME_UNAVAILABLE: 'O serviço de pagamento está temporariamente indisponível.',
   PAYMENT_WEBHOOK_FAILED: 'A confirmação do provider não pôde ser processada.',
   PAYMENT_REFERENCE_MISSING: 'O provider não devolveu uma referência de transação válida.',
-  UNAUTHORIZED: 'Esta operação não está autorizada.'
+  UNAUTHORIZED: 'Esta operação não está autorizada.',
   INVALID_CANCEL_REASON: 'O motivo do cancelamento é demasiado longo.',
   BARBERSHOP_NOT_FOUND: 'Esta barbearia não está disponível.',
   PUBLIC_SHOP_INVALID_RESPONSE: 'Não foi possível carregar os dados públicos desta barbearia.',
