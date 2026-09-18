@@ -136,6 +136,11 @@ select
   not has_table_privilege('anon','public.appointments','UPDATE') as anon_no_direct_update,
   not has_table_privilege('anon','public.appointments','SELECT') as anon_no_direct_select,
   exists (
+    select 1
+    from pg_indexes
+    where schemaname='public' and tablename='appointments' and indexname='appointments_agenda_lookup_idx'
+  ) as agenda_index_present,
+  exists (
     select 1 from pg_proc p
     join pg_namespace n on n.oid=p.pronamespace
     where n.nspname='public'
