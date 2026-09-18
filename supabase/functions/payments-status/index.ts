@@ -24,13 +24,20 @@ Deno.serve(async(req)=>{
   if(!r)return json({ok:true,status:"not_required",amount_cents:0,hold_expires_at:null});
 
   if(r.status!=="pending"){
-    return json({ok:true,status:r.status,amount_cents:Number(r.amount_cents),hold_expires_at:null,requires_refund:Boolean(r.status==="paid" && body?.include_refund_flag ? false : false)});
+    return json({
+      ok:true,
+      status:r.status,
+      amount_cents:Number(r.amount_cents),
+      hold_expires_at:r.hold_expires_at,
+      appointment_status:r.appointment_status,
+      requires_refund:Boolean(r.requires_refund),
+    });
   }
 
   const {data:claim,error:claimError}=await admin.rpc("claim_payment_reconciliation",{p_payment:r.payment_id,p_min_interval:"10 seconds"});
   if(claimError)return json({ok:false,error:"PAYMENT_RECONCILIATION_UNAVAILABLE"},500);
   if(!claim){
-    return json({ok:true,status:"pending",amount_cents:Number(r.amount_cents),message:"Pagamento em verificação."});
+    return json({ok:true,status:"pending",amount_cents:Number(r.amount_cents),hold_expires_at:r.hold_expires_at,message:"Pagamento em verificação."});
   }
 
   const request={
