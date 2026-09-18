@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { queryPayment, type PaymentProvider, type ProviderConfig } from "../_shared/payment-providers.ts";
+import { queryPayment, type PaymentProvider, type ProviderConfig } from "./payment-providers.ts";
 
 function secretKey():string{
  const direct=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim(); if(direct)return direct;
