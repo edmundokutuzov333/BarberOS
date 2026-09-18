@@ -284,6 +284,20 @@ export default function BookingWizard() {
   }, [data, serviceId, service, searchParams, setSearchParams]);
 
   useEffect(() => {
+    if (!data || !haircutId || !serviceId || !service) return;
+    if (!eligibleHaircuts.some((item) => item.id === haircutId)) {
+      updateSearchParams(searchParams, setSearchParams, { step: '2', haircut: null, barber: 'any', date: null, start: null });
+    }
+  }, [data, haircutId, serviceId, service, eligibleHaircuts, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (!data || barberParam === 'any' || !service) return;
+    if (!barber) {
+      updateSearchParams(searchParams, setSearchParams, { step: '3', barber: 'any', date: null, start: null });
+    }
+  }, [data, barberParam, barber, service, searchParams, setSearchParams]);
+
+  useEffect(() => {
     if (!date || !today || !maxDate) return;
     if (date < today || date > maxDate) {
       updateSearchParams(searchParams, setSearchParams, { step: '4', date: null, start: null });
