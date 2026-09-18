@@ -20,20 +20,25 @@ for (const file of files) {
   const source = fs.readFileSync(file, 'utf8');
   const rel = path.relative(process.cwd(), file);
 
-  if (/['"`](?:Loading|Carregando)\.\.\.['"`]/i.test(source)) {
+  if (/(["'`])(?:Loading|Carregando)\.\.\.\1/i.test(source)) {
     failures.push(rel + ': found raw Loading... text');
   }
 
   for (const match of source.matchAll(/<button\b[^>]*>/g)) {
-    if (!/data-testid=/.test(match[0])) {
-      failures.push(rel + ': native button without data-testid near offset ' + match.index);
+    if (!/\btype=/.test(match[0])) {
+      failures.push(rel + ': native button without explicit type near offset ' + match.index);
     }
   }
 
-  for (const match of source.matchAll(/<a\b[^>]*>/g)) {
-    const tag = match[0];
-    if (!/data-testid=/.test(tag) && !/href="#/.test(tag)) {
-      failures.push(rel + ': anchor without data-testid near offset ' + match.index);
+  for (const match of source.matchAll(/<a\b[^>]*target=(["'])_blank\1[^>]*>/g)) {
+    if (!/\brel=/.test(match[0])) {
+      failures.push(rel + ': target="_blank" anchor without rel near offset ' + match.index);
+    }
+  }
+
+  for (const match of source.matchAll(/<(?:button|a)\b[^>]*>\s*<(?:[^ >]+)\b[^>]*(?:\/>)?\s*<\/[^>]+>\s*<\/(?:button|a)>/g)) {
+    if (!/aria-label=/.test(match[0]) && !/aria-labelledby=/.test(match[0])) {
+      failures.push(rel + ': possible icon-only control without accessible name near offset ' + match.index);
     }
   }
 }
