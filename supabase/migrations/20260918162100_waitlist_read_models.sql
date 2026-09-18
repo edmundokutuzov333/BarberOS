@@ -46,10 +46,11 @@ begin
   with base as (
     select
       w.*,
-      row_number() over (
+      count(*) filter (where w.status='waiting') over (
         partition by w.service_id
         order by w.created_at,w.id
-      ) filter (where w.status='waiting') as waiting_position
+        rows between unbounded preceding and current row
+      ) as waiting_position
     from public.waitlist_entries w
     where w.barbershop_id=p_shop
       and (
