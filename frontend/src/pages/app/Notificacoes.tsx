@@ -8,6 +8,7 @@ import { fmt, humanError } from "@/lib/utils";
 import {
   useNotificationMetrics,
   useNotifications,
+  useRetryNotification,
   type NotificationChannel,
   type NotificationStatus,
   type NotificationView,
@@ -71,6 +72,7 @@ export default function Notificacoes() {
   const [page, setPage] = useState(0);
   const metrics = useNotificationMetrics(shop?.id);
   const rows = useNotifications(shop?.id, view, channel, page, PAGE_SIZE);
+  const retry = useRetryNotification();
 
   useEffect(() => setPage(0), [view, channel]);
 
@@ -192,11 +194,29 @@ export default function Notificacoes() {
                     </td>
                     <td className="p-4 t-label text-ink-mid">{row.attempts}</td>
                     <td className="p-4">
-                      {row.fallback_url
-                        ? <a href={row.fallback_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm text-accent-soft hover:text-ink-hi hover:bg-white/5">
-                            <ExternalLink size={15} /> Abrir WhatsApp
-                          </a>
-                        : <span className="t-label text-ink-lo">Sem acção</span>}
+                      <div className="flex flex-wrap items-center gap-1">
+                        {row.status === "failed" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={async () => {
+                              try {
+                                await retry.mutateAsync({ shopId: shop!.id, notificationId: row.notification_id });
+                              } catch (error) {
+                                window.alert(humanError(error));
+                              }
+                            }}
+                            disabled={retry.isPending}
+                          >
+                            <RefreshCw size={15} /> Tentar novamente
+                          </Button>
+                        )}
+                        {row.fallback_url
+                          ? <a href={row.fallback_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm text-accent-soft hover:text-ink-hi hover:bg-white/5">
+                              <ExternalLink size={15} /> Abrir WhatsApp
+                            </a>
+                          : !row.status && <span className="t-label text-ink-lo">Sem acção</span>}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -222,11 +242,29 @@ export default function Notificacoes() {
                 </div>
                 {row.last_error && <p className="t-label text-st-noshow mt-4">{row.last_error}</p>}
                 {row.next_attempt_at && <p className="t-label text-accent-soft mt-2">Nova tentativa: {fmt(row.next_attempt_at, "dd MMM, HH:mm")}</p>}
-                {row.fallback_url && (
-                  <a href={row.fallback_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm text-accent-soft">
-                    <ExternalLink size={15} /> Abrir WhatsApp pré-preenchido
-                  </a>
-                )}
+                <div className="flex flex-wrap items-center gap-2 mt-3">
+                  {row.status === "failed" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await retry.mutateAsync({ shopId: shop!.id, notificationId: row.notification_id });
+                        } catch (error) {
+                          window.alert(humanError(error));
+                        }
+                      }}
+                      disabled={retry.isPending}
+                    >
+                      <RefreshCw size={15} /> Tentar novamente
+                    </Button>
+                  )}
+                  {row.fallback_url && (
+                    <a href={row.fallback_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm text-accent-soft">
+                      <ExternalLink size={15} /> Abrir WhatsApp pré-preenchido
+                    </a>
+                  )}
+                </div>
               </article>
             ))}
           </div>
