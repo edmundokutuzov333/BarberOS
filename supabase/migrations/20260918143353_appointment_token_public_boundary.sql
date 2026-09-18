@@ -1,0 +1,1 @@
+revoke select on table public.appointments from anon;
