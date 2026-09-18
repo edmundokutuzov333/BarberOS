@@ -145,3 +145,7 @@ A implementação está em `frontend/src/pages/BookingWizard.tsx`. A aceitação
 `/app/agenda` agora usa read models PostgreSQL tenant-scoped, timeline por barbeiro em Dia, carga semanal em Semana, acções de atendimento e remarcação por slots reais. A remarcação por drag suporta mudança de barbeiro com locks determinísticos. Nenhuma mutação de `appointments` é feita directamente pelo browser.
 
 A aceitação está em `supabase/tests/agenda_phase9.sql` e a implementação em `frontend/src/pages/app/Agenda.tsx` e `frontend/src/features/agenda/api.ts`.
+
+## Fase 10: Realtime
+
+A agenda passou a consumir eventos Realtime de `appointments` via Postgres Changes. A publicação `supabase_realtime` fica deliberadamente limitada a essa tabela; o frontend invalida o read model da agenda e sincroniza novamente sem refresh manual.
