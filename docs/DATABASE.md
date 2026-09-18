@@ -21,6 +21,15 @@ A ordem actual é:
 11. `20260918141851_20260918162700_booking_engine_2_0_phone_normalization.sql`
 12. `20260918141926_20260918163000_booking_engine_2_0_returning_fix.sql`
 13. `20260918142515_booking_engine_2_0_indexes.sql`
+14. `20260918143050_appointment_token_view.sql`
+15. `20260918143124_appointment_token_cancel.sql`
+16. `20260918143139_appointment_token_reschedule.sql`
+17. `20260918143239_appointment_token_view_customer_name.sql`
+18. `20260918143317_appointment_token_cancel_returning_fix.sql`
+19. `20260918143353_appointment_token_public_boundary.sql`
+20. `20260918143427_appointment_token_slots.sql`
+21. `20260918143814_appointment_token_cancel_lock.sql`
+22. `20260918144500_appointment_token_cancel_returning_fix.sql`
 
 As versões 1 a 3 foram reconciliadas com o estado que já existia na base viva. A versão 4 já estava aplicada e foi mantida com a mesma versão no histórico Supabase.
 
@@ -135,3 +144,9 @@ O contrato de consumo React está em `frontend/src/features/availability/api.ts`
 A tabela `appointments` continua sem INSERT directo para anon/authenticated. O conflito de concorrência é traduzido para `SLOT_TAKEN`, mantendo a exclusion constraint `appointments_no_overlap` como última barreira.
 
 Os tipos e o consumidor React estão em `frontend/src/features/booking/api.ts`. A suíte em `supabase/tests/booking_phase5.sql` usa apenas blocos rollback-only.
+
+## Phase 6: appointment token management
+
+A public capability token is backed by `appointments.manage_token`. The token RPCs expose only customer-safe fields, cancellation/rescheduling flags and slot starts. Anonymous direct SELECT on `appointments` is revoked; public reads and mutations use SECURITY DEFINER functions with `search_path=""`.
+
+Rescheduling uses the same availability engine and the same barber advisory lock as booking. Cancellation also acquires that lock before changing the appointment state, preventing stale reminder work and reducing race windows with new bookings.
