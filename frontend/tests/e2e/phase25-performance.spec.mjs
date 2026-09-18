@@ -19,7 +19,7 @@ test.describe('BarberOS Phase 25 public performance', () => {
     await client.send('Network.emulateNetworkConditions', FAST_3G);
 
     await page.addInitScript(() => {
-      window.__phase25 = { lcp: 0, cls: 0, maxEvent: 0 };
+      window.__phase25 = { lcp: 0, cls: 0, inp: 0 };
 
       try {
         new PerformanceObserver((list) => {
@@ -40,8 +40,8 @@ test.describe('BarberOS Phase 25 public performance', () => {
       try {
         new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            if (entry.duration > window.__phase25.maxEvent) {
-              window.__phase25.maxEvent = entry.duration;
+            if (entry.interactionId && entry.duration > window.__phase25.inp) {
+              window.__phase25.inp = entry.duration;
             }
           }
         }).observe({ type: 'event', buffered: true, durationThreshold: 16 });
@@ -57,7 +57,7 @@ test.describe('BarberOS Phase 25 public performance', () => {
     await expect(page.getByText('Serviços').first()).toBeVisible();
     await page.waitForTimeout(1200);
 
-    await page.mouse.wheel(0, 520);
+    await page.mouse.click(400, 220);
     await page.waitForTimeout(300);
 
     const metrics = await page.evaluate(() => {
@@ -70,7 +70,7 @@ test.describe('BarberOS Phase 25 public performance', () => {
       return {
         lcp: window.__phase25.lcp,
         cls: window.__phase25.cls,
-        maxEvent: window.__phase25.maxEvent,
+        inp: window.__phase25.inp,
         elapsed: performance.now(),
         wallClock: Date.now(),
         dcl: navigation?.domContentLoadedEventEnd ?? 0,
@@ -100,8 +100,8 @@ test.describe('BarberOS Phase 25 public performance', () => {
       expect(metrics.rpcDuration, 'Public RPC client roundtrip target: <= 1200ms').toBeLessThanOrEqual(1200);
     }
 
-    if (metrics.maxEvent > 0) {
-      expect(metrics.maxEvent, 'Lab interaction target: <= 200ms').toBeLessThanOrEqual(200);
+    if (metrics.inp > 0) {
+      expect(metrics.inp, 'INP target: <= 200ms').toBeLessThanOrEqual(200);
     }
   });
 });
