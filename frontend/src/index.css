@@ -27,6 +27,7 @@ body{
   background:
     radial-gradient(120% 80% at 50% 100%, var(--canvas-glow-a) 0%, transparent 60%),
     radial-gradient(90% 60% at 15% 0%, rgba(var(--accent-rgb),.10) 0%, transparent 55%),
+    radial-gradient(70% 55% at 100% 0%, var(--canvas-glow-b) 0%, transparent 70%),
     var(--canvas-void);
   background-attachment:fixed;
   color:var(--text-hi);
@@ -35,7 +36,6 @@ body{
   text-rendering:optimizeLegibility;
 }
 
-body::selection,
 ::selection{
   background:rgba(var(--accent-rgb),.35);
   color:var(--text-hi);
