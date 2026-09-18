@@ -44,8 +44,19 @@ function collect(source, visited = new Set()) {
   return files;
 }
 
+const mainSourceKey = manifest['index.html']
+  ? 'index.html'
+  : Object.keys(manifest).find((key) =>
+      manifest[key]?.isEntry &&
+      (manifest[key]?.src?.includes('main.tsx') || manifest[key]?.file?.endsWith('.js'))
+    );
+
+if (!mainSourceKey) throw new Error('PERF_MANIFEST_MAIN_ENTRY_MISSING');
+
+const publicSourceKey = resolveManifestKey('src/pages/PublicBarbershop.tsx');
+
 const files = new Map();
-for (const item of [...collect('src/main.tsx'), ...collect('src/pages/PublicBarbershop.tsx')]) {
+for (const item of [...collect(mainSourceKey), ...collect(publicSourceKey)]) {
   files.set(item.file, item);
 }
 
