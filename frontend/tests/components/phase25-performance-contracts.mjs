@@ -6,6 +6,13 @@ const root = process.cwd();
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
 const tests = [
+  ['private providers are not imported by the public entry', () => {
+    const main = read('src/main.tsx');
+    const app = read('src/App.tsx');
+    assert.doesNotMatch(main, /from ['"]\.\/lib\/(auth|shop)/);
+    assert.doesNotMatch(main, /from ['"]sonner['"]/);
+    assert.match(app, /lazy\(\(\) => import\('\.\/components\/layout\/PrivateProviders'\)\)/);
+  }],
   ['route surface is lazy-loaded so public entry does not ship internal pages', () => {
     const source = read('src/App.tsx');
     assert.match(source, /lazy\(\(\) => import\('\.\/pages\/PublicBarbershop'\)/);
