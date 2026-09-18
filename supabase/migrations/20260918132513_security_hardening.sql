@@ -70,12 +70,10 @@ revoke all on function private.is_member(uuid,public.app_role[]) from public, an
 revoke all on function private.is_platform_admin() from public, anon, authenticated;
 revoke all on function private.my_barber_id(uuid) from public, anon, authenticated;
 revoke all on function private.shop_is_public(uuid) from public, anon, authenticated;
-
 grant execute on function private.is_member(uuid,public.app_role[]) to anon, authenticated;
 grant execute on function private.is_platform_admin() to anon, authenticated;
 grant execute on function private.my_barber_id(uuid) to anon, authenticated;
 grant execute on function private.shop_is_public(uuid) to anon, authenticated;
-
 do $$
 declare
   r record;
@@ -139,12 +137,10 @@ revoke execute on function public.shop_is_public(uuid) from public, anon, authen
 revoke execute on function public.enqueue_appointment_notifications(uuid) from public, anon, authenticated;
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
 revoke execute on function public.on_appointment_completed() from public, anon, authenticated;
-
 revoke execute on function public.create_barbershop(text,text,text,text) from public, anon;
 revoke execute on function public.add_member_by_email(uuid,text,public.app_role) from public, anon;
 revoke execute on function public.list_members(uuid) from public, anon;
 revoke execute on function public.seed_haircut_catalogue(uuid) from public, anon;
-
 revoke execute on function public.get_available_slots(text,uuid,uuid,date) from public;
 revoke execute on function public.get_available_days(text,uuid,uuid,date,date) from public;
 revoke execute on function public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text) from public;
