@@ -15,6 +15,13 @@ export type NotificationMetrics = {
   delivery_rate_7d: number;
 };
 
+export type NotificationAutomationStatus = {
+  dispatcher_active: boolean;
+  dispatcher_last_run_at: string | null;
+  dispatcher_last_run_status: string | null;
+  dispatcher_last_run_message: string | null;
+};
+
 export type NotificationRow = {
   notification_id: string;
   channel: Exclude<NotificationChannel, "all">;
@@ -52,6 +59,17 @@ export async function retryNotification(shopId: string, notificationId: string) 
   const row = data?.[0];
   if (!row) throw new Error("NOTIFICATION_RETRY_EMPTY_RESPONSE");
   return row;
+}
+
+export async function getNotificationAutomationStatus(shopId: string): Promise<NotificationAutomationStatus> {
+  const { data, error } = await supabase.rpc("get_notification_automation_status", { p_shop: shopId });
+  if (error) throw error;
+  return data?.[0] ?? {
+    dispatcher_active: false,
+    dispatcher_last_run_at: null,
+    dispatcher_last_run_status: null,
+    dispatcher_last_run_message: null,
+  };
 }
 
 export async function getNotifications(
@@ -114,6 +132,19 @@ export function useRetryNotification() {
         queryClient.invalidateQueries({ queryKey: ["notifications", "metrics", input.shopId] }),
       ]);
     },
+  });
+}
+
+
+export function useNotificationAutomationStatus(shopId?: string) {
+  return useQuery({
+    queryKey: ["notifications", "automation", shopId],
+    queryFn: () => getNotificationAutomationStatus(shopId!),
+    enabled: Boolean(shopId),
+    staleTime: 15_000,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+    retry: false,
   });
 }
 

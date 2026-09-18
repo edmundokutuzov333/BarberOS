@@ -1134,6 +1134,15 @@ export type Database = {
           waitlist_entry_id: string | null
         }[]
       }
+      get_notification_automation_status: {
+        Args: { p_shop: string }
+        Returns: {
+          dispatcher_active: boolean
+          dispatcher_last_run_at: string | null
+          dispatcher_last_run_message: string | null
+          dispatcher_last_run_status: string | null
+        }[]
+      }
       get_notification_metrics: {
         Args: { p_shop: string }
         Returns: {

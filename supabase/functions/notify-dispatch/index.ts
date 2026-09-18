@@ -137,7 +137,7 @@ function dataFor(job: DispatchJob): TemplateData {
   };
 }
 
-function messageFor(templateKey: string, d: TemplateData): string {
+function messageFor(templateKey: string, d: TemplateData, job?: DispatchJob): string {
   switch (templateKey) {
     case "appointment_pending":
       return "Olá " + d.customerName + ". Recebemos a sua marcação na " + d.shopName +
@@ -169,6 +169,21 @@ function messageFor(templateKey: string, d: TemplateData): string {
     case "review_request":
       return "Olá " + d.customerName + ". Esperamos que a sua visita à " + d.shopName +
         " tenha corrido bem. Pode consultar a sua marcação e dar-nos feedback aqui: " + d.manageUrl;
+    case "daily_digest": {
+      const p = job?.payload ?? {};
+      const total = Number(p.today_total ?? 0);
+      const confirmed = Number(p.today_confirmed ?? 0);
+      const completed = Number(p.today_completed ?? 0);
+      const noShow = Number(p.today_no_show ?? 0);
+      const pending = Number(p.pending_deposits ?? 0);
+      const waiting = Number(p.waitlist_waiting ?? 0);
+      const revenue = mzn(Number(p.revenue_cents ?? 0));
+      const localDate = String(p.local_date ?? d.date);
+      return "Bom dia. Aqui está o resumo da " + d.shopName + " de " + localDate + ": " +
+        total + " marcações hoje, " + confirmed + " confirmadas, " + completed +
+        " concluídas, " + noShow + " faltas, " + pending + " sinais pendentes, " +
+        waiting + " clientes na lista de espera e " + revenue + " de receita estimada.";
+    }
     default:
       throw new Error("NOTIFICATION_TEMPLATE_UNSUPPORTED:" + templateKey);
   }
@@ -356,7 +371,7 @@ async function markSent(client: RpcClient, job: DispatchJob, providerId: string,
 
 async function dispatchOne(client: RpcClient, job: DispatchJob): Promise<Record<string, unknown>> {
   const d = dataFor(job);
-  const message = messageFor(job.template_key, d);
+  const message = messageFor(job.template_key, d, job);
   const fallback = fallbackUrl(job, message);
 
   try {
@@ -398,7 +413,18 @@ async function dispatchOne(client: RpcClient, job: DispatchJob): Promise<Record<
 }
 
 export default {
-  fetch: withSupabase({ auth: "secret" }, async (req, ctx) => {
+  fetch: withSupabase({ auth: "publishable" }, async (req, ctx) => {
+    const cronSecret = req.headers.get("x-barberos-cron-secret")?.trim() || "";
+    const secretOk = await rpc(ctx.supabaseAdmin as unknown as RpcClient, "scheduler_secret_valid", {
+      p_candidate: cronSecret,
+    });
+    if (secretOk !== true) {
+      return new Response(JSON.stringify({ ok: false, error: "UNAUTHORIZED" }), {
+        status: 401,
+        headers: { "content-type": "application/json", "cache-control": "no-store" },
+      });
+    }
+
     if (req.method !== "POST") {
       return new Response(JSON.stringify({ ok: false, error: "METHOD_NOT_ALLOWED" }), {
         status: 405,
