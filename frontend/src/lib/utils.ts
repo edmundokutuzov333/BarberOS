@@ -32,6 +32,16 @@ export function slugify(s: string): string {
 const ERRORS: Record<string, string> = {
   SLOT_TAKEN: 'Esse horário foi ocupado. Escolhe outro.',
   SLOT_UNAVAILABLE: 'Esse horário foi ocupado. Escolhe outro.',
+  INVALID_DATE: 'Escolhe uma data válida.',
+  INVALID_DATE_RANGE: 'O intervalo de datas não é válido.',
+  BARBER_NOT_FOUND: 'Esse barbeiro já não está disponível.',
+  INVALID_SLOT_INTERVAL: 'O intervalo de marcação configurado é inválido.',
+  OVERRIDE_DATE_IN_PAST: 'A excepção tem de ser hoje ou uma data futura.',
+  INVALID_OVERRIDE_HOURS: 'O horário especial tem de ter abertura e fecho válidos.',
+  CLOSED_OVERRIDE_CANNOT_HAVE_HOURS: 'Um dia fechado não pode ter horas definidas.',
+  OVERRIDE_NOT_FOUND: 'Essa excepção já não existe.',
+  OVERRIDE_NOTE_TOO_LONG: 'A nota pode ter no máximo 500 caracteres.',
+  TENANT_RELATION_MISMATCH: 'A configuração pertence a outra barbearia.'
   POLICY_LOCKED: 'Já passou o prazo para alterar online. Fala com a barbearia.',
   INVALID_PHONE: 'Número inválido. Usa o formato 84 000 0000.',
   BARBERSHOP_NOT_FOUND: 'Esta barbearia não está disponível.',
