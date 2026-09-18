@@ -208,6 +208,55 @@ $block$;
 
 do $block$
 declare
+  v_appt public.appointments%rowtype;
+  v_notification uuid;
+  v_status public.notif_status;
+begin
+  select a.*
+  into v_appt
+  from public.appointments a
+  where a.starts_at > now()
+  order by a.created_at desc
+  limit 1;
+
+  if v_appt.id is null then
+    raise exception 'FAIL: no appointment fixture for stale notification guard';
+  end if;
+
+  update public.notifications
+  set scheduled_for=now()+interval '7 days'
+  where status='queued';
+
+  update public.appointments
+  set status='cancelled',
+      cancelled_at=now(),
+      cancel_reason='stale_guard_fixture'
+  where id=v_appt.id;
+
+  insert into public.notifications(
+    barbershop_id,appointment_id,channel,template_key,recipient,scheduled_for,payload
+  )
+  values(
+    v_appt.barbershop_id,v_appt.id,'whatsapp','appointment_confirmed','+258841234567',now(),
+    jsonb_build_object('fixture',true)
+  )
+  returning id into v_notification;
+
+  perform public.claim_notifications(10);
+
+  select status
+  into v_status
+  from public.notifications
+  where id=v_notification;
+
+  if v_status is distinct from 'skipped' then
+    raise exception 'FAIL: stale appointment notification was not suppressed';
+  end if;
+end
+$block$;
+
+do $block$
+declare
   v_first integer;
   v_second integer;
 begin
