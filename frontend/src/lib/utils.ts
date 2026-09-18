@@ -103,6 +103,9 @@ const ERRORS: Record<string, string> = {
   REVIEW_EMPTY_RESPONSE: 'A avaliação não foi registada. Tenta de novo.',
   REVIEW_PUBLICATION_FILTER_INVALID: 'O filtro das avaliações não é válido.',
   REVIEW_NOT_FOUND: 'A avaliação não foi encontrada.',
+  REPORT_EMPTY_RESPONSE: 'Os relatórios não devolveram dados válidos.',
+  REPORT_RANGE_TOO_LARGE: 'O intervalo máximo do relatório é de 366 dias.',
+
 
   PAYMENT_REFERENCE_MISSING: 'O provider não devolveu uma referência de transação válida.',
   UNAUTHORIZED: 'Esta operação não está autorizada.',

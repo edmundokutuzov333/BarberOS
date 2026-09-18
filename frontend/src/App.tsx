@@ -22,6 +22,7 @@ import Notificacoes from './pages/app/Notificacoes';
 import Pagamentos from './pages/app/Pagamentos';
 import Vaga from './pages/Vaga';
 import ReviewSubmit from './pages/ReviewSubmit';
+import Relatorios from './pages/app/Relatorios';
 import Avaliacoes from './pages/app/Avaliacoes';
 
 export default function App() {
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="notificacoes" element={<Notificacoes />} />
           <Route path="pagamentos" element={<Pagamentos />} />
           <Route path="avaliacoes" element={<Avaliacoes />} />
+          <Route path="relatorios" element={<Relatorios />} />
           <Route path="servicos" element={<ServicosPage />} />
           <Route path="cortes" element={<CortesPage />} />
           <Route path="barbeiros" element={<BarbeirosPage />} />
