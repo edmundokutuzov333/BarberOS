@@ -2,8 +2,24 @@ name: BarberOS Phase 23 Test Suite
 
 on:
   pull_request:
+    paths:
+      - "frontend/**"
+      - "tests/**"
+      - "supabase/tests/**"
+      - "scripts/test_database_phase23.py"
+      - "docs/TESTING.md"
+      - ".github/workflows/phase23-tests.yml"
   push:
-    branches: [main]
+    branches:
+      - main
+      - "phase-*"
+    paths:
+      - "frontend/**"
+      - "tests/**"
+      - "supabase/tests/**"
+      - "scripts/test_database_phase23.py"
+      - "docs/TESTING.md"
+      - ".github/workflows/phase23-tests.yml"
 
 jobs:
   frontend:
@@ -13,77 +29,97 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: yarn
           cache-dependency-path: frontend/yarn.lock
-      - run: corepack enable
-      - run: yarn install --frozen-lockfile
-      - run: yarn a11y:phase21
-      - run: yarn typecheck
-      - run: yarn build
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Accessibility audit
+        run: yarn a11y:phase21
+      - name: Typecheck
+        run: yarn typecheck
+      - name: Production build
+        run: yarn build
 
   unit-components:
     name: Unit and component tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: yarn
           cache-dependency-path: frontend/yarn.lock
-      - run: corepack enable
-      - working-directory: frontend
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install dependencies
+        working-directory: frontend
         run: yarn install --frozen-lockfile
-      - working-directory: frontend
+      - name: Unit tests
+        working-directory: frontend
         run: yarn test:unit:phase23
-      - working-directory: frontend
+      - name: Component tests
+        working-directory: frontend
         run: yarn test:components:phase23
 
   e2e:
     name: Browser E2E
     runs-on: ubuntu-latest
-    needs: [frontend]
+    needs:
+      - frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 22
-      - working-directory: frontend
-        run: corepack enable && yarn install --frozen-lockfile
-      - working-directory: frontend
+      - name: Enable Corepack
+        working-directory: frontend
+        run: corepack enable
+      - name: Install frontend
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+      - name: Build production app
+        working-directory: frontend
         run: yarn build
-      - working-directory: frontend
-        run: |
-          nohup yarn preview --host 127.0.0.1 --port 4173 > /tmp/barberos-preview.log 2>&1 &
-      - working-directory: frontend
+      - name: Start preview
+        working-directory: frontend
+        run: nohup yarn preview --host 127.0.0.1 --port 4173 > /tmp/barberos-preview.log 2>&1 &
+      - name: Install Playwright
+        working-directory: frontend
         run: npm install --no-save --package-lock=false @playwright/test@1.56.1
-      - working-directory: frontend
+      - name: Install Chromium
+        working-directory: frontend
         run: npx playwright install --with-deps chromium
-      - working-directory: frontend
+      - name: Run E2E
+        working-directory: frontend
         run: npx playwright test tests/e2e/phase23.spec.mjs --config=playwright.config.mjs
-        env:
-          BARBEROS_E2E_BASE_URL: http://127.0.0.1:4173
-          BARBEROS_E2E_SHOP_SLUG: ${{ secrets.BARBEROS_E2E_SHOP_SLUG }}
-          BARBEROS_E2E_EMAIL: ${{ secrets.BARBEROS_E2E_EMAIL }}
-          BARBEROS_E2E_PASSWORD: ${{ secrets.BARBEROS_E2E_PASSWORD }}
-      - if: failure()
+      - name: Preview logs
+        if: failure()
         run: cat /tmp/barberos-preview.log
 
   database:
     name: Database acceptance suite
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-      - run: pip install "psycopg[binary]==3.2.12"
-      - name: Database suite
-        env:
-          BARBEROS_TEST_DATABASE_URL: ${{ secrets.BARBEROS_TEST_DATABASE_URL }}
-          BARBEROS_TEST_ALLOW_MUTATION: '1'
+          python-version: "3.12"
+      - name: Install psycopg
+        run: pip install "psycopg[binary]==3.2.12"
+      - name: Run database suite
         run: python scripts/test_database_phase23.py
