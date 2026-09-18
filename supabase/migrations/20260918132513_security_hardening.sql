@@ -74,6 +74,7 @@ grant execute on function private.is_member(uuid,public.app_role[]) to anon, aut
 grant execute on function private.is_platform_admin() to anon, authenticated;
 grant execute on function private.my_barber_id(uuid) to anon, authenticated;
 grant execute on function private.shop_is_public(uuid) to anon, authenticated;
+
 do $$
 declare
   r record;
@@ -149,7 +150,6 @@ grant execute on function public.create_barbershop(text,text,text,text) to authe
 grant execute on function public.add_member_by_email(uuid,text,public.app_role) to authenticated;
 grant execute on function public.list_members(uuid) to authenticated;
 grant execute on function public.seed_haircut_catalogue(uuid) to authenticated;
-
 grant execute on function public.get_available_slots(text,uuid,uuid,date) to anon, authenticated;
 grant execute on function public.get_available_days(text,uuid,uuid,date,date) to anon, authenticated;
 grant execute on function public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text) to anon, authenticated;
