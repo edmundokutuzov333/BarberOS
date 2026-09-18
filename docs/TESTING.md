@@ -51,3 +51,14 @@ A FASE 24 adiciona uma fronteira HTTP pública `booking-create` para preservar o
 A suite `scripts/test_booking_concurrency_phase24.py` exige um PostgreSQL dedicado e controla a ordem das transacções para provar A = sucesso, B = `SLOT_TAKEN` e uma única appointment activa no slot. `frontend/tests/e2e/phase24-http-concurrency.spec.mjs` verifica os estados HTTP 200/409 contra um ambiente dedicado e recusa explicitamente a produção.
 
 Sem ambiente dedicado, estes testes fazem `SKIP` e a aceitação final da FASE 24 permanece aberta.
+## FASE 25: performance
+
+A FASE 25 adiciona budgets de assets, code splitting por rota e benchmark público em Fast 3G.
+
+- `frontend/tests/components/phase25-performance-contracts.mjs` valida o corte de bundles e as regras de carregamento de imagens.
+- `scripts/check-performance-budget.mjs` mede o grafo real do primeiro carregamento público usando o manifest do Vite.
+- `frontend/tests/e2e/phase25-performance.spec.mjs` mede LCP, CLS, DOMContentLoaded, TTFB, RPC público e interação de laboratório sob Fast 3G.
+- `supabase/tests/phase25_performance_contract.sql` valida os índices da superfície pública.
+- `supabase/tests/phase25_public_rpc_benchmark.sql` mede o RPC público em modo read-only.
+
+A aceitação de performance não executa mutações contra produção.
