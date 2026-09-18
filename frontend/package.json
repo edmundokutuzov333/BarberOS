@@ -71,7 +71,9 @@
     "test:components:phase23": "node tests/components/phase23-components.mjs",
     "test:contracts:phase23": "node tests/components/phase23-page-contracts.mjs",
     "test:unit:phase24": "node tests/unit/phase24-concurrency.mjs",
-    "test:contracts:phase24": "node tests/components/phase24-concurrency-contracts.mjs"
+    "test:contracts:phase24": "node tests/components/phase24-concurrency-contracts.mjs",
+    "test:contracts:phase25": "node tests/components/phase25-performance-contracts.mjs",
+    "perf:budget": "node ../scripts/check-performance-budget.mjs"
   },
   "browserslist": {
     "production": [

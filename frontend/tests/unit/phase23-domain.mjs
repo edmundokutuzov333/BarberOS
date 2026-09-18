@@ -19,7 +19,7 @@ async function main() {
         assert.equal(utils.slugify('  Café  &  Corte  '), 'cafe-corte');
       }],
       ['humanError preserves business contracts', () => {
-        assert.equal(utils.humanError({ message: 'SLOT_TAKEN' }), 'Esse horário foi ocupado. Escolhe outro.');
+        assert.equal(utils.humanError({ message: 'SLOT_TAKEN' }), 'Este horário acabou de ser ocupado. Escolha outro horário.');
         assert.equal(utils.humanError({ message: 'INVALID_PHONE from booking' }), 'Número inválido. Usa o formato 84 000 0000.');
         assert.equal(utils.humanError({ message: 'unknown backend failure' }), 'Algo falhou. Tenta de novo.');
       }],

@@ -14,4 +14,9 @@ export default defineConfig({
     hmr: { clientPort: 443 },
   },
   preview: { host: '0.0.0.0', port: 3000 },
+  build: {
+    manifest: '.vite/manifest.json',
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 500,
+  },
 });
