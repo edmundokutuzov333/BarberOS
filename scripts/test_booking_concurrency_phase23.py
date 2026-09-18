@@ -10,8 +10,6 @@ import os
 import threading
 import uuid
 from dataclasses import dataclass
-from datetime import timedelta
-
 import psycopg
 
 DB = os.getenv("BARBEROS_TEST_DATABASE_URL")
@@ -43,10 +41,12 @@ def fixture(conn):
         if not row:
             raise RuntimeError("PHASE23_CONCURRENCY_FIXTURE_UNAVAILABLE")
         slug, service_id, barber_id = row
+        cur.execute("select ((now() at time zone 'Africa/Maputo')::date + 1)")
+        test_day = cur.fetchone()[0]
         cur.execute(
             "select slot_start from public.get_available_slots(%s,%s,%s,%s) "
             "where slot_start > now() + interval '20 minutes' order by slot_start limit 1",
-            (slug, service_id, barber_id, conn.execute("select ((now() at time zone 'Africa/Maputo')::date + 1)").fetchone()[0]),
+            (slug, service_id, barber_id, test_day),
         )
         row = cur.fetchone()
         if not row:
