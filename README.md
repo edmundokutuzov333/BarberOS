@@ -54,6 +54,10 @@ A cadeia actual é:
 25. `20260918144535_public_barbershop_anon_boundary.sql`
 26. `20260918145140_public_booking_config.sql`
 27. `20260918145210_public_booking_deposit_config.sql`
+28. `20260918150407_agenda_operational_engine.sql`
+29. `20260918150747_agenda_confirm_deposit_guard.sql`
+30. `20260918150955_agenda_argument_validation_order.sql`
+31. `20260918151118_agenda_cross_barber_reschedule.sql`
 
 Future schema changes must be a new timestamped migration. Never rename an applied migration.
 
@@ -134,3 +138,9 @@ A rota `/barbearia/:slug/marcar` implementa o percurso sem conta em seis passos:
 Dias e slots vêm do Availability Engine e a criação usa exclusivamente `book_appointment()`. "Qualquer barbeiro" é resolvido pelo PostgreSQL. Em caso de `SLOT_TAKEN`, o cliente regressa ao passo de hora e a disponibilidade é actualizada.
 
 A implementação está em `frontend/src/pages/BookingWizard.tsx`. A aceitação live está em `supabase/tests/booking_wizard_phase8.sql`.
+
+## Fase 9: agenda operacional
+
+`/app/agenda` agora usa read models PostgreSQL tenant-scoped, timeline por barbeiro em Dia, carga semanal em Semana, acções de atendimento e remarcação por slots reais. A remarcação por drag suporta mudança de barbeiro com locks determinísticos. Nenhuma mutação de `appointments` é feita directamente pelo browser.
+
+A aceitação está em `supabase/tests/agenda_phase9.sql` e a implementação em `frontend/src/pages/app/Agenda.tsx` e `frontend/src/features/agenda/api.ts`.
