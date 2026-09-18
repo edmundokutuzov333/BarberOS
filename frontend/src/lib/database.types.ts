@@ -557,7 +557,7 @@ export type Database = {
           },
           {
             foreignKeyName: "notifications_barbershop_id_fkey"
-            columns: ["appointment_id"]
+            columns: ["barbershop_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
             referencedColumns: ["id"]
@@ -1100,6 +1100,98 @@ export type Database = {
           p_whatsapp?: string | null
         }
         Returns: string
+      }
+      claim_notifications: {
+        Args: { p_limit?: number }
+        Returns: {
+          appointment_id: string | null
+          attempts: number
+          barber_name: string | null
+          barbershop_id: string
+          channel: Database["public"]["Enums"]["notif_channel"]
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          duration_min: number | null
+          ends_at: string | null
+          haircut_name: string | null
+          id: string
+          manage_token: string | null
+          offer_expires_at: string | null
+          offer_token: string | null
+          payload: Json
+          price_cents: number | null
+          recipient: string
+          scheduled_for: string
+          service_name: string | null
+          shop_name: string
+          shop_phone: string | null
+          shop_slug: string
+          shop_whatsapp: string | null
+          starts_at: string | null
+          template_key: string
+          timezone: string
+          waitlist_entry_id: string | null
+        }[]
+      }
+      get_notification_metrics: {
+        Args: { p_shop: string }
+        Returns: {
+          delivery_rate_7d: number
+          failed_count: number
+          processing_count: number
+          queued_count: number
+          sent_7d_count: number
+          sent_today_count: number
+        }[]
+      }
+      get_notifications: {
+        Args: {
+          p_channel?: string
+          p_limit?: number
+          p_offset?: number
+          p_shop: string
+          p_status?: string
+        }
+        Returns: {
+          attempts: number
+          channel: Database["public"]["Enums"]["notif_channel"]
+          fallback_url: string | null
+          last_error: string | null
+          next_attempt_at: string | null
+          notification_id: string
+          recipient_masked: string
+          scheduled_for: string
+          sent_at: string | null
+          status: Database["public"]["Enums"]["notif_status"]
+          template_key: string
+          total_count: number
+        }[]
+      }
+      mark_notification_failure: {
+        Args: {
+          p_error: string
+          p_fallback_url?: string | null
+          p_id: string
+          p_retryable?: boolean
+        }
+        Returns: {
+          attempts: number
+          retry_at: string | null
+          status: Database["public"]["Enums"]["notif_status"]
+        }[]
+      }
+      mark_notification_sent: {
+        Args: {
+          p_id: string
+          p_meta?: Json
+          p_provider_message_id?: string | null
+        }
+        Returns: Database["public"]["Enums"]["notif_status"]
+      }
+      recover_stuck_notifications: {
+        Args: { p_after?: string }
+        Returns: number
       }
       delete_schedule_override: {
         Args: { p_id: string; p_shop: string }
