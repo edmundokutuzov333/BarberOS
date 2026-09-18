@@ -86,7 +86,7 @@ begin
   end;
 
   begin
-    perform public.save_schedule_override(
+    select public.save_schedule_override(
       v_shop,v_day,null,true,null,null,'holiday','shop-close-test',null
     ) into v_override;
 
