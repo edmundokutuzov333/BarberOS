@@ -3,11 +3,11 @@
 do $do$
 begin
   if not exists (select 1 from vault.decrypted_secrets where name='barberos_project_url') then
-    perform vault.create_secret('https://alseiinjzwjdiwtvkdzy.supabase.co','barberos_project_url',null,null);
+    perform vault.create_secret('https://alseiinjzwjdiwtvkdzy.supabase.co','barberos_project_url','Supabase project URL',null);
   end if;
 
   if not exists (select 1 from vault.decrypted_secrets where name='barberos_publishable_key') then
-    perform vault.create_secret('sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID','barberos_publishable_key',null,null);
+    perform vault.create_secret('sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID','barberos_publishable_key','Supabase publishable key for cron invocation',null);
   end if;
 
   if not exists (select 1 from vault.decrypted_secrets where name='barberos_cron_secret') then
