@@ -35,6 +35,10 @@ A ordem actual é:
 25. `20260918144535_public_barbershop_anon_boundary.sql`
 26. `20260918145140_public_booking_config.sql`
 27. `20260918145210_public_booking_deposit_config.sql`
+28. `20260918150407_agenda_operational_engine.sql`
+29. `20260918150747_agenda_confirm_deposit_guard.sql`
+30. `20260918150955_agenda_argument_validation_order.sql`
+31. `20260918151118_agenda_cross_barber_reschedule.sql`
 
 As versões 1 a 3 foram reconciliadas com o estado que já existia na base viva. A versão 4 já estava aplicada e foi mantida com a mesma versão no histórico Supabase.
 
@@ -167,3 +171,7 @@ Anonymous direct SELECT was revoked from the domain tables used by the public pa
 `/barbearia/:slug/marcar` is the public six-step booking flow. The frontend consumes the public shop contract, `get_available_days`, `get_available_slots` and finally `book_appointment`. It never inserts directly into appointments.
 
 The public payload now includes only the booking configuration needed for UX: max advance, lead time, slot interval and deposit rules. The database remains authoritative for the final deposit value and slot acceptance.
+
+## Phase 9: operational agenda
+
+The operational agenda is backed by tenant-scoped PostgreSQL read models and transactional appointment state changes. Day view renders barber timelines and supports drag reschedule, including cross-barber moves. Week view provides a seven-day operational board.
