@@ -30,8 +30,8 @@ export function slugify(s: string): string {
 }
 
 const ERRORS: Record<string, string> = {
-  SLOT_TAKEN: 'Esse horário foi ocupado. Escolhe outro.',
-  SLOT_UNAVAILABLE: 'Esse horário foi ocupado. Escolhe outro.',
+  SLOT_TAKEN: 'Este horário acabou de ser ocupado. Escolha outro horário.',
+  SLOT_UNAVAILABLE: 'Este horário acabou de ser ocupado. Escolha outro horário.',
   INVALID_DATE: 'Escolhe uma data válida.',
   INVALID_DATE_RANGE: 'O intervalo de datas não é válido.',
   BARBER_NOT_FOUND: 'Esse barbeiro já não está disponível.',
