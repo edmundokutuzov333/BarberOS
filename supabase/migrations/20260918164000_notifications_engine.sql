@@ -1,8 +1,6 @@
 -- BarberOS Phase 14: Notifications Engine
 -- Durable dispatcher state, retry policy, secure operator read model and provider delivery boundary.
 
-alter type public.notif_status add value if not exists 'processing';
-
 alter table public.notifications
   add column if not exists attempts integer not null default 0,
   add column if not exists last_attempt_at timestamptz,
