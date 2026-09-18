@@ -25,3 +25,7 @@ Horários e overrides deixaram de executar delete seguido de insert no browser. 
 ## Acceptance
 
 O teste read-only está em supabase/tests/domain_integrity_phase3.sql. Ele valida a cadeia de migrations, índices, constraints, RPCs, grants, triggers e ausência de relações cross-tenant no estado vivo.
+
+## Agregado barbeiro
+
+A criação e edição de barbeiros usa save_barber, que grava os dados do barbeiro e a lista completa de serviços numa única transacção. O RPC valida operador, tenant, conta ligada, duplicação de serviços e pertença dos serviços à loja.
