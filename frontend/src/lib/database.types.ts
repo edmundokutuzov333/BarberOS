@@ -1193,6 +1193,14 @@ export type Database = {
         Args: { p_after?: string }
         Returns: number
       }
+      retry_notification: {
+        Args: { p_notification: string; p_shop: string }
+        Returns: {
+          attempts: number
+          notification_id: string
+          status: Database["public"]["Enums"]["notif_status"]
+        }[]
+      }
       delete_schedule_override: {
         Args: { p_id: string; p_shop: string }
         Returns: boolean
