@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { TZDate } from '@date-fns/tz';
 import { supabase } from '@/lib/supabase';
 import { useShop } from '@/lib/shop';
+import type { Json } from '@/lib/database.types';
 import { humanError, fmt, TZ } from '@/lib/utils';
 import { WEEKDAYS, BLOCK_REASONS, type WorkingHour, type TimeBlock, type BlockReason } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
@@ -46,8 +47,8 @@ export function HoursEditor() {
       }
 
       const params = barberId
-        ? { p_shop: shop!.id, p_rows: rows, p_barber_id: barberId }
-        : { p_shop: shop!.id, p_rows: rows };
+        ? { p_shop: shop!.id, p_rows: rows as unknown as Json, p_barber_id: barberId }
+        : { p_shop: shop!.id, p_rows: rows as unknown as Json };
 
       const { error } = await supabase.rpc('replace_working_hours', params);
       if (error) throw error;
@@ -59,7 +60,7 @@ export function HoursEditor() {
     mutationFn: async () => {
       const { error } = await supabase.rpc('replace_working_hours', {
         p_shop: shop!.id,
-        p_rows: [],
+        p_rows: [] as Json,
         p_barber_id: barberId,
       });
       if (error) throw error;
