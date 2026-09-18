@@ -66,7 +66,6 @@ $$;
 
 revoke all on schema private from public;
 grant usage on schema private to anon, authenticated;
-
 revoke all on function private.is_member(uuid,public.app_role[]) from public, anon, authenticated;
 revoke all on function private.is_platform_admin() from public, anon, authenticated;
 revoke all on function private.my_barber_id(uuid) from public, anon, authenticated;
