@@ -20,7 +20,10 @@ const Onboarding = lazy(() => import('./pages/app/Onboarding'));
 const NotYet = lazy(() => import('./pages/app/NotYet').then((m) => ({ default: m.default })));
 const NotFound = lazy(() => import('./pages/app/NotYet').then((m) => ({ default: m.NotFound })));
 const Definicoes = lazy(() => import('./pages/app/Definicoes'));
-const ConfigPages = lazy(() => import('./pages/app/ConfigPages'));
+const ServicosPage = lazy(() => import('./pages/app/ConfigPages').then((m) => ({ default: m.ServicosPage })));
+const CortesPage = lazy(() => import('./pages/app/ConfigPages').then((m) => ({ default: m.CortesPage })));
+const BarbeirosPage = lazy(() => import('./pages/app/ConfigPages').then((m) => ({ default: m.BarbeirosPage })));
+const HorariosPage = lazy(() => import('./pages/app/ConfigPages').then((m) => ({ default: m.HorariosPage })));
 const AgendaPage = lazy(() => import('./pages/app/Agenda'));
 const Clientes = lazy(() => import('./pages/app/Clientes'));
 const ClienteDetalhe = lazy(() => import('./pages/app/ClienteDetalhe'));
@@ -55,18 +58,6 @@ function RouteLoading() {
   );
 }
 
-function ConfigServicos() {
-  return <ConfigPages.ServicosPage />;
-}
-function ConfigCortes() {
-  return <ConfigPages.CortesPage />;
-}
-function ConfigBarbeiros() {
-  return <ConfigPages.BarbeirosPage />;
-}
-function ConfigHorarios() {
-  return <ConfigPages.HorariosPage />;
-}
 
 export default function App() {
   return (
@@ -95,10 +86,10 @@ export default function App() {
             <Route path="pagamentos" element={<Pagamentos />} />
             <Route path="avaliacoes" element={<Avaliacoes />} />
             <Route path="relatorios" element={<Relatorios />} />
-            <Route path="servicos" element={<ConfigServicos />} />
-            <Route path="cortes" element={<ConfigCortes />} />
-            <Route path="barbeiros" element={<ConfigBarbeiros />} />
-            <Route path="horarios" element={<ConfigHorarios />} />
+            <Route path="servicos" element={<ServicosPage />} />
+            <Route path="cortes" element={<CortesPage />} />
+            <Route path="barbeiros" element={<BarbeirosPage />} />
+            <Route path="horarios" element={<HorariosPage />} />
             <Route path="definicoes" element={<Navigate to="/app/definicoes/perfil" replace />} />
             <Route path="definicoes/:tab" element={<Definicoes />} />
             <Route path="*" element={<NotYet />} />
