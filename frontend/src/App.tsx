@@ -17,6 +17,8 @@ import { ServicosPage, CortesPage, BarbeirosPage, HorariosPage } from './pages/a
 import AgendaPage from './pages/app/Agenda';
 import Clientes from './pages/app/Clientes';
 import ClienteDetalhe from './pages/app/ClienteDetalhe';
+import ListaEspera from './pages/app/ListaEspera';
+import Vaga from './pages/Vaga';
 
 export default function App() {
   return (
@@ -26,6 +28,7 @@ export default function App() {
       <Route path="/registar" element={<Registar />} />
       <Route path="/recuperar" element={<Recuperar />} />
       <Route path="/marcacao/:token" element={<AppointmentManage />} />
+      <Route path="/vaga/:token" element={<Vaga />} />
       <Route path="/barbearia/:slug" element={<PublicBarbershop />} />
       <Route path="/barbearia/:slug/marcar" element={<BookingWizard />} />
 
@@ -37,6 +40,7 @@ export default function App() {
           <Route path="marcacoes" element={<NotYet />} />
           <Route path="clientes" element={<Clientes />} />
           <Route path="clientes/:customerId" element={<ClienteDetalhe />} />
+          <Route path="lista-espera" element={<ListaEspera />} />
           <Route path="servicos" element={<ServicosPage />} />
           <Route path="cortes" element={<CortesPage />} />
           <Route path="barbeiros" element={<BarbeirosPage />} />

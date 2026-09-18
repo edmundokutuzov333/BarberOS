@@ -8,6 +8,7 @@ import { buildWhatsAppLink } from '@/lib/calendar';
 import { formatMT, humanError } from '@/lib/utils';
 import { useAvailableDays, useAvailableSlots } from '@/features/availability/api';
 import { normalizeMozPhone, useBookAppointment } from '@/features/booking/api';
+import { WaitlistJoinPanel } from '@/features/waitlist/WaitlistJoinPanel';
 import {
   usePublicBarbershop,
   type PublicBarber,
@@ -571,7 +572,25 @@ export default function BookingWizard() {
                       ))}
                     </div>
                   </div>
-                ) : <EmptyState title="Este dia ficou sem vagas" body="A disponibilidade mudou. Volte ao dia anterior e escolha outra data." action={<Button variant="secondary" onClick={() => setStep(4)}>Escolher outro dia</Button>} />}
+                ) : (
+                  <div className="space-y-4">
+                    <EmptyState
+                      title="Este dia ficou sem vagas"
+                      body="A disponibilidade mudou. Pode escolher outro dia ou entrar na lista de espera."
+                      action={<Button variant="secondary" onClick={() => setStep(4)}>Escolher outro dia</Button>}
+                    />
+                    {slotsQuery.isSuccess && slotsQuery.data?.length === 0 && today && maxDate && (
+                      <WaitlistJoinPanel
+                        slug={slug!}
+                        serviceId={service.id}
+                        haircutId={haircut?.id ?? null}
+                        barberId={selectedBarberId}
+                        date={date}
+                        maxDate={maxDate}
+                      />
+                    )}
+                  </div>
+                )}
               </Panel>
             )}
 

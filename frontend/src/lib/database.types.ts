@@ -1056,6 +1056,27 @@ export type Database = {
           cancelled_at: string
         }[]
       }
+      cancel_waitlist: {
+        Args: { p_entry: string; p_shop: string }
+        Returns: {
+          status: Database["public"]["Enums"]["waitlist_status"]
+          waitlist_entry_id: string
+        }[]
+      }
+      claim_waitlist_offer: {
+        Args: { p_token: string }
+        Returns: {
+          appointment_id: string
+          barber_id: string
+          deposit_cents: number
+          ends_at: string
+          manage_token: string
+          needs_payment: boolean
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          waitlist_entry_id: string
+        }[]
+      }
       create_barbershop: {
         Args: {
           p_name: string
@@ -1072,6 +1093,14 @@ export type Database = {
       enqueue_appointment_notifications: {
         Args: { p_appt: string }
         Returns: undefined
+      }
+      expire_waitlist_offer: {
+        Args: { p_token: string }
+        Returns: {
+          next_offer_token: string
+          status: Database["public"]["Enums"]["waitlist_status"]
+          waitlist_entry_id: string
+        }[]
       }
       get_agenda_appointments: {
         Args: { p_from: string; p_shop: string; p_to: string }
@@ -1252,6 +1281,63 @@ export type Database = {
           slot_start: string
         }[]
       }
+      get_waitlist: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_shop: string
+          p_status?: string
+        }
+        Returns: {
+          barber_name: string
+          created_at: string
+          customer_name: string
+          date_from: string
+          date_to: string
+          email: string
+          haircut_name: string
+          offer_barber_name: string
+          offer_expires_at: string
+          offer_slot_start: string
+          period: string
+          phone: string
+          queue_position: number
+          service_name: string
+          status: Database["public"]["Enums"]["waitlist_status"]
+          total_count: number
+          waitlist_entry_id: string
+        }[]
+      }
+      get_waitlist_metrics: {
+        Args: { p_shop: string }
+        Returns: {
+          converted_30d: number
+          expiring_soon_count: number
+          offered_count: number
+          waiting_count: number
+        }[]
+      }
+      get_waitlist_offer: {
+        Args: { p_token: string }
+        Returns: {
+          barber_name: string
+          can_claim: boolean
+          customer_name: string
+          haircut_name: string
+          offer_expires_at: string
+          service_duration_min: number
+          service_name: string
+          service_price_cents: number
+          shop_name: string
+          shop_phone: string
+          shop_slug: string
+          shop_whatsapp: string
+          slot_start: string
+          status: Database["public"]["Enums"]["waitlist_status"]
+          timezone: string
+        }[]
+      }
       is_member: {
         Args: {
           p_roles?: Database["public"]["Enums"]["app_role"][]
@@ -1260,6 +1346,24 @@ export type Database = {
         Returns: boolean
       }
       is_platform_admin: { Args: never; Returns: boolean }
+      join_waitlist: {
+        Args: {
+          p_barber_id?: string
+          p_customer_name: string
+          p_date_from?: string
+          p_date_to?: string
+          p_email?: string
+          p_haircut_id?: string
+          p_period?: string
+          p_phone: string
+          p_service_id: string
+          p_slug: string
+        }
+        Returns: {
+          queued_at: string
+          status: Database["public"]["Enums"]["waitlist_status"]
+        }[]
+      }
       list_members: {
         Args: { p_shop: string }
         Returns: {
@@ -1272,6 +1376,21 @@ export type Database = {
         }[]
       }
       my_barber_id: { Args: { p_shop: string }; Returns: string }
+      offer_next_waitlist: {
+        Args: { p_barber_id: string; p_shop: string; p_slot_start: string }
+        Returns: {
+          barber_id: string
+          customer_name: string
+          email: string
+          haircut_id: string
+          offer_expires_at: string
+          offer_token: string
+          phone: string
+          service_id: string
+          slot_start: string
+          waitlist_entry_id: string
+        }[]
+      }
       reorder_barbers: {
         Args: { p_ids: string[]; p_shop: string }
         Returns: undefined
