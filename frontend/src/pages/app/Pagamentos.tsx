@@ -36,7 +36,8 @@ function maskedPhone(phone: string): string {
 }
 
 export default function Pagamentos() {
-  const { shop } = useShop();
+  const { shop, role } = useShop();
+  const canConfigure = role === 'owner';
   const [status, setStatus] = React.useState<PaymentRow['status'] | null>(null);
   const accounts = usePaymentAccounts(shop?.id);
   const metrics = usePaymentMetrics(shop?.id);
@@ -50,9 +51,11 @@ export default function Pagamentos() {
       title="Pagamentos"
       subtitle="Sinais, estados de pagamento e configuração dos providers da sua barbearia."
       actions={
-        <Link to="/app/definicoes/pagamentos">
-          <Button variant="secondary" size="sm"><CreditCard size={15} />Configurar pagamentos</Button>
-        </Link>
+        {canConfigure && (
+          <Link to="/app/definicoes/pagamentos">
+            <Button variant="secondary" size="sm"><CreditCard size={15} />Configurar pagamentos</Button>
+          </Link>
+        )}
       }
     >
       <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
@@ -87,9 +90,11 @@ export default function Pagamentos() {
               {configured} provider{configured === 1 ? '' : 's'} activo{configured === 1 ? '' : 's'} e pronto{configured === 1 ? '' : 's'} para receber sinais.
             </p>
           </div>
-          <Link to="/app/definicoes/pagamentos" className="shrink-0">
-            <Button variant="ghost" size="sm"><ShieldCheck size={15} />Gerir credenciais</Button>
-          </Link>
+          {canConfigure && (
+            <Link to="/app/definicoes/pagamentos" className="shrink-0">
+              <Button variant="ghost" size="sm"><ShieldCheck size={15} />Gerir credenciais</Button>
+            </Link>
+          )}
         </div>
 
         {accounts.isLoading ? (
