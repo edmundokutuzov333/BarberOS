@@ -286,10 +286,10 @@ grant execute on function public.offer_next_waitlist(uuid,timestamptz,uuid) to a
 create or replace function public.join_waitlist(
   p_slug text,
   p_service_id uuid,
-  p_haircut_id uuid default null,
-  p_barber_id uuid default null,
   p_customer_name text,
   p_phone text,
+  p_haircut_id uuid default null,
+  p_barber_id uuid default null,
   p_email text default null,
   p_date_from date default null,
   p_date_to date default null,
@@ -449,7 +449,7 @@ begin
 end;
 $function$;
 
-grant execute on function public.join_waitlist(text,uuid,uuid,uuid,text,text,text,date,date,text) to anon,authenticated;
+grant execute on function public.join_waitlist(text,uuid,text,text,uuid,uuid,text,date,date,text) to anon,authenticated;
 
 create or replace function public.get_waitlist_offer(
   p_token uuid
@@ -867,7 +867,7 @@ grant execute on function public.cancel_waitlist(uuid,uuid) to authenticated;
 comment on function public.offer_next_waitlist(uuid,timestamptz,uuid)
 is 'Offers one eligible waiting customer the released slot. Protected by a slot advisory lock and a unique active-offer index.';
 
-comment on function public.join_waitlist(text,uuid,uuid,uuid,text,text,text,date,date,text)
+comment on function public.join_waitlist(text,uuid,text,text,uuid,uuid,text,date,date,text)
 is 'Public no-account waitlist entry. Validates tenant, service, optional haircut/barber, date range, period and Mozambican phone.';
 
 comment on function public.claim_waitlist_offer(uuid)
