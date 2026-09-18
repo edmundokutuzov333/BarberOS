@@ -150,7 +150,7 @@ begin
   select s.id into v_service
   from public.services s
   where s.barbershop_id=v_shop and s.is_active
-  order by s.sort_order,s.created_at
+  order by s.sort_order,s.id
   limit 1;
 
   select b.id into v_barber
