@@ -51,7 +51,8 @@ export function useAgendaAppointments(
     queryFn: () => getAgendaAppointments(shopId!, from!, to!),
     enabled: Boolean(shopId && from && to),
     staleTime: 10_000,
-    refetchInterval: 30_000,
+    refetchOnReconnect: true,
+    refetchOnWindowFocus: true,
     retry: false,
   });
 }
