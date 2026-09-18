@@ -51,6 +51,11 @@ export function downloadAppointmentCalendar(appointment: AppointmentTokenView, m
 
 export function buildWhatsAppLink(phone: string, message: string): string {
   const compact = phone.trim().replace(/[\s()-]+/g, '');
+  if (compact.startsWith('http://') || compact.startsWith('https://')) {
+    const url = new URL(compact);
+    url.searchParams.set('text', message);
+    return url.toString();
+  }
   const normalized = compact.startsWith('+')
     ? compact.slice(1)
     : compact.startsWith('258')
