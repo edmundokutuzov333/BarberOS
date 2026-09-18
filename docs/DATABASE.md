@@ -14,6 +14,9 @@ A ordem actual é:
 4. `20260918132513_security_hardening.sql`
 5. `20260918134600_domain_integrity.sql`
 6. `20260918134657_domain_integrity_contract.sql`
+7. `20260918135712_atomic_barber_save.sql`
+8. `20260918140253_availability_engine_2.sql`
+9. `20260918140609_availability_security.sql`
 
 As versões 1 a 3 foram reconciliadas com o estado que já existia na base viva. A versão 4 já estava aplicada e foi mantida com a mesma versão no histórico Supabase.
 
@@ -110,3 +113,13 @@ Foram adicionados índices únicos para a grelha base e overrides de horários e
 A reordenação de serviços, cortes e barbeiros usa RPCs SECURITY DEFINER com validação do tenant e exige a lista completa dos IDs da loja. A alteração de sort_order ocorre numa única operação de banco, rejeitando payload incompleto, duplicado ou de outro tenant.
 
 A actualização de horários usa replace_working_hours. A base usa sete linhas; um override usa zero ou sete. A operação substitui o conjunto numa única transacção, rejeitando duplicados, dias inválidos e intervalos com fecho anterior ou igual à abertura.
+
+## Phase 4: Availability Engine 2.0
+
+A tabela `schedule_overrides` representa excepções por data a nível da loja ou do barbeiro. Uma excepção pode fechar o dia ou definir um novo intervalo de abertura e fecho. A precedência é: override do barbeiro, override da loja, horário específico do barbeiro, horário base da loja.
+
+O motor de slots recusa datas passadas, respeita `max_advance_days` em data e em timestamp, aplica `min_lead_time_min`, usa a duração efectiva do serviço e o `slot_interval_min`, ignora `pending` cuja hold já expirou, e bloqueia `confirmed`, `in_progress` e holds pendentes ainda válidos. `time_blocks` são barreiras adicionais por loja ou barbeiro.
+
+O acesso público recebe apenas a função de disponibilidade. A tabela `schedule_overrides` não é exposta ao cliente anónimo. Alterações de calendário usam `save_schedule_override` e `delete_schedule_override`, restritos a owner/manager.
+
+O contrato de consumo React está em `frontend/src/features/availability/api.ts`.
