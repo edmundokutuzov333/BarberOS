@@ -5,6 +5,7 @@ const RequireAuth = lazy(() => import('./components/layout/AppShell').then((m) =
 const AppShell = lazy(() => import('./components/layout/AppShell').then((m) => ({ default: m.AppShell })));
 const RequireAdmin = lazy(() => import('./components/layout/AppShell').then((m) => ({ default: m.RequireAdmin })));
 const AdminShell = lazy(() => import('./components/layout/AdminShell').then((m) => ({ default: m.AdminShell })));
+const PrivateProviders = lazy(() => import('./components/layout/PrivateProviders'));
 
 const Landing = lazy(() => import('./pages/Landing'));
 const Entrar = lazy(() => import('./pages/auth/Entrar'));
@@ -73,26 +74,28 @@ export default function App() {
         <Route path="/barbearia/:slug" element={<PublicBarbershop />} />
         <Route path="/barbearia/:slug/marcar" element={<BookingWizard />} />
 
-        <Route element={<RequireAuth />}>
-          <Route path="/app" element={<AppShell />}>
-            <Route index element={<Dashboard />} />
-            <Route path="onboarding" element={<Onboarding />} />
-            <Route path="agenda" element={<AgendaPage />} />
-            <Route path="marcacoes" element={<NotYet />} />
-            <Route path="clientes" element={<Clientes />} />
-            <Route path="clientes/:customerId" element={<ClienteDetalhe />} />
-            <Route path="lista-espera" element={<ListaEspera />} />
-            <Route path="notificacoes" element={<Notificacoes />} />
-            <Route path="pagamentos" element={<Pagamentos />} />
-            <Route path="avaliacoes" element={<Avaliacoes />} />
-            <Route path="relatorios" element={<Relatorios />} />
-            <Route path="servicos" element={<ServicosPage />} />
-            <Route path="cortes" element={<CortesPage />} />
-            <Route path="barbeiros" element={<BarbeirosPage />} />
-            <Route path="horarios" element={<HorariosPage />} />
-            <Route path="definicoes" element={<Navigate to="/app/definicoes/perfil" replace />} />
-            <Route path="definicoes/:tab" element={<Definicoes />} />
-            <Route path="*" element={<NotYet />} />
+        <Route element={<PrivateProviders />}>
+          <Route element={<RequireAuth />}>
+            <Route path="/app" element={<AppShell />}>
+              <Route index element={<Dashboard />} />
+              <Route path="onboarding" element={<Onboarding />} />
+              <Route path="agenda" element={<AgendaPage />} />
+              <Route path="marcacoes" element={<NotYet />} />
+              <Route path="clientes" element={<Clientes />} />
+              <Route path="clientes/:customerId" element={<ClienteDetalhe />} />
+              <Route path="lista-espera" element={<ListaEspera />} />
+              <Route path="notificacoes" element={<Notificacoes />} />
+              <Route path="pagamentos" element={<Pagamentos />} />
+              <Route path="avaliacoes" element={<Avaliacoes />} />
+              <Route path="relatorios" element={<Relatorios />} />
+              <Route path="servicos" element={<ServicosPage />} />
+              <Route path="cortes" element={<CortesPage />} />
+              <Route path="barbeiros" element={<BarbeirosPage />} />
+              <Route path="horarios" element={<HorariosPage />} />
+              <Route path="definicoes" element={<Navigate to="/app/definicoes/perfil" replace />} />
+              <Route path="definicoes/:tab" element={<Definicoes />} />
+              <Route path="*" element={<NotYet />} />
+            </Route>
           </Route>
 
           <Route element={<RequireAdmin />}>
