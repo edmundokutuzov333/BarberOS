@@ -171,7 +171,7 @@ function messageFor(templateKey: string, d: TemplateData, job?: DispatchJob): st
         ". Aceite aqui: " + d.offerUrl;
     case "review_request":
       return "Olá " + d.customerName + ". Esperamos que a sua visita à " + d.shopName +
-        " tenha corrido bem. Pode consultar a sua marcação e dar-nos feedback aqui: " + d.manageUrl;
+        " tenha corrido bem. Pode avaliar a sua visita aqui: " + d.reviewUrl;
     case "daily_digest": {
       const p = job?.payload ?? {};
       const total = Number(p.today_total ?? 0);
