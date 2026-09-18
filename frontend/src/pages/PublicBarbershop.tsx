@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { Clock3, Instagram, MapPin, MessageCircle, Phone, Scissors, Star, UsersRound } from 'lucide-react';
+import { Clock3, Instagram, MapPin, MessageCircle, Phone, Scissors, Star } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { buildWhatsAppLink } from '@/lib/calendar';
@@ -14,7 +14,7 @@ function timeLabel(value: string): string {
 
 function socialInstagram(value: string): string {
   const clean = value.trim();
-  if (/^https?:\\/\\//i.test(clean)) return clean;
+  if (clean.toLowerCase().startsWith('http://') || clean.toLowerCase().startsWith('https://')) return clean;
   return 'https://instagram.com/' + clean.replace(/^@/, '');
 }
 
