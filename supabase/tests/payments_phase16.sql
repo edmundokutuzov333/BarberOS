@@ -126,6 +126,7 @@ begin
   where a.starts_at > now()+interval '1 day'
     and a.manage_token is not null
     and a.id <> (select appointment_id from public.payments where idempotency_key='11111111-1111-4111-8111-111111111111')
+    and not exists (select 1 from public.payments p where p.appointment_id=a.id and p.status='pending')
   order by a.id desc limit 1;
 
   if v_appt.id is null then raise exception 'FAIL: second payment fixture unavailable'; end if;
@@ -148,13 +149,12 @@ begin
   select * into v_appt from public.appointments where id=v_appt.id;
   select * into v_payment from public.payments where id=v_payment.id;
 
-  if v_result.payment_status<>'paid' or not v_result.late_success or not v_result.requires_refund
-     or v_appt.status<>'confirmed' and v_appt.status<>'cancelled'
+  if v_result.payment_status<>'paid'
+     or not v_result.late_success
+     or not v_result.requires_refund
+     or v_appt.status<>'cancelled'
      or v_payment.failure_code<>'LATE_PAYMENT' then
-    -- The appointment may already have been cancelled by the temporal worker between fixture setup and finalization.
-    if v_appt.status<>'cancelled' or v_payment.failure_code<>'LATE_PAYMENT' then
-      raise exception 'FAIL: late payment quarantine is incorrect';
-    end if;
+    raise exception 'FAIL: late payment quarantine is incorrect';
   end if;
 end
 $block$;
