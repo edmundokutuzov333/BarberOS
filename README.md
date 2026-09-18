@@ -149,3 +149,6 @@ A aceitação está em `supabase/tests/agenda_phase9.sql` e a implementação em
 ## Fase 10: Realtime
 
 A agenda passou a consumir eventos Realtime de `appointments` via Postgres Changes. A publicação `supabase_realtime` fica deliberadamente limitada a essa tabela; o frontend invalida o read model da agenda e sincroniza novamente sem refresh manual.
+## Fase 11: Marcações manuais
+
+A operação `Nova marcação` da Agenda usa o mesmo core transaccional PostgreSQL do booking online, com `source=manual`, actor autenticado, notas internas, depósito, notificações, auditoria e os mesmos guards de disponibilidade/overlap. Anonymous não pode executar a operação.
