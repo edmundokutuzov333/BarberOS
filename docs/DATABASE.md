@@ -33,8 +33,8 @@ A ordem actual é:
 23. `20260918144319_public_barbershop_surface.sql`
 24. `20260918144500_appointment_token_cancel_returning_fix.sql`
 25. `20260918144535_public_barbershop_anon_boundary.sql`
-26. `20260918145000_public_booking_config.sql`
-27. `20260918145020_public_booking_deposit_config.sql`
+26. `20260918145140_public_booking_config.sql`
+27. `20260918145210_public_booking_deposit_config.sql`
 
 As versões 1 a 3 foram reconciliadas com o estado que já existia na base viva. A versão 4 já estava aplicada e foi mantida com a mesma versão no histórico Supabase.
 
