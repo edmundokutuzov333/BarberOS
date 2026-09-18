@@ -52,7 +52,7 @@ export async function getAdminOverview() {
 }
 
 export async function getAdminShops(params: { search: string; status: ShopStatus | null; limit?: number; offset?: number }) {
-  return rpc<AdminShop[]>('admin_list_barbershops', { p_search: params.search || null, p_status: params.status, p_limit: params.limit ?? 25, p_offset: params.offset ?? 0 });
+  return rpc<AdminShop[]>('admin_list_barbershops', { p_search: params.search || null, p_status: params.status ?? undefined, p_limit: params.limit ?? 25, p_offset: params.offset ?? 0 });
 }
 
 export async function getAdminShopDetail(shopId: string) {
@@ -87,14 +87,14 @@ export async function updateAdminPlan(input: {
 
 export async function getAdminPayments(params: { search: string; status: PaymentState | null; provider: PaymentProvider | null; limit?: number; offset?: number }) {
   return rpc<AdminPayment[]>('admin_list_payments', {
-    p_search: params.search || null, p_status: params.status, p_provider: params.provider,
+    p_search: params.search || null, p_status: params.status, p_provider: params.provider ?? undefined,
     p_limit: params.limit ?? 25, p_offset: params.offset ?? 0,
   });
 }
 
 export async function getAdminSupport(params: { search: string; status: SupportStatus | null; priority: SupportPriority | null; limit?: number; offset?: number }) {
   return rpc<AdminSupportTicket[]>('admin_list_support_tickets', {
-    p_search: params.search || null, p_status: params.status, p_priority: params.priority,
+    p_search: params.search || null, p_status: params.status ?? undefined, p_priority: params.priority ?? undefined,
     p_limit: params.limit ?? 25, p_offset: params.offset ?? 0,
   });
 }
