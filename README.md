@@ -58,6 +58,7 @@ A cadeia actual é:
 29. `20260918150747_agenda_confirm_deposit_guard.sql`
 30. `20260918150955_agenda_argument_validation_order.sql`
 31. `20260918151118_agenda_cross_barber_reschedule.sql`
+32. `20260918151603_agenda_scope_and_index_hardening.sql`
 
 Future schema changes must be a new timestamped migration. Never rename an applied migration.
 
