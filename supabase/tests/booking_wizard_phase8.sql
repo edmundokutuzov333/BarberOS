@@ -150,7 +150,7 @@ begin
 
     begin
       perform public.book_appointment(
-        v_slug,v_service,v_haircut,null,v_start,
+        v_slug,v_service,v_haircut,v_barber,v_start,
         'Phase 8 Wizard Customer B','84 000 0089','phase8-wizard-b@example.com'
       );
       raise exception 'CONCURRENT_SLOT_ACCEPTED';
