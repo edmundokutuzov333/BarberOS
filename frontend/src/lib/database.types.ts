@@ -1110,9 +1110,9 @@ export type Database = {
       }
       book_appointment: {
         Args: {
-          p_barber_id: string
+          p_barber_id: string | null
           p_email?: string | null
-          p_haircut_id: string
+          p_haircut_id: string | null
           p_name: string
           p_phone: string
           p_service_id: string
@@ -1128,9 +1128,9 @@ export type Database = {
       }
       book_appointment_manual: {
         Args: {
-          p_barber_id: string
+          p_barber_id: string | null
           p_email?: string | null
-          p_haircut_id: string
+          p_haircut_id: string | null
           p_internal_note?: string | null
           p_name: string
           p_phone: string
@@ -1829,13 +1829,13 @@ export type Database = {
       }
       save_barber: {
         Args: {
-          p_barber_id: string
-          p_bio: string
+          p_barber_id: string | null
+          p_bio: string | null
           p_display_name: string
-          p_photo_url: string
+          p_photo_url: string | null
           p_service_ids: string[]
           p_shop: string
-          p_user_id: string
+          p_user_id: string | null
           p_years_experience: number
         }
         Returns: string
