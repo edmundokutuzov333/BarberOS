@@ -96,8 +96,8 @@ export function BarbersEditor() {
               <p className="t-label text-ink-mid truncate">{b.years_experience} {b.years_experience === 1 ? 'ano' : 'anos'} · {b.barber_services?.length ?? 0} {b.barber_services?.length === 1 ? 'serviço' : 'serviços'}{b.user_id ? ' · conta ligada' : ''}</p>
             </div>
             <Switch testId={`barber-toggle-${b.id}`} checked={b.is_active} onCheckedChange={() => toggle.mutate(b)} />
-            <button data-testid={`barber-edit-${b.id}`} onClick={() => open(b)} aria-label="Editar" className="p-2 text-ink-lo hover:text-accent-soft transition-colors"><Pencil size={15} /></button>
-            <button data-testid={`barber-delete-${b.id}`} onClick={() => confirm(`Remover "${b.display_name}"?`) && remove.mutate(b)} aria-label="Remover" className="p-2 text-ink-lo hover:text-st-noshow transition-colors"><Trash2 size={15} /></button>
+            <button type="button" data-testid={`barber-edit-${b.id}`} onClick={() => open(b)} aria-label="Editar" className="p-2 text-ink-lo hover:text-accent-soft transition-colors"><Pencil size={15} /></button>
+            <button type="button" data-testid={`barber-delete-${b.id}`} onClick={() => confirm(`Remover "${b.display_name}"?`) && remove.mutate(b)} aria-label="Remover" className="p-2 text-ink-lo hover:text-st-noshow transition-colors"><Trash2 size={15} /></button>
           </div>
         )} />
       )}
