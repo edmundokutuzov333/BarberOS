@@ -30,8 +30,10 @@ begin
   perform public.admin_update_plan(v_plan,v_plan_row.name,v_plan_row.price_cents,v_plan_row.max_barbers,v_plan_row.features,v_plan_row.is_active);
 
   select id into v_ticket from public.admin_create_support_ticket(v_shop,'Phase 19 acceptance','Transient administrative support ticket.','high'::public.support_ticket_priority);
-  perform public.admin_update_support_ticket(v_ticket,'in_progress'::public.support_ticket_status,'urgent'::public.support_ticket_priority,v_admin);
+  perform public.admin_update_support_ticket(v_ticket,'in_progress'::public.support_ticket_status,'urgent'::public.support_ticket_priority,v_admin,false);
   if not exists(select 1 from public.support_tickets st where st.id=v_ticket and st.status='in_progress' and st.priority='urgent' and st.assigned_to=v_admin) then raise exception 'ADMIN_SUPPORT_WRITE_FAILED'; end if;
+  perform public.admin_update_support_ticket(v_ticket,null,null,null,true);
+  if exists(select 1 from public.support_tickets st where st.id=v_ticket and st.assigned_to is not null) then raise exception 'ADMIN_SUPPORT_UNASSIGN_FAILED'; end if;
 
   if v_nonadmin is not null then
     perform set_config('request.jwt.claim.sub',v_nonadmin::text,true);
