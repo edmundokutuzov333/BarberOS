@@ -52,6 +52,8 @@ A cadeia actual é:
 23. `20260918144319_public_barbershop_surface.sql`
 24. `20260918144500_appointment_token_cancel_returning_fix.sql`
 25. `20260918144535_public_barbershop_anon_boundary.sql`
+26. `20260918145000_public_booking_config.sql`
+27. `20260918145020_public_booking_deposit_config.sql`
 
 Future schema changes must be a new timestamped migration. Never rename an applied migration.
 
@@ -124,3 +126,11 @@ A rota `/barbearia/:slug` agora é uma superfície pública real ligada ao Supab
 O acesso anónimo directo às tabelas do domínio foi fechado para a superfície pública. A publicação é servida por RPC SECURITY DEFINER com `search_path=""`.
 
 A implementação está em `frontend/src/features/public-shop/api.ts` e `frontend/src/pages/PublicBarbershop.tsx`. A aceitação live está em `supabase/tests/public_barbershop_phase7.sql`.
+
+## Fase 8: booking wizard público
+
+A rota `/barbearia/:slug/marcar` implementa o percurso sem conta em seis passos: serviço, corte, barbeiro, data, hora e dados. O estado das escolhas operacionais fica em `searchParams`; dados pessoais não são colocados na URL.
+
+Dias e slots vêm do Availability Engine e a criação usa exclusivamente `book_appointment()`. "Qualquer barbeiro" é resolvido pelo PostgreSQL. Em caso de `SLOT_TAKEN`, o cliente regressa ao passo de hora e a disponibilidade é actualizada.
+
+A implementação está em `frontend/src/pages/BookingWizard.tsx`. A aceitação live está em `supabase/tests/booking_wizard_phase8.sql`.
