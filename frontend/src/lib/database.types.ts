@@ -571,42 +571,119 @@ export type Database = {
           },
         ]
       }
+      payment_accounts: {
+        Row: {
+          account_reference: string | null
+          barbershop_id: string
+          created_at: string
+          credential_secret_id: string | null
+          enabled: boolean
+          id: string
+          provider: Database["public"]["Enums"]["payment_provider"]
+          public_config: Json
+          updated_at: string
+          webhook_secret_id: string | null
+        }
+        Insert: {
+          account_reference?: string | null
+          barbershop_id: string
+          created_at?: string
+          credential_secret_id?: string | null
+          enabled?: boolean
+          id?: string
+          provider: Database["public"]["Enums"]["payment_provider"]
+          public_config?: Json
+          updated_at?: string
+          webhook_secret_id?: string | null
+        }
+        Update: {
+          account_reference?: string | null
+          barbershop_id?: string
+          created_at?: string
+          credential_secret_id?: string | null
+          enabled?: boolean
+          id?: string
+          provider?: Database["public"]["Enums"]["payment_provider"]
+          public_config?: Json
+          updated_at?: string
+          webhook_secret_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_accounts_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount_cents: number
           appointment_id: string | null
           barbershop_id: string
           created_at: string
+          failed_at: string | null
+          failure_code: string | null
+          failure_reason: string | null
           id: string
+          idempotency_key: string | null
+          last_reconciled_at: string | null
           msisdn: string | null
+          paid_at: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
+          provider_account_id: string | null
           provider_ref: string | null
+          provider_transaction_id: string | null
           raw: Json | null
+          requires_refund: boolean
           status: Database["public"]["Enums"]["payment_state"]
+          updated_at: string
         }
         Insert: {
           amount_cents: number
           appointment_id?: string | null
           barbershop_id: string
           created_at?: string
+          failed_at?: string | null
+          failure_code?: string | null
+          failure_reason?: string | null
           id?: string
+          idempotency_key?: string | null
+          last_reconciled_at?: string | null
           msisdn?: string | null
+          paid_at?: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
+          provider_account_id?: string | null
           provider_ref?: string | null
+          provider_transaction_id?: string | null
           raw?: Json | null
+          requires_refund?: boolean
           status?: Database["public"]["Enums"]["payment_state"]
+          updated_at?: string
         }
         Update: {
           amount_cents?: number
           appointment_id?: string | null
           barbershop_id?: string
           created_at?: string
+          failed_at?: string | null
+          failure_code?: string | null
+          failure_reason?: string | null
           id?: string
+          idempotency_key?: string | null
+          last_reconciled_at?: string | null
           msisdn?: string | null
+          paid_at?: string | null
           provider?: Database["public"]["Enums"]["payment_provider"]
+          provider_account_id?: string | null
           provider_ref?: string | null
+          provider_transaction_id?: string | null
           raw?: Json | null
+          requires_refund?: boolean
           status?: Database["public"]["Enums"]["payment_state"]
+          updated_at?: string
         }
         Relationships: [
           {
@@ -621,6 +698,13 @@ export type Database = {
             columns: ["barbershop_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_provider_account_id_fkey"
+            columns: ["provider_account_id"]
+            isOneToOne: false
+            referencedRelation: "payment_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -1026,9 +1110,9 @@ export type Database = {
       }
       book_appointment: {
         Args: {
-          p_barber_id: string | null
-          p_email?: string | null
-          p_haircut_id: string | null
+          p_barber_id: string
+          p_email?: string
+          p_haircut_id: string
           p_name: string
           p_phone: string
           p_service_id: string
@@ -1044,10 +1128,10 @@ export type Database = {
       }
       book_appointment_manual: {
         Args: {
-          p_barber_id: string | null
-          p_email?: string | null
-          p_haircut_id: string | null
-          p_internal_note?: string | null
+          p_barber_id: string
+          p_email?: string
+          p_haircut_id: string
+          p_internal_note?: string
           p_name: string
           p_phone: string
           p_service_id: string
@@ -1066,7 +1150,7 @@ export type Database = {
         }[]
       }
       cancel_appointment_by_token: {
-        Args: { p_reason?: string | null; p_token: string }
+        Args: { p_reason?: string; p_token: string }
         Returns: {
           cancelled_at: string
         }[]
@@ -1077,6 +1161,43 @@ export type Database = {
           status: Database["public"]["Enums"]["waitlist_status"]
           waitlist_entry_id: string
         }[]
+      }
+      claim_notifications: {
+        Args: { p_limit?: number }
+        Returns: {
+          appointment_id: string
+          attempts: number
+          barber_name: string
+          barbershop_id: string
+          channel: Database["public"]["Enums"]["notif_channel"]
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          duration_min: number
+          ends_at: string
+          haircut_name: string
+          id: string
+          manage_token: string
+          offer_expires_at: string
+          offer_token: string
+          payload: Json
+          price_cents: number
+          recipient: string
+          scheduled_for: string
+          service_name: string
+          shop_name: string
+          shop_phone: string
+          shop_slug: string
+          shop_whatsapp: string
+          starts_at: string
+          template_key: string
+          timezone: string
+          waitlist_entry_id: string
+        }[]
+      }
+      claim_payment_reconciliation: {
+        Args: { p_min_interval?: string; p_payment: string }
+        Returns: boolean
       }
       claim_waitlist_offer: {
         Args: { p_token: string }
@@ -1095,120 +1216,11 @@ export type Database = {
       create_barbershop: {
         Args: {
           p_name: string
-          p_phone?: string | null
+          p_phone?: string
           p_slug: string
-          p_whatsapp?: string | null
+          p_whatsapp?: string
         }
         Returns: string
-      }
-      claim_notifications: {
-        Args: { p_limit?: number }
-        Returns: {
-          appointment_id: string | null
-          attempts: number
-          barber_name: string | null
-          barbershop_id: string
-          channel: Database["public"]["Enums"]["notif_channel"]
-          customer_email: string | null
-          customer_name: string | null
-          customer_phone: string | null
-          duration_min: number | null
-          ends_at: string | null
-          haircut_name: string | null
-          id: string
-          manage_token: string | null
-          offer_expires_at: string | null
-          offer_token: string | null
-          payload: Json
-          price_cents: number | null
-          recipient: string
-          scheduled_for: string
-          service_name: string | null
-          shop_name: string
-          shop_phone: string | null
-          shop_slug: string
-          shop_whatsapp: string | null
-          starts_at: string | null
-          template_key: string
-          timezone: string
-          waitlist_entry_id: string | null
-        }[]
-      }
-      get_notification_automation_status: {
-        Args: { p_shop: string }
-        Returns: {
-          dispatcher_active: boolean
-          dispatcher_last_run_at: string | null
-          dispatcher_last_run_message: string | null
-          dispatcher_last_run_status: string | null
-        }[]
-      }
-      get_notification_metrics: {
-        Args: { p_shop: string }
-        Returns: {
-          delivery_rate_7d: number
-          failed_count: number
-          processing_count: number
-          queued_count: number
-          sent_7d_count: number
-          sent_today_count: number
-        }[]
-      }
-      get_notifications: {
-        Args: {
-          p_channel?: string
-          p_limit?: number
-          p_offset?: number
-          p_shop: string
-          p_status?: string
-        }
-        Returns: {
-          attempts: number
-          channel: Database["public"]["Enums"]["notif_channel"]
-          fallback_url: string | null
-          last_error: string | null
-          next_attempt_at: string | null
-          notification_id: string
-          recipient_masked: string
-          scheduled_for: string
-          sent_at: string | null
-          status: Database["public"]["Enums"]["notif_status"]
-          template_key: string
-          total_count: number
-        }[]
-      }
-      mark_notification_failure: {
-        Args: {
-          p_error: string
-          p_fallback_url?: string | null
-          p_id: string
-          p_retryable?: boolean
-        }
-        Returns: {
-          attempts: number
-          retry_at: string | null
-          status: Database["public"]["Enums"]["notif_status"]
-        }[]
-      }
-      mark_notification_sent: {
-        Args: {
-          p_id: string
-          p_meta?: Json
-          p_provider_message_id?: string | null
-        }
-        Returns: Database["public"]["Enums"]["notif_status"]
-      }
-      recover_stuck_notifications: {
-        Args: { p_after?: string }
-        Returns: number
-      }
-      retry_notification: {
-        Args: { p_notification: string; p_shop: string }
-        Returns: {
-          attempts: number
-          notification_id: string
-          status: Database["public"]["Enums"]["notif_status"]
-        }[]
       }
       delete_schedule_override: {
         Args: { p_id: string; p_shop: string }
@@ -1224,6 +1236,39 @@ export type Database = {
           next_offer_token: string
           status: Database["public"]["Enums"]["waitlist_status"]
           waitlist_entry_id: string
+        }[]
+      }
+      finalize_payment_event: {
+        Args: {
+          p_payment: string
+          p_provider_message: string
+          p_provider_status: string
+          p_provider_transaction_id: string
+          p_raw?: Json
+          p_state: Database["public"]["Enums"]["payment_state"]
+        }
+        Returns: {
+          appointment_status: Database["public"]["Enums"]["appointment_status"]
+          late_success: boolean
+          payment_id: string
+          payment_status: Database["public"]["Enums"]["payment_state"]
+          requires_refund: boolean
+        }[]
+      }
+      find_payment_by_provider_ref: {
+        Args: {
+          p_account: string
+          p_provider: Database["public"]["Enums"]["payment_provider"]
+          p_provider_ref: string
+        }
+        Returns: {
+          amount_cents: number
+          appointment_id: string
+          barbershop_id: string
+          msisdn: string
+          payment_id: string
+          provider_ref: string
+          status: Database["public"]["Enums"]["payment_state"]
         }[]
       }
       get_agenda_appointments: {
@@ -1279,6 +1324,12 @@ export type Database = {
           deposit_cents: number
           deposit_status: Database["public"]["Enums"]["deposit_state"]
           haircut_name: string
+          hold_expires_at: string
+          latest_payment_failure_code: string
+          latest_payment_failure_reason: string
+          latest_payment_requires_refund: boolean
+          latest_payment_status: Database["public"]["Enums"]["payment_state"]
+          payment_methods: Database["public"]["Enums"]["payment_provider"][]
           service_duration_min: number
           service_name: string
           service_price_cents: number
@@ -1293,11 +1344,11 @@ export type Database = {
       }
       get_available_days: {
         Args: {
-          p_barber_id?: string | null
-          p_from?: string | null
+          p_barber_id?: string
+          p_from?: string
           p_service_id: string
           p_slug: string
-          p_to?: string | null
+          p_to?: string
         }
         Returns: {
           day: string
@@ -1307,8 +1358,8 @@ export type Database = {
       }
       get_available_slots: {
         Args: {
-          p_barber_id?: string | null
-          p_date?: string | null
+          p_barber_id?: string
+          p_date?: string
           p_service_id: string
           p_slug: string
         }
@@ -1376,7 +1427,7 @@ export type Database = {
         Args: {
           p_limit?: number
           p_offset?: number
-          p_search?: string | null
+          p_search?: string
           p_shop: string
           p_view?: string
         }
@@ -1398,7 +1449,162 @@ export type Database = {
           visits_count: number
         }[]
       }
+      get_notification_automation_status: {
+        Args: { p_shop: string }
+        Returns: {
+          dispatcher_active: boolean
+          dispatcher_last_run_at: string
+          dispatcher_last_run_message: string
+          dispatcher_last_run_status: string
+        }[]
+      }
+      get_notification_metrics: {
+        Args: { p_shop: string }
+        Returns: {
+          delivery_rate_7d: number
+          failed_count: number
+          processing_count: number
+          queued_count: number
+          sent_7d_count: number
+          sent_today_count: number
+        }[]
+      }
+      get_notifications: {
+        Args: {
+          p_channel?: string
+          p_limit?: number
+          p_offset?: number
+          p_shop: string
+          p_status?: string
+        }
+        Returns: {
+          attempts: number
+          channel: Database["public"]["Enums"]["notif_channel"]
+          fallback_url: string
+          last_error: string
+          next_attempt_at: string
+          notification_id: string
+          recipient_masked: string
+          scheduled_for: string
+          sent_at: string
+          status: Database["public"]["Enums"]["notif_status"]
+          template_key: string
+          total_count: number
+        }[]
+      }
+      get_payment_accounts: {
+        Args: { p_shop: string; p_supabase_url?: string }
+        Returns: {
+          account_reference: string
+          configured: boolean
+          enabled: boolean
+          id: string
+          provider: Database["public"]["Enums"]["payment_provider"]
+          public_config: Json
+          updated_at: string
+          webhook_url: string
+        }[]
+      }
+      get_payment_metrics: {
+        Args: { p_shop: string }
+        Returns: {
+          failed_count: number
+          paid_amount_cents: number
+          paid_count: number
+          pending_amount_cents: number
+          pending_count: number
+          refund_count: number
+          refund_required_count: number
+        }[]
+      }
+      get_payment_runtime_config: {
+        Args: { p_payment: string }
+        Returns: {
+          amount_cents: number
+          appointment_id: string
+          barbershop_id: string
+          credentials: Json
+          msisdn: string
+          payment_id: string
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_account_id: string
+          provider_ref: string
+          public_config: Json
+          requires_refund: boolean
+          status: Database["public"]["Enums"]["payment_state"]
+        }[]
+      }
+      get_payment_runtime_for_token: {
+        Args: { p_token: string }
+        Returns: {
+          amount_cents: number
+          appointment_id: string
+          appointment_status: Database["public"]["Enums"]["appointment_status"]
+          barbershop_id: string
+          credentials: Json
+          hold_expires_at: string
+          msisdn: string
+          payment_id: string
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_account_id: string
+          provider_ref: string
+          public_config: Json
+          requires_refund: boolean
+          status: Database["public"]["Enums"]["payment_state"]
+        }[]
+      }
+      get_payment_status_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          hold_expires_at: string
+          payment_amount_cents: number
+          payment_failure_code: string
+          payment_failure_reason: string
+          payment_provider: Database["public"]["Enums"]["payment_provider"]
+          payment_requires_refund: boolean
+          payment_status: Database["public"]["Enums"]["payment_state"]
+          payment_updated_at: string
+        }[]
+      }
+      get_payment_webhook_context: {
+        Args: { p_account: string; p_token: string }
+        Returns: {
+          barbershop_id: string
+          provider: Database["public"]["Enums"]["payment_provider"]
+          valid: boolean
+        }[]
+      }
+      get_payments: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_shop: string
+          p_status?: Database["public"]["Enums"]["payment_state"]
+        }
+        Returns: {
+          amount_cents: number
+          appointment_id: string
+          created_at: string
+          failure_code: string
+          failure_reason: string
+          id: string
+          msisdn: string
+          paid_at: string
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_ref: string
+          provider_transaction_id: string
+          requires_refund: boolean
+          status: Database["public"]["Enums"]["payment_state"]
+          updated_at: string
+        }[]
+      }
       get_public_barbershop: { Args: { p_slug: string }; Returns: Json }
+      get_public_payment_methods: {
+        Args: { p_slug: string }
+        Returns: {
+          payment_providers: Database["public"]["Enums"]["payment_provider"][]
+        }[]
+      }
       get_reschedule_slots_by_token: {
         Args: { p_date: string; p_token: string }
         Returns: {
@@ -1462,6 +1668,23 @@ export type Database = {
           timezone: string
         }[]
       }
+      init_payment_from_token: {
+        Args: {
+          p_idempotency_key: string
+          p_msisdn: string
+          p_provider: Database["public"]["Enums"]["payment_provider"]
+          p_token: string
+        }
+        Returns: {
+          amount_cents: number
+          hold_expires_at: string
+          msisdn: string
+          payment_id: string
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_ref: string
+          reused: boolean
+        }[]
+      }
       is_member: {
         Args: {
           p_roles?: Database["public"]["Enums"]["app_role"][]
@@ -1499,6 +1722,47 @@ export type Database = {
           user_id: string
         }[]
       }
+      list_payment_reconciliation_batch: {
+        Args: { p_limit?: number }
+        Returns: {
+          barbershop_id: string
+          payment_id: string
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_account_id: string
+          provider_ref: string
+        }[]
+      }
+      mark_notification_failure: {
+        Args: {
+          p_error: string
+          p_fallback_url?: string
+          p_id: string
+          p_retryable?: boolean
+        }
+        Returns: {
+          attempts: number
+          retry_at: string
+          status: Database["public"]["Enums"]["notif_status"]
+        }[]
+      }
+      mark_notification_sent: {
+        Args: { p_id: string; p_meta?: Json; p_provider_message_id?: string }
+        Returns: Database["public"]["Enums"]["notif_status"]
+      }
+      mark_payment_provider_started: {
+        Args: {
+          p_payment: string
+          p_provider_message: string
+          p_provider_status: string
+          p_provider_transaction_id: string
+          p_raw?: Json
+        }
+        Returns: {
+          payment_id: string
+          provider_ref: string
+          status: Database["public"]["Enums"]["payment_state"]
+        }[]
+      }
       my_barber_id: { Args: { p_shop: string }; Returns: string }
       offer_next_waitlist: {
         Args: { p_barber_id: string; p_shop: string; p_slot_start: string }
@@ -1514,6 +1778,10 @@ export type Database = {
           slot_start: string
           waitlist_entry_id: string
         }[]
+      }
+      recover_stuck_notifications: {
+        Args: { p_after?: string }
+        Returns: number
       }
       reorder_barbers: {
         Args: { p_ids: string[]; p_shop: string }
@@ -1534,7 +1802,7 @@ export type Database = {
       reschedule_appointment_by_operator: {
         Args: {
           p_appointment: string
-          p_new_barber_id?: string | null
+          p_new_barber_id?: string
           p_new_start: string
           p_shop: string
         }
@@ -1551,40 +1819,69 @@ export type Database = {
           new_starts_at: string
         }[]
       }
+      retry_notification: {
+        Args: { p_notification: string; p_shop: string }
+        Returns: {
+          attempts: number
+          notification_id: string
+          status: Database["public"]["Enums"]["notif_status"]
+        }[]
+      }
       save_barber: {
         Args: {
-          p_barber_id: string | null
-          p_bio: string | null
+          p_barber_id: string
+          p_bio: string
           p_display_name: string
-          p_photo_url: string | null
+          p_photo_url: string
           p_service_ids: string[]
           p_shop: string
-          p_user_id: string | null
+          p_user_id: string
           p_years_experience: number
         }
         Returns: string
       }
       save_schedule_override: {
         Args: {
-          p_barber_id?: string | null
-          p_closes_at?: string | null
-          p_id?: string | null
+          p_barber_id?: string
+          p_closes_at?: string
+          p_id?: string
           p_is_closed?: boolean
-          p_note?: string | null
-          p_opens_at?: string | null
+          p_note?: string
+          p_opens_at?: string
           p_override_date: string
           p_reason?: Database["public"]["Enums"]["block_reason"]
           p_shop: string
         }
         Returns: string
       }
+      scheduler_secret_valid: {
+        Args: { p_candidate: string }
+        Returns: boolean
+      }
       seed_haircut_catalogue: { Args: { p_shop: string }; Returns: number }
+      set_payment_provider_account: {
+        Args: {
+          p_account_reference: string
+          p_actor: string
+          p_credentials: Json
+          p_enabled: boolean
+          p_provider: Database["public"]["Enums"]["payment_provider"]
+          p_public_config: Json
+          p_shop: string
+        }
+        Returns: {
+          configured: boolean
+          enabled: boolean
+          id: string
+          provider: Database["public"]["Enums"]["payment_provider"]
+        }[]
+      }
       shop_is_public: { Args: { p_shop: string }; Returns: boolean }
       transition_appointment: {
         Args: {
           p_action: string
           p_appointment: string
-          p_reason?: string | null
+          p_reason?: string
           p_shop: string
         }
         Returns: {
@@ -1601,9 +1898,9 @@ export type Database = {
       update_customer: {
         Args: {
           p_customer: string
-          p_email?: string | null
+          p_email?: string
           p_name: string
-          p_notes?: string | null
+          p_notes?: string
           p_phone: string
           p_preferences?: Json
           p_shop: string
