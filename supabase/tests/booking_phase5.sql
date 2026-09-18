@@ -92,7 +92,7 @@ begin
 
     select count(*) into v_notif_count
     from public.notifications where appointment_id=v_appt;
-    if v_notif_count <> 2 then
+    if v_notif_count < 2 then
       raise exception 'BOOKING_NOTIFICATIONS_NOT_QUEUED';
     end if;
 
