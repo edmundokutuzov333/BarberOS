@@ -43,3 +43,11 @@ A FASE 23 só fica fechada quando a pirâmide de testes está instalada e as sui
 ## Full lifecycle E2E
 
 `frontend/tests/e2e/phase23-full-lifecycle.spec.mjs` cobre registo, onboarding, configuração, página pública, booking sem conta, agenda, atendimento concluído e CRM. Exige `BARBEROS_E2E_FULL=1`, credenciais dedicadas e um reset endpoint privado do ambiente de teste. Nunca aponta para produção.
+
+## FASE 24: concorrência
+
+A FASE 24 adiciona uma fronteira HTTP pública `booking-create` para preservar o PostgreSQL como fonte de verdade e traduzir `SLOT_TAKEN` para HTTP 409. O contrato de sucesso é HTTP 200 com `manage_token`, `deposit_cents` e `needs_payment`, sem expor `appointment_id`.
+
+A suite `scripts/test_booking_concurrency_phase24.py` exige um PostgreSQL dedicado e controla a ordem das transacções para provar A = sucesso, B = `SLOT_TAKEN` e uma única appointment activa no slot. `frontend/tests/e2e/phase24-http-concurrency.spec.mjs` verifica os estados HTTP 200/409 contra um ambiente dedicado e recusa explicitamente a produção.
+
+Sem ambiente dedicado, estes testes fazem `SKIP` e a aceitação final da FASE 24 permanece aberta.
