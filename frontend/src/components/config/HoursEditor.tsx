@@ -39,19 +39,33 @@ export function HoursEditor() {
 
   const save = useMutation({
     mutationFn: async () => {
-      for (const r of rows) if (!r.is_closed && r.closes_at <= r.opens_at) throw new Error(`${WEEKDAYS[r.weekday]}: a hora de fecho tem de ser depois da abertura.`);
-      let del = supabase.from('working_hours').delete().eq('barbershop_id', shop!.id);
-      del = barberId ? del.eq('barber_id', barberId) : del.is('barber_id', null);
-      const d = await del; if (d.error) throw d.error;
-      const r = await supabase.from('working_hours').insert(rows.map((x) => ({ ...x, barbershop_id: shop!.id, barber_id: barberId || null })));
-      if (r.error) throw r.error;
+      for (const r of rows) {
+        if (!r.is_closed && r.closes_at <= r.opens_at) {
+          throw new Error(`${WEEKDAYS[r.weekday]}: a hora de fecho tem de ser depois da abertura.`);
+        }
+      }
+
+      const params = barberId
+        ? { p_shop: shop!.id, p_rows: rows, p_barber_id: barberId }
+        : { p_shop: shop!.id, p_rows: rows };
+
+      const { error } = await supabase.rpc('replace_working_hours', params);
+      if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: key }); toast.success('Horário guardado'); },
     onError: (e) => toast.error(e instanceof Error && e.message.includes(':') ? e.message : humanError(e)),
   });
   const clearOverride = useMutation({
-    mutationFn: async () => { const d = await supabase.from('working_hours').delete().eq('barbershop_id', shop!.id).eq('barber_id', barberId); if (d.error) throw d.error; },
+    mutationFn: async () => {
+      const { error } = await supabase.rpc('replace_working_hours', {
+        p_shop: shop!.id,
+        p_rows: [],
+        p_barber_id: barberId,
+      });
+      if (error) throw error;
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: key }); toast.success('Este barbeiro volta a seguir o horário da barbearia'); },
+    onError: (e) => toast.error(humanError(e)),
   });
   const set = (i: number, patch: Partial<Row>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
 
