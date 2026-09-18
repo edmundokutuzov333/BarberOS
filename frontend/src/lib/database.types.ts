@@ -1611,6 +1611,77 @@ export type Database = {
           slot_start: string
         }[]
       }
+      get_review_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          appointment_completed_at: string
+          appointment_status: Database["public"]["Enums"]["appointment_status"]
+          available_at: string
+          barber_name: string
+          barber_photo_url: string
+          can_submit: boolean
+          comment: string | null
+          customer_name: string
+          haircut_name: string | null
+          has_review: boolean
+          rating: number | null
+          review_created_at: string | null
+          review_is_published: boolean | null
+          service_name: string
+          shop_name: string
+          shop_slug: string
+          timezone: string
+        }[]
+      }
+      get_reviews: {
+        Args: {
+          p_barber_id?: string | null
+          p_limit?: number | null
+          p_offset?: number | null
+          p_published?: string | null
+          p_rating?: number | null
+          p_shop: string
+        }
+        Returns: {
+          appointment_id: string
+          appointment_starts_at: string
+          barber_id: string
+          barber_name: string
+          comment: string | null
+          created_at: string
+          customer_name: string
+          is_published: boolean
+          rating: number
+          review_id: string
+          total_count: number
+        }[]
+      }
+      set_review_publication: {
+        Args: {
+          p_is_published: boolean
+          p_review: string
+          p_shop: string
+        }
+        Returns: {
+          is_published: boolean
+          rating_avg: number
+          rating_count: number
+          review_id: string
+        }[]
+      }
+      submit_review_by_token: {
+        Args: {
+          p_comment?: string | null
+          p_rating: number
+          p_token: string
+        }
+        Returns: {
+          comment: string | null
+          created_at: string
+          rating: number
+          review_id: string
+        }[]
+      }
       get_waitlist: {
         Args: {
           p_limit?: number | null
