@@ -12,6 +12,8 @@ A ordem actual é:
 2. `20260918132200_rls.sql`
 3. `20260918132400_engine.sql`
 4. `20260918132513_security_hardening.sql`
+5. `20260918134600_domain_integrity.sql`
+6. `20260918134657_domain_integrity_contract.sql`
 
 As versões 1 a 3 foram reconciliadas com o estado que já existia na base viva. A versão 4 já estava aplicada e foi mantida com a mesma versão no histórico Supabase.
 
@@ -100,3 +102,11 @@ Ele valida:
 - constraints críticas
 - functions de domínio
 - integridade básica do baseline
+
+## Phase 3: integridade do domínio
+
+Foram adicionados índices únicos para a grelha base e overrides de horários e para a ligação opcional entre conta e barbeiro por loja. O PostgreSQL valida limites numéricos relevantes e relações entre entidades para impedir referências cruzadas entre tenants.
+
+A reordenação de serviços, cortes e barbeiros usa RPCs SECURITY DEFINER com validação do tenant e exige a lista completa dos IDs da loja. A alteração de sort_order ocorre numa única operação de banco, rejeitando payload incompleto, duplicado ou de outro tenant.
+
+A actualização de horários usa replace_working_hours. A base usa sete linhas; um override usa zero ou sete. A operação substitui o conjunto numa única transacção, rejeitando duplicados, dias inválidos e intervalos com fecho anterior ou igual à abertura.
