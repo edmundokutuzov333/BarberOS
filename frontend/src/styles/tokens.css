@@ -1,0 +1,33 @@
+:root{
+  /* fundo */
+  --canvas-void:#000000;
+  --canvas-glow-a:#1a102f;
+  --canvas-glow-b:#0c0614;
+
+  /* superfícies */
+  --surface-1:rgba(15,12,22,.65);
+  --surface-2:rgba(22,20,28,.80);
+  --surface-3:rgba(30,26,40,.55);
+
+  /* acentos */
+  --accent:#9d7bf5;
+  --accent-soft:#b59eff;
+  --accent-ink:#120c1f;
+  --accent-rgb:157,123,245;
+
+  /* texto */
+  --text-hi:#ffffff;
+  --text-mid:#9b95a8;
+  --text-lo:#5c5765;
+
+  /* estados */
+  --st-pending:#e0b057;
+  --st-confirmed:#b59eff;
+  --st-active:#7bd7f5;
+  --st-done:#6ee7b7;
+  --st-cancelled:#5c5765;
+  --st-noshow:#f57b9d;
+
+  --radius-panel:1.5rem;
+  --radius-card:1rem;
+}

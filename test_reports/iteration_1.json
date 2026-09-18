@@ -1,0 +1,36 @@
+{
+  "summary": "Fase 1 BarberOS testada end-to-end. Backend (Supabase REST/RLS) e frontend passam. RLS anónimo bloqueia INSERT em appointments (401/403) e devolve [] em GET appointments/customers; barbershops public list retorna 'oryon' active. Frontend: landing, login OK, login-errado mostra 'Email ou palavra-passe incorrectos.', dashboard com KPIs + painéis + estados vazios, sidebar colapsa 264→76px, shop-switcher 'Barbearia Oryon', nav-agenda → not-yet-page, /admin/barbearias mostra admin-shop-row-oryon (2 shops), guarda de rota /app→/entrar, sign-out OK, recuperar-sent OK, mobile-dock visível com sidebar oculto, dock-nav-clientes + dock-more-sheet OK. Registo cria pedido mas Supabase devolveu 429 (rate limit) após tentativas repetidas — a app humaniza correctamente para 'Demasiadas tentativas'.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "auth/v1/signup", "issue": "Rate limit (429) atingido rapidamente durante testes; humanError trata correctamente. Não é bug da app; apenas nota que testes de registo/onboarding devem intercalar >60s ou usar utilizadores pré-criados."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_supabase_rls.py",
+    "/app/test_reports/pytest/rls_results.xml"
+  ],
+  "action_items": [
+    "Nenhum bloqueante. Opcional: aumentar retry/backoff explícito no signUp ou reduzir react-query default retries para mostrar erros de dashboard mais depressa (actualmente 3 retries podem manter skeleton por muito tempo se a rede for lenta)."
+  ],
+  "critical_code_review_comments": [
+    "Dashboard.tsx: useQuery com refetchInterval 60s e retries default (3) mantém o skeleton visível durante retries; considerar retry:1 para experiência mais honesta em erros reais.",
+    "AdminBarbearias.tsx: query pesada com 3 embedded counts pode ser lenta; considerar paginação ou índice server-side.",
+    "Registar.tsx: falta throttle client-side/CAPTCHA — utilizadores podem bater no rate-limit do Supabase facilmente ao testar."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_supabase_rls.py (novo)"
+  ],
+  "success_rate": {"backend": "100% (4/4 anon RLS; 2 skipped pending email-confirm)", "frontend": "~95% (registo end-to-end bloqueado por rate limit Supabase, humanização do erro validada)"},
+  "test_credentials": "contact@edmundokutuzov.art / Oryon#2026! (admin+owner oryon)",
+  "seed_data_creation": "Foi tentado criar utilizadores qa+<ts>@barberos-test.mz mas o Supabase exige confirmação de email, então nenhum novo owner/barbearia foi criado. Barbearia 'oryon' e 'magoanine-c' (existente) intactas.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Supabase signup tem rate limit agressivo (~5/hora por IP). Se precisar testar registo end-to-end, use um email já criado com sessão activa ou desactive email confirmation no Supabase Dashboard. RLS tests em /app/backend/tests/test_supabase_rls.py são idempotentes e reusáveis. Todos os data-testid do briefing existem e funcionam.",
+  "rca of the issue": "Não há bug. O 429 observado no fluxo de registo é rate limit legítimo do Supabase Auth; a app trata o erro com humanError() → 'Demasiadas tentativas. Espera um minuto e tenta de novo.', exactamente como especificado."
+}

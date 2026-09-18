@@ -1,0 +1,305 @@
+{
+  "project_name": "BarberOS by Oryon",
+  "app_type": "hybrid_fullstack",
+  "language": "pt-PT",
+  "language_notes": "European Portuguese (Mozambique variant). Vocabulary: marcação, telemóvel, ecrã, ficheiro, definições, guardar, remarcar, a seguir, precisa de atenção, meticais (MT).",
+  "branding": {
+    "product_name": "BarberOS",
+    "tagline": "by Oryon",
+    "branding_rule": "Product name 'BarberOS' must always be displayed prominently (font-weight 600-700, text-hi), paired with 'by Oryon' in light weight (font-weight 300, opacity 0.60, text-mid) beside or beneath it."
+  },
+  "tokens": {
+    "colors": {
+      "--canvas-void": "#000000",
+      "--canvas-glow-a": "#1a102f",
+      "--canvas-glow-b": "#0c0614",
+      "--surface-1": "rgba(15, 12, 22, 0.65)",
+      "--surface-2": "rgba(22, 20, 28, 0.80)",
+      "--surface-3": "rgba(30, 26, 40, 0.55)",
+      "--accent": "#9d7bf5",
+      "--accent-soft": "#b59eff",
+      "--accent-ink": "#120c1f",
+      "--text-hi": "#ffffff",
+      "--text-mid": "#9b95a8",
+      "--text-lo": "#5c5765"
+    },
+    "states": {
+      "pending": "#e0b057",
+      "confirmed": "#b59eff",
+      "active": "#7bd7f5",
+      "done": "#6ee7b7",
+      "cancelled": "#5c5765",
+      "noshow": "#f57b9d"
+    },
+    "radii": {
+      "--radius-panel": "1.5rem",
+      "--radius-card": "1rem"
+    },
+    "body_background": "radial-gradient(120% 80% at 50% 100%, #1a102f 0%, transparent 60%), radial-gradient(90% 60% at 15% 0%, rgba(157,123,245,.10) 0%, transparent 55%), #000; background-attachment: fixed;"
+  },
+  "typography": {
+    "font_family": "'Plus Jakarta Sans', sans-serif",
+    "google_fonts_import": "@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');",
+    "scales": {
+      "big_number": "text-4xl sm:text-5xl font-medium tracking-tight (-0.02em)",
+      "screen_title": "text-2xl font-medium tracking-tight (-0.01em)",
+      "card_title": "text-base font-medium",
+      "body": "text-sm font-light tracking-normal (0.01em)",
+      "label": "text-xs font-light tracking-wide (0.02em)"
+    },
+    "rules": {
+      "forbidden_casing": "NO uppercase spaced labels like 'S E R V I Ç O S'. Use natural sentence case everywhere.",
+      "forbidden_decorations": "NO '01/02/03' step numbering decoration. NO single title word in a different color. NO '→' glued to button text.",
+      "sentence_case_everywhere": "All headers, titles, tabs, buttons, and labels must strictly use sentence case (e.g., 'Resumo da marcação', 'Painel de controlo', 'Definições do perfil')."
+    }
+  },
+  "glass_system": {
+    "glass_class": ".glass {\n  background: var(--surface-1);\n  backdrop-filter: blur(28px) saturate(140%);\n  -webkit-backdrop-filter: blur(28px) saturate(140%);\n  border-radius: 1.5rem;\n  box-shadow: 0 24px 60px -20px rgba(80, 40, 160, 0.45);\n  position: relative;\n}\n.glass::before {\n  content: '';\n  position: absolute;\n  inset: 0;\n  border-radius: 1.5rem;\n  padding: 0.5px;\n  background: linear-gradient(135deg, rgba(255,255,255,0.28), rgba(157,123,245,0.14) 50%, transparent);\n  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);\n  -webkit-mask-composite: xor;\n  mask-composite: exclude;\n  pointer-events: none;\n}",
+    "forbidden_styles": [
+      "shadow-lg/shadow-xl with black color",
+      "border-gray-200",
+      "bg-white",
+      "bg-slate-900",
+      "white background cards",
+      "generic blue-purple template gradients"
+    ],
+    "depth_philosophy": "Depth is achieved purely via diffuse purple glowing shadows (0 24px 60px -20px rgba(80,40,160,.45)), subtle specular top-left border highlights, and dark translucent surfaces. Never rely on black box-shadows."
+  },
+  "shapes_and_geometry": {
+    "panels_and_sidebar": "rounded-3xl (1.5rem / var(--radius-panel))",
+    "inner_cards_inputs_nav_buttons": "rounded-2xl (1rem / var(--radius-card))",
+    "chips_badges_search": "rounded-full (9999px)",
+    "active_nav_item": "SOLID lilac superellipse (background: var(--accent-soft); text & icon color: var(--accent-ink); font-weight: 600)"
+  },
+  "themes": {
+    "active_attribute": "data-theme on <html> tag",
+    "theme_list": [
+      {
+        "id": "violet-noir",
+        "name": "Violet Noir (Base)",
+        "accent": "#9d7bf5",
+        "accent_soft": "#b59eff",
+        "accent_ink": "#120c1f",
+        "glow_a": "#1a102f",
+        "glow_b": "#0c0614"
+      },
+      {
+        "id": "neon-lilac",
+        "name": "Neon Lilac",
+        "accent": "#b87bf5",
+        "accent_soft": "#d4a8ff",
+        "accent_ink": "#180a29",
+        "glow_a": "#230f38",
+        "glow_b": "#0e0517"
+      },
+      {
+        "id": "midnight-indigo",
+        "name": "Midnight Indigo",
+        "accent": "#7b8cf5",
+        "accent_soft": "#a8b5ff",
+        "accent_ink": "#0b102b",
+        "glow_a": "#0f163d",
+        "glow_b": "#05081a"
+      },
+      {
+        "id": "cyan-abyss",
+        "name": "Cyan Abyss",
+        "accent": "#57d3e0",
+        "accent_soft": "#94edf5",
+        "accent_ink": "#062226",
+        "glow_a": "#0a2d33",
+        "glow_b": "#031214"
+      },
+      {
+        "id": "emerald-smoke",
+        "name": "Emerald Smoke",
+        "accent": "#57d8a2",
+        "accent_soft": "#9bf0cc",
+        "accent_ink": "#062417",
+        "glow_a": "#0c3321",
+        "glow_b": "#03140d"
+      },
+      {
+        "id": "amber-ash",
+        "name": "Amber Ash",
+        "accent": "#f0b354",
+        "accent_soft": "#fbd593",
+        "accent_ink": "#291b05",
+        "glow_a": "#3d290f",
+        "glow_b": "#170e03"
+      },
+      {
+        "id": "rose-quartz",
+        "name": "Rose Quartz",
+        "accent": "#f27ba8",
+        "accent_soft": "#fbbada",
+        "accent_ink": "#2b0a19",
+        "glow_a": "#3b0e24",
+        "glow_b": "#14030b"
+      },
+      {
+        "id": "plum-ember",
+        "name": "Plum Ember",
+        "accent": "#d965b8",
+        "accent_soft": "#f3a5df",
+        "accent_ink": "#24091e",
+        "glow_a": "#360d2e",
+        "glow_b": "#140311"
+      },
+      {
+        "id": "nordic-mono",
+        "name": "Nordic Mono",
+        "accent": "#d1d5db",
+        "accent_soft": "#f3f4f6",
+        "accent_ink": "#111827",
+        "glow_a": "#1f2937",
+        "glow_b": "#0b0f17"
+      },
+      {
+        "id": "blood-orange",
+        "name": "Blood Orange",
+        "accent": "#f56b57",
+        "accent_soft": "#ffaa9e",
+        "accent_ink": "#2b0a06",
+        "glow_a": "#3b100a",
+        "glow_b": "#140402"
+      }
+    ]
+  },
+  "motion": {
+    "page_transition": {
+      "initial": { "opacity": 0, "y": 8, "filter": "blur(6px)" },
+      "animate": { "opacity": 1, "y": 0, "filter": "blur(0px)" },
+      "exit": { "opacity": 0, "y": -6, "filter": "blur(4px)" },
+      "transition": { "duration": 0.28, "ease": [0.22, 1, 0.36, 1] }
+    },
+    "sidebar_collapse": {
+      "width": "76px ↔ 264px",
+      "spring": { "stiffness": 200, "damping": 25 }
+    },
+    "nav_active_pill": {
+      "component": "motion.div",
+      "layoutId": "nav-active"
+    },
+    "inactive_icon_hover": "opacity: 0.55 → 1, color: var(--text-lo) → var(--accent-soft), duration: 160ms ease-out",
+    "button_press": "whileTap={{ scale: 0.97 }}. Forbidden: whileHover lift/translate-y",
+    "slot_grid_stagger": "staggerChildren: 0.02s, max total duration: 300ms",
+    "skeleton_aurora": "3.2s infinite keyframe aurora animation: opacity .35 → .7, translateX -12% → 12%",
+    "mobile_dock": {
+      "position": "fixed bottom-4 left-4 right-4 z-50",
+      "style": "backdrop-blur-2xl bg-[var(--surface-2)] rounded-full border border-white/10 p-2 flex justify-around items-center shadow-[0_16px_40px_-10px_rgba(80,40,160,0.5)]",
+      "layout_id_sharing": "Shares nav active layoutId 'nav-active' with desktop sidebar",
+      "items": ["Agenda", "Marcações", "Clientes", "Relatórios", "Mais"]
+    }
+  },
+  "component_specifications": {
+    "buttons": {
+      "primary": "bg-[var(--accent-soft)] text-[var(--accent-ink)] font-semibold rounded-2xl px-5 py-3 text-sm hover:brightness-105 active:scale-97 transition-all shadow-[0_8px_24px_-6px_rgba(157,123,245,0.4)]",
+      "secondary": "bg-[var(--surface-2)] text-[var(--text-hi)] border border-white/10 rounded-2xl px-5 py-3 text-sm hover:border-white/20 active:scale-97 transition-all",
+      "ghost": "text-[var(--text-mid)] hover:text-[var(--text-hi)] hover:bg-white/5 rounded-2xl px-4 py-2.5 text-sm transition-all",
+      "danger": "bg-red-500/20 text-red-300 border border-red-500/30 rounded-2xl px-4 py-2 text-sm hover:bg-red-500/30"
+    },
+    "inputs": {
+      "text": "bg-[var(--surface-3)] border border-white/10 rounded-2xl px-4 py-3 text-sm text-[var(--text-hi)] placeholder-[var(--text-lo)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all",
+      "select": "bg-[var(--surface-3)] border border-white/10 rounded-2xl px-4 py-3 text-sm text-[var(--text-hi)] focus:outline-none focus:border-[var(--accent)]"
+    },
+    "status_badges": {
+      "pending": "bg-[#e0b057]/15 text-[#e0b057] border border-[#e0b057]/30 px-3 py-1 rounded-full text-xs font-medium",
+      "confirmed": "bg-[#b59eff]/15 text-[#b59eff] border border-[#b59eff]/30 px-3 py-1 rounded-full text-xs font-medium",
+      "active": "bg-[#7bd7f5]/15 text-[#7bd7f5] border border-[#7bd7f5]/30 px-3 py-1 rounded-full text-xs font-medium",
+      "done": "bg-[#6ee7b7]/15 text-[#6ee7b7] border border-[#6ee7b7]/30 px-3 py-1 rounded-full text-xs font-medium",
+      "cancelled": "bg-[#5c5765]/20 text-[#9b95a8] border border-[#5c5765]/40 px-3 py-1 rounded-full text-xs font-medium",
+      "noshow": "bg-[#f57b9d]/15 text-[#f57b9d] border border-[#f57b9d]/30 px-3 py-1 rounded-full text-xs font-medium"
+    },
+    "tables": {
+      "container": "glass overflow-hidden rounded-3xl",
+      "header": "bg-[var(--surface-2)] border-b border-white/10 text-left text-xs text-[var(--text-mid)] font-medium px-6 py-4",
+      "row": "border-b border-white/5 hover:bg-white/[0.02] transition-colors text-sm text-[var(--text-hi)]",
+      "cell": "px-6 py-4"
+    },
+    "skeleton": {
+      "animation": "aurora background shimmer",
+      "style": "bg-gradient-to-r from-[var(--surface-3)] via-white/10 to-[var(--surface-3)] rounded-2xl animate-pulse"
+    }
+  },
+  "layout_specifications": {
+    "public_booking": {
+      "goal": "Clients book haircut in <40s without account creation",
+      "sections": [
+        "Cover image with dark violet radial overlay",
+        "Barbershop header: glass logo, status chip ('Aberto' / 'Fechado' live status), address, rating",
+        "Haircut catalogue carousel (3:4 photo aspect ratio)",
+        "Services list with prices formatted as '1 200 MT' (meticais)",
+        "Barbers list with avatar, specialty, and star rating",
+        "Weekly working hours block",
+        "Location map card & quick contacts",
+        "Sticky mobile bottom bar with prominent 'Marcar corte' button"
+      ]
+    },
+    "booking_wizard_6_steps": {
+      "progress": "2px solid lilac progress line at top of step card",
+      "summary_bar": "Fixed bottom glass summary bar showing selected service, barber, date/time, and price with 'Continuar' action",
+      "steps": [
+        "Step 1: Selecionar serviço (cut, beard, combo)",
+        "Step 2: Escolher barbeiro (or qualquer barbeiro disponível)",
+        "Step 3: Escolher data e hora (interactive slot grid staggered)",
+        "Step 4: Dados do cliente (Nome, Telemóvel sem registo)",
+        "Step 5: Confirmar resumo da marcação",
+        "Step 6: Sucesso com código da marcação e botão 'Guardar no telemóvel'"
+      ]
+    },
+    "barbershop_backoffice": {
+      "sections": [
+        "Dashboard overview: 4 KPI cards with big numbers (Ex: 48 Marcações hoje, 34 200 MT Faturação, 94% Ocupação, 4.9 Avaliação), 'A seguir' queue card, and 'Precisa de atenção' card",
+        "Agenda timeline: multi-column view per barber, red/lilac current-time indicator line, appointment blocks with 3px left status bar color",
+        "Appointments table: full filter, search, status change, cancel/reschedule actions",
+        "Clients CRM: client history, total spend in MT, frequency, notes",
+        "Services manager: category, duration, price in MT, drag-to-reorder",
+        "Haircut catalogue manager: upload photo, title, recommended hair type",
+        "Barbers roster: shift schedules, commission rate, status toggle",
+        "Waitlist manager: quick add client, notification status",
+        "Reviews section: client feedback, average score, reply action",
+        "Reports & Analytics: revenue graphs, top services, peak hours",
+        "Settings: 9-step onboarding checklist, QR Code poster generator, link sharing, and 10 visual theme thumbnails"
+      ]
+    },
+    "platform_admin": {
+      "style": "Sober, dense, multi-tenant tabular view",
+      "features": ["Tenants list (Mozambique barbershops)", "Subscription plans", "System logs", "Global metrics"]
+    }
+  },
+  "curated_image_assets": {
+    "haircuts": [
+      {
+        "url": "https://images.unsplash.com/photo-1647140655214-e4a2d914971f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwxfHxiYXJiZXIlMjBoYWlyY3V0JTIwc3R5bGUlMjBwb3J0cmFpdHxlbnwwfHx8fDE3ODk3MTg0MTR8MA&ixlib=rb-4.1.0&q=85",
+        "alt": "Corte Moderno Fade"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1578390432942-d323db577792?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHw0fHxiYXJiZXIlMjBoYWlyY3V0JTIwc3R5bGUlMjBwb3J0cmFpdHxlbnwwfHx8fDE3ODk3MTg0MTR8MA&ixlib=rb-4.1.0&q=85",
+        "alt": "Corte Clássico & Barba"
+      },
+      {
+        "url": "https://images.pexels.com/photos/4422102/pexels-photo-4422102.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "alt": "Textured Crop"
+      },
+      {
+        "url": "https://images.pexels.com/photos/4625630/pexels-photo-4625630.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "alt": "Perfilagem & Degradê"
+      }
+    ],
+    "interiors": [
+      {
+        "url": "https://images.unsplash.com/photo-1788985375145-81da8cc731a2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHxfHxtb2Rlcm4lMjBiYXJiZXJzaG9wJTIwaW50ZXJpb3IlMjBkYXJrJTIwbW9vZHl8ZW58MHx8fHwxNzg5NzE4NDE0fDA&ixlib=rb-4.1.0&q=85",
+        "alt": "BarberOS Premium Space"
+      },
+      {
+        "url": "https://images.pexels.com/photos/17027433/pexels-photo-17027433.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "alt": "Ambiente Neon Moody"
+      }
+    ]
+  },
+  "testing_and_accessibility": {
+    "data_testid_rule": "Every single interactive element (buttons, tabs, inputs, modal triggers, status badges, table rows, navigation links) MUST include a readable, role-based data-testid attribute in kebab-case. Example: data-testid='booking-wizard-next-btn', data-testid='sidebar-nav-agenda'.",
+    "contrast": "All text must be legible against glass backgrounds (minimum 4.5:1 ratio). Body text text-mid (#9b95a8) and text-hi (#ffffff) strictly used. Never place text-lo (#5c5765) on body text."
+  }
+}

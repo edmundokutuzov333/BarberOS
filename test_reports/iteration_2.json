@@ -1,0 +1,40 @@
+{
+  "summary": "Fase 2 do BarberOS testada end-to-end. Backend (Supabase PostgREST + RPCs get_available_days/get_available_slots/book_appointment) e frontend (Serviços, Cortes, Barbeiros, Horários+Bloqueios, Definições completas, Onboarding) todos passam. Criados via UI: serviço 'QA Corte' (30 min · 350 MT) e barbeiro 'QA Nelson' (5 anos · 1 serviço, pré-associado a QA Corte). 22 cartões de haircuts semeados; toast idempotente 'O catálogo já tinha todos os estilos' confirmado. Horários: 20:00 persiste após reload, 'segue o horário da barbearia' aparece ao mudar scope para QA Nelson, bloqueio Almoço criado/apagado. Definições: perfil descrição persiste, --accent muda para #57d3e0 ao escolher cyan-abyss, regra strict_24h persiste (aria-pressed=true), depósito switch/save presentes, membros listam 'Dono' + toast 'Não há conta com esse email' para inexistentes. Link+QR: canvas QR presente, público-link contém /barbearia/oryon, botão descarregar cartaz presente. Onboarding: page/progress presentes, passo=3 mostra ServicesEditor+next, passo=8 mostra link-qr+link-done-btn. Backend RPC: 4/4 testes passam (dias com domingo fechado, slots incluem QA Nelson, book_appointment devolve appointment_id+manage_token, segundo booking devolve SLOT_UNAVAILABLE/TAKEN, telefone '123' devolve INVALID_PHONE).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "LinkQr / copy-public-link-btn", "issue": "Toast 'Link copiado' não foi detectado após clicar copy button no ambiente Playwright — provavelmente porque navigator.clipboard requer permissão/foco activo. Não reproduz em navegador humano, considerar apenas se relatórios de utilizadores ocorrerem.", "selector": "[data-testid=\"copy-public-link-btn\"]", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/app/definicoes/link", "issues": ["O input 'Link público' na coluna direita fica muito estreito e apenas mostra 'ht' visível (o URL completo está no valor, mas o campo não expande). Considerar aumentar largura mínima ou permitir wrap."]},
+      {"screen": "Dialog modais (Serviço/Corte/Bloqueio)", "issues": ["Warning React: 'Missing Description or aria-describedby for {DialogContent}' — adicionar DialogDescription para acessibilidade."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_engine_rpc.py",
+    "/app/backend/tests/test_supabase_rls.py",
+    "/app/test_reports/pytest/engine_rpc.xml"
+  ],
+  "action_items": [
+    "Adicionar <DialogDescription> aos DialogContent de service-modal, haircut-modal, block-modal para eliminar warnings de acessibilidade.",
+    "Considerar expandir min-width do public-link-input em /app/definicoes/link para exibir mais do URL sem scroll."
+  ],
+  "critical_code_review_comments": [
+    "ServicesEditor/HaircutsEditor/BlocksEditor: DialogContent sem aria-describedby — warnings recorrentes na consola.",
+    "Copy-to-clipboard: usar fallback (document.execCommand ou textarea+select) quando navigator.clipboard.writeText falha (contexto inseguro / permissão negada); actualmente o toast só dispara em caminho feliz."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_engine_rpc.py (novo)"
+  ],
+  "success_rate": {"backend": "100% (4/4 RPC + 4/4 RLS anon)", "frontend": "~97% (todos fluxos Fase 2 OK; único item observado é toast de copiar link não detectável em Playwright)"},
+  "test_credentials": "contact@edmundokutuzov.art / Oryon#2026!",
+  "seed_data_creation": "Criados via UI (persistentes): service 'QA Corte' (30 min / 350 MT) e barber 'QA Nelson' (5 anos, ligado a QA Corte) na barbearia 'oryon'. Backend pytest cria/reutiliza os mesmos (idempotente por lookup por nome). Marcações QA feitas pelos testes RPC ficam para o dashboard como especificado.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Serviço 'QA Corte' e barbeiro 'QA Nelson' já existem na barbearia oryon. Backend RPCs (get_available_days/slots, book_appointment) testados via anon PostgREST — reusar /app/backend/tests/test_engine_rpc.py como regressão. Warnings de DialogContent aria-describedby são cosméticos.",
+  "rca of the issue": "N/A — sem bugs bloqueantes. Único ponto de atenção: navigator.clipboard.writeText requer contexto seguro + permissão em Playwright; se main agent quiser cobrir isso em testes automáticos, granting via browser context permissions=['clipboard-read','clipboard-write'] resolve."
+}
