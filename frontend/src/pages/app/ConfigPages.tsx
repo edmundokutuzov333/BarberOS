@@ -4,6 +4,7 @@ import { ServicesEditor } from '@/components/config/ServicesEditor';
 import { HaircutsEditor } from '@/components/config/HaircutsEditor';
 import { BarbersEditor } from '@/components/config/BarbersEditor';
 import { HoursEditor, BlocksEditor } from '@/components/config/HoursEditor';
+import { ScheduleOverridesEditor } from '@/components/config/ScheduleOverridesEditor';
 
 export function ServicosPage() {
   return (
@@ -34,6 +35,7 @@ export function HorariosPage() {
     <Page testId="horarios-page" title="Horários" subtitle="Horário base da barbearia, excepções por barbeiro e bloqueios.">
       <div className="space-y-4">
         <Panel title="Horário semanal"><HoursEditor /></Panel>
+        <ScheduleOverridesEditor />
         <BlocksEditor />
       </div>
     </Page>
