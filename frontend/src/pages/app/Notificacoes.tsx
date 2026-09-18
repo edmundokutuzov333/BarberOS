@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { BellRing, CheckCircle2, ChevronLeft, ChevronRight, Clock3, ExternalLink, Mail, MessageCircle, RefreshCw, ServerCog, TriangleAlert, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { Page } from "@/components/layout/Page";
 import { Button } from "@/components/ui/Button";
 import { EmptyState, ErrorState, Panel, Skeleton } from "@/components/ui/States";
@@ -203,7 +204,7 @@ export default function Notificacoes() {
                               try {
                                 await retry.mutateAsync({ shopId: shop!.id, notificationId: row.notification_id });
                               } catch (error) {
-                                window.alert(humanError(error));
+                                toast.error(humanError(error));
                               }
                             }}
                             disabled={retry.isPending}
