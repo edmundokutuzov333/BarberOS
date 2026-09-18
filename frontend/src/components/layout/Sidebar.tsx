@@ -29,8 +29,8 @@ export function Sidebar() {
     >
       <div className={cn('flex items-center h-16 px-4 shrink-0', collapsed ? 'justify-center' : 'justify-between')}>
         {!collapsed && <Brand size="sm" />}
-        <button data-testid="sidebar-toggle" onClick={toggle} aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
-          className="text-ink-lo hover:text-accent-soft opacity-60 hover:opacity-100 transition-[opacity,color] duration-150 p-1.5 rounded-xl">
+        <button data-testid="sidebar-toggle" type="button" onClick={toggle} aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'} aria-expanded={!collapsed}
+          className="icon-button h-11 w-11 min-h-11 min-w-11 text-ink-lo hover:text-accent-soft opacity-60 hover:opacity-100">
           {collapsed ? <ChevronsRight size={18} /> : <ChevronsLeft size={18} />}
         </button>
       </div>
@@ -65,7 +65,7 @@ export function Sidebar() {
                 <motion.div layoutId="nav-active" className="absolute inset-0 rounded-2xl bg-accent-soft"
                   transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 350, damping: 30 }} />
               )}
-              <item.icon size={18} className={cn('relative shrink-0 transition-[opacity,color] duration-150',
+              <item.icon size={18} aria-hidden="true" className={cn('relative shrink-0 transition-[opacity,color] duration-150',
                 isActive ? 'opacity-100' : 'opacity-55 text-ink-lo group-hover:opacity-100 group-hover:text-accent-soft')} />
               {!collapsed && <span className={cn('relative text-sm truncate', isActive ? 'font-medium' : 'font-light')}>{item.label}</span>}
             </NavLink>
@@ -74,8 +74,8 @@ export function Sidebar() {
       </nav>
 
       <div className="p-3 shrink-0 border-t border-white/5">
-        <button data-testid="sign-out-btn" onClick={signOut}
-          className={cn('flex items-center gap-3 h-11 w-full rounded-2xl px-3 text-ink-mid hover:text-ink-hi hover:bg-white/5 transition-colors', collapsed && 'justify-center px-0')}>
+        <button data-testid="sign-out-btn" type="button" onClick={signOut} aria-label={collapsed ? 'Sair da conta' : undefined}
+          className={cn('flex items-center gap-3 h-11 w-full rounded-2xl px-3 text-ink-mid hover:text-ink-hi hover:bg-white/5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent-soft', collapsed && 'justify-center px-0')}>
           <LogOut size={18} className="opacity-55 shrink-0" />
           {!collapsed && <span className="text-sm truncate text-left flex-1">{profile?.full_name ?? 'Sair'}</span>}
         </button>
