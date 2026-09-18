@@ -104,7 +104,6 @@ const ERRORS: Record<string, string> = {
   REVIEW_PUBLICATION_FILTER_INVALID: 'O filtro das avaliações não é válido.',
   REVIEW_NOT_FOUND: 'A avaliação não foi encontrada.',
   REPORT_EMPTY_RESPONSE: 'Os relatórios não devolveram dados válidos.',
-  REPORT_RANGE_TOO_LARGE: 'O intervalo máximo do relatório é de 366 dias.',
   PLATFORM_ADMIN_REQUIRED: 'Esta área é reservada ao Admin Oryon.',
   INVALID_LIMIT: 'O limite seleccionado não é válido.',
   INVALID_OFFSET: 'A página seleccionada não é válida.',
@@ -119,7 +118,6 @@ const ERRORS: Record<string, string> = {
   INVALID_PLAN_FEATURES: 'As funcionalidades do plano não são válidas.',
   SUPPORT_TICKET_NOT_FOUND: 'O ticket de suporte não foi encontrado.',
   SUPPORT_ASSIGNEE_INVALID: 'O responsável seleccionado não é um administrador válido.',
-  REPORT_RANGE_TOO_LARGE: 'O intervalo máximo do relatório é de 366 dias.',
 
 
   PAYMENT_REFERENCE_MISSING: 'O provider não devolveu uma referência de transação válida.',
