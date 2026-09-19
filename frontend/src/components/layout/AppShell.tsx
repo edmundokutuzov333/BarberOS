@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/States';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { SkipLink } from '@/components/ui/SkipLink';
 import { canAccessAppRoute } from '@/lib/permissions';
+import { humanError } from '@/lib/utils';
+import { ErrorState } from '@/components/ui/States';
 
 function FullSkeleton() {
   return (
@@ -63,11 +65,12 @@ export function AnimatedOutlet() {
 }
 
 export function AppShell() {
-  const { shop, role, loading } = useShop();
+  const { shop, role, loading, error } = useShop();
   const { pathname } = useLocation();
   const desktop = useMediaQuery('(min-width: 768px)');
 
   if (loading) return <FullSkeleton />;
+  if (error) return <div className="min-h-screen p-6 grid place-items-center"><div className="w-full max-w-xl"><ErrorState message={humanError(error)} onRetry={() => window.location.reload()} /></div></div>;
   if (!shop && pathname !== '/app/onboarding') return <Navigate to="/app/onboarding" replace />;
   if (pathname === '/app/onboarding') {
     if (shop && !(role === 'owner' || role === 'manager')) return <RoleDenied pathname={pathname} />;
