@@ -27,18 +27,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    let alive = true;
+
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!alive) return;
+      if (error) {
+        setSession(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
       setSession(data.session);
-      if (!data.session) setLoading(false);
+      if (!data.session) {
+        setProfile(null);
+        setLoading(false);
+      }
+    }).catch(() => {
+      if (!alive) return;
+      setSession(null);
+      setProfile(null);
+      setLoading(false);
     });
+
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      if (!alive) return;
       setSession(s);
       if (!s) {
         setProfile(null);
         setLoading(false);
       }
     });
-    return () => sub.subscription.unsubscribe();
+
+    return () => {
+      alive = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -49,9 +72,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .select('id, full_name, phone, avatar_url, is_platform_admin, created_at')
       .eq('id', session.user.id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
         if (!alive) return;
-        setProfile(data ?? null);
+        setProfile(error ? null : data ?? null);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setProfile(null);
         setLoading(false);
       });
     return () => {
