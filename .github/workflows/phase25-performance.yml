@@ -39,11 +39,11 @@ jobs:
           cache: yarn
           cache-dependency-path: frontend/yarn.lock
       - run: corepack enable
-      - run: yarn install --frozen-lockfile
-      - run: yarn build
-      - run: yarn perf:budget
-      - run: yarn test:contracts:phase25
-      - run: yarn typecheck
+      - run: corepack yarn install --frozen-lockfile
+      - run: corepack yarn build
+      - run: corepack yarn perf:budget
+      - run: corepack yarn test:contracts:phase25
+      - run: corepack yarn typecheck
 
   public-3g:
     name: Phase 25 public Fast 3G
@@ -61,9 +61,9 @@ jobs:
       - working-directory: frontend
         run: corepack enable
       - working-directory: frontend
-        run: yarn install --frozen-lockfile
+        run: corepack yarn install --frozen-lockfile
       - working-directory: frontend
-        run: yarn build
+        run: corepack yarn build
       - name: Start production preview
         working-directory: frontend
         run: nohup yarn preview --host 127.0.0.1 --port 4173 > /tmp/barberos-preview.log 2>&1 &
