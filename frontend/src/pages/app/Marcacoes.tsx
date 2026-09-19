@@ -109,9 +109,9 @@ export default function Marcacoes() {
     >
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
         <Metric label="Resultados" value={query.isLoading ? null : totalCount} />
-        <Metric label="Hoje" value={query.isLoading ? null : (query.data ?? []).filter((a) => fmt(a.starts_at, 'yyyy-MM-dd') === fmt(new Date(), 'yyyy-MM-dd')).length} />
-        <Metric label="Pendentes" value={query.isLoading ? null : (query.data ?? []).filter((a) => a.status === 'pending').length} />
-        <Metric label="Confirmadas" value={query.isLoading ? null : (query.data ?? []).filter((a) => a.status === 'confirmed').length} />
+        <Metric label="Pendentes nesta página" value={query.isLoading ? null : (query.data ?? []).filter((a) => a.status === 'pending').length} />
+        <Metric label="Confirmadas nesta página" value={query.isLoading ? null : (query.data ?? []).filter((a) => a.status === 'confirmed').length} />
+        <Metric label="Concluídas nesta página" value={query.isLoading ? null : (query.data ?? []).filter((a) => a.status === 'completed').length} />
       </div>
 
       <Panel testId="appointments-controls">
