@@ -26,6 +26,7 @@ const CortesPage = lazy(() => import('./pages/app/ConfigPages').then((m) => ({ d
 const BarbeirosPage = lazy(() => import('./pages/app/ConfigPages').then((m) => ({ default: m.BarbeirosPage })));
 const HorariosPage = lazy(() => import('./pages/app/ConfigPages').then((m) => ({ default: m.HorariosPage })));
 const AgendaPage = lazy(() => import('./pages/app/Agenda'));
+const Marcacoes = lazy(() => import('./pages/app/Marcacoes'));
 const Clientes = lazy(() => import('./pages/app/Clientes'));
 const ClienteDetalhe = lazy(() => import('./pages/app/ClienteDetalhe'));
 const ListaEspera = lazy(() => import('./pages/app/ListaEspera'));
@@ -80,7 +81,7 @@ export default function App() {
               <Route index element={<Dashboard />} />
               <Route path="onboarding" element={<Onboarding />} />
               <Route path="agenda" element={<AgendaPage />} />
-              <Route path="marcacoes" element={<NotYet />} />
+              <Route path="marcacoes" element={<Marcacoes />} />
               <Route path="clientes" element={<Clientes />} />
               <Route path="clientes/:customerId" element={<ClienteDetalhe />} />
               <Route path="lista-espera" element={<ListaEspera />} />
