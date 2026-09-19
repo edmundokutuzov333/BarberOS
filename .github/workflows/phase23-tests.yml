@@ -11,6 +11,8 @@ on:
       - "frontend/tests/e2e/phase23-full-lifecycle.spec.mjs"
       - "docs/TESTING.md"
       - ".github/workflows/phase23-tests.yml"
+      - "package.json"
+      - ".nvmrc"
   push:
     branches:
       - main
@@ -22,6 +24,8 @@ on:
       - "scripts/test_database_phase23.py"
       - "docs/TESTING.md"
       - ".github/workflows/phase23-tests.yml"
+      - "package.json"
+      - ".nvmrc"
 
 jobs:
   frontend:
