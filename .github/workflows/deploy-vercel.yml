@@ -38,15 +38,15 @@ jobs:
           cache-dependency-path: frontend/yarn.lock
       - run: corepack enable
       - working-directory: frontend
-        run: yarn install --frozen-lockfile
+        run: corepack yarn install --frozen-lockfile
       - working-directory: frontend
-        run: yarn deploy:contract
+        run: corepack yarn deploy:contract
       - working-directory: frontend
-        run: yarn build
+        run: corepack yarn build
       - working-directory: frontend
-        run: yarn perf:budget
+        run: corepack yarn perf:budget
       - working-directory: frontend
-        run: yarn typecheck
+        run: corepack yarn typecheck
 
   deploy:
     name: Vercel production deployment
