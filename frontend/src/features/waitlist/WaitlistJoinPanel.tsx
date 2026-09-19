@@ -52,11 +52,11 @@ export function WaitlistJoinPanel({ slug, serviceId, haircutId, barberId, date, 
     const cleanName = name.trim();
     const cleanEmail = email.trim();
     if (cleanName.length < 2 || cleanName.length > 120) {
-      toast.error('Escreve o teu nome.');
+      toast.error('Introduza o seu nome.');
       return;
     }
     if (!validPhone(phone)) {
-      toast.error('Usa um número móvel de Moçambique.');
+      toast.error('Use um número móvel de Moçambique.');
       return;
     }
     if (!validEmail(cleanEmail)) {
