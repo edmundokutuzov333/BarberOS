@@ -1,3 +1,6 @@
+# Vercel local project metadata
+.vercel/
+
 # Secrets and environment
 .env
 .env.*
