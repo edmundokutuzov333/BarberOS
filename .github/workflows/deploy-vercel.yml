@@ -2,8 +2,7 @@ name: BarberOS Vercel Production
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - "frontend/**"
       - "vercel.json"
@@ -27,7 +26,7 @@ jobs:
     env:
       DEPLOY_PREFLIGHT: production
       VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
-      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -50,7 +49,6 @@ jobs:
   deploy:
     name: Vercel production deployment
     needs: preflight
-    if: ${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != '' }}
     runs-on: ubuntu-latest
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -58,16 +56,38 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     outputs:
       deployment_url: ${{ steps.deploy.outputs.deployment_url }}
+      deployed: ${{ steps.credentials.outputs.enabled }}
     steps:
+      - id: credentials
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.credentials.outputs.enabled == 'true'
       - uses: actions/setup-node@v4
+        if: steps.credentials.outputs.enabled == 'true'
         with:
           node-version: 22
+
       - name: Pull production project settings
+        if: steps.credentials.outputs.enabled == 'true'
         run: npx --yes vercel@latest pull --yes --environment=production --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID" --project="$VERCEL_PROJECT_ID"
+
       - name: Build with production environment
+        if: steps.credentials.outputs.enabled == 'true'
         run: npx --yes vercel@latest build --prod --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID" --project="$VERCEL_PROJECT_ID"
+
       - name: Deploy prebuilt production artifact
+        if: steps.credentials.outputs.enabled == 'true'
         id: deploy
         shell: bash
         run: |
@@ -76,25 +96,32 @@ jobs:
           test -n "$url"
           echo "deployment_url=$url" >> "$GITHUB_OUTPUT"
           echo "Deployment: $url"
+
       - name: Release summary
+        if: steps.credentials.outputs.enabled == 'true'
         run: |
           {
             echo "## BarberOS Vercel production deployment"
             echo
-            echo "- Deployment: ${{ steps.deploy.outputs.deployment_url }}"
-            echo "- Commit: $GITHUB_SHA"
+            echo "Deployment: ${{ steps.deploy.outputs.deployment_url }}"
+            echo "Commit: $GITHUB_SHA"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Credentials not configured
+        if: steps.credentials.outputs.enabled != 'true'
+        run: echo "SKIP | Vercel production credentials are not configured in GitHub Actions."
 
   smoke:
     name: Production smoke
     needs: deploy
-    if: ${{ needs.deploy.result == 'success' && secrets.BARBEROS_PUBLIC_URL != '' }}
     runs-on: ubuntu-latest
-    env:
-      BARBEROS_PUBLIC_URL: ${{ secrets.BARBEROS_PUBLIC_URL }}
+    if: needs.deploy.outputs.deployed == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node scripts/verify-production.mjs
+      - name: Verify production
+        env:
+          BARBEROS_PUBLIC_URL: ${{ secrets.BARBEROS_PUBLIC_URL }}
+        run: node scripts/verify-production.mjs
