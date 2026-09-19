@@ -1,0 +1,88 @@
+name: BarberOS Supabase Production
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/**"
+      - "scripts/verify-supabase-release.mjs"
+      - ".github/workflows/deploy-supabase.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: barberos-supabase-production
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Supabase production release
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_PROJECT_REF: alseiinjzwjdiwtvkdzy
+    steps:
+      - id: credentials
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          if [ -n "$SUPABASE_ACCESS_TOKEN" ] && [ -n "$SUPABASE_DB_PASSWORD" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.credentials.outputs.enabled == 'true'
+
+      - name: Repository secret scan
+        if: steps.credentials.outputs.enabled == 'true'
+        run: node scripts/scan-repository-secrets.mjs
+
+      - name: Validate release contract
+        if: steps.credentials.outputs.enabled == 'true'
+        run: node scripts/verify-supabase-release.mjs
+
+      - name: Install Supabase CLI
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: supabase/setup-cli@v2
+        with:
+          version: latest
+
+      - name: Preview database changes
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase db push --dry-run --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Apply database migrations
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase db push --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Deploy Edge Functions
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Release summary
+        if: steps.credentials.outputs.enabled == 'true'
+        run: |
+          {
+            echo "## BarberOS Supabase production release"
+            echo
+            echo "Project: $SUPABASE_PROJECT_REF"
+            echo "Migrations: canonical Git history"
+            echo "Edge Functions: supabase/functions/"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Credentials not configured
+        if: steps.credentials.outputs.enabled != 'true'
+        run: echo "SKIP | Supabase production credentials are not configured in GitHub Actions."

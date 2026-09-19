@@ -152,3 +152,27 @@ A agenda passou a consumir eventos Realtime de `appointments` via Postgres Chang
 ## Fase 11: Marcações manuais
 
 A operação `Nova marcação` da Agenda usa o mesmo core transaccional PostgreSQL do booking online, com `source=manual`, actor autenticado, notas internas, depósito, notificações, auditoria e os mesmos guards de disponibilidade/overlap. Anonymous não pode executar a operação.
+
+## Fase 26: deployment
+
+O deployment de produção é separado em duas camadas:
+
+- Vercel serve o frontend React/Vite.
+- Supabase mantém Auth, PostgreSQL, RLS, Storage, Realtime, Edge Functions e jobs.
+
+O repositório contém:
+
+- `vercel.json` com SPA rewrites, headers de segurança e cache imutável dos assets;
+- `supabase/config.toml` com o projecto e os contratos `verify_jwt` das Edge Functions;
+- `supabase/functions/` com as sete funções activas reconciliadas do projecto;
+- `scripts/validate-deployment-config.mjs` para a fronteira de ambiente;
+- `scripts/verify-supabase-release.mjs` para a cadeia de migrations;
+- `scripts/scan-repository-secrets.mjs` para detectar valores privados no Git;
+- `scripts/verify-production.mjs` para smoke da produção;
+- `.github/workflows/deploy-vercel.yml` para preflight, build, deploy prebuilt e smoke;
+- `.github/workflows/deploy-supabase.yml` para dry-run, migrations e Edge Functions;
+- `.github/workflows/rollback-vercel.yml` para recuperação de produção.
+
+Nunca colocar Service Role, Vercel Token, passwords ou tokens de providers em `VITE_*`. A área pública recebe apenas dados e chaves próprias do browser.
+
+As credenciais de deploy ficam exclusivamente nos GitHub Actions Secrets e nos ambientes server-side correspondentes.
