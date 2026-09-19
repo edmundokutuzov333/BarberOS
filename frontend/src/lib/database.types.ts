@@ -1600,6 +1600,40 @@ export type Database = {
           timezone: string
         }[]
       }
+      get_appointments: {
+        Args: {
+          p_from: string
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_shop: string
+          p_status?: Database["public"]["Enums"]["appointment_status"]
+          p_to: string
+        }
+        Returns: {
+          appointment_id: string
+          barber_id: string
+          barber_name: string
+          customer_email: string
+          customer_id: string
+          customer_name: string
+          customer_phone: string
+          deposit_cents: number
+          deposit_status: Database["public"]["Enums"]["deposit_state"]
+          duration_min: number
+          ends_at: string
+          haircut_id: string
+          haircut_name: string
+          hold_expires_at: string
+          price_cents: number
+          service_id: string
+          service_name: string
+          source: Database["public"]["Enums"]["booking_source"]
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          total_count: number
+        }[]
+      }
       get_available_days: {
         Args: {
           p_barber_id?: string
