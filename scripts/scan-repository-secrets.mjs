@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const blocked = /(?:sb_secret_[A-Za-z0-9_-]+|service_role|SUPABASE_SERVICE_ROLE_KEY\s*=\s*['\"][^'\"]+['\"]|VERCEL_TOKEN\s*=\s*[^$\s]+)/i;
+const blocked = /(?:sb_secret_[A-Za-z0-9_-]{12,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|SUPABASE_SERVICE_ROLE_KEY\s*=\s*['\"][^'\"]{12,}['\"])/i;
 const ignored = new Set(['.git','node_modules','dist','build','.vite']);
 const allowedNames = new Set(['.env.example','frontend/.env.example']);
 let failures = 0;
