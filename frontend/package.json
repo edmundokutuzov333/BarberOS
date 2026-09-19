@@ -73,7 +73,9 @@
     "test:unit:phase24": "node tests/unit/phase24-concurrency.mjs",
     "test:contracts:phase24": "node tests/components/phase24-concurrency-contracts.mjs",
     "test:contracts:phase25": "node tests/components/phase25-performance-contracts.mjs",
-    "perf:budget": "node ../scripts/check-performance-budget.mjs"
+    "perf:budget": "node ../scripts/check-performance-budget.mjs",
+    "deploy:contract": "node ../scripts/validate-deployment-config.mjs",
+    "supabase:contract": "node ../scripts/verify-supabase-release.mjs"
   },
   "browserslist": {
     "production": [
@@ -152,5 +154,8 @@
     "**/tinyglobby/picomatch": "4.0.4",
     "http-proxy-middleware": "2.0.10"
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "engines": {
+    "node": "22.x"
+  }
 }
