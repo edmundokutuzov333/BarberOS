@@ -109,7 +109,7 @@ export default function Marcacoes() {
     >
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
         <Metric label="Resultados" value={query.isLoading ? null : totalCount} />
-        <Metric label="Hoje em dia" value={query.isLoading ? null : (query.data ?? []).filter((a) => new Date(a.starts_at).toDateString() === new Date().toDateString()).length} />
+        <Metric label="Hoje" value={query.isLoading ? null : (query.data ?? []).filter((a) => fmt(a.starts_at, 'yyyy-MM-dd') === fmt(new Date(), 'yyyy-MM-dd')).length} />
         <Metric label="Pendentes" value={query.isLoading ? null : (query.data ?? []).filter((a) => a.status === 'pending').length} />
         <Metric label="Confirmadas" value={query.isLoading ? null : (query.data ?? []).filter((a) => a.status === 'confirmed').length} />
       </div>
@@ -156,7 +156,7 @@ export default function Marcacoes() {
       ) : query.data?.length ? (
         <div className="space-y-3 mt-4" data-testid="appointments-list">
           {query.data.map((appointment) => (
-            <AppointmentRow key={appointment.appointment_id} appointment={appointment} onAction={runAction} busy={actionMutation.isPending} />
+            <AppointmentRow key={appointment.appointment_id} appointment={appointment} shopName={shop.name} onAction={runAction} busy={actionMutation.isPending} />
           ))}
 
           <div className="flex items-center justify-between gap-3 pt-2">
@@ -195,10 +195,12 @@ export default function Marcacoes() {
 
 function AppointmentRow({
   appointment,
+  shopName,
   onAction,
   busy,
 }: {
   appointment: AppointmentListRow;
+  shopName: string;
   onAction: (action: 'confirm' | 'start' | 'complete' | 'no_show' | 'cancel', appointment: AppointmentListRow) => void;
   busy: boolean;
 }) {
@@ -247,7 +249,7 @@ function AppointmentRow({
           ))}
           {appointment.customer_phone && (
             <a
-              href={buildWhatsAppLink(appointment.customer_phone, 'Olá ' + appointment.customer_name + ', falamos da sua marcação na ' + shopName(appointment) + '.')}
+              href={buildWhatsAppLink(appointment.customer_phone, 'Olá ' + appointment.customer_name + ', falamos da sua marcação na ' + shopName + '.')}
               target="_blank"
               rel="noreferrer"
               aria-label={'Abrir WhatsApp de ' + appointment.customer_name}
@@ -263,9 +265,6 @@ function AppointmentRow({
   );
 }
 
-function shopName(appointment: AppointmentListRow) {
-  return 'nossa barbearia';
-}
 
 function Metric({ label, value }: { label: string; value: number | null }) {
   return (
