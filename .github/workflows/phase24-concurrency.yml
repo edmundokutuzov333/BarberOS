@@ -15,6 +15,8 @@ on:
       - "docs/PHASE24-CONCURRENCY.md"
       - "frontend/package.json"
       - ".github/workflows/phase24-concurrency.yml"
+      - "package.json"
+      - ".nvmrc"
   push:
     branches:
       - main
@@ -32,6 +34,8 @@ on:
       - "docs/PHASE24-CONCURRENCY.md"
       - "frontend/package.json"
       - ".github/workflows/phase24-concurrency.yml"
+      - "package.json"
+      - ".nvmrc"
 
 jobs:
   frontend:
