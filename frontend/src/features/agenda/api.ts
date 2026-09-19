@@ -101,6 +101,7 @@ export function useAppointmentAction() {
     retry: false,
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ['agenda'] });
+      await qc.invalidateQueries({ queryKey: ['appointments'] });
       await qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
