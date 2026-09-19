@@ -399,8 +399,8 @@ export default function BookingWizard() {
     const phone = form.phone.trim();
     const email = form.email.trim();
 
-    if (name.length < 2 || name.length > 120) nextErrors.name = 'Escreve o teu nome (2 a 120 caracteres).';
-    if (!validMozPhone(phone)) nextErrors.phone = 'Usa um número móvel de Moçambique, por exemplo 84 000 0000.';
+    if (name.length < 2 || name.length > 120) nextErrors.name = 'Introduza o seu nome (2 a 120 caracteres).';
+    if (!validMozPhone(phone)) nextErrors.phone = 'Use um número móvel de Moçambique, por exemplo 84 000 0000.';
     if (!validEmail(email)) nextErrors.email = 'Indica um email válido.';
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
