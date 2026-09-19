@@ -8,7 +8,16 @@ function read(file) {
   return fs.readFileSync(path.join(root, file), 'utf8');
 }
 
-const vercel = JSON.parse(read('vercel.json'));
+function readJson(file) {
+  return JSON.parse(read(file));
+}
+
+const vercel = readJson('vercel.json');
+
+// The repository supports both valid Vercel Root Directory modes:
+// 1) repository root
+// 2) frontend
+// Keep both configurations explicit so the output path is never resolved twice.
 if (vercel.outputDirectory !== 'frontend/dist') throw new Error('DEPLOY_CONFIG_OUTPUT_DIRECTORY_INVALID');
 if (!String(vercel.buildCommand || '').includes('corepack yarn --cwd frontend build')) {
   throw new Error('DEPLOY_CONFIG_BUILD_COMMAND_INVALID');
@@ -16,25 +25,37 @@ if (!String(vercel.buildCommand || '').includes('corepack yarn --cwd frontend bu
 if (!String(vercel.installCommand || '').includes('corepack yarn --cwd frontend install --frozen-lockfile')) {
   throw new Error('DEPLOY_CONFIG_INSTALL_COMMAND_INVALID');
 }
-if (!Array.isArray(vercel.rewrites) || !vercel.rewrites.some((r) => r.source === '/(.*)' && r.destination === '/index.html')) {
-  throw new Error('DEPLOY_CONFIG_SPA_REWRITE_MISSING');
+
+const frontendVercel = readJson('frontend/vercel.json');
+if (frontendVercel.outputDirectory !== 'dist') throw new Error('DEPLOY_FRONTEND_CONFIG_OUTPUT_DIRECTORY_INVALID');
+if (frontendVercel.buildCommand !== 'corepack yarn build') {
+  throw new Error('DEPLOY_FRONTEND_CONFIG_BUILD_COMMAND_INVALID');
 }
-if (!Array.isArray(vercel.headers) || !vercel.headers.some((h) => h.source === '/(.*)')) {
-  throw new Error('DEPLOY_CONFIG_SECURITY_HEADERS_MISSING');
+if (frontendVercel.installCommand !== 'corepack yarn install --frozen-lockfile') {
+  throw new Error('DEPLOY_FRONTEND_CONFIG_INSTALL_COMMAND_INVALID');
 }
-if (!vercel.headers.some((h) => h.source === '/assets/(.*)' && h.headers?.some((x) => x.key === 'Cache-Control' && x.value.includes('immutable')))) {
-  throw new Error('DEPLOY_CONFIG_ASSET_CACHE_MISSING');
+
+for (const config of [vercel, frontendVercel]) {
+  if (!Array.isArray(config.rewrites) || !config.rewrites.some((r) => r.source === '/(.*)' && r.destination === '/index.html')) {
+    throw new Error('DEPLOY_CONFIG_SPA_REWRITE_MISSING');
+  }
+  if (!Array.isArray(config.headers) || !config.headers.some((h) => h.source === '/(.*)')) {
+    throw new Error('DEPLOY_CONFIG_SECURITY_HEADERS_MISSING');
+  }
+  if (!config.headers.some((h) => h.source === '/assets/(.*)' && h.headers?.some((x) => x.key === 'Cache-Control' && x.value.includes('immutable')))) {
+    throw new Error('DEPLOY_CONFIG_ASSET_CACHE_MISSING');
+  }
 }
 
 if (read('.nvmrc').trim() !== '22') throw new Error('DEPLOY_CONFIG_NODE_VERSION_INVALID');
 
-const rootPackage = JSON.parse(read('package.json'));
+const rootPackage = readJson('package.json');
 if (!String(rootPackage.packageManager || '').startsWith('yarn@1.22.22')) {
   throw new Error('DEPLOY_CONFIG_ROOT_PACKAGE_MANAGER_INVALID');
 }
 if (rootPackage.engines?.node !== '22.x') throw new Error('DEPLOY_CONFIG_ROOT_NODE_ENGINE_INVALID');
 
-const frontendPackage = JSON.parse(read('frontend/package.json'));
+const frontendPackage = readJson('frontend/package.json');
 if (!String(frontendPackage.packageManager || '').startsWith('yarn@1.22.22')) {
   throw new Error('DEPLOY_CONFIG_PACKAGE_MANAGER_INVALID');
 }
