@@ -18,6 +18,7 @@ interface ShopState {
   role: Role | null;
   shops: Membership[];
   loading: boolean;
+  error: Error | null;
   setShopId: (id: string) => void;
   refresh: () => Promise<unknown>;
 }
@@ -27,6 +28,7 @@ const Ctx = createContext<ShopState>({
   role: null,
   shops: [],
   loading: true,
+  error: null,
   setShopId: () => {},
   refresh: async () => {},
 });
@@ -72,6 +74,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         role: current?.role ?? null,
         shops,
         loading: !!user && q.isLoading,
+        error: q.error instanceof Error ? q.error : q.error ? new Error(String(q.error)) : null,
         setShopId,
         refresh: () => qc.invalidateQueries({ queryKey: ['memberships'] }),
       }}
