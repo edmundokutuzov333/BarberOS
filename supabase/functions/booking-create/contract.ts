@@ -36,7 +36,7 @@ export function publicBookingMessage(code: string): string {
   switch (code) {
     case "SLOT_TAKEN":
     case "SLOT_UNAVAILABLE":
-      return "Esse horário acabou de ser ocupado. Escolhe outro horário.";
+      return "Este horário acabou de ser ocupado. Escolha outro horário.";
     case "INVALID_NAME":
       return "Escreve um nome com pelo menos 2 letras.";
     case "INVALID_PHONE":
