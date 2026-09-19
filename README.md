@@ -162,7 +162,7 @@ O deployment de produção é separado em duas camadas:
 
 O repositório contém:
 
-- `vercel.json` com SPA rewrites, headers de segurança e cache imutável dos assets;
+- `vercel.json` com SPA rewrites, headers de segurança, cache imutável dos assets e instalação/build determinísticos via Corepack + Yarn 1.22.22;
 - `supabase/config.toml` com o projecto e os contratos `verify_jwt` das Edge Functions;
 - `supabase/functions/` com as sete funções activas reconciliadas do projecto;
 - `scripts/validate-deployment-config.mjs` para a fronteira de ambiente;
