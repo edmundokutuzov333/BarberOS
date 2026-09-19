@@ -42,16 +42,16 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: corepack yarn install --frozen-lockfile
       - name: Accessibility audit
         run: yarn a11y:phase21
       - name: Typecheck
-        run: yarn typecheck
+        run: corepack yarn typecheck
       - name: Production build
         env:
           VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
-        run: yarn build
+        run: corepack yarn build
 
   unit-components:
     name: Unit and component tests
@@ -69,16 +69,16 @@ jobs:
         run: corepack enable
       - name: Install dependencies
         working-directory: frontend
-        run: yarn install --frozen-lockfile
+        run: corepack yarn install --frozen-lockfile
       - name: Unit tests
         working-directory: frontend
-        run: yarn test:unit:phase23
+        run: corepack yarn test:unit:phase23
       - name: Component tests
         working-directory: frontend
-        run: yarn test:components:phase23
+        run: corepack yarn test:components:phase23
       - name: Page contracts
         working-directory: frontend
-        run: yarn test:contracts:phase23
+        run: corepack yarn test:contracts:phase23
 
   e2e:
     name: Browser E2E
@@ -102,13 +102,13 @@ jobs:
         run: corepack enable
       - name: Install frontend
         working-directory: frontend
-        run: yarn install --frozen-lockfile
+        run: corepack yarn install --frozen-lockfile
       - name: Build production app
         working-directory: frontend
         env:
           VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
-        run: yarn build
+        run: corepack yarn build
       - name: Start preview
         working-directory: frontend
         run: nohup yarn preview --host 127.0.0.1 --port 4173 > /tmp/barberos-preview.log 2>&1 &
