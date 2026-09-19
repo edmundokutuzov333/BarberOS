@@ -1,0 +1,51 @@
+name: BarberOS Supabase Production
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "supabase/**"
+      - "scripts/verify-supabase-release.mjs"
+      - ".github/workflows/deploy-supabase.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: barberos-supabase-production
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Supabase production release
+    if: ${{ secrets.SUPABASE_ACCESS_TOKEN != '' && secrets.SUPABASE_DB_PASSWORD != '' }}
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_PROJECT_REF: alseiinjzwjdiwtvkdzy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate release contract
+        run: node scripts/verify-supabase-release.mjs
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v2
+        with:
+          version: latest
+      - name: Preview database changes
+        run: supabase db push --dry-run --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+      - name: Apply database migrations
+        run: supabase db push --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+      - name: Deploy Edge Functions
+        run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Release summary
+        run: |
+          {
+            echo "## BarberOS Supabase production release"
+            echo
+            echo "- Project: $SUPABASE_PROJECT_REF"
+            echo "- Migrations: applied through the canonical Git history"
+            echo "- Edge Functions: deployed from supabase/functions/"
+          } >> "$GITHUB_STEP_SUMMARY"
