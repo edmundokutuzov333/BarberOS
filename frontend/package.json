@@ -75,7 +75,8 @@
     "test:contracts:phase25": "node tests/components/phase25-performance-contracts.mjs",
     "perf:budget": "node ../scripts/check-performance-budget.mjs",
     "deploy:contract": "node ../scripts/validate-deployment-config.mjs",
-    "supabase:contract": "node ../scripts/verify-supabase-release.mjs"
+    "supabase:contract": "node ../scripts/verify-supabase-release.mjs",
+    "test:contracts:audit": "node tests/components/release-audit-contracts.mjs"
   },
   "browserslist": {
     "production": [
