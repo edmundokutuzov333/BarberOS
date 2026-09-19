@@ -12,6 +12,7 @@ const Entrar = lazy(() => import('./pages/auth/Entrar'));
 const Registar = lazy(() => import('./pages/auth/Registar'));
 const Recuperar = lazy(() => import('./pages/auth/Recuperar'));
 const AppointmentManage = lazy(() => import('./pages/AppointmentManage'));
+const Marcacoes = lazy(() => import('./pages/app/Marcacoes'));
 const PublicBarbershop = lazy(() => import('./pages/PublicBarbershop'));
 const BookingWizard = lazy(() => import('./pages/BookingWizard'));
 const Vaga = lazy(() => import('./pages/Vaga'));
@@ -80,7 +81,7 @@ export default function App() {
               <Route index element={<Dashboard />} />
               <Route path="onboarding" element={<Onboarding />} />
               <Route path="agenda" element={<AgendaPage />} />
-              <Route path="marcacoes" element={<NotYet />} />
+              <Route path="marcacoes" element={<Marcacoes />} />
               <Route path="clientes" element={<Clientes />} />
               <Route path="clientes/:customerId" element={<ClienteDetalhe />} />
               <Route path="lista-espera" element={<ListaEspera />} />
