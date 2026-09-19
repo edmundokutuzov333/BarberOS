@@ -36,6 +36,38 @@ if (frontendPackage.engines?.node !== '22.x') throw new Error('DEPLOY_CONFIG_FRO
 const supabaseConfig = read('supabase/config.toml');
 if (!supabaseConfig.includes('project_id = "alseiinjzwjdiwtvkdzy"')) throw new Error('DEPLOY_CONFIG_SUPABASE_PROJECT_INVALID');
 if (!supabaseConfig.includes('[functions]')) throw new Error('DEPLOY_CONFIG_SUPABASE_FUNCTIONS_CONFIG_MISSING');
+const supabaseWorkflow = read('.github/workflows/deploy-supabase.yml');
+if (!supabaseWorkflow.includes('supabase db push --dry-run')) throw new Error('DEPLOY_SUPABASE_DRY_RUN_MISSING');
+if (!supabaseWorkflow.includes('supabase db push --project-ref')) throw new Error('DEPLOY_SUPABASE_PUSH_MISSING');
+if (!supabaseWorkflow.includes('supabase functions deploy')) throw new Error('DEPLOY_SUPABASE_FUNCTION_DEPLOY_MISSING');
+
+const vercelWorkflow = read('.github/workflows/deploy-vercel.yml');
+for (const required of [
+  'vercel@latest pull',
+  'vercel@latest build',
+  'vercel@latest deploy --prebuilt --prod',
+  'barberos-vercel-production',
+]) {
+  if (!vercelWorkflow.includes(required)) throw new Error('DEPLOY_VERCEL_CONTRACT_MISSING:' + required);
+}
+
+const rollbackWorkflow = read('.github/workflows/rollback-vercel.yml');
+if (!rollbackWorkflow.includes('vercel@latest rollback')) throw new Error('DEPLOY_ROLLBACK_CONTRACT_MISSING');
+
+const expectedFunctions = [
+  'notify-dispatch',
+  'payments-configure',
+  'payments-initiate',
+  'payments-status',
+  'payments-webhook',
+  'payments-reconcile',
+  'booking-create',
+];
+for (const fn of expectedFunctions) {
+  if (!fs.existsSync(path.join(root, 'supabase', 'functions', fn, 'index.ts'))) {
+    throw new Error('DEPLOY_FUNCTION_SOURCE_MISSING:' + fn);
+  }
+}
 
 for (const [key, value] of Object.entries(process.env)) {
   if (!key.startsWith('VITE_')) continue;
