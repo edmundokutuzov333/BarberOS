@@ -44,7 +44,7 @@ jobs:
       - name: Install dependencies
         run: corepack yarn install --frozen-lockfile
       - name: Accessibility audit
-        run: yarn a11y:phase21
+        run: corepack yarn a11y:phase21
       - name: Typecheck
         run: corepack yarn typecheck
       - name: Production build
