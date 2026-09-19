@@ -5,6 +5,8 @@ on:
     paths:
       - "frontend/**"
       - ".github/workflows/frontend-ci.yml"
+      - "package.json"
+      - ".nvmrc"
   push:
     branches:
       - main
@@ -12,6 +14,8 @@ on:
     paths:
       - "frontend/**"
       - ".github/workflows/frontend-ci.yml"
+      - "package.json"
+      - ".nvmrc"
 
 jobs:
   frontend:
