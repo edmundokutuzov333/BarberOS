@@ -9,6 +9,8 @@ on:
       - "supabase/tests/phase25_*"
       - "docs/PHASE25-PERFORMANCE.md"
       - ".github/workflows/phase25-performance.yml"
+      - "package.json"
+      - ".nvmrc"
   push:
     branches:
       - main
@@ -20,6 +22,8 @@ on:
       - "supabase/tests/phase25_*"
       - "docs/PHASE25-PERFORMANCE.md"
       - ".github/workflows/phase25-performance.yml"
+      - "package.json"
+      - ".nvmrc"
 
 jobs:
   build-budget:
