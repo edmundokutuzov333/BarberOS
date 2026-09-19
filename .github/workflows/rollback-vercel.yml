@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       deployment:
-        description: "Deployment URL or ID. Leave empty to roll back current production to the previous deployment."
+        description: "Deployment URL or ID. Leave empty for the previous production deployment."
         required: false
         type: string
 
@@ -18,19 +18,34 @@ concurrency:
 jobs:
   rollback:
     name: Roll back production
-    if: ${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != '' }}
     runs-on: ubuntu-latest
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      BARBEROS_PUBLIC_URL: ${{ secrets.BARBEROS_PUBLIC_URL }}
     steps:
+      - id: credentials
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.credentials.outputs.enabled == 'true'
       - uses: actions/setup-node@v4
+        if: steps.credentials.outputs.enabled == 'true'
         with:
           node-version: 22
+
       - name: Roll back production
+        if: steps.credentials.outputs.enabled == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -41,5 +56,13 @@ jobs:
             npx --yes vercel@latest rollback --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID" --yes
           fi
           npx --yes vercel@latest rollback status --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"
+
       - name: Verify service after rollback
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          BARBEROS_PUBLIC_URL: ${{ secrets.BARBEROS_PUBLIC_URL }}
         run: node scripts/verify-production.mjs
+
+      - name: Credentials not configured
+        if: steps.credentials.outputs.enabled != 'true'
+        run: echo "SKIP | Vercel rollback credentials are not configured in GitHub Actions."
