@@ -29,6 +29,8 @@ jobs:
       VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
     steps:
       - uses: actions/checkout@v4
+      - name: Repository secret scan
+        run: node scripts/scan-repository-secrets.mjs
       - uses: actions/setup-node@v4
         with:
           node-version: 22
