@@ -1,0 +1,45 @@
+name: BarberOS Phase 26 Deployment Contract
+
+on:
+  pull_request:
+    paths:
+      - "frontend/**"
+      - "supabase/**"
+      - "scripts/validate-deployment-config.mjs"
+      - "scripts/verify-supabase-release.mjs"
+      - "scripts/scan-repository-secrets.mjs"
+      - "vercel.json"
+      - ".nvmrc"
+      - ".github/workflows/deploy-*.yml"
+      - ".github/workflows/rollback-vercel.yml"
+      - ".github/workflows/phase26-deployment-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: Deployment contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repository secret scan
+        run: node scripts/scan-repository-secrets.mjs
+      - name: Deployment configuration contract
+        run: node scripts/validate-deployment-config.mjs
+      - name: Supabase release contract
+        run: node scripts/verify-supabase-release.mjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - run: corepack enable
+      - working-directory: frontend
+        run: yarn install --frozen-lockfile
+      - working-directory: frontend
+        run: yarn build
+      - working-directory: frontend
+        run: yarn perf:budget
+      - working-directory: frontend
+        run: yarn typecheck
