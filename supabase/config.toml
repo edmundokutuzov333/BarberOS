@@ -11,3 +11,24 @@ port = 54323
 
 [functions]
 enabled = true
+
+[functions.notify-dispatch]
+verify_jwt = false
+
+[functions.payments-configure]
+verify_jwt = true
+
+[functions.payments-initiate]
+verify_jwt = false
+
+[functions.payments-status]
+verify_jwt = false
+
+[functions.payments-webhook]
+verify_jwt = false
+
+[functions.payments-reconcile]
+verify_jwt = false
+
+[functions.booking-create]
+verify_jwt = false
