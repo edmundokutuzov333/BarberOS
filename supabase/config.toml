@@ -1,0 +1,13 @@
+project_id = "alseiinjzwjdiwtvkdzy"
+
+[api]
+enabled = true
+
+[db]
+port = 54322
+
+[studio]
+port = 54323
+
+[functions]
+enabled = true
