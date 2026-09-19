@@ -10,6 +10,7 @@ on:
       - "scripts/validate-deployment-config.mjs"
       - "scripts/verify-production.mjs"
       - ".github/workflows/deploy-vercel.yml"
+      - "package.json"
   workflow_dispatch:
 
 permissions:
