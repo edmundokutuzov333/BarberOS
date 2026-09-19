@@ -1,0 +1,45 @@
+name: BarberOS Vercel Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment:
+        description: "Deployment URL or ID. Leave empty to roll back current production to the previous deployment."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: barberos-vercel-rollback
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    name: Roll back production
+    if: ${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != '' }}
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      BARBEROS_PUBLIC_URL: ${{ secrets.BARBEROS_PUBLIC_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Roll back production
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="${{ inputs.deployment }}"
+          if [ -n "$target" ]; then
+            npx --yes vercel@latest rollback "$target" --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID" --yes
+          else
+            npx --yes vercel@latest rollback --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID" --yes
+          fi
+          npx --yes vercel@latest rollback status --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"
+      - name: Verify service after rollback
+        run: node scripts/verify-production.mjs
