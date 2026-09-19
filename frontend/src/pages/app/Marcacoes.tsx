@@ -145,9 +145,9 @@ export default function Marcacoes() {
 
         {appointmentsQuery.isLoading ? (
           <div className="space-y-3">
-            <Skeleton testId="marcacoes-loading-1" className="h-28" lines={4} />
-            <Skeleton testId="marcacoes-loading-2" className="h-28" lines={4} />
-            <Skeleton testId="marcacoes-loading-3" className="h-28" lines={4} />
+            <Skeleton className="h-28" lines={4} />
+            <Skeleton className="h-28" lines={4} />
+            <Skeleton className="h-28" lines={4} />
           </div>
         ) : appointmentsQuery.error ? (
           <ErrorState message={humanError(appointmentsQuery.error)} onRetry={() => appointmentsQuery.refetch()} />
