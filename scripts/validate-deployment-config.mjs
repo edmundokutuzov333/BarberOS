@@ -10,10 +10,10 @@ function read(file) {
 
 const vercel = JSON.parse(read('vercel.json'));
 if (vercel.outputDirectory !== 'frontend/dist') throw new Error('DEPLOY_CONFIG_OUTPUT_DIRECTORY_INVALID');
-if (!String(vercel.buildCommand || '').includes('frontend') || !String(vercel.buildCommand || '').includes('yarn build')) {
+if (!String(vercel.buildCommand || '').includes('corepack yarn --cwd frontend build')) {
   throw new Error('DEPLOY_CONFIG_BUILD_COMMAND_INVALID');
 }
-if (!String(vercel.installCommand || '').includes('yarn install --frozen-lockfile')) {
+if (!String(vercel.installCommand || '').includes('corepack yarn --cwd frontend install --frozen-lockfile')) {
   throw new Error('DEPLOY_CONFIG_INSTALL_COMMAND_INVALID');
 }
 if (!Array.isArray(vercel.rewrites) || !vercel.rewrites.some((r) => r.source === '/(.*)' && r.destination === '/index.html')) {
@@ -27,6 +27,12 @@ if (!vercel.headers.some((h) => h.source === '/assets/(.*)' && h.headers?.some((
 }
 
 if (read('.nvmrc').trim() !== '22') throw new Error('DEPLOY_CONFIG_NODE_VERSION_INVALID');
+
+const rootPackage = JSON.parse(read('package.json'));
+if (!String(rootPackage.packageManager || '').startsWith('yarn@1.22.22')) {
+  throw new Error('DEPLOY_CONFIG_ROOT_PACKAGE_MANAGER_INVALID');
+}
+if (rootPackage.engines?.node !== '22.x') throw new Error('DEPLOY_CONFIG_ROOT_NODE_ENGINE_INVALID');
 
 const frontendPackage = JSON.parse(read('frontend/package.json'));
 if (!String(frontendPackage.packageManager || '').startsWith('yarn@1.22.22')) {
