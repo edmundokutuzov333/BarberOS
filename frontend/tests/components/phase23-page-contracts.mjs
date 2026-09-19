@@ -19,6 +19,15 @@ const tests = [
     assert.match(source, /booking-summary/);
     assert.match(source, /searchParams\.get\('service'\)/);
   }],
+  ['Appointments page is wired to the real agenda contract', () => {
+    const source = read('src/pages/app/Marcacoes.tsx');
+    assert.match(source, /useAgendaAppointments\(/);
+    assert.match(source, /useAppointmentAction\(/);
+    assert.match(source, /marcacoes-search-input/);
+    assert.match(source, /marcacoes-status-select/);
+    assert.match(source, /marcacao-confirm-/);
+    assert.match(source, /marcacao-cancel-/);
+  }],
   ['Agenda is wired to realtime, schedule and appointment actions', () => {
     const source = read('src/pages/app/Agenda.tsx');
     assert.match(source, /useAgendaRealtime\(/);
