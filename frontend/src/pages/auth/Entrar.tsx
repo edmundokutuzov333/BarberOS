@@ -10,7 +10,7 @@ import { humanError } from '@/lib/utils';
 export function AuthCard({ title, subtitle, children, footer, testId }: { title: string; subtitle: string; children: React.ReactNode; footer: React.ReactNode; testId: string }) {
   return (
     <Page testId={testId} className="min-h-screen flex flex-col">
-      <header className="h-20 px-5 sm:px-8 flex items-center"><Link to="/" aria-label="Início"><Brand /></Link></header>
+      <header className="h-20 px-5 sm:px-8 flex items-center"><Link to="/"><Brand /></Link></header>
       <div className="flex-1 grid place-items-center px-4 pb-16">
         <div className="glass w-full max-w-md p-7 sm:p-9">
           <h1 className="t-title">{title}</h1>

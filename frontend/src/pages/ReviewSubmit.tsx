@@ -56,7 +56,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen px-5 py-8 sm:px-8">
       <header className="max-w-3xl mx-auto h-16 flex items-center">
-        <Link to="/" aria-label="Início"><Brand /></Link>
+        <Link to="/"><Brand /></Link>
       </header>
       <main className="max-w-2xl mx-auto pt-10 pb-16">{children}</main>
     </div>

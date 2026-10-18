@@ -27,3 +27,7 @@ __pycache__/
 # Test / local reports
 .coverage
 coverage/
+
+# Playwright reports
+frontend/test-results/
+frontend/playwright-report/

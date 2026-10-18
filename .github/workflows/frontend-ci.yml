@@ -4,6 +4,10 @@ on:
   pull_request:
     paths:
       - "frontend/**"
+      - "scripts/check-performance-budget.mjs"
+      - "scripts/verify-supabase-release.mjs"
+      - "docs/TESTING.md"
+      - ".gitignore"
       - ".github/workflows/frontend-ci.yml"
       - "package.json"
       - ".nvmrc"
@@ -13,6 +17,10 @@ on:
       - "phase-*"
     paths:
       - "frontend/**"
+      - "scripts/check-performance-budget.mjs"
+      - "scripts/verify-supabase-release.mjs"
+      - "docs/TESTING.md"
+      - ".gitignore"
       - ".github/workflows/frontend-ci.yml"
       - "package.json"
       - ".nvmrc"
@@ -47,4 +55,16 @@ jobs:
         run: corepack yarn typecheck
 
       - name: Production build
+        env:
+          VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
         run: corepack yarn build
+
+      - name: Install Playwright Chromium and Linux dependencies
+        run: corepack yarn playwright install --with-deps chromium
+
+      - name: Browser smoke and serious/critical accessibility tests (desktop and mobile)
+        run: corepack yarn test:e2e:smoke
+
+      - name: Production asset budget
+        run: corepack yarn perf:budget

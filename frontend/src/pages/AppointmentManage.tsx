@@ -134,7 +134,7 @@ export default function AppointmentManage() {
   if (query.error || !data) {
     return (
       <div className="min-h-screen px-5 py-8 sm:px-8">
-        <header className="max-w-3xl mx-auto h-16 flex items-center"><Link to="/" aria-label="Início"><Brand /></Link></header>
+        <header className="max-w-3xl mx-auto h-16 flex items-center"><Link to="/"><Brand /></Link></header>
         <main className="max-w-3xl mx-auto pt-14">
           <ErrorState message={humanError(query.error ?? new Error('APPOINTMENT_NOT_FOUND'))} onRetry={() => query.refetch()} />
           <p className="t-body text-ink-mid mt-4 text-center">Use o link original recebido da barbearia ou peça um novo link.</p>
@@ -150,7 +150,7 @@ export default function AppointmentManage() {
   return (
     <div className="min-h-screen px-5 py-8 sm:px-8">
       <header className="max-w-3xl mx-auto h-16 flex items-center justify-between gap-4">
-        <Link to="/" aria-label="Início"><Brand /></Link>
+        <Link to="/"><Brand /></Link>
         <span className="t-label text-ink-mid">Gestão da marcação</span>
       </header>
 

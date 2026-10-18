@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = process.cwd();
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const migrationDir = path.join(root, 'supabase', 'migrations');
 const names = fs.readdirSync(migrationDir).filter((n) => n.endsWith('.sql')).sort();
 

@@ -75,7 +75,9 @@
     "test:contracts:phase25": "node tests/components/phase25-performance-contracts.mjs",
     "perf:budget": "node ../scripts/check-performance-budget.mjs",
     "deploy:contract": "node ../scripts/validate-deployment-config.mjs",
-    "supabase:contract": "node ../scripts/verify-supabase-release.mjs"
+    "supabase:contract": "node ../scripts/verify-supabase-release.mjs",
+    "test:e2e:smoke": "playwright test tests/e2e/local-smoke.spec.mjs",
+    "test:e2e": "playwright test"
   },
   "browserslist": {
     "production": [
@@ -107,7 +109,10 @@
     "postcss": "8.5.10",
     "tailwindcss": "3.4.17",
     "typescript": "^7.0.2",
-    "vite": "6"
+    "vite": "6",
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.64.1",
+    "playwright-core": "1.64.1"
   },
   "resolutions": {
     "react-router": "7.15.1",

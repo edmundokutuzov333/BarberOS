@@ -1,8 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { gzipSync, brotliCompressSync } from 'node:zlib';
 
-const dist = path.resolve(process.cwd(), 'dist');
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const dist = path.join(repoRoot, 'frontend', 'dist');
 const manifestCandidates = [
   path.join(dist, '.vite', 'manifest.json'),
   path.join(dist, 'manifest.json'),

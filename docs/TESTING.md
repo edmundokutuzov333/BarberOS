@@ -62,3 +62,17 @@ A FASE 25 adiciona budgets de assets, code splitting por rota e benchmark públi
 - `supabase/tests/phase25_public_rpc_benchmark.sql` mede o RPC público em modo read-only.
 
 A aceitação de performance não executa mutações contra produção.
+
+
+## Browser smoke tests (desktop + mobile)
+
+Install the locked dependencies with Node 22, then install the Chromium runtime once:
+
+```bash
+cd frontend
+corepack yarn install --frozen-lockfile
+corepack yarn playwright install --with-deps chromium
+corepack yarn test:e2e:smoke
+```
+
+The smoke suite starts a local Vite Preview server automatically when `BARBEROS_E2E_BASE_URL` is not set. It checks the landing, login and password-recovery routes, uncaught browser errors, serious or critical WCAG 2.1 A/AA issues, the unauthenticated redirect for the private agenda, and login overflow on a mobile viewport. These tests do not create or mutate bookings, customers, or production records. Set `BARBEROS_E2E_BASE_URL` only when intentionally testing a separate running environment. The wider `yarn test:e2e` suite includes tests that require a dedicated test tenant and credentials; follow each test's environment guard and never point mutating concurrency/full-lifecycle tests at production.
