@@ -60,7 +60,7 @@ const tests = [
     const css = read('src/index.css');
     assert.match(atmosphere, /variant !== 'hero'/);
     assert.match(css, /barber-atmosphere--showcase \.barber-atmosphere__slats--showcase/);
-    assert.ok(css.includes('rgba(var(--brand-accent-rgb), .30)'));
+    assert.ok(css.includes('rgba(var(--brand-accent-rgb), .22)'));
     assert.match(css, /barber-atmosphere--ambient \.barber-atmosphere__slats--static/);
   }],
   ['every route inherits one centrally managed atmosphere', () => {
