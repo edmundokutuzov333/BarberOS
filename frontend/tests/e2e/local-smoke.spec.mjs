@@ -2,10 +2,10 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 const publicRoutes = [
-  { path: '/', heading: /A barbearia controla o dia/i, label: 'landing page', atmosphere: true },
-  { path: '/entrar', heading: /^Entrar$/i, label: 'login page', atmosphere: true },
-  { path: '/recuperar', heading: /Recuperar palavra-passe/i, label: 'password recovery page', atmosphere: true },
-  { path: '/barbearia/oryon', heading: /^Barbearia Oryon$/i, label: 'public demonstration page', atmosphere: true },
+  { path: '/', heading: /A barbearia controla o dia/i, label: 'landing page', atmosphere: true, atmosphereVariant: 'hero' },
+  { path: '/entrar', heading: /^Entrar$/i, label: 'login page', atmosphere: true, atmosphereVariant: 'quiet' },
+  { path: '/recuperar', heading: /Recuperar palavra-passe/i, label: 'password recovery page', atmosphere: true, atmosphereVariant: 'quiet' },
+  { path: '/barbearia/oryon', heading: /^Barbearia Oryon$/i, label: 'public demonstration page', atmosphere: true, atmosphereVariant: 'showcase' },
 ];
 
 test.describe('BarberOS local production-safe smoke tests', () => {
@@ -18,8 +18,17 @@ test.describe('BarberOS local production-safe smoke tests', () => {
       await expect(page.locator('h1:visible').first()).toBeVisible();
       await expect(page.locator('h1:visible').first()).toContainText(route.heading);
       if (route.atmosphere) {
-        await expect(page.getByTestId('barber-atmosphere')).toHaveCount(1);
-        await expect(page.getByTestId('barber-atmosphere')).toHaveAttribute('aria-hidden', 'true');
+        const atmosphere = page.getByTestId('barber-atmosphere');
+        await expect(atmosphere).toHaveCount(1);
+        await expect(atmosphere).toHaveAttribute('aria-hidden', 'true');
+        await expect(atmosphere).toHaveClass(new RegExp(`barber-atmosphere--${route.atmosphereVariant}`));
+        await expect(page.locator('html')).toHaveAttribute(
+          'data-barberos-surface',
+          route.path === '/' ? 'landing' : 'platform',
+        );
+        if (route.atmosphereVariant === 'showcase') {
+          await expect(page.locator('.barber-atmosphere--showcase .micro-slats')).toHaveCount(1);
+        }
       }
       expect(pageErrors, `Uncaught browser errors on ${route.path}`).toEqual([]);
     });

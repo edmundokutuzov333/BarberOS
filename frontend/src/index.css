@@ -385,6 +385,16 @@ textarea.field{
 }
 .barber-atmosphere--hero .barber-atmosphere__slats { opacity: .33; }
 .barber-atmosphere--showcase .barber-atmosphere__slats { opacity: .38; }
+.barber-atmosphere--showcase .barber-atmosphere__slats--showcase {
+  background: repeating-linear-gradient(
+    116deg,
+    transparent 0,
+    transparent 54px,
+    rgba(var(--brand-accent-rgb), .13) 55px,
+    transparent 56px,
+    transparent 105px
+  );
+}
 .barber-atmosphere--showcase .barber-atmosphere__slats--static { opacity: .42; }
 .barber-atmosphere--ambient .barber-atmosphere__slats--static { opacity: .32; }
 .barber-atmosphere--quiet .barber-atmosphere__slats { opacity: .13; }

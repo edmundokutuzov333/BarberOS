@@ -16,6 +16,7 @@ export function MobileDock() {
   const navItems = navForRole(role);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const moreRef = useRef<HTMLButtonElement | null>(null);
+  const wasOpenRef = useRef(false);
 
   const dockItems = navItems.filter((n) => DOCK.includes(n.to));
   const rest = navItems.filter((n) => !DOCK.includes(n.to));
@@ -36,7 +37,8 @@ export function MobileDock() {
   }, [open]);
 
   useEffect(() => {
-    if (!open) moreRef.current?.focus();
+    if (wasOpenRef.current && !open) moreRef.current?.focus();
+    wasOpenRef.current = open;
   }, [open]);
 
   return (

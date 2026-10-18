@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { useReducedMotion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 const MicroSlats = lazy(() => import('./MicroSlats'));
 type BarberAtmosphereProps = { variant?: 'ambient' | 'hero' | 'quiet' | 'showcase' };
@@ -23,6 +24,8 @@ function StraightRazorArtwork() {
   </svg>;
 }
 export function BarberAtmosphere({ variant = 'ambient' }: BarberAtmosphereProps) {
+  const reduceMotion = useReducedMotion();
+  const usesFluidBackground = variant === 'hero' || variant === 'showcase';
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -33,15 +36,22 @@ export function BarberAtmosphere({ variant = 'ambient' }: BarberAtmosphereProps)
 
   return createPortal(
     <div className={`barber-atmosphere barber-atmosphere--${variant}`} data-testid="barber-atmosphere" aria-hidden="true">
-      {variant !== 'hero' ? (
-        <div className={`barber-atmosphere__slats barber-atmosphere__slats--static barber-atmosphere__slats--${variant}`} />
+      {usesFluidBackground ? (
+        <div className={`barber-atmosphere__slats barber-atmosphere__slats--${variant}`}>
+          <Suspense fallback={null}>
+            <MicroSlats preset="swell" color="#b9964f" glintColor="#dfc27b" backgroundColor="transparent"
+              slatWidth={10} slatHeight={25} gap={4} roundness={0.75}
+              speed={variant === 'hero' ? 0.16 : 0.12}
+              interactive={variant === 'hero'}
+              cursorStrength={variant === 'hero' ? 0.75 : 0}
+              cursorSize={42}
+              swirl={0} trail={variant === 'hero' ? 0.8 : 0} lean={0}
+              intro={variant === 'hero'} introDuration={1.8}
+              paused={variant === 'showcase' && Boolean(reduceMotion)} />
+          </Suspense>
+        </div>
       ) : (
-        <div className="barber-atmosphere__slats"><Suspense fallback={null}>
-          <MicroSlats preset="swell" color="#b9964f" glintColor="#dfc27b" backgroundColor="transparent"
-            slatWidth={10} slatHeight={25} gap={4} roundness={0.75} speed={0.16}
-            interactive cursorStrength={0.75} cursorSize={42}
-            swirl={0} trail={0.8} lean={0} intro introDuration={1.8} />
-        </Suspense></div>
+        <div className={`barber-atmosphere__slats barber-atmosphere__slats--static barber-atmosphere__slats--${variant}`} />
       )}
       <div className="barber-atmosphere__tools"><ShearsArtwork /><StraightRazorArtwork /></div>
     </div>,

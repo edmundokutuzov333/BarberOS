@@ -40,13 +40,14 @@ const tests = [
     assert.doesNotMatch(css, /@import\s+url\(['"]?https?:\/\//i);
     assert.match(css, /font-family:\s*system-ui/i);
   }],
-  ['only the landing uses WebGL and reacts to the cursor', () => {
+  ['landing and public showcase use MicroSlats; only the landing reacts to the cursor', () => {
     const source = read('src/components/background/BarberAtmosphere.tsx');
-    assert.match(source, /variant !== 'hero'/);
-    assert.match(source, /barber-atmosphere__slats--static barber-atmosphere__slats--\$\{variant\}/);
-    assert.match(source, /<MicroSlats preset="swell"/);
-    assert.match(source, /interactive cursorStrength=\{0\.75\} cursorSize=\{42\}/);
-    assert.doesNotMatch(source, /interactive=\{variant === 'hero'\}/);
+    assert.ok(source.includes("usesFluidBackground = variant === 'hero' || variant === 'showcase'"));
+    assert.ok(source.includes('<MicroSlats preset="swell"'));
+    assert.ok(source.includes("interactive={variant === 'hero'}"));
+    assert.ok(source.includes("cursorStrength={variant === 'hero' ? 0.75 : 0}"));
+    assert.ok(source.includes("speed={variant === 'hero' ? 0.16 : 0.12}"));
+    assert.ok(source.includes("paused={variant === 'showcase' && Boolean(reduceMotion)}"));
   }],
   ['public shop uses the showcase background while the landing remains cursor-reactive', () => {
     const app = read('src/App.tsx');
@@ -55,8 +56,8 @@ const tests = [
     assert.match(app, /isLanding \? 'hero' : isPublicShop \? 'showcase'/);
     assert.match(app, /setAttribute\('data-barberos-surface', isLanding \? 'landing' : 'platform'\)/);
     const css = read('src/index.css');
-    assert.match(atmosphere, /variant !== 'hero'/);
-    assert.match(css, /barber-atmosphere--showcase \.barber-atmosphere__slats--static/);
+    assert.ok(atmosphere.includes("usesFluidBackground = variant === 'hero' || variant === 'showcase'"));
+    assert.match(css, /barber-atmosphere--showcase \.barber-atmosphere__slats--showcase/);\n    assert.match(css, /rgba\\(var\\(--brand-accent-rgb\\), \.13\\)/);
     assert.match(css, /barber-atmosphere--ambient \.barber-atmosphere__slats--static/);
   }],
   ['every route inherits one centrally managed atmosphere', () => {
@@ -111,6 +112,12 @@ const tests = [
     assert.match(migration, /where slug = 'oryon'/i);
     assert.match(migration, /theme_key = 'noir-brass'/i);
     assert.match(migration, /to_jsonb\(new\)/i);
+  }],
+  ['mobile dock does not steal focus on mount and restores focus only after closing', () => {
+    const source = read('src/components/layout/MobileDock.tsx');
+    assert.ok(source.includes('const wasOpenRef = useRef(false)'));
+    assert.ok(source.includes('if (wasOpenRef.current && !open) moreRef.current?.focus()'));
+    assert.ok(source.includes('wasOpenRef.current = open'));
   }],
   ['theme picker cleanup follows the last saved theme instead of a stale closure', () => {
     const source = read('src/components/config/ShopForms.tsx');
