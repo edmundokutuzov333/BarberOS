@@ -375,6 +375,9 @@ textarea.field{
 }
 .barber-atmosphere--hero .barber-atmosphere__slats { opacity: .33; }
 .barber-atmosphere--quiet .barber-atmosphere__slats { opacity: .13; }
+/* Management keeps the same BarberOS motif, with a quieter contrast than the landing. */
+.barber-atmosphere--ambient .barber-atmosphere__slats { opacity: .11; }
+.barber-atmosphere--ambient .barber-tool { opacity: .18; }
 .barber-atmosphere .micro-slats { position: absolute; inset: 0; }
 .barber-atmosphere .micro-slats canvas { display: block; width: 100%; height: 100%; }
 .barber-atmosphere__tools { position: absolute; inset: 0; overflow: hidden; }
@@ -420,6 +423,7 @@ textarea.field{
   .barber-atmosphere__slats { opacity: .11; }
   .barber-atmosphere--hero .barber-atmosphere__slats { opacity: .19; }
   .barber-tool { opacity: .12; }
+  .barber-atmosphere--ambient .barber-tool { opacity: .10; }
   .barber-atmosphere--hero .barber-tool--scissors { left: 62%; top: 13%; width: 40vw; opacity: .18; }
   .barber-atmosphere--hero .barber-tool--razor { right: -3%; top: 59%; opacity: .10; }
 }

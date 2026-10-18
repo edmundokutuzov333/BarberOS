@@ -6,7 +6,7 @@ The shared design system is now noir with antique brass: near-black canvas, smok
 
 ## Ambient motion
 
-`BarberAtmosphere.tsx` layers the open-source React Bits MicroSlats canvas with line-art scissors and a straight razor. Scissor blades open and close gently, while the razor has a slow stroke animation. The entire layer is pointer-transparent and `aria-hidden`, and its intensity drops on smaller viewports. MicroSlats is lazy-loaded and non-interactive. On task-focused public/shop/booking surfaces, the slat field draws once and pauses to avoid a continuously running WebGL animation; the scissors and razor retain very subtle CSS movement. The fluid simulation is skipped when interactive mode is disabled, and CSS tool animations are disabled for reduced-motion preferences.
+`App.tsx` owns one route-aware `BarberAtmosphere` layer, so the landing, authentication, customer links, shop/booking flows, staff workspace, administration, loading states and not-found routes do not drift into separate background implementations. The landing keeps the existing hero treatment and is the only route that enables the MicroSlats pointer/fluid response. Staff and admin pages use the same noir/brass motif at lower intensity so data and text remain the focus. Authentication and token-driven customer pages use the quieter static slat treatment. Scissor and straight-razor line art remains decorative, pointer-transparent and `aria-hidden`; animations respect reduced-motion preferences. The customer shop theme still controls its intended accent colours.
 
 ## Functional contracts kept
 
@@ -23,4 +23,4 @@ The Pro-only `profile-5` block was not copied because it requires a valid Pro li
 
 ## Validation scope
 
-The Playwright smoke suite now asserts that the decorative layer exists and is hidden from assistive technology on the landing, login and password-recovery routes. CI still runs typecheck, build, unit/component contracts, E2E, accessibility and performance gates. This document records the implemented design and automated coverage; it does not claim manual certification of every page/browser/device.
+The route-aware background and its hero-only pointer interaction have static regression contracts in the Phase 25 suite. The smoke suite covers the public landing, login and recovery routes, with typecheck, build, component contracts, E2E, accessibility and asset budgets executed through CI. This is automated coverage, not a claim of manual certification across every page, browser and device.

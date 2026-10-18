@@ -6,12 +6,11 @@ import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { supabase } from '@/lib/supabase';
 import { humanError } from '@/lib/utils';
-import { BarberAtmosphere } from '@/components/background/BarberAtmosphere';
 
 export function AuthCard({ title, subtitle, children, footer, testId }: { title: string; subtitle: string; children: React.ReactNode; footer: React.ReactNode; testId: string }) {
   return (
     <Page testId={testId} className="barber-shell barber-page min-h-screen flex flex-col">
-      <BarberAtmosphere variant="quiet" />
+      
       <header className="auth-header h-20 px-5 sm:px-8 flex items-center"><Link to="/"><Brand /></Link></header>
       <div className="flex-1 grid place-items-center px-4 pb-16">
         <div className="auth-card glass w-full max-w-md p-7 sm:p-9">

@@ -3,7 +3,6 @@ import { ArrowUpRight, QrCode, CalendarClock, BellRing, Check, Scissors } from '
 import { Page } from '@/components/layout/Page';
 import { Brand } from '@/components/ui/Brand';
 import { Button } from '@/components/ui/Button';
-import { BarberAtmosphere } from '@/components/background/BarberAtmosphere';
 import { useAuth } from '@/lib/auth';
 
 const POINTS = [
@@ -16,7 +15,7 @@ export default function Landing() {
   const { user } = useAuth();
   return (
     <Page testId="landing-page" className="barber-shell barber-page landing-page min-h-screen">
-      <BarberAtmosphere variant="hero" />
+      
       <header className="landing-nav max-w-7xl mx-auto px-5 sm:px-8">
         <Link to="/" ><Brand size="md" /></Link>
         <nav className="flex items-center gap-2" aria-label="Navegação principal">

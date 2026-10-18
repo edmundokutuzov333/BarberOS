@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BarberAtmosphere } from './components/background/BarberAtmosphere';
 
 const RequireAuth = lazy(() => import('./components/layout/AppShell').then((m) => ({ default: m.RequireAuth })));
 const AppShell = lazy(() => import('./components/layout/AppShell').then((m) => ({ default: m.AppShell })));
@@ -62,9 +63,20 @@ function RouteLoading() {
 
 
 export default function App() {
+  const { pathname } = useLocation();
+  const atmosphereVariant: 'ambient' | 'hero' | 'quiet' =
+    pathname === '/'
+      ? 'hero'
+      : /^\/(?:entrar|registar|recuperar)(?:\/|$)/.test(pathname) ||
+          /^\/(?:marcacao|vaga|barbearia)(?:\/|$)/.test(pathname)
+        ? 'quiet'
+        : 'ambient';
+
   return (
-    <Suspense fallback={<RouteLoading />}>
-      <Routes>
+    <>
+      <BarberAtmosphere variant={atmosphereVariant} />
+      <Suspense fallback={<RouteLoading />}>
+        <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/entrar" element={<Entrar />} />
         <Route path="/registar" element={<Registar />} />
@@ -115,7 +127,8 @@ export default function App() {
         </Route>
 
         <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Suspense>
+        </Routes>
+      </Suspense>
+    </>
   );
 }

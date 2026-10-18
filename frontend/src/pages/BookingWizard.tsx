@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check, Clock3, Mail, MessageCircle, Scissors, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { BarberAtmosphere } from '@/components/background/BarberAtmosphere';
 import { applyTheme } from '@/themes';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { Field } from '@/components/ui/Field';
@@ -325,7 +324,7 @@ export default function BookingWizard() {
   if (query.isLoading) {
     return (
       <div className="barber-shell min-h-screen px-5 py-6 sm:px-8">
-        <BarberAtmosphere variant="quiet" />
+        
         <div className="max-w-6xl mx-auto"><Skeleton className="h-20" lines={3} /><div className="mt-6 grid lg:grid-cols-[1fr_22rem] gap-6"><Skeleton className="h-[32rem]" lines={8} /><Skeleton className="h-80" lines={7} /></div></div>
       </div>
     );
@@ -333,7 +332,7 @@ export default function BookingWizard() {
 
   if (query.error || !data) {
     return <div className="barber-shell min-h-screen px-5 py-10 grid place-items-center">
-        <BarberAtmosphere variant="quiet" /><div className="w-full max-w-lg"><ErrorState message={humanError(query.error ?? new Error('BARBERSHOP_NOT_FOUND'))} onRetry={() => query.refetch()} /></div></div>;
+        <div className="w-full max-w-lg"><ErrorState message={humanError(query.error ?? new Error('BARBERSHOP_NOT_FOUND'))} onRetry={() => query.refetch()} /></div></div>;
   }
 
   const effectiveStep = !selectableService ? 1 : Math.min(currentStep, start ? 6 : date ? 5 : 4);
@@ -442,7 +441,7 @@ export default function BookingWizard() {
 
   return (
     <div className="barber-shell min-h-screen">
-      <BarberAtmosphere variant="quiet" />
+      
       <header className="max-w-6xl mx-auto px-5 sm:px-8 py-5">
         <StepHeader currentStep={effectiveStep} shopName={data.shop.name} />
       </header>

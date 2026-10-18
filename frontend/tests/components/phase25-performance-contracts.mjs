@@ -33,12 +33,45 @@ const tests = [
     assert.match(css, /content-visibility:auto/);
     assert.match(css, /contain-intrinsic-size/);
   }],
-  ['font stylesheet cannot block the first render', () => {
-    const source = read('index.html');
-    assert.match(source, /rel="preload"/);
-    assert.match(source, /as="style"/);
-    assert.match(source, /onLoad=/);
-    assert.match(source, /<noscript>/);
+  ['public page avoids render-blocking third-party fonts', () => {
+    const html = read('index.html');
+    const css = read('src/index.css');
+    assert.doesNotMatch(html, /fonts\.(?:googleapis|gstatic)\.com/i);
+    assert.doesNotMatch(css, /@import\s+url\(['"]?https?:\/\//i);
+    assert.match(css, /font-family:\s*system-ui/i);
+  }],
+  ['only the landing atmosphere responds to the cursor', () => {
+    const source = read('src/components/background/BarberAtmosphere.tsx');
+    assert.match(source, /interactive=\{variant === 'hero'\}/);
+    assert.match(source, /cursorStrength=\{variant === 'hero' \? 0\.75 : 0\.25\}/);
+    assert.match(source, /cursorSize=\{variant === 'hero' \? 42 : 32\}/);
+  }],
+  ['every route inherits one centrally managed atmosphere', () => {
+    const app = read('src/App.tsx');
+    assert.match(app, /useLocation\(\)/);
+    assert.match(app, /<BarberAtmosphere variant=\{atmosphereVariant\} \/>/);
+    assert.match(app, /\/marcacao/);
+    assert.match(app, /\/vaga/);
+    for (const file of [
+      'src/pages/Landing.tsx',
+      'src/pages/auth/Entrar.tsx',
+      'src/pages/PublicBarbershop.tsx',
+      'src/pages/BookingWizard.tsx',
+      'src/pages/AppointmentManage.tsx',
+      'src/pages/ReviewSubmit.tsx',
+      'src/pages/Vaga.tsx',
+      'src/pages/app/NotYet.tsx',
+      'src/components/layout/AppShell.tsx',
+      'src/components/layout/AdminShell.tsx',
+    ]) {
+      assert.doesNotMatch(read(file), /<BarberAtmosphere/);
+    }
+  }],
+  ['landing hero image remains an explicit high-priority asset', () => {
+    const source = read('src/pages/Landing.tsx');
+    assert.match(source, /images\.pexels\.com\/photos\/17027433/);
+    assert.match(source, /alt="Interior de barbearia com cadeiras e iluminação quente"/);
+    assert.match(source, /fetchPriority="high" decoding="async"/);
   }],
 ];
 
