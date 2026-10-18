@@ -94,6 +94,11 @@ const tests = [
       assert.doesNotMatch(read(file), /<BarberAtmosphere/);
     }
   }],
+  ['management background keeps the static brass slats visible instead of overriding them to 11%', () => {
+    const css = read('src/index.css');
+    assert.ok(css.includes('.barber-atmosphere--ambient .barber-atmosphere__slats--static { opacity: .32; }'));
+    assert.ok(css.includes('.barber-atmosphere--ambient .barber-atmosphere__slats:not(.barber-atmosphere__slats--static) { opacity: .11; }'));
+  }],
   ['brand atmosphere is independent of tenant accent themes', () => {
     const tokens = read('src/styles/tokens.css');
     const css = read('src/index.css');
