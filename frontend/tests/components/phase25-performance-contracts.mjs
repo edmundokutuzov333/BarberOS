@@ -106,6 +106,7 @@ const tests = [
     assert.match(html, /data-theme="noir-brass"/);
     assert.match(migration, /where slug = 'oryon'/i);
     assert.match(migration, /theme_key = 'noir-brass'/i);
+    assert.match(migration, /to_jsonb\(new\)/i);
   }],
   ['theme picker cleanup follows the last saved theme instead of a stale closure', () => {
     const source = read('src/components/config/ShopForms.tsx');
