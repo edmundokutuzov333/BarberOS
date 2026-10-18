@@ -22,12 +22,12 @@ const tests = [
   }],
   ['public bootstrap prefetches shop data early without importing the demo into booking', () => {
     const main = read('src/main.tsx');
-    assert.match(main, /const publicShopMatch = pathname\\.match/);
-    assert.match(main, /const publicBookingMatch = pathname\\.match/);
-    assert.match(main, /qc\\.prefetchQuery/);
-    assert.match(main, /queryKey: \\['public-barbershop', slug\\]/);
-    assert.match(main, /else if \\(publicBookingMatch\\)/);
-    assert.doesNotMatch(main, /pathname\\.startsWith\\('\\/barbearia\\/'\\)/);
+    assert.ok(main.includes('const publicShopMatch = pathname.match'));
+    assert.ok(main.includes('const publicBookingMatch = pathname.match'));
+    assert.ok(main.includes('qc.prefetchQuery'));
+    assert.ok(main.includes("queryKey: ['public-barbershop', slug]"));
+    assert.ok(main.includes('else if (publicBookingMatch)'));
+    assert.ok(!main.includes("pathname.startsWith('/barbearia/')"));
   }],
   ['public images use browser loading primitives deliberately', () => {
     const source = read('src/pages/PublicBarbershop.tsx');
