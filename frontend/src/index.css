@@ -386,26 +386,15 @@ textarea.field{
 .barber-atmosphere--hero .barber-atmosphere__slats { opacity: .33; }
 .barber-atmosphere--showcase .barber-atmosphere__slats { opacity: .38; }
 .barber-atmosphere--showcase .barber-atmosphere__slats--showcase {
-  background:
-    radial-gradient(ellipse at 72% 20%, rgba(var(--brand-accent-rgb), .18), transparent 38%),
-    radial-gradient(ellipse at 24% 78%, rgba(var(--brand-accent-rgb), .09), transparent 42%),
-    repeating-linear-gradient(
-      116deg,
-      transparent 0,
-      transparent 48px,
-      rgba(var(--brand-accent-rgb), .30) 49px,
-      rgba(var(--brand-accent-rgb), .07) 50px,
-      transparent 52px,
-      transparent 100px
-    ),
-    repeating-linear-gradient(
-      64deg,
-      transparent 0,
-      transparent 122px,
-      rgba(255,255,255,.045) 123px,
-      transparent 125px,
-      transparent 246px
-    );
+  background: repeating-linear-gradient(
+    116deg,
+    transparent 0,
+    transparent 48px,
+    rgba(var(--brand-accent-rgb), .22) 49px,
+    rgba(var(--brand-accent-rgb), .07) 50px,
+    transparent 52px,
+    transparent 100px
+  );
 }
 .barber-atmosphere--showcase .barber-atmosphere__slats--static { opacity: .42; }
 .barber-atmosphere--ambient .barber-atmosphere__slats--static { opacity: .32; }

@@ -48,8 +48,8 @@ const tests = [
     assert.ok(!source.includes('interactive={variant ==='));
     const css = read('src/index.css');
     assert.ok(css.includes('.barber-atmosphere--showcase .barber-atmosphere__slats--showcase'));
-    assert.ok(css.includes('rgba(var(--brand-accent-rgb), .30)'));
-    assert.ok(css.includes('radial-gradient(ellipse at 72% 20%'));
+    assert.ok(css.includes('background: repeating-linear-gradient('));
+    assert.ok(css.includes('rgba(var(--brand-accent-rgb), .22)'));
   }],
   ['public shop uses the showcase background while the landing remains cursor-reactive', () => {
     const app = read('src/App.tsx');
