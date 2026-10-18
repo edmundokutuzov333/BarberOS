@@ -25,7 +25,7 @@ export default {
           hover: 'var(--surface-hover)',
         },
       },
-      fontFamily: { sans: ['Geist', 'Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'] },
+      fontFamily: { sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'] },
       backdropBlur: { xs: '2px' },
       borderRadius: { panel: 'var(--radius-panel)', card: 'var(--radius-card)', pill: 'var(--radius-pill)' },
       keyframes: {
