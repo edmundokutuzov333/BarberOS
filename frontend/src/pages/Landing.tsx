@@ -18,7 +18,7 @@ export default function Landing() {
     <Page testId="landing-page" className="barber-shell barber-page landing-page min-h-screen">
       <BarberAtmosphere variant="hero" />
       <header className="landing-nav max-w-7xl mx-auto px-5 sm:px-8">
-        <Link to="/" aria-label="BarberOS início"><Brand size="md" /></Link>
+        <Link to="/" ><Brand size="md" /></Link>
         <nav className="flex items-center gap-2" aria-label="Navegação principal">
           <a className="landing-nav-link hidden sm:inline-flex" href="#funcionalidades">Funcionalidades</a>
           <Link className="landing-nav-link hidden sm:inline-flex" to="/barbearia/oryon">Demonstração</Link>

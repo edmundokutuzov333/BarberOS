@@ -31,7 +31,7 @@ test.describe('BarberOS local production-safe smoke tests', () => {
         .analyze();
       const blocking = results.violations.filter((violation) => ['critical', 'serious'].includes(violation.impact));
       expect(
-        blocking.map(({ id, help, impact, nodes }) => ({ id, help, impact, affectedNodes: nodes.length })),
+        blocking.map(({ id, help, impact, nodes }) => ({ id, help, impact, nodes: nodes.map(({ target, failureSummary }) => ({ target, failureSummary })) })),
         `Serious or critical accessibility violations on ${route.path}`,
       ).toEqual([]);
     });

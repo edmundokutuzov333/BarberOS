@@ -19,20 +19,20 @@ test.describe('BarberOS Phase 25 public performance', () => {
     await client.send('Network.emulateNetworkConditions', FAST_3G);
 
     await page.addInitScript(() => {
-      window.__phase25 = { lcp: 0, cls: 0, inp: 0 };
+      window.__phase25 = { lcp: 0, cls: 0, inp: 0, lcpElement: '', clsEntries: [] };
 
       try {
         new PerformanceObserver((list) => {
           const entries = list.getEntries();
           const last = entries[entries.length - 1];
-          if (last) window.__phase25.lcp = last.startTime;
+          if (last) { window.__phase25.lcp = last.startTime; window.__phase25.lcpElement = last.element?.outerHTML?.slice(0, 280) || ''; }
         }).observe({ type: 'largest-contentful-paint', buffered: true });
       } catch {}
 
       try {
         new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            if (!entry.hadRecentInput) window.__phase25.cls += entry.value;
+            if (!entry.hadRecentInput) { window.__phase25.cls += entry.value; window.__phase25.clsEntries.push({ value: entry.value, sources: (entry.sources || []).map((source) => ({ tag: source.node?.tagName, id: source.node?.id, className: typeof source.node?.className === 'string' ? source.node.className.slice(0, 100) : '', previousRect: source.previousRect, currentRect: source.currentRect })) }); }
           }
         }).observe({ type: 'layout-shift', buffered: true });
       } catch {}
@@ -57,24 +57,11 @@ test.describe('BarberOS Phase 25 public performance', () => {
     await expect(page.getByText('Serviços').first()).toBeVisible();
     await page.waitForTimeout(1200);
 
-    // Keep measurements on the public shop. Prevent route transitions on the already-loaded document,
-    // otherwise the booking screen's layout shift is counted as public-page CLS.
-    await page.evaluate(() => {
-      document.addEventListener('click', (event) => {
-        const link = (event.target instanceof Element) ? event.target.closest('a') : null;
-        if (link) {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-        }
-      }, true);
-    });
-
-    const bookingCta = page.locator('a[href$="/marcar"]').first();
-    if (await bookingCta.count()) {
-      await bookingCta.click();
-    } else {
-      await page.getByRole('heading', { level: 1 }).click();
-    }
+    // Use an inert heading for the input sample so a client-side route
+    // transition cannot reset the PerformanceObserver or contaminate CLS.
+    const safeInteraction = page.locator('main h1').first();
+    await expect(safeInteraction).toBeVisible();
+    await safeInteraction.click();
     await page.waitForTimeout(300);
 
     const metrics = await page.evaluate(() => {
@@ -86,7 +73,9 @@ test.describe('BarberOS Phase 25 public performance', () => {
 
       return {
         lcp: window.__phase25.lcp,
+        lcpElement: window.__phase25.lcpElement,
         cls: window.__phase25.cls,
+        clsEntries: window.__phase25.clsEntries,
         inp: window.__phase25.inp,
         elapsed: performance.now(),
         wallClock: Date.now(),
