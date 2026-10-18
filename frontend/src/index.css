@@ -350,14 +350,81 @@ textarea.field{
 @media(max-width:700px){.landing-nav{height:74px}.landing-hero{grid-template-columns:1fr;gap:2.5rem;padding-top:4rem}.landing-title{font-size:clamp(2.55rem,11vw,4.1rem)}.landing-visual{justify-self:stretch;max-width:none}.landing-visual-frame{min-height:360px;border-bottom-right-radius:56px}.landing-trust-strip{gap:.7rem .85rem;padding-top:1rem;padding-bottom:1rem;font-size:8px}.landing-trust-strip i{display:none}.landing-feature-grid{grid-template-columns:1fr}.landing-feature{min-height:190px}.landing-feature h3{margin-top:1.45rem}.landing-cta-panel{flex-direction:column;align-items:flex-start}.landing-cta-actions{align-items:flex-start}.landing-footer{padding-top:1rem;padding-bottom:1rem;flex-wrap:wrap}.dashboard-public-link{align-items:flex-start;flex-wrap:wrap}.dashboard-public-actions{width:100%}}
 @media(prefers-reduced-motion:reduce){.landing-feature-line{transition:none}}
 
-/* Stable, page-sized geometry for route-transition-safe ambient artwork. */
-.barber-atmosphere--quiet,
-.barber-atmosphere--hero {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: auto;
-  left: 0;
-  width: 100%;
+/* BarberOS ambient layer. Always lives in the viewport and never in layout flow. */
+#root { position: relative; z-index: 1; min-height: 100vh; }
+.barber-shell, .barber-page { position: relative; isolation: isolate; }
+.barber-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100vw;
   height: 100vh;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--accent-soft);
+  background:
+    radial-gradient(ellipse at 78% 8%, rgba(var(--accent-rgb), .045), transparent 34%),
+    radial-gradient(ellipse at 10% 76%, rgba(117, 88, 32, .035), transparent 36%);
+}
+.barber-atmosphere__slats {
+  position: absolute;
+  inset: -3%;
+  opacity: .20;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.98) 0%, rgba(0,0,0,.72) 48%, transparent 92%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.98) 0%, rgba(0,0,0,.72) 48%, transparent 92%);
+}
+.barber-atmosphere--hero .barber-atmosphere__slats { opacity: .33; }
+.barber-atmosphere--quiet .barber-atmosphere__slats { opacity: .13; }
+.barber-atmosphere .micro-slats { position: absolute; inset: 0; }
+.barber-atmosphere .micro-slats canvas { display: block; width: 100%; height: 100%; }
+.barber-atmosphere__tools { position: absolute; inset: 0; overflow: hidden; }
+.barber-tool {
+  position: absolute;
+  width: clamp(120px, 22vw, 300px);
+  height: auto;
+  color: rgba(223, 194, 123, .26);
+  opacity: .34;
+  filter: drop-shadow(0 0 22px rgba(var(--accent-rgb), .035));
+}
+.barber-tool--scissors { left: 4%; top: 18%; transform: rotate(-16deg); animation: barber-tool-float 22s ease-in-out infinite; }
+.barber-tool--razor { right: 3%; top: 57%; width: clamp(100px, 18vw, 240px); transform: rotate(17deg); animation: barber-razor-drift 28s ease-in-out infinite; }
+.barber-tool__blade, .barber-tool__razor-blade { transform-box: view-box; }
+.barber-tool__blade--upper { transform-origin: 78px 107px; animation: barber-shear-upper 3.4s ease-in-out infinite; }
+.barber-tool__blade--lower { transform-origin: 78px 107px; animation: barber-shear-lower 3.4s ease-in-out infinite; }
+.barber-tool__razor-blade { transform-origin: 54px 111px; animation: barber-razor-close 6s ease-in-out infinite; }
+.barber-atmosphere--hero .barber-tool--scissors { left: 66%; top: 22%; width: clamp(140px, 25vw, 340px); opacity: .38; }
+.barber-atmosphere--hero .barber-tool--razor { right: 12%; top: 62%; opacity: .25; }
+.barber-atmosphere--quiet .barber-tool { opacity: .17; }
+@keyframes barber-tool-float { 0%,100% { margin-top: 0; rotate: -2deg; } 50% { margin-top: -14px; rotate: 2deg; } }
+@keyframes barber-razor-drift { 0%,100% { translate: 0 0; rotate: 17deg; } 50% { translate: -8px -12px; rotate: 12deg; } }
+@keyframes barber-shear-upper { 0%,100% { rotate: -2deg; } 48%,58% { rotate: 11deg; } }
+@keyframes barber-shear-lower { 0%,100% { rotate: 2deg; } 48%,58% { rotate: -11deg; } }
+@keyframes barber-razor-close { 0%,100% { rotate: 0deg; } 45%,60% { rotate: -20deg; } }
+
+/* Gold stays controlled in forms, surfaces, and reusable brand marks. */
+.brand-mark {
+  display: inline-flex;
+  width: 2.1em;
+  height: 2.1em;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-soft);
+  border: 1px solid rgba(var(--accent-rgb), .42);
+  border-radius: .65em;
+  background: linear-gradient(145deg, rgba(var(--accent-rgb), .13), rgba(255,255,255,.015));
+  box-shadow: inset 0 1px rgba(255,255,255,.06);
+}
+.brand-mark svg { flex-shrink: 0; }
+
+@media (max-width: 767px) {
+  .barber-atmosphere__slats { opacity: .11; }
+  .barber-atmosphere--hero .barber-atmosphere__slats { opacity: .19; }
+  .barber-tool { opacity: .12; }
+  .barber-atmosphere--hero .barber-tool--scissors { left: 62%; top: 13%; width: 40vw; opacity: .18; }
+  .barber-atmosphere--hero .barber-tool--razor { right: -3%; top: 59%; opacity: .10; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .barber-tool, .barber-tool__blade--upper, .barber-tool__blade--lower, .barber-tool__razor-blade {
+    animation: none !important;
+  }
 }
