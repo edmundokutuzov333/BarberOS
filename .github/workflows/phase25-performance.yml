@@ -68,21 +68,12 @@ jobs:
         run: corepack yarn install --frozen-lockfile
       - working-directory: frontend
         run: corepack yarn build
-      - name: Start production preview
+      - name: Install Playwright Chromium and Linux dependencies
         working-directory: frontend
-        run: nohup yarn preview --host 127.0.0.1 --port 4173 > /tmp/barberos-preview.log 2>&1 &
-      - name: Install Playwright
-        working-directory: frontend
-        run: npm install --no-save --package-lock=false --legacy-peer-deps @playwright/test@1.56.1
-      - name: Install Chromium
-        working-directory: frontend
-        run: npx playwright install --with-deps chromium
+        run: corepack yarn playwright install --with-deps chromium
       - name: Run public performance benchmark
         working-directory: frontend
-        run: npx playwright test tests/e2e/phase25-performance.spec.mjs --config=playwright.config.mjs
-      - name: Preview logs
-        if: failure()
-        run: cat /tmp/barberos-preview.log
+        run: corepack yarn playwright test tests/e2e/phase25-performance.spec.mjs --config=playwright.config.mjs
 
   database-contract:
     name: Phase 25 database performance contract
