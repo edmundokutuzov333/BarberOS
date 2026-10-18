@@ -149,7 +149,8 @@ export default function PublicBarbershop() {
   const bookingReady = bookableServiceCount > 0;
 
   return (
-    <div className="min-h-screen">
+    <div className="barber-shell min-h-screen">
+      <BarberAtmosphere variant="quiet" />
       <header className="max-w-6xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between gap-4">
         <Link to="/" aria-label="BarberOS"><span className="t-card text-ink-hi">BarberOS <span className="font-light text-ink-mid">by Oryon</span></span></Link>
         <div className="flex items-center gap-4">

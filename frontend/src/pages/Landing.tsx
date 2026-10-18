@@ -44,7 +44,7 @@ export default function Landing() {
             </div>
             <div className="landing-proof"><span className="landing-proof-mark"><Check size={13} /></span><span>Feito para operações reais, não para folhas de cálculo.</span></div>
           </div>
-          <div className="landing-visual" aria-label="Interior de uma barbearia">
+          <div className="landing-visual">
             <div className="landing-visual-frame">
               <img src="https://images.pexels.com/photos/17027433/pexels-photo-17027433.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=1100" alt="Interior de barbearia com cadeiras e iluminação quente" className="landing-visual-image" fetchPriority="high" decoding="async" />
               <div className="landing-visual-shade" aria-hidden="true" />
@@ -54,7 +54,7 @@ export default function Landing() {
             <div className="landing-visual-note">
               <span className="landing-note-icon"><Scissors size={17} /></span>
               <div><strong>A agenda da equipa.</strong><span>Organizada, acessível e pronta para marcar.</span></div>
-              <span className="landing-note-status" aria-label="Funcionalidade disponível"><span /></span>
+              <span className="landing-note-status" aria-hidden="true"><span /></span>
             </div>
           </div>
         </section>
