@@ -4,6 +4,7 @@ import AxeBuilder from '@axe-core/playwright';
 const publicRoutes = [
   { path: '/', heading: /A barbearia controla o dia/i, label: 'landing page', atmosphere: true, atmosphereVariant: 'hero' },
   { path: '/entrar', heading: /^Entrar$/i, label: 'login page', atmosphere: true, atmosphereVariant: 'quiet' },
+  { path: '/registar', heading: /^Criar conta$/i, label: 'registration page', atmosphere: true, atmosphereVariant: 'quiet' },
   { path: '/recuperar', heading: /Recuperar palavra-passe/i, label: 'password recovery page', atmosphere: true, atmosphereVariant: 'quiet' },
   { path: '/barbearia/oryon', heading: /^Barbearia Oryon$/i, label: 'public demonstration page', atmosphere: true, atmosphereVariant: 'showcase' },
 ];
@@ -27,7 +28,10 @@ test.describe('BarberOS local production-safe smoke tests', () => {
           route.path === '/' ? 'landing' : 'platform',
         );
         if (route.atmosphereVariant === 'showcase') {
-          await expect(page.locator('.barber-atmosphere--showcase .micro-slats')).toHaveCount(1);
+          const showcaseSlats = page.locator('.barber-atmosphere--showcase .barber-atmosphere__slats--static');
+          await expect(showcaseSlats).toHaveCount(1);
+          await expect(page.locator('.barber-atmosphere--showcase .micro-slats')).toHaveCount(0);
+          await expect(showcaseSlats).toHaveCSS('background-image', /repeating-linear-gradient/);
         }
       }
       expect(pageErrors, `Uncaught browser errors on ${route.path}`).toEqual([]);
@@ -46,6 +50,18 @@ test.describe('BarberOS local production-safe smoke tests', () => {
       ).toEqual([]);
     });
   }
+
+  test('public booking wizard inherits the quiet background and loads the service step', async ({ page }) => {
+    const pageErrors = [];
+    page.on('pageerror', (error) => pageErrors.push(error.message));
+    const response = await page.goto('/barbearia/oryon/marcar');
+    expect(response?.status(), 'public booking route HTTP status').toBeLessThan(400);
+    const atmosphere = page.getByTestId('barber-atmosphere');
+    await expect(atmosphere).toHaveCount(1);
+    await expect(atmosphere).toHaveClass(/barber-atmosphere--quiet/);
+    await expect(page.getByTestId('booking-step-service')).toBeVisible({ timeout: 15_000 });
+    expect(pageErrors, 'Uncaught browser errors on public booking route').toEqual([]);
+  });
 
   test('private agenda redirects an unauthenticated visitor to login', async ({ page }) => {
     await page.goto('/app/agenda');

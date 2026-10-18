@@ -40,14 +40,16 @@ const tests = [
     assert.doesNotMatch(css, /@import\s+url\(['"]?https?:\/\//i);
     assert.match(css, /font-family:\s*system-ui/i);
   }],
-  ['landing and public showcase use MicroSlats; only the landing reacts to the cursor', () => {
+  ['only the landing loads MicroSlats and reacts to the cursor; showcase remains CSS-only', () => {
     const source = read('src/components/background/BarberAtmosphere.tsx');
-    assert.ok(source.includes("usesFluidBackground = variant === 'hero' || variant === 'showcase'"));
+    assert.ok(source.includes("variant !== 'hero' ?"));
     assert.ok(source.includes('<MicroSlats preset="swell"'));
-    assert.ok(source.includes("interactive={variant === 'hero'}"));
-    assert.ok(source.includes("cursorStrength={variant === 'hero' ? 0.75 : 0}"));
-    assert.ok(source.includes("speed={variant === 'hero' ? 0.16 : 0.12}"));
-    assert.ok(source.includes("paused={variant === 'showcase' && Boolean(reduceMotion)}"));
+    assert.ok(source.includes('interactive cursorStrength={0.75} cursorSize={42}'));
+    assert.ok(!source.includes('interactive={variant ==='));
+    const css = read('src/index.css');
+    assert.ok(css.includes('.barber-atmosphere--showcase .barber-atmosphere__slats--showcase'));
+    assert.ok(css.includes('rgba(var(--brand-accent-rgb), .30)'));
+    assert.ok(css.includes('radial-gradient(ellipse at 72% 20%'));
   }],
   ['public shop uses the showcase background while the landing remains cursor-reactive', () => {
     const app = read('src/App.tsx');
@@ -56,9 +58,9 @@ const tests = [
     assert.match(app, /isLanding \? 'hero' : isPublicShop \? 'showcase'/);
     assert.match(app, /setAttribute\('data-barberos-surface', isLanding \? 'landing' : 'platform'\)/);
     const css = read('src/index.css');
-    assert.ok(atmosphere.includes("usesFluidBackground = variant === 'hero' || variant === 'showcase'"));
+    assert.match(atmosphere, /variant !== 'hero'/);
     assert.match(css, /barber-atmosphere--showcase \.barber-atmosphere__slats--showcase/);
-    assert.match(css, /rgba\(var\(--brand-accent-rgb\), \.13\)/);
+    assert.ok(css.includes('rgba(var(--brand-accent-rgb), .30)'));
     assert.match(css, /barber-atmosphere--ambient \.barber-atmosphere__slats--static/);
   }],
   ['every route inherits one centrally managed atmosphere', () => {
