@@ -22,7 +22,6 @@ if (publicShopMatch) {
       staleTime: 60_000,
       gcTime: 5 * 60_000,
       retry: false,
-      refetchOnWindowFocus: false,
     }))
     .catch(() => {});
 } else if (publicBookingMatch) {
