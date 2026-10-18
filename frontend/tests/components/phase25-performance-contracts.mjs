@@ -57,7 +57,8 @@ const tests = [
     assert.match(app, /setAttribute\('data-barberos-surface', isLanding \? 'landing' : 'platform'\)/);
     const css = read('src/index.css');
     assert.ok(atmosphere.includes("usesFluidBackground = variant === 'hero' || variant === 'showcase'"));
-    assert.match(css, /barber-atmosphere--showcase \.barber-atmosphere__slats--showcase/);\n    assert.match(css, /rgba\\(var\\(--brand-accent-rgb\\), \.13\\)/);
+    assert.match(css, /barber-atmosphere--showcase \.barber-atmosphere__slats--showcase/);
+    assert.match(css, /rgba\(var\(--brand-accent-rgb\), \.13\)/);
     assert.match(css, /barber-atmosphere--ambient \.barber-atmosphere__slats--static/);
   }],
   ['every route inherits one centrally managed atmosphere', () => {
