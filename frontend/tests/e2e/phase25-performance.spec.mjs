@@ -57,14 +57,16 @@ test.describe('BarberOS Phase 25 public performance', () => {
     await expect(page.getByText('Serviços').first()).toBeVisible();
     await page.waitForTimeout(1200);
 
-    // Use an inert heading for the input sample so a client-side route
-    // transition cannot reset the PerformanceObserver or contaminate CLS.
-    const safeInteraction = page.locator('main h1').first();
-    await expect(safeInteraction).toBeVisible();
-    await safeInteraction.click();
-    await page.waitForTimeout(300);
+    // Wait for a real LCP candidate before any input. Input can end LCP observation,
+    // so collecting LCP after a click would produce a false zero.
+    await page.waitForFunction(
+      () => Boolean(window.__phase25 && window.__phase25.lcp > 0),
+      undefined,
+      { timeout: 5_000 },
+    ).catch(() => {});
+    await page.waitForTimeout(250);
 
-    const metrics = await page.evaluate(() => {
+    const initialMetrics = await page.evaluate(() => {
       const navigation = performance.getEntriesByType('navigation')[0];
       const resources = performance.getEntriesByType('resource');
       const rpc = resources.filter((entry) =>
@@ -74,9 +76,14 @@ test.describe('BarberOS Phase 25 public performance', () => {
       return {
         lcp: window.__phase25.lcp,
         lcpElement: window.__phase25.lcpElement,
+        lcpEntries: performance.getEntriesByType('largest-contentful-paint').map((entry) => ({
+          startTime: entry.startTime,
+          size: entry.size,
+          element: entry.element?.outerHTML?.slice(0, 280) || '',
+        })),
+        visibilityState: document.visibilityState,
         cls: window.__phase25.cls,
         clsEntries: window.__phase25.clsEntries,
-        inp: window.__phase25.inp,
         elapsed: performance.now(),
         wallClock: Date.now(),
         dcl: navigation?.domContentLoadedEventEnd ?? 0,
@@ -86,6 +93,14 @@ test.describe('BarberOS Phase 25 public performance', () => {
         rpcCount: rpc.length,
       };
     });
+
+    // One non-navigational input sample for INP. LCP/CLS above are captured first.
+    const safeInteraction = page.locator('main h1').first();
+    await expect(safeInteraction).toBeVisible();
+    await safeInteraction.click();
+    await page.waitForTimeout(300);
+    const inp = await page.evaluate(() => window.__phase25.inp);
+    const metrics = { ...initialMetrics, inp };
 
     const wallClockMs = Date.now() - start;
     const report = {

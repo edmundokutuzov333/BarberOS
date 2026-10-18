@@ -7,9 +7,9 @@ import { BarberAtmosphere } from '@/components/background/BarberAtmosphere';
 import { useAuth } from '@/lib/auth';
 
 const POINTS = [
-  { icon: QrCode, index: '01', title: 'Marcação em 40 segundos', body: 'O cliente lê o QR no espelho, escolhe corte, barbeiro e hora. Sem conta, sem app.' },
+  { icon: QrCode, index: '01', title: 'Marcação em poucos passos', body: 'O cliente lê o QR no espelho, escolhe corte, barbeiro e hora. Sem conta, sem app.' },
   { icon: CalendarClock, index: '02', title: 'Agenda que não falha', body: 'Disponibilidade calculada no servidor. Dois clientes nunca ficam no mesmo horário.' },
-  { icon: BellRing, index: '03', title: 'Menos faltas', body: 'Lembretes por WhatsApp, lista de espera automática e sinal opcional por M-Pesa.' },
+  { icon: BellRing, index: '03', title: 'Menos faltas', body: 'Lembretes por WhatsApp e lista de espera automática ajudam a reduzir faltas e aproveitar horários vagos.' },
 ];
 
 export default function Landing() {
