@@ -25,8 +25,8 @@ export function BarberAtmosphere({ variant = 'ambient' }: BarberAtmosphereProps)
   return <div className={`barber-atmosphere barber-atmosphere--${variant}`} data-testid="barber-atmosphere" aria-hidden="true">
     <div className="barber-atmosphere__slats"><Suspense fallback={null}>
       <MicroSlats preset="swell" color="#8e6e31" glintColor="#dfc27b" backgroundColor="transparent"
-        slatWidth={10} slatHeight={25} gap={4} roundness={0.75} speed={0.16} interactive={false}
-        cursorStrength={0.25} cursorSize={32} swirl={0} trail={0.8} lean={0} intro introDuration={1.8} />
+        slatWidth={10} slatHeight={25} gap={4} roundness={0.75} speed={variant === "quiet" ? 0 : 0.16} interactive={false} paused={variant === "quiet"}
+        cursorStrength={0.25} cursorSize={32} swirl={0} trail={0.8} lean={0} intro={variant !== "quiet"} introDuration={1.8} />
     </Suspense></div>
     <div className="barber-atmosphere__tools"><ShearsArtwork /><StraightRazorArtwork /></div>
   </div>;

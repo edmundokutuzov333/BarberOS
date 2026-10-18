@@ -6,7 +6,7 @@ The shared design system is now noir with antique brass: near-black canvas, smok
 
 ## Ambient motion
 
-`BarberAtmosphere.tsx` layers the open-source React Bits MicroSlats canvas with line-art scissors and a straight razor. Scissor blades open and close gently, while the razor has a slow stroke animation. The entire layer is pointer-transparent and `aria-hidden`, and its intensity drops on smaller viewports. MicroSlats is lazy-loaded, low-speed and non-interactive. Its fluid simulation is skipped when interactive mode is disabled, and CSS tool animations are disabled for reduced-motion preferences.
+`BarberAtmosphere.tsx` layers the open-source React Bits MicroSlats canvas with line-art scissors and a straight razor. Scissor blades open and close gently, while the razor has a slow stroke animation. The entire layer is pointer-transparent and `aria-hidden`, and its intensity drops on smaller viewports. MicroSlats is lazy-loaded and non-interactive. On task-focused public/shop/booking surfaces, the slat field draws once and pauses to avoid a continuously running WebGL animation; the scissors and razor retain very subtle CSS movement. The fluid simulation is skipped when interactive mode is disabled, and CSS tool animations are disabled for reduced-motion preferences.
 
 ## Functional contracts kept
 
