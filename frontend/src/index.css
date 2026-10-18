@@ -384,7 +384,9 @@ textarea.field{
   -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.98) 0%, rgba(0,0,0,.72) 48%, transparent 92%);
 }
 .barber-atmosphere--hero .barber-atmosphere__slats { opacity: .33; }
-.barber-atmosphere--showcase .barber-atmosphere__slats { opacity: .25; }
+.barber-atmosphere--showcase .barber-atmosphere__slats { opacity: .38; }
+.barber-atmosphere--showcase .barber-atmosphere__slats--static { opacity: .42; }
+.barber-atmosphere--ambient .barber-atmosphere__slats--static { opacity: .32; }
 .barber-atmosphere--quiet .barber-atmosphere__slats { opacity: .13; }
 /* Management keeps the same BarberOS motif, with a quieter contrast than the landing. */
 .barber-atmosphere--ambient .barber-atmosphere__slats { opacity: .11; }
@@ -434,7 +436,9 @@ textarea.field{
 @media (max-width: 767px) {
   .barber-atmosphere__slats { opacity: .11; }
   .barber-atmosphere--hero .barber-atmosphere__slats { opacity: .19; }
-  .barber-atmosphere--showcase .barber-atmosphere__slats { opacity: .17; }
+  .barber-atmosphere--showcase .barber-atmosphere__slats { opacity: .30; }
+  .barber-atmosphere--showcase .barber-atmosphere__slats--static { opacity: .38; }
+  .barber-atmosphere--ambient .barber-atmosphere__slats--static { opacity: .30; }
   .barber-tool { opacity: .12; }
   .barber-atmosphere--showcase .barber-tool { opacity: .15; }
   .barber-atmosphere--ambient .barber-tool { opacity: .10; }

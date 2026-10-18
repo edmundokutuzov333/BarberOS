@@ -40,11 +40,13 @@ const tests = [
     assert.doesNotMatch(css, /@import\s+url\(['"]?https?:\/\//i);
     assert.match(css, /font-family:\s*system-ui/i);
   }],
-  ['only the landing atmosphere responds to the cursor', () => {
+  ['only the landing uses WebGL and reacts to the cursor', () => {
     const source = read('src/components/background/BarberAtmosphere.tsx');
-    assert.match(source, /interactive=\{variant === 'hero'\}/);
-    assert.match(source, /cursorStrength=\{variant === 'hero' \? 0\.75 : 0\.25\}/);
-    assert.match(source, /cursorSize=\{variant === 'hero' \? 42 : 32\}/);
+    assert.match(source, /variant !== 'hero'/);
+    assert.match(source, /barber-atmosphere__slats--static barber-atmosphere__slats--\$\{variant\}/);
+    assert.match(source, /<MicroSlats preset="swell"/);
+    assert.match(source, /interactive cursorStrength=\{0\.75\} cursorSize=\{42\}/);
+    assert.doesNotMatch(source, /interactive=\{variant === 'hero'\}/);
   }],
   ['public shop uses the showcase background while the landing remains cursor-reactive', () => {
     const app = read('src/App.tsx');

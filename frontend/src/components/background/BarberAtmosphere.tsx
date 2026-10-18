@@ -33,13 +33,13 @@ export function BarberAtmosphere({ variant = 'ambient' }: BarberAtmosphereProps)
 
   return createPortal(
     <div className={`barber-atmosphere barber-atmosphere--${variant}`} data-testid="barber-atmosphere" aria-hidden="true">
-      {variant === 'quiet' ? (
-        <div className="barber-atmosphere__slats barber-atmosphere__slats--static" />
+      {variant !== 'hero' ? (
+        <div className={`barber-atmosphere__slats barber-atmosphere__slats--static barber-atmosphere__slats--${variant}`} />
       ) : (
         <div className="barber-atmosphere__slats"><Suspense fallback={null}>
           <MicroSlats preset="swell" color="#b9964f" glintColor="#dfc27b" backgroundColor="transparent"
             slatWidth={10} slatHeight={25} gap={4} roundness={0.75} speed={0.16}
-            interactive={variant === 'hero'} cursorStrength={variant === 'hero' ? 0.75 : 0.25} cursorSize={variant === 'hero' ? 42 : 32}
+            interactive cursorStrength={0.75} cursorSize={42}
             swirl={0} trail={0.8} lean={0} intro introDuration={1.8} />
         </Suspense></div>
       )}
