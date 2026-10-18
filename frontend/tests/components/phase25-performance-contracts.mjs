@@ -54,8 +54,10 @@ const tests = [
     assert.match(app, /isPublicShop = \/\^/);
     assert.match(app, /isLanding \? 'hero' : isPublicShop \? 'showcase'/);
     assert.match(app, /setAttribute\('data-barberos-surface', isLanding \? 'landing' : 'platform'\)/);
-    assert.match(atmosphere, /variant === 'hero' \? 0\.75 : 0\.25/);
-    assert.match(atmosphere, /variant === 'hero' \? 42 : 32/);
+    const css = read('src/index.css');
+    assert.match(atmosphere, /variant !== 'hero'/);
+    assert.match(css, /barber-atmosphere--showcase \.barber-atmosphere__slats--static/);
+    assert.match(css, /barber-atmosphere--ambient \.barber-atmosphere__slats--static/);
   }],
   ['every route inherits one centrally managed atmosphere', () => {
     const app = read('src/App.tsx');
