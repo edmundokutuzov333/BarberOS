@@ -1,50 +1,12 @@
-:root{
-  /* fundo */
-  --canvas-void:#000000;
-  --canvas-glow-a:#1a102f;
-  --canvas-glow-b:#0c0614;
-
-  /* superfícies */
-  --surface-1:rgba(15,12,22,.65);
-  --surface-2:rgba(22,20,28,.80);
-  --surface-3:rgba(30,26,40,.55);
-  --surface-hover:rgba(255,255,255,.045);
-
-  /* acentos */
-  --accent:#9d7bf5;
-  --accent-soft:#b59eff;
-  --accent-ink:#120c1f;
-  --accent-rgb:157,123,245;
-
-  /* texto */
-  --text-hi:#ffffff;
-  --text-mid:#9b95a8;
-  --text-lo:#5c5765;
-  --text-on-accent:#120c1f;
-
-  /* estrutura */
-  --border-subtle:rgba(255,255,255,.07);
-  --border-default:rgba(255,255,255,.10);
-  --border-strong:rgba(255,255,255,.18);
-  --focus-ring:#b59eff;
-
-  /* estados */
-  --st-pending:#e0b057;
-  --st-warning:#e0b057;
-  --st-confirmed:#b59eff;
-  --st-active:#7bd7f5;
-  --st-info:#7bd7f5;
-  --st-done:#6ee7b7;
-  --st-cancelled:#5c5765;
-  --st-noshow:#f57b9d;
-
-  /* profundidade */
-  --shadow-panel:0 24px 60px -20px rgba(80,40,160,.45);
-  --shadow-float:0 16px 40px -10px rgba(80,40,160,.50);
-  --shadow-accent:0 8px 24px -6px rgba(var(--accent-rgb),.45);
-
-  /* geometria */
-  --radius-panel:1.5rem;
-  --radius-card:1rem;
-  --radius-pill:9999px;
+:root {
+  --canvas-void:#050504; --canvas-glow-a:#171208; --canvas-glow-b:#0c0b08;
+  --surface-1:rgba(14,13,10,.88); --surface-2:rgba(21,19,14,.94); --surface-3:rgba(29,26,18,.72); --surface-hover:rgba(225,194,126,.065);
+  --accent:#b9964f; --accent-soft:#dfc27b; --accent-ink:#171208; --accent-rgb:185,150,79;
+  --text-hi:#f7f4ec; --text-mid:#aca698; --text-lo:#777162; --text-on-accent:#171208;
+  --border-subtle:rgba(235,219,174,.065); --border-default:rgba(235,219,174,.12); --border-strong:rgba(235,219,174,.23); --focus-ring:#dfc27b;
+  --st-pending:#e4b767; --st-warning:#e4b767; --st-confirmed:#dfc27b; --st-active:#7bc7d4; --st-info:#7bc7d4; --st-done:#7bd3a7; --st-cancelled:#777162; --st-noshow:#e88791;
+  --shadow-panel:0 24px 60px -30px rgba(0,0,0,.86),0 1px 0 rgba(235,219,174,.025);
+  --shadow-float:0 18px 48px -16px rgba(0,0,0,.9),0 0 0 1px rgba(223,194,123,.045);
+  --shadow-accent:0 8px 24px -8px rgba(var(--accent-rgb),.2);
+  --radius-panel:1.35rem; --radius-card:.95rem; --radius-pill:9999px;
 }

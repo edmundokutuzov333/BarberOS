@@ -5,6 +5,7 @@ import { AnimatedOutlet } from './AppShell';
 import { Brand } from '@/components/ui/Brand';
 import { cn } from '@/lib/utils';
 import { SkipLink } from '@/components/ui/SkipLink';
+import { BarberAtmosphere } from '@/components/background/BarberAtmosphere';
 
 const ADMIN_NAV = [
   { to: '/admin', label: 'Visão geral', icon: LayoutDashboard, end: true },
@@ -22,7 +23,8 @@ export function AdminShell() {
   const active = ADMIN_NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)));
 
   return (
-    <div className="min-h-screen md:flex md:gap-6 md:p-6">
+    <div className="barber-shell min-h-screen md:flex md:gap-6 md:p-6">
+      <BarberAtmosphere />
       <SkipLink targetId="admin-main-content" />
       <aside
         data-testid="admin-sidebar"

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Instagram, MapPin, MessageCircle, Phone, Scissors, Star } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { BarberAtmosphere } from '@/components/background/BarberAtmosphere';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { buildWhatsAppLink } from '@/lib/calendar';
 import { formatMT, humanError } from '@/lib/utils';
@@ -104,7 +105,8 @@ export default function PublicBarbershop() {
 
   if (query.isLoading) {
     return (
-      <div className="min-h-screen">
+      <div className="barber-shell min-h-screen">
+        <BarberAtmosphere variant="quiet" />
         <header className="max-w-6xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between gap-4">
           <Skeleton className="h-6 w-40" />
           <Skeleton className="h-10 w-28 rounded-2xl" />
@@ -129,7 +131,8 @@ export default function PublicBarbershop() {
 
   if (query.error || !data) {
     return (
-      <div className="min-h-screen px-5 py-10 sm:px-8 grid place-items-center">
+      <div className="barber-shell min-h-screen px-5 py-10 sm:px-8 grid place-items-center">
+        <BarberAtmosphere variant="quiet" />
         <div className="w-full max-w-lg">
           <ErrorState message={humanError(query.error ?? new Error('BARBERSHOP_NOT_FOUND'))} onRetry={() => query.refetch()} />
           <div className="text-center mt-5"><Link to="/"><Button variant="secondary" size="sm" pill>Voltar ao BarberOS</Button></Link></div>

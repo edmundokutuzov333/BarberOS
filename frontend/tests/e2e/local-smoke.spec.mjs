@@ -2,9 +2,9 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 const publicRoutes = [
-  { path: '/', heading: /A barbearia controla o dia/i, label: 'landing page' },
-  { path: '/entrar', heading: /^Entrar$/i, label: 'login page' },
-  { path: '/recuperar', heading: /Recuperar palavra-passe/i, label: 'password recovery page' },
+  { path: '/', heading: /A barbearia controla o dia/i, label: 'landing page', atmosphere: true },
+  { path: '/entrar', heading: /^Entrar$/i, label: 'login page', atmosphere: true },
+  { path: '/recuperar', heading: /Recuperar palavra-passe/i, label: 'password recovery page', atmosphere: true },
 ];
 
 test.describe('BarberOS local production-safe smoke tests', () => {
@@ -16,6 +16,10 @@ test.describe('BarberOS local production-safe smoke tests', () => {
       expect(response?.status(), `${route.path} HTTP status`).toBeLessThan(400);
       await expect(page.locator('h1:visible').first()).toBeVisible();
       await expect(page.locator('h1:visible').first()).toContainText(route.heading);
+      if (route.atmosphere) {
+        await expect(page.getByTestId('barber-atmosphere')).toHaveCount(1);
+        await expect(page.getByTestId('barber-atmosphere')).toHaveAttribute('aria-hidden', 'true');
+      }
       expect(pageErrors, `Uncaught browser errors on ${route.path}`).toEqual([]);
     });
 

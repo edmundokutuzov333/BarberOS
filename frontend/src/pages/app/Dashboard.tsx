@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Copy } from 'lucide-react';
+import { ArrowUpRight, Banknote, CalendarCheck2, Copy, Gauge, Scissors, UserRoundX } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { Page } from '@/components/layout/Page';
@@ -41,13 +42,15 @@ async function loadDashboard(shopId: string): Promise<DashboardSnapshot> {
   return parsed.data;
 }
 
-function Kpi({ label, value, testId }: { label: string; value: string; testId: string }) {
-  return (
-    <div className="glass p-5 sm:p-6">
-      <p className="t-label text-ink-mid">{label}</p>
-      <p data-testid={testId} className="t-kpi mt-3">{value}</p>
+function Kpi({ label, value, testId, icon: Icon }: { label: string; value: string; testId: string; icon: LucideIcon }) {
+  return <div className="kpi-card glass p-5 sm:p-6">
+    <div className="flex items-start justify-between gap-3">
+      <p className="kpi-label t-label text-ink-mid">{label}</p>
+      <span className="kpi-icon" aria-hidden="true"><Icon size={17} strokeWidth={1.7} /></span>
     </div>
-  );
+    <p data-testid={testId} className="t-kpi mt-5">{value}</p>
+    <div className="kpi-rule mt-5" aria-hidden="true"><span /></div>
+  </div>;
 }
 
 export default function Dashboard() {
@@ -64,12 +67,17 @@ export default function Dashboard() {
 
   const publicUrl = window.location.origin + '/barbearia/' + shop.slug;
   const copyLink = async () => {
-    await navigator.clipboard.writeText(publicUrl);
-    toast.success('Link copiado');
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      toast.success('Link copiado');
+    } catch {
+      toast.error('Não foi possível copiar o link neste dispositivo.');
+    }
   };
 
   return (
-    <Page testId="dashboard-page" title={shop.name} subtitle={fmt(new Date(), "EEEE, d 'de' MMMM")}>
+    <Page testId="dashboard-page" className="dashboard-page" title={shop.name} subtitle={fmt(new Date(), "EEEE, d 'de' MMMM")}>
+      <div className="dashboard-overline"><span /> VISÃO OPERACIONAL</div>
       {shop.onboarding_step < 9 && canManageShop && (
         <div data-testid="onboarding-banner" className="glass glass-3 !rounded-2xl p-4 mb-4 flex flex-wrap items-center justify-between gap-3" style={{ boxShadow: 'none' }}>
           <p className="t-body">Configuração a {Math.round((Math.max(1, shop.onboarding_step) / 9) * 100)}%. Faltam {9 - Math.max(1, shop.onboarding_step)} passos para a agenda estar pronta.</p>
@@ -84,11 +92,25 @@ export default function Dashboard() {
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Kpi testId="kpi-today" label="Marcações de hoje" value={String(q.data!.today)} />
-            <Kpi testId="kpi-occupancy" label="Ocupação da agenda" value={q.data!.occupancy === null ? 'n/d' : q.data!.occupancy + '%'} />
-            <Kpi testId="kpi-revenue" label="Receita estimada de hoje" value={formatMT(q.data!.revenue)} />
-            <Kpi testId="kpi-noshows" label="Faltas do mês" value={String(q.data!.noShows)} />
+            <Kpi testId="kpi-today" label="Marcações de hoje" value={String(q.data!.today)} icon={CalendarCheck2} />
+            <Kpi testId="kpi-occupancy" label="Ocupação da agenda" value={q.data!.occupancy === null ? 'n/d' : q.data!.occupancy + '%'} icon={Gauge} />
+            <Kpi testId="kpi-revenue" label="Receita estimada de hoje" value={formatMT(q.data!.revenue)} icon={Banknote} />
+            <Kpi testId="kpi-noshows" label="Faltas do mês" value={String(q.data!.noShows)} icon={UserRoundX} />
           </div>
+
+          <section className="dashboard-public-link glass mt-4 p-4 sm:p-5" aria-label="Página pública da barbearia">
+            <span className="dashboard-public-icon" aria-hidden="true"><Scissors size={19} strokeWidth={1.7} /></span>
+            <div className="min-w-0 flex-1">
+              <p className="dashboard-overline-label">A TUA PÁGINA PÚBLICA</p>
+              <p className="mt-1 text-sm font-medium text-ink-hi">{shop.name}</p>
+              <p className="t-label text-ink-mid mt-1 break-all">/barbearia/{shop.slug}</p>
+              <p className="t-body text-ink-mid mt-2">Partilha este endereço para os clientes consultarem os serviços e marcarem sem criar conta.</p>
+            </div>
+            <div className="dashboard-public-actions">
+              <a className="dashboard-public-open" href={publicUrl} target="_blank" rel="noreferrer">Ver página <ArrowUpRight size={14} /></a>
+              <Button variant="secondary" size="sm" pill onClick={copyLink}><Copy size={14} />Copiar link</Button>
+            </div>
+          </section>
 
           <div className="grid lg:grid-cols-[1.2fr_.8fr] gap-4 mt-4">
             <Panel title="A seguir" testId="next-panel">

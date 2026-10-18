@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/States';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { SkipLink } from '@/components/ui/SkipLink';
 import { canAccessAppRoute } from '@/lib/permissions';
+import { BarberAtmosphere } from '@/components/background/BarberAtmosphere';
 
 function FullSkeleton() {
   return (
@@ -71,7 +72,7 @@ export function AppShell() {
   if (!shop && pathname !== '/app/onboarding') return <Navigate to="/app/onboarding" replace />;
   if (pathname === '/app/onboarding') {
     if (shop && !(role === 'owner' || role === 'manager')) return <RoleDenied pathname={pathname} />;
-    return <div className="min-h-screen" id="main-content"><SkipLink /><AnimatedOutlet /></div>;
+    return <div className="barber-shell min-h-screen" id="main-content"><BarberAtmosphere /><SkipLink /><AnimatedOutlet /></div>;
   }
 
   if (!canAccessAppRoute(role, pathname)) {
@@ -79,7 +80,8 @@ export function AppShell() {
   }
 
   return (
-    <div className="min-h-screen md:flex md:gap-6 md:p-6 md:pr-8">
+    <div className="barber-shell min-h-screen md:flex md:gap-6 md:p-6 md:pr-8">
+      <BarberAtmosphere />
       <SkipLink />
       {desktop && <Sidebar />}
       <main id="main-content" tabIndex={-1} aria-label="Conteúdo principal" className="flex-1 min-w-0 px-4 pt-5 pb-28 md:p-0 max-w-[1400px]">
