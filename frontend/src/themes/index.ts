@@ -1,5 +1,6 @@
+import { useEffect } from 'react';
 export type ThemeKey =
-  | 'violet-noir' | 'neon-lilac' | 'midnight-indigo' | 'cyan-abyss' | 'emerald-smoke'
+  | 'noir-brass' | 'violet-noir' | 'neon-lilac' | 'midnight-indigo' | 'cyan-abyss' | 'emerald-smoke'
   | 'amber-ash' | 'rose-quartz' | 'plum-ember' | 'nordic-mono' | 'blood-orange';
 
 export interface ThemePreset {
@@ -13,7 +14,8 @@ export interface ThemePreset {
 }
 
 export const THEMES: ThemePreset[] = [
-  { key: 'violet-noir',     name: 'Violeta noir',     accent: '#9d7bf5', accentSoft: '#b59eff', accentInk: '#120c1f', glowA: '#1a102f', glowB: '#0c0614' },
+  { key: 'noir-brass',      name: 'Noir & latão',      accent: '#b9964f', accentSoft: '#dfc27b', accentInk: '#171208', glowA: '#171208', glowB: '#0c0b08' },
+  { key: 'violet-noir',     name: 'Violeta noir',      accent: '#9d7bf5', accentSoft: '#b59eff', accentInk: '#120c1f', glowA: '#1a102f', glowB: '#0c0614' },
   { key: 'neon-lilac',      name: 'Lilás néon',       accent: '#b87bf5', accentSoft: '#d4a8ff', accentInk: '#180a29', glowA: '#230f38', glowB: '#0e0517' },
   { key: 'midnight-indigo', name: 'Índigo meia-noite',accent: '#7b8cf5', accentSoft: '#a8b5ff', accentInk: '#0b102b', glowA: '#0f163d', glowB: '#05081a' },
   { key: 'cyan-abyss',      name: 'Ciano abismo',     accent: '#57d3e0', accentSoft: '#94edf5', accentInk: '#062226', glowA: '#0a2d33', glowB: '#031214' },
@@ -40,6 +42,42 @@ export function themeVars(t: ThemePreset): Record<string, string> {
     '--canvas-glow-b': t.glowB,
     '--st-confirmed': t.accentSoft,
   };
+}
+
+const THEME_VARIABLES = ['--accent', '--accent-soft', '--accent-ink', '--accent-rgb', '--canvas-glow-a', '--canvas-glow-b', '--st-confirmed'] as const;
+
+export interface ThemeSnapshot {
+  dataTheme: string | null;
+  inlineVariables: Record<(typeof THEME_VARIABLES)[number], string>;
+}
+
+export function captureThemeState(): ThemeSnapshot {
+  const root = document.documentElement;
+  const inlineVariables = Object.fromEntries(
+    THEME_VARIABLES.map((name) => [name, root.style.getPropertyValue(name)]),
+  ) as ThemeSnapshot['inlineVariables'];
+  return { dataTheme: root.getAttribute('data-theme'), inlineVariables };
+}
+
+export function restoreThemeState(snapshot: ThemeSnapshot) {
+  const root = document.documentElement;
+  if (snapshot.dataTheme === null) root.removeAttribute('data-theme');
+  else root.setAttribute('data-theme', snapshot.dataTheme);
+
+  for (const name of THEME_VARIABLES) {
+    const value = snapshot.inlineVariables[name];
+    if (value) root.style.setProperty(name, value);
+    else root.style.removeProperty(name);
+  }
+}
+
+export function useScopedTheme(key: string | null | undefined) {
+  useEffect(() => {
+    if (!key) return;
+    const previous = captureThemeState();
+    applyTheme(key);
+    return () => restoreThemeState(previous);
+  }, [key]);
 }
 
 export function applyTheme(key: string | null | undefined) {

@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
@@ -97,10 +97,13 @@ export function ThemePicker({ onDone }: { onDone?: () => void }) {
   const [sel, setSel] = useState(s.theme_key);
   const m = useUpdateShop(onDone);
   const dirty = sel !== s.theme_key;
+  const savedThemeKey = useRef(s.theme_key);
 
   useEffect(() => {
-    return () => applyTheme(s.theme_key);
+    savedThemeKey.current = s.theme_key;
   }, [s.theme_key]);
+
+  useEffect(() => () => applyTheme(savedThemeKey.current), []);
 
   const pick = (k: string) => {
     setSel(k);

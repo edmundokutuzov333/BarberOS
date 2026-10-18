@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { BarberAtmosphere } from './components/background/BarberAtmosphere';
 
@@ -64,13 +64,24 @@ function RouteLoading() {
 
 export default function App() {
   const { pathname } = useLocation();
-  const atmosphereVariant: 'ambient' | 'hero' | 'quiet' =
-    pathname === '/'
-      ? 'hero'
-      : /^\/(?:entrar|registar|recuperar)(?:\/|$)/.test(pathname) ||
-          /^\/(?:marcacao|vaga|barbearia)(?:\/|$)/.test(pathname)
-        ? 'quiet'
-        : 'ambient';
+  const isLanding = pathname === '/';
+  const isPublicShop = /^\/barbearia\/[^/]+\/?$/.test(pathname);
+  const isQuietSurface =
+    /^\/(?:entrar|registar|recuperar)(?:\/|$)/.test(pathname) ||
+    /^\/(?:marcacao|vaga)(?:\/|$)/.test(pathname) ||
+    /^\/barbearia\/[^/]+\/marcar\/?$/.test(pathname);
+  const atmosphereVariant: 'ambient' | 'hero' | 'quiet' | 'showcase' =
+    isLanding ? 'hero' : isPublicShop ? 'showcase' : isQuietSurface ? 'quiet' : 'ambient';
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const previousSurface = root.getAttribute('data-barberos-surface');
+    root.setAttribute('data-barberos-surface', isLanding ? 'landing' : 'platform');
+    return () => {
+      if (previousSurface === null) root.removeAttribute('data-barberos-surface');
+      else root.setAttribute('data-barberos-surface', previousSurface);
+    };
+  }, [isLanding, pathname]);
 
   return (
     <>

@@ -1,4 +1,6 @@
 :root {
+  --brand-accent:#b9964f; --brand-accent-soft:#dfc27b; --brand-accent-rgb:185,150,79;
+  --brand-canvas-void:#050504; --brand-canvas-glow-a:#110e08; --brand-canvas-glow-b:#090805;
   --canvas-void:#050504; --canvas-glow-a:#171208; --canvas-glow-b:#0c0b08;
   --surface-1:rgba(14,13,10,.88); --surface-2:rgba(21,19,14,.94); --surface-3:rgba(29,26,18,.72); --surface-hover:rgba(225,194,126,.065);
   --accent:#b9964f; --accent-soft:#dfc27b; --accent-ink:#171208; --accent-rgb:185,150,79;

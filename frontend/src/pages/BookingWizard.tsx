@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check, Clock3, Mail, MessageCircle, Scissors, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { applyTheme } from '@/themes';
+import { useScopedTheme } from '@/themes';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { Field } from '@/components/ui/Field';
 import { buildWhatsAppLink } from '@/lib/calendar';
@@ -231,12 +231,8 @@ export default function BookingWizard() {
   const query = usePublicBarbershop(slug);
   const data = query.data;
 
-  useEffect(() => {
-    if (!data?.shop.theme_key) return;
-    const previousTheme = document.documentElement.getAttribute('data-theme');
-    applyTheme(data.shop.theme_key);
-    return () => applyTheme(previousTheme);
-  }, [data?.shop.theme_key]);
+  // Tenant colours are scoped to this route and restored on exit.
+  useScopedTheme(data?.shop.theme_key);
 
   const [form, setForm] = useState<CustomerForm>({ name: '', phone: '', email: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});

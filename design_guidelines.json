@@ -75,6 +75,15 @@
     "active_attribute": "data-theme on <html> tag",
     "theme_list": [
       {
+        "id": "noir-brass",
+        "name": "Noir & latão (BarberOS)",
+        "accent": "#b9964f",
+        "accent_soft": "#dfc27b",
+        "accent_ink": "#171208",
+        "glow_a": "#171208",
+        "glow_b": "#0c0b08"
+      },
+      {
         "id": "violet-noir",
         "name": "Violet Noir (Base)",
         "accent": "#9d7bf5",

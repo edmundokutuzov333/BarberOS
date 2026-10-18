@@ -5,6 +5,7 @@ const publicRoutes = [
   { path: '/', heading: /A barbearia controla o dia/i, label: 'landing page', atmosphere: true },
   { path: '/entrar', heading: /^Entrar$/i, label: 'login page', atmosphere: true },
   { path: '/recuperar', heading: /Recuperar palavra-passe/i, label: 'password recovery page', atmosphere: true },
+  { path: '/barbearia/oryon', heading: /^Barbearia Oryon$/i, label: 'public demonstration page', atmosphere: true },
 ];
 
 test.describe('BarberOS local production-safe smoke tests', () => {

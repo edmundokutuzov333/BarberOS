@@ -36,6 +36,16 @@ body{
   text-rendering:optimizeLegibility;
 }
 
+/* Every non-landing page uses the brand's noir/brass canvas, independent of a tenant's UI theme. */
+html[data-barberos-surface="platform"] body{
+  background:
+    radial-gradient(120% 80% at 50% 100%,var(--brand-canvas-glow-a) 0%,transparent 60%),
+    radial-gradient(90% 60% at 15% 0%,rgba(var(--brand-accent-rgb),.055) 0%,transparent 55%),
+    radial-gradient(70% 55% at 100% 0%,var(--brand-canvas-glow-b) 0%,transparent 70%),
+    var(--brand-canvas-void);
+  background-attachment:fixed;
+}
+
 ::selection{
   background:rgba(var(--accent-rgb),.35);
   color:var(--text-hi);
@@ -361,10 +371,10 @@ textarea.field{
   height: 100vh;
   overflow: hidden;
   pointer-events: none;
-  color: var(--accent-soft);
+  color: var(--brand-accent-soft);
   background:
-    radial-gradient(ellipse at 78% 8%, rgba(var(--accent-rgb), .045), transparent 34%),
-    radial-gradient(ellipse at 10% 76%, rgba(117, 88, 32, .035), transparent 36%);
+    radial-gradient(ellipse at 78% 8%, rgba(var(--brand-accent-rgb), .045), transparent 34%),
+    radial-gradient(ellipse at 10% 76%, rgba(var(--brand-accent-rgb), .035), transparent 36%);
 }
 .barber-atmosphere__slats {
   position: absolute;
@@ -374,6 +384,7 @@ textarea.field{
   -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.98) 0%, rgba(0,0,0,.72) 48%, transparent 92%);
 }
 .barber-atmosphere--hero .barber-atmosphere__slats { opacity: .33; }
+.barber-atmosphere--showcase .barber-atmosphere__slats { opacity: .25; }
 .barber-atmosphere--quiet .barber-atmosphere__slats { opacity: .13; }
 /* Management keeps the same BarberOS motif, with a quieter contrast than the landing. */
 .barber-atmosphere--ambient .barber-atmosphere__slats { opacity: .11; }
@@ -387,7 +398,7 @@ textarea.field{
   height: auto;
   color: rgba(223, 194, 123, .26);
   opacity: .34;
-  filter: drop-shadow(0 0 22px rgba(var(--accent-rgb), .035));
+  filter: drop-shadow(0 0 22px rgba(var(--brand-accent-rgb), .035));
 }
 .barber-tool--scissors { left: 4%; top: 18%; transform: rotate(-16deg); animation: barber-tool-float 22s ease-in-out infinite; }
 .barber-tool--razor { right: 3%; top: 57%; width: clamp(100px, 18vw, 240px); transform: rotate(17deg); animation: barber-razor-drift 28s ease-in-out infinite; }
@@ -397,6 +408,7 @@ textarea.field{
 .barber-tool__razor-blade { transform-origin: 54px 111px; animation: barber-razor-close 6s ease-in-out infinite; }
 .barber-atmosphere--hero .barber-tool--scissors { left: 66%; top: 22%; width: clamp(140px, 25vw, 340px); opacity: .38; }
 .barber-atmosphere--hero .barber-tool--razor { right: 12%; top: 62%; opacity: .25; }
+.barber-atmosphere--showcase .barber-tool { opacity: .27; }
 .barber-atmosphere--quiet .barber-tool { opacity: .17; }
 @keyframes barber-tool-float { 0%,100% { margin-top: 0; rotate: -2deg; } 50% { margin-top: -14px; rotate: 2deg; } }
 @keyframes barber-razor-drift { 0%,100% { translate: 0 0; rotate: 17deg; } 50% { translate: -8px -12px; rotate: 12deg; } }
@@ -422,7 +434,9 @@ textarea.field{
 @media (max-width: 767px) {
   .barber-atmosphere__slats { opacity: .11; }
   .barber-atmosphere--hero .barber-atmosphere__slats { opacity: .19; }
+  .barber-atmosphere--showcase .barber-atmosphere__slats { opacity: .17; }
   .barber-tool { opacity: .12; }
+  .barber-atmosphere--showcase .barber-tool { opacity: .15; }
   .barber-atmosphere--ambient .barber-tool { opacity: .10; }
   .barber-atmosphere--hero .barber-tool--scissors { left: 62%; top: 13%; width: 40vw; opacity: .18; }
   .barber-atmosphere--hero .barber-tool--razor { right: -3%; top: 59%; opacity: .10; }
@@ -442,7 +456,7 @@ textarea.field{
     116deg,
     transparent 0,
     transparent 54px,
-    rgba(var(--accent-rgb), .13) 55px,
+    rgba(var(--brand-accent-rgb), .13) 55px,
     transparent 56px,
     transparent 105px
   );

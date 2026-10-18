@@ -1,9 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Database } from './database.types';
 import { supabase } from './supabase';
 import { useAuth } from './auth';
-import { applyTheme } from '@/themes';
+import { useScopedTheme } from '@/themes';
 
 export type Role = Database['public']['Enums']['app_role'];
 export type Shop = Database['public']['Tables']['barbershops']['Row'];
@@ -56,9 +56,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     [shops, shopId],
   );
 
-  useEffect(() => {
-    applyTheme(current?.barbershops.theme_key);
-  }, [current?.barbershops.theme_key]);
+  useScopedTheme(current?.barbershops.theme_key);
 
   const setShopId = (id: string) => {
     localStorage.setItem(KEY, id);

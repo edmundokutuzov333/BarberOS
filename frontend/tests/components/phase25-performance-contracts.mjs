@@ -46,12 +46,22 @@ const tests = [
     assert.match(source, /cursorStrength=\{variant === 'hero' \? 0\.75 : 0\.25\}/);
     assert.match(source, /cursorSize=\{variant === 'hero' \? 42 : 32\}/);
   }],
+  ['public shop uses the showcase background while the landing remains cursor-reactive', () => {
+    const app = read('src/App.tsx');
+    const atmosphere = read('src/components/background/BarberAtmosphere.tsx');
+    assert.match(app, /isPublicShop = \/\^/);
+    assert.match(app, /isLanding \? 'hero' : isPublicShop \? 'showcase'/);
+    assert.match(app, /setAttribute\('data-barberos-surface', isLanding \? 'landing' : 'platform'\)/);
+    assert.match(atmosphere, /variant === 'hero' \? 0\.75 : 0\.25/);
+    assert.match(atmosphere, /variant === 'hero' \? 42 : 32/);
+  }],
   ['every route inherits one centrally managed atmosphere', () => {
     const app = read('src/App.tsx');
     assert.match(app, /useLocation\(\)/);
     assert.match(app, /<BarberAtmosphere variant=\{atmosphereVariant\} \/>/);
     assert.match(app, /\/marcacao/);
     assert.match(app, /\/vaga/);
+    assert.match(app, /\/barbearia/);
     for (const file of [
       'src/pages/Landing.tsx',
       'src/pages/auth/Entrar.tsx',
@@ -66,6 +76,42 @@ const tests = [
     ]) {
       assert.doesNotMatch(read(file), /<BarberAtmosphere/);
     }
+  }],
+  ['brand atmosphere is independent of tenant accent themes', () => {
+    const tokens = read('src/styles/tokens.css');
+    const css = read('src/index.css');
+    const source = read('src/components/background/BarberAtmosphere.tsx');
+    assert.match(tokens, /--brand-accent-rgb:\s*185,150,79/);
+    assert.match(css, /html\[data-barberos-surface="platform"\] body/);
+    assert.match(css, /rgba\(var\(--brand-accent-rgb\)/);
+    assert.match(source, /color="#b9964f" glintColor="#dfc27b"/);
+  }],
+  ['theme scope restores exact inline variables and original data-theme', () => {
+    const themes = read('src/themes/index.ts');
+    const shop = read('src/lib/shop.tsx');
+    const publicShop = read('src/pages/PublicBarbershop.tsx');
+    const booking = read('src/pages/BookingWizard.tsx');
+    assert.match(themes, /captureThemeState/);
+    assert.match(themes, /restoreThemeState/);
+    assert.match(themes, /root\.style\.removeProperty\(name\)/);
+    assert.match(shop, /useScopedTheme\(current\?\.barbershops\.theme_key\)/);
+    assert.match(publicShop, /useScopedTheme\(data\?\.shop\.theme_key\)/);
+    assert.match(booking, /useScopedTheme\(data\?\.shop\.theme_key\)/);
+  }],
+  ['the Oryon demonstration has an explicit brand theme migration', () => {
+    const themes = read('src/themes/index.ts');
+    const html = read('index.html');
+    const migration = read('../supabase/migrations/20261018030000_noir_brass_demo_theme.sql');
+    assert.match(themes, /key: 'noir-brass',\s+name: 'Noir & latão'/);
+    assert.match(html, /data-theme="noir-brass"/);
+    assert.match(migration, /where slug = 'oryon'/i);
+    assert.match(migration, /theme_key = 'noir-brass'/i);
+  }],
+  ['theme picker cleanup follows the last saved theme instead of a stale closure', () => {
+    const source = read('src/components/config/ShopForms.tsx');
+    assert.match(source, /const savedThemeKey = useRef\(s\.theme_key\)/);
+    assert.match(source, /savedThemeKey\.current = s\.theme_key/);
+    assert.match(source, /applyTheme\(savedThemeKey\.current\)/);
   }],
   ['landing hero image remains an explicit high-priority asset', () => {
     const source = read('src/pages/Landing.tsx');
