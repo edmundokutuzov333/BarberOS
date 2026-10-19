@@ -321,29 +321,14 @@ begin
     raise exception 'AUDIT_FIXTURE_PERSISTED';
   end if;
 
-  if not (
-    has_function_privilege(
-      'anon',
-      'public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)',
-      'execute'
-    )
-    and has_function_privilege(
-      'authenticated',
-      'public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)',
-      'execute'
-    )
-    and not has_table_privilege('anon','public.appointments','INSERT')
-    and not has_table_privilege('authenticated','public.appointments','INSERT')
-    and not has_function_privilege(
-      'anon',
-      'public.enqueue_appointment_notifications(uuid)',
-      'execute'
-    )
-    and not has_function_privilege(
-      'authenticated',
-      'public.enqueue_appointment_notifications(uuid)',
-      'execute'
-    )
+  if (
+    has_function_privilege('anon','public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)','execute')
+    or has_function_privilege('authenticated','public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)','execute')
+    or not has_function_privilege('service_role','public.book_appointment_idempotent(uuid,text,uuid,uuid,uuid,timestamptz,text,text,text)','execute')
+    or has_table_privilege('anon','public.appointments','INSERT')
+    or has_table_privilege('authenticated','public.appointments','INSERT')
+    or has_function_privilege('anon','public.enqueue_appointment_notifications(uuid)','execute')
+    or has_function_privilege('authenticated','public.enqueue_appointment_notifications(uuid)','execute')
   ) then
     raise exception 'BOOKING_SECURITY_GRANTS_FAILED';
   end if;
