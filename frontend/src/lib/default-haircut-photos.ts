@@ -28,10 +28,10 @@ const photos: Record<string, DefaultHaircutPhoto> = {
   "waves": { url: "https://images.pexels.com/photos/5839954/pexels-photo-5839954.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/close-up-photo-of-man-in-afro-hairstyle-5839954/", skinTone: "Escuro" },
   "twists": { url: "https://images.pexels.com/photos/1845923/pexels-photo-1845923.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/man-showing-his-dreadlocks-hair-1845923/", skinTone: "Escuro" },
   "dreads retwist": { url: "https://images.pexels.com/photos/19028067/pexels-photo-19028067.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/man-at-a-barbershop-19028067/", skinTone: "Escuro" },
-  "corte à tesoura": { url: "https://images.pexels.com/photos/14072328/pexels-photo-14072328.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/man-with-afro-hair-14072328/", skinTone: "Escuro" },
+  "corte a tesoura": { url: "https://images.pexels.com/photos/14072328/pexels-photo-14072328.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/man-with-afro-hair-14072328/", skinTone: "Escuro" },
   "corte infantil": { url: "https://images.pexels.com/photos/7697356/pexels-photo-7697356.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/a-child-wearing-a-barber-s-cape-7697356/", skinTone: "Variado" },
   "design freestyle": { url: "https://images.pexels.com/photos/35276951/pexels-photo-35276951.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/outdoor-barbershop-scene-with-customers-35276951/", skinTone: "Escuro" },
-  "careca à navalha": { url: "https://images.pexels.com/photos/17492272/pexels-photo-17492272.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/man-face-in-darkness-17492272/", skinTone: "Escuro" },
+  "careca a navalha": { url: "https://images.pexels.com/photos/17492272/pexels-photo-17492272.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/man-face-in-darkness-17492272/", skinTone: "Escuro" },
 };
 
 function normalise(name: string): string {
