@@ -68,7 +68,9 @@ begin
     raise exception 'INVALID_PHONE';
   end if;
 
-  if v_phone !~ '^[+]2588[2-7][0-9]{7}
+  if v_phone !~ '^[+]2588[2-7][0-9]{7}$' then
+    raise exception 'INVALID_PHONE';
+  end if;
 
   v_email := nullif(lower(btrim(p_email)),'');
   if v_email is not null and (length(v_email) > 254 or position('@' in v_email) < 2) then
