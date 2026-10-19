@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { BarberAtmosphere } from './components/background/BarberAtmosphere';
+import { getShopSlugFromHost } from './lib/public-routing';
 
 const RequireAuth = lazy(() => import('./components/layout/AppShell').then((m) => ({ default: m.RequireAuth })));
 const AppShell = lazy(() => import('./components/layout/AppShell').then((m) => ({ default: m.AppShell })));
@@ -92,7 +93,8 @@ export default function App() {
       <BarberAtmosphere variant={atmosphereVariant} />
       <Suspense fallback={<RouteLoading />}>
         <Routes>
-        <Route path="/" element={<Gateway />} />
+        <Route path="/" element={<HostTenantEntry />} />
+        <Route path="/marcar" element={<HostBookingEntry />} />
         <Route path="/sobre" element={<Landing />} />
         <Route path="/privacidade" element={<Privacy />} />
         <Route path="/termos" element={<Terms />} />
@@ -155,4 +157,14 @@ export default function App() {
 function ShortLink() {
   const { slug } = useParams();
   return <Navigate to={`/barbearia/${slug ?? ''}`} replace />;
+}
+
+function HostTenantEntry() {
+  const hostShopSlug = getShopSlugFromHost();
+  return hostShopSlug ? <Navigate to={`/barbearia/${hostShopSlug}`} replace /> : <Gateway />;
+}
+
+function HostBookingEntry() {
+  const hostShopSlug = getShopSlugFromHost();
+  return hostShopSlug ? <Navigate to={`/barbearia/${hostShopSlug}/marcar`} replace /> : <Navigate to="/" replace />;
 }

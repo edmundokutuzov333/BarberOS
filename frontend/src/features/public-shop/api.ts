@@ -18,6 +18,13 @@ export type PublicReview = { rating: number; comment: string | null; created_at:
 export type PublicReviews = { rating_avg: number; rating_count: number; items: PublicReview[] };
 export type PublicBarbershopPayload = { shop: PublicShop; services: PublicService[]; haircuts: PublicHaircut[]; barbers: PublicBarber[]; working_hours: PublicWorkingHour[]; reviews: PublicReviews };
 
+export type PublicDirectoryShop = Pick<PublicShop, 'name' | 'slug' | 'description' | 'logo_url' | 'cover_url' | 'address' | 'maps_url' | 'lat' | 'lng' | 'status'> & {
+  id: string;
+  service_count: number;
+  rating_avg: number;
+  rating_count: number;
+};
+
 const nullableUrl = z.string().nullable();
 const publicPayloadSchema = z.object({
   shop: z.object({
@@ -48,6 +55,50 @@ export async function getPublicBarbershop(slug: string): Promise<PublicBarbersho
   return parsed.data as PublicBarbershopPayload;
 }
 
+/**
+ * Directory data is intentionally limited to public, non-sensitive fields.
+ * Services and reviews are queried independently so this remains compatible
+ * with the existing RLS boundary and does not expose private shop metadata.
+ */
+export async function getPublicBarbershops(): Promise<PublicDirectoryShop[]> {
+  const [shopsResult, servicesResult, reviewsResult] = await Promise.all([
+    supabase
+      .from('barbershops')
+      .select('id, name, slug, description, logo_url, cover_url, address, maps_url, lat, lng, status')
+      .in('status', ['active', 'trial'])
+      .order('name'),
+    supabase.from('services').select('barbershop_id').eq('is_active', true),
+    supabase.from('reviews').select('barbershop_id, rating').eq('is_published', true),
+  ]);
+
+  if (shopsResult.error) throw shopsResult.error;
+  if (servicesResult.error) throw servicesResult.error;
+  if (reviewsResult.error) throw reviewsResult.error;
+
+  const serviceCounts = new Map<string, number>();
+  for (const service of servicesResult.data ?? []) {
+    serviceCounts.set(service.barbershop_id, (serviceCounts.get(service.barbershop_id) ?? 0) + 1);
+  }
+  const reviewStats = new Map<string, { total: number; count: number }>();
+  for (const review of reviewsResult.data ?? []) {
+    const current = reviewStats.get(review.barbershop_id) ?? { total: 0, count: 0 };
+    current.total += review.rating;
+    current.count += 1;
+    reviewStats.set(review.barbershop_id, current);
+  }
+
+  return (shopsResult.data ?? []).map((shop) => {
+    const reviews = reviewStats.get(shop.id) ?? { total: 0, count: 0 };
+    return {
+      ...shop,
+      status: shop.status as PublicDirectoryShop['status'],
+      service_count: serviceCounts.get(shop.id) ?? 0,
+      rating_avg: reviews.count ? reviews.total / reviews.count : 0,
+      rating_count: reviews.count,
+    };
+  });
+}
+
 export function usePublicBarbershop(slug?: string) {
   return useQuery({
     queryKey: ['public-barbershop', slug],
@@ -56,6 +107,17 @@ export function usePublicBarbershop(slug?: string) {
     staleTime: 60_000,
     gcTime: 5 * 60_000,
     retry: false,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function usePublicBarbershops() {
+  return useQuery({
+    queryKey: ['public-barbershops'],
+    queryFn: getPublicBarbershops,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    retry: 1,
     refetchOnWindowFocus: false,
   });
 }

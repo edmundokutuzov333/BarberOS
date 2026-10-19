@@ -4,10 +4,11 @@ import { Copy, Download, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useShop } from '@/lib/shop';
 import { Button } from '@/components/ui/Button';
+import { getShopPublicUrl } from '@/lib/public-routing';
 
 export function LinkQr({ onDone }: { onDone?: () => void }) {
   const { shop } = useShop();
-  const url = `${window.location.origin}/barbearia/${shop!.slug}`;
+  const url = getShopPublicUrl(shop!.slug);
   const qrRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
 

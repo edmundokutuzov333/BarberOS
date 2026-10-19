@@ -9,6 +9,19 @@ import './index.css';
 import './i18n';
 import { registerSW } from 'virtual:pwa-register';
 
+// A deployment can leave one browser tab with an older manifest while a new
+// lazy route chunk is already live. Recover once automatically instead of
+// surfacing the global error screen for a transient preload mismatch.
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault();
+  const key = 'barberos.preload-recovery';
+  const previous = Number(sessionStorage.getItem(key) ?? 0);
+  if (previous && Date.now() - previous < 30_000) return;
+  sessionStorage.setItem(key, String(Date.now()));
+  window.location.reload();
+});
+window.addEventListener('load', () => window.setTimeout(() => sessionStorage.removeItem('barberos.preload-recovery'), 30_000), { once: true });
+
 registerSW({ immediate: true });
 
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 15_000, retry: 1, refetchOnWindowFocus: false } } });

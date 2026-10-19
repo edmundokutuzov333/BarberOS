@@ -17,6 +17,7 @@ import { HaircutsEditor } from '@/components/config/HaircutsEditor';
 import { BarbersEditor } from '@/components/config/BarbersEditor';
 import { HoursEditor } from '@/components/config/HoursEditor';
 import { LinkQr } from '@/components/config/LinkQr';
+import { getShopPublicUrl } from '@/lib/public-routing';
 
 const STEPS = [
   { title: 'A tua barbearia', body: 'Começa pelo nome. O resto configuras a seguir, ao teu ritmo.' },
@@ -53,7 +54,7 @@ function CreateShop() {
   return (
     <form onSubmit={submit} className="space-y-4" noValidate>
       <Field data-testid="onboarding-name-input" label="Nome da barbearia" name="shop_name" required value={name} onChange={(e) => { setName(e.target.value); if (!touched) setSlug(slugify(e.target.value)); }} placeholder="Ex.: Barbearia Central" />
-      <Field data-testid="onboarding-slug-input" label="Endereço público" name="slug" required value={slug} onChange={(e) => { setTouched(true); setSlug(slugify(e.target.value)); }} prefix="/barbearia/" hint={slug ? `${window.location.host}/barbearia/${slug}` : 'Só letras minúsculas, números e hífens'} />
+      <Field data-testid="onboarding-slug-input" label="Endereço público" name="slug" required value={slug} onChange={(e) => { setTouched(true); setSlug(slugify(e.target.value)); }} prefix="barbearia" hint={slug ? getShopPublicUrl(slug).replace(/^https?:\/\//, '') : 'Só letras minúsculas, números e hífens'} />
       <Field data-testid="onboarding-phone-input" label="Telemóvel da barbearia" name="shop_phone" type="tel" prefix="+258" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="84 000 0000" hint="Usado no WhatsApp e na página pública. Opcional." />
       <FormError msg={err} />
       <Button data-testid="onboarding-submit-btn" type="submit" loading={busy} full>Criar barbearia</Button>
