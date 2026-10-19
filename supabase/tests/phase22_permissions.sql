@@ -116,7 +116,13 @@ begin
   if has_table_privilege('authenticated','public.appointments','INSERT') then raise exception 'AUTH_DIRECT_APPOINTMENT_INSERT_BREACHED'; end if;
   if has_table_privilege('authenticated','public.notifications','SELECT') then raise exception 'AUTH_DIRECT_NOTIFICATIONS_SELECT_BREACHED'; end if;
 
-  if not has_function_privilege('anon','public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)','EXECUTE') then raise exception 'ANON_BOOKING_RPC_MISSING'; end if;
+  if has_function_privilege('anon','public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)','EXECUTE')
+     or has_function_privilege('authenticated','public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)','EXECUTE') then
+    raise exception 'RAW_BOOKING_RPC_EXPOSED';
+  end if;
+  if not has_function_privilege('service_role','public.book_appointment_idempotent(uuid,text,uuid,uuid,uuid,timestamptz,text,text,text)','EXECUTE') then
+    raise exception 'SERVICE_IDEMPOTENT_BOOKING_RPC_MISSING';
+  end if;
   if not has_function_privilege('anon','public.get_available_slots(text,uuid,uuid,date)','EXECUTE') then raise exception 'ANON_AVAILABILITY_RPC_MISSING'; end if;
   if not has_function_privilege('authenticated','public.get_dashboard_snapshot(uuid)','EXECUTE') then raise exception 'AUTH_DASHBOARD_RPC_MISSING'; end if;
   if has_function_privilege('authenticated','public.claim_notifications(integer)','EXECUTE') then raise exception 'CLIENT_NOTIFICATION_CLAIM_EXPOSED'; end if;
