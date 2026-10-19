@@ -180,8 +180,7 @@ begin
 exception
   when exclusion_violation then raise exception 'SLOT_TAKEN';
 end;
-$function$
-
+$function$;
 
 revoke all on function public.reschedule_appointment_by_operator(uuid,uuid,timestamptz,uuid) from public,anon,authenticated;
 grant execute on function public.reschedule_appointment_by_operator(uuid,uuid,timestamptz,uuid) to authenticated;
