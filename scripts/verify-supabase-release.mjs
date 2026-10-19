@@ -47,10 +47,11 @@ const bookingSource = fs.readFileSync(path.join(functionDir, 'booking-create', '
 if (!bookingSource.includes('book_appointment_idempotent')) throw new Error('BOOKING_EDGE_RPC_CONTRACT_MISSING');
 const wizardPath = path.join(root, 'frontend', 'src', 'pages', 'BookingWizard.tsx');
 const wizard = fs.readFileSync(wizardPath, 'utf8');
-if (!wizard.includes('Boolean(turnstileSiteKey && turnstileToken)')) {
-  throw new Error('BOOKING_TURNSTILE_FAIL_CLOSED_CONTRACT_MISSING');
+if (!wizard.includes('Boolean(turnstileSiteKey && turnstileToken)')
+  || !wizard.includes("VITE_BOOKING_TURNSTILE_REQUIRED === 'true'")) {
+  throw new Error('BOOKING_TURNSTILE_ROLLOUT_GUARD_MISSING');
 }
-if (!wizard.includes('turnstile_token: turnstileToken')) {
+if (!wizard.includes('turnstile_token: turnstileToken ?? undefined')) {
   throw new Error('BOOKING_TURNSTILE_TOKEN_NOT_SENT');
 }
 
