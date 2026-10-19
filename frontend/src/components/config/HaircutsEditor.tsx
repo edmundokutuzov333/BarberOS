@@ -11,6 +11,7 @@ import { Field } from '@/components/ui/Field';
 import { Modal, Switch, Select, Textarea, ImageUpload } from '@/components/ui/Primitives';
 import { Skeleton, EmptyState, ErrorState } from '@/components/ui/States';
 import { useServices } from './ServicesEditor';
+import { getDefaultHaircutPhoto } from '@/lib/default-haircut-photos';
 
 const empty = { name: '', description: '', service_id: '', price: '', duration: '', photo_url: null as string | null };
 
@@ -93,6 +94,7 @@ export function HaircutsEditor() {
         <Button data-testid="haircut-seed-btn" variant="secondary" size="sm" pill loading={seed.isPending} onClick={() => seed.mutate()}><Sparkles size={14} />Semear catálogo (22 estilos)</Button>
         <Button data-testid="haircut-add-btn" size="sm" pill onClick={() => open('new')}><Plus size={14} />Novo corte</Button>
       </div>
+      <p className="text-xs leading-5 text-ink-mid">As fotografias-padrão são referências visuais reais e incluem diferentes tons de pele e tipos de cabelo. Para mostrar trabalhos da sua barbearia, edite cada corte e carregue uma fotografia própria; o carregamento substitui apenas a imagem desta loja.</p>
       {q.isLoading ? <Skeleton className="h-40" /> : q.error ? <ErrorState message={humanError(q.error)} onRetry={() => q.refetch()} /> : q.data!.length === 0 ? (
         <EmptyState testId="haircuts-empty" title="O catálogo está vazio." body="Semeia os 22 estilos mais pedidos e depois junta fotos dos teus próprios cortes." action={<Button data-testid="haircuts-empty-seed-btn" size="sm" pill loading={seed.isPending} onClick={() => seed.mutate()}>Semear catálogo</Button>} />
       ) : (
@@ -100,8 +102,9 @@ export function HaircutsEditor() {
           {q.data!.map((h, i) => (
             <div key={h.id} data-testid={`haircut-card-${h.id}`} className={`glass glass-3 !rounded-2xl overflow-hidden ${!h.is_active && 'opacity-50'}`} style={{ boxShadow: 'none' }}>
               <div className="aspect-[3/4] bg-[var(--surface-2)] relative">
-                {h.photo_url ? <img src={h.photo_url} alt={h.name} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                {(h.photo_url ?? getDefaultHaircutPhoto(h.name)?.url) ? <img src={h.photo_url ?? getDefaultHaircutPhoto(h.name)?.url ?? undefined} alt={`Exemplo do corte ${h.name}`} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                   : <div className="absolute inset-0 grid place-items-center text-ink-lo text-3xl font-medium">{h.name.slice(0, 1)}</div>}
+                {!h.photo_url && getDefaultHaircutPhoto(h.name) && <span className="absolute bottom-2 left-2 rounded-full bg-black/70 px-2 py-1 text-[10px] font-medium text-white">Foto padrão</span>}
                 <div className="absolute top-2 right-2 flex gap-1">
                   <button type="button" data-testid={`haircut-move-up-${h.id}`} onClick={() => reorder.mutate({ id: h.id, direction: -1 })} disabled={i === 0 || reorder.isPending} aria-label={`Mover ${h.name} para cima`} title="Mover para cima" className="h-8 w-8 rounded-full bg-black/50 backdrop-blur grid place-items-center text-ink-hi hover:text-accent-soft disabled:opacity-30 disabled:cursor-not-allowed"><ArrowUp size={13} /></button>
                   <button type="button" data-testid={`haircut-move-down-${h.id}`} onClick={() => reorder.mutate({ id: h.id, direction: 1 })} disabled={i === q.data!.length - 1 || reorder.isPending} aria-label={`Mover ${h.name} para baixo`} title="Mover para baixo" className="h-8 w-8 rounded-full bg-black/50 backdrop-blur grid place-items-center text-ink-hi hover:text-accent-soft disabled:opacity-30 disabled:cursor-not-allowed"><ArrowDown size={13} /></button>
@@ -124,7 +127,10 @@ export function HaircutsEditor() {
       <Modal open={editing !== null} onOpenChange={(o) => !o && setEditing(null)} title={editing === 'new' ? 'Novo corte' : 'Editar corte'} testId="haircut-modal">
         <form className="space-y-4" onSubmit={(e: FormEvent) => { e.preventDefault(); save.mutate(); }}>
           <div className="grid grid-cols-[120px_1fr] gap-4">
-            <ImageUpload testId="haircut-photo-upload" bucket="haircuts" shopId={shop!.id} ratio={3 / 4} value={form.photo_url} onChange={(u) => setForm({ ...form, photo_url: u })} label="Foto 3:4" />
+            <div className="space-y-2">
+              <ImageUpload testId="haircut-photo-upload" bucket="haircuts" shopId={shop!.id} ratio={3 / 4} value={form.photo_url} onChange={(u) => setForm({ ...form, photo_url: u })} label="Foto própria 3:4" />
+              {!form.photo_url && getDefaultHaircutPhoto(form.name) && <p className="text-[11px] leading-4 text-ink-mid">A imagem padrão fica activa até carregar uma foto real da sua barbearia.</p>}
+            </div>
             <div className="space-y-3">
               <Field data-testid="haircut-name-input" label="Nome" name="hc_name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex.: Low fade" autoFocus />
               <Select data-testid="haircut-service-select" label="Serviço associado" value={form.service_id} onChange={(e) => setForm({ ...form, service_id: e.target.value })}>
