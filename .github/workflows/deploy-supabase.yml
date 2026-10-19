@@ -111,7 +111,7 @@ jobs:
           for file in supabase/migrations/*.sql; do
             version="${file##*/}"
             version="${version%%_*}"
-            if [[ "$version" < "20261019160000" ]]; then
+            if [[ "$version" < "20261019170000" ]]; then
               cp "$file" "$pre_gateway/supabase/migrations/"
             fi
           done
