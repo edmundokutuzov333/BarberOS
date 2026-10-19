@@ -8,7 +8,7 @@ This runbook governs the rollout of the booking hardening, token gateway, and em
 
 - [ ] The complete migration chain passes `supabase db reset` on an isolated database.
 - [ ] `supabase test db` passes, including `supabase/tests/booking_security.test.sql`.
-- [ ] The production migration history has been reconciled against the checked-in files. The live database currently records version `20260919005227` (`release_audit_appointments_read_model`), which does not have a matching migration file in `main`. Do not run `supabase migration repair` or push blindly to silence this difference.
+- [ ] The production migration history has been reconciled against the checked-in files. A migration for version `20260919005227` (`release_audit_appointments_read_model`) has now been restored from the live function definition and grants. The clean reset and `supabase migration list` / `supabase db push --dry-run` must still confirm that no other version differences remain. Do not run `supabase migration repair` or push blindly to silence a difference.
 - [ ] A dedicated staging database has the same schema/migration chain and has passed booking, concurrency, token expiry, and notification tests.
 - [ ] Cloudflare Turnstile is configured: public `VITE_TURNSTILE_SITE_KEY` and `VITE_BOOKING_TURNSTILE_REQUIRED=true` in Vercel; `TURNSTILE_SECRET_KEY` in Supabase. The site key must be the production widget key, not a test key.
 - [ ] Supabase runtime secret names `RATE_LIMIT_SALT`, `ALLOWED_ORIGINS`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, and `NOTIFICATION_EMAIL_FROM` are present. The release workflow checks names only and must never print values.
@@ -35,7 +35,7 @@ This runbook governs the rollout of the booking hardening, token gateway, and em
 
 - The production SPA routing defect was fixed in `frontend/vercel.json`: direct requests to `/entrar`, `/barbearia/magoanine-c`, `/barbearia/magoanine-c/marcar`, and `/marcacao/:token` now return the application shell with the expected security headers. This verifies routing/headers only, not the client-side booking transaction.
 - Emergency containment was applied directly to production on 2026-10-19: `EXECUTE` on `public.book_appointment(...)` is revoked from `PUBLIC`, `anon`, and `authenticated`; `service_role` retains access. This exact grant change is also present in the checked-in hardening migration, so applying it later is idempotent.
-- Production migration history and `main` are not fully reconciled.
+- The restored historical read-model migration still needs a successful clean database reset and an exact remote migration-list/dry-run comparison before the reconciliation gate can be set.
 - The production Edge Function inventory previously showed `booking-create` v1 and did not include `token-gateway`, `health`, or `resend-webhook`.
 - The Vercel project did not list `VITE_TURNSTILE_SITE_KEY` or `VITE_BOOKING_TURNSTILE_REQUIRED` when inspected on 2026-10-19.
 - A Supabase staging branch requires explicit cost approval before it can be created. The quoted branch compute cost was US$0.01344/hour.
