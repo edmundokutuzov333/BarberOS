@@ -32,7 +32,9 @@ const tests = [
     const source = read('src/pages/BookingWizard.tsx');
     assert.match(source, /VITE_TURNSTILE_SITE_KEY/);
     assert.match(source, /turnstile_token:\s*turnstileToken/);
-    assert.match(source, /!turnstileSiteKey \|\| turnstileToken/);
+    assert.match(source, /turnstileRequired/);
+    assert.match(source, /Boolean\(turnstileSiteKey && turnstileToken\)/);
+    assert.match(source, /VITE_BOOKING_TURNSTILE_REQUIRED/);
   }],
   ['booking uses atomic SQL idempotency and locks down provider credentials', () => {
     const edge = read('../supabase/functions/booking-create/index.ts');
