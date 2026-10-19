@@ -35,28 +35,19 @@ begin
     raise exception 'WAITLIST_JOIN_ANON_EXECUTE_REQUIRED';
   end if;
 
-  if not has_function_privilege(
-    'anon',
-    'public.get_waitlist_offer(uuid)',
-    'EXECUTE'
-  ) then
-    raise exception 'WAITLIST_OFFER_VIEW_ANON_EXECUTE_REQUIRED';
+  if has_function_privilege('anon','public.get_waitlist_offer(uuid)','EXECUTE')
+     or has_function_privilege('authenticated','public.get_waitlist_offer(uuid)','EXECUTE')
+     or has_function_privilege('anon','public.claim_waitlist_offer(uuid)','EXECUTE')
+     or has_function_privilege('authenticated','public.claim_waitlist_offer(uuid)','EXECUTE')
+     or has_function_privilege('anon','public.expire_waitlist_offer(uuid)','EXECUTE')
+     or has_function_privilege('authenticated','public.expire_waitlist_offer(uuid)','EXECUTE') then
+    raise exception 'WAITLIST_TOKEN_RPCS_MUST_BE_GATEWAY_ONLY';
   end if;
 
-  if not has_function_privilege(
-    'anon',
-    'public.claim_waitlist_offer(uuid)',
-    'EXECUTE'
-  ) then
-    raise exception 'WAITLIST_CLAIM_ANON_EXECUTE_REQUIRED';
-  end if;
-
-  if not has_function_privilege(
-    'anon',
-    'public.expire_waitlist_offer(uuid)',
-    'EXECUTE'
-  ) then
-    raise exception 'WAITLIST_EXPIRE_ANON_EXECUTE_REQUIRED';
+  if not has_function_privilege('service_role','public.get_waitlist_offer(uuid)','EXECUTE')
+     or not has_function_privilege('service_role','public.claim_waitlist_offer(uuid)','EXECUTE')
+     or not has_function_privilege('service_role','public.expire_waitlist_offer(uuid)','EXECUTE') then
+    raise exception 'WAITLIST_SERVICE_GATEWAY_GRANTS_REQUIRED';
   end if;
 
   if not has_function_privilege(
