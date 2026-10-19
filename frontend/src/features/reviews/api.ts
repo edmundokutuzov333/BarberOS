@@ -8,16 +8,31 @@ export type ReviewRow = Database['public']['Functions']['get_reviews']['Returns'
 export type ReviewListArgs = Database['public']['Functions']['get_reviews']['Args'];
 
 export async function getReviewByToken(token: string): Promise<ReviewByToken | null> {
-  const data = await invokeTokenGateway<ReviewByToken[]>('review.get', { token });
-  return data?.[0] ?? null;
+  try {
+    const data = await invokeTokenGateway<ReviewByToken[]>('review.get', { token });
+    return data?.[0] ?? null;
+  } catch (error) {
+    if (!(error instanceof Error) || error.message !== 'TOKEN_GATEWAY_NOT_DEPLOYED') throw error;
+    const { data, error: rpcError } = await supabase.rpc('get_review_by_token', { p_token: token });
+    if (rpcError) throw rpcError;
+    return data?.[0] ?? null;
+  }
 }
 
 export async function submitReviewByToken(input: Database['public']['Functions']['submit_review_by_token']['Args']) {
-  const data = await invokeTokenGateway<Array<Database['public']['Functions']['submit_review_by_token']['Returns'][number]>>('review.submit', {
-    token: input.p_token,
-    rating: input.p_rating,
-    comment: input.p_comment,
-  });
+  let data: Array<Database['public']['Functions']['submit_review_by_token']['Returns'][number]>;
+  try {
+    data = await invokeTokenGateway<Array<Database['public']['Functions']['submit_review_by_token']['Returns'][number]>>('review.submit', {
+      token: input.p_token,
+      rating: input.p_rating,
+      comment: input.p_comment,
+    });
+  } catch (error) {
+    if (!(error instanceof Error) || error.message !== 'TOKEN_GATEWAY_NOT_DEPLOYED') throw error;
+    const { data: legacyData, error: rpcError } = await supabase.rpc('submit_review_by_token', input);
+    if (rpcError) throw rpcError;
+    data = legacyData ?? [];
+  }
   const row = data?.[0];
   if (!row) throw new Error('REVIEW_EMPTY_RESPONSE');
   return row;
