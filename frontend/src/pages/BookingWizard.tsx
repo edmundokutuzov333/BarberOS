@@ -86,12 +86,12 @@ function updateSearchParams(
   setSearchParams(next, { replace: true });
 }
 
-function StepHeader({ currentStep, shopName }: { currentStep: number; shopName: string }) {
+function StepHeader({ currentStep, shopName, shopSlug }: { currentStep: number; shopName: string; shopSlug: string }) {
   return (
     <div>
       <div className="flex items-center justify-between gap-4">
         <div>
-          <Link to="" className="t-label text-ink-mid hover:text-ink-hi transition-colors">{shopName}</Link>
+          <Link to={`/barbearia/${shopSlug}`} className="t-label text-ink-mid hover:text-ink-hi transition-colors">{shopName}</Link>
           <p className="t-label text-accent-soft mt-1">Marcação online</p>
         </div>
         <span className="t-label text-ink-mid">{currentStep} de {STEP_LABELS.length}</span>
@@ -444,7 +444,7 @@ export default function BookingWizard() {
     <div className="barber-shell min-h-screen">
       
       <header className="max-w-6xl mx-auto px-5 sm:px-8 py-5">
-        <StepHeader currentStep={effectiveStep} shopName={data.shop.name} />
+        <StepHeader currentStep={effectiveStep} shopName={data.shop.name} shopSlug={data.shop.slug} />
       </header>
 
       <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-28 lg:pb-16">

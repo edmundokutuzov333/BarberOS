@@ -30,12 +30,42 @@ export function getShopPublicPath(slug: string): string {
   return `/barbearia/${slug.trim().toLowerCase()}`;
 }
 
-export function getDirectionsUrl({ lat, lng, address }: { lat: number | null; lng: number | null; address: string | null }): string | null {
+export function getDirectionsUrl({
+  lat,
+  lng,
+  address,
+  maps_url,
+}: {
+  lat: number | null;
+  lng: number | null;
+  address: string | null;
+  maps_url?: string | null;
+}): string | null {
   const destination = lat != null && lng != null ? `${lat},${lng}` : address?.trim();
-  if (!destination) return null;
+  if (!destination) {
+    if (!maps_url) return null;
+    try {
+      const savedMap = new URL(maps_url);
+      const host = savedMap.hostname.toLowerCase();
+      const trustedMapHost =
+        host === 'maps.apple.com' ||
+        host === 'maps.google.com' ||
+        host === 'maps.app.goo.gl' ||
+        host === 'goo.gl' ||
+        host === 'google.com' ||
+        host.endsWith('.google.com') ||
+        /^google\.[a-z.]+$/.test(host);
+      return savedMap.protocol === 'https:' && trustedMapHost ? savedMap.href : null;
+    } catch {
+      return null;
+    }
+  }
+
   const encoded = encodeURIComponent(destination);
   const isApple = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
-  return isApple ? `https://maps.apple.com/?daddr=${encoded}` : `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
+  return isApple
+    ? `https://maps.apple.com/?daddr=${encoded}`
+    : `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
 }
 
 export function distanceInKm(from: { latitude: number; longitude: number }, to: { lat: number | null; lng: number | null }): number | null {
