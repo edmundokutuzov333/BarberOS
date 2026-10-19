@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { useScopedTheme } from '@/themes';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { Field } from '@/components/ui/Field';
+import { TurnstileWidget } from '@/components/security/TurnstileWidget';
 import { buildWhatsAppLink } from '@/lib/calendar';
 import { formatMT, humanError } from '@/lib/utils';
 import { useAvailableDays, useAvailableSlots } from '@/features/availability/api';
@@ -239,6 +240,9 @@ export default function BookingWizard() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingAttemptKey, setBookingAttemptKey] = useState(() => crypto.randomUUID());
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() ?? '';
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   const rawStep = Number(searchParams.get('step') ?? '1');
@@ -336,7 +340,10 @@ export default function BookingWizard() {
   const effectiveStep = !selectableService ? 1 : Math.min(currentStep, start ? 6 : date ? 5 : 4);
   const depositCents = service ? getDepositCents(service, data.shop) : 0;
   const depositConfigValid = !service || depositCents <= service.price_cents;
-  const canBook = Boolean(selectableService && start && (barberParam === 'any' || barber) && depositConfigValid);
+  const canBook = Boolean(
+    selectableService && start && (barberParam === 'any' || barber) && depositConfigValid &&
+    (!turnstileSiteKey || turnstileToken),
+  );
 
   const setStep = (step: number) => updateSearchParams(searchParams, setSearchParams, { step: String(step) });
 
@@ -392,6 +399,10 @@ export default function BookingWizard() {
   };
 
   const submitBooking = async () => {
+    if (turnstileSiteKey && !turnstileToken) {
+      setBookingError('Conclua a verificação de segurança antes de confirmar a marcação.');
+      return;
+    }
     if (!canBook || !slug || !selectableService || !start) return;
 
     const nextErrors: Record<string, string> = {};
@@ -417,16 +428,32 @@ export default function BookingWizard() {
         p_phone: normalizeMozPhone(phone),
         p_email: email || null,
         idempotency_key: bookingAttemptKey,
+        ...(turnstileSiteKey ? { turnstile_token: turnstileToken ?? undefined } : {}),
       });
       rememberLocalBooking({ token: result.manage_token, shopSlug: slug, startsAt: start, serviceName: selectableService.name });
       navigate(`/marcacao/${result.manage_token}`, { replace: true });
       setBookingAttemptKey(crypto.randomUUID());
     } catch (error) {
-      const message = String(error).includes('SLOT_TAKEN') || String(error).includes('SLOT_UNAVAILABLE')
+      const errorCode = error && typeof error === 'object' && 'code' in error
+        ? String((error as { code?: unknown }).code ?? '')
+        : String(error);
+      const message = errorCode.includes('SLOT_TAKEN') || errorCode.includes('SLOT_UNAVAILABLE')
         ? 'Este horário acabou de ser ocupado. Escolha outro horário.'
-        : humanError(error);
+        : errorCode === 'BOT_CHECK_FAILED'
+          ? 'A verificação de segurança expirou ou não foi aceite. Verifique novamente.'
+          : errorCode === 'RATE_LIMITED'
+            ? 'Foram feitas demasiadas tentativas. Aguarde alguns minutos e tente novamente.'
+            : errorCode === 'IDEMPOTENCY_IN_PROGRESS'
+              ? 'Esta tentativa ainda está a ser processada. Aguarde um momento antes de tentar novamente.'
+              : errorCode === 'IDEMPOTENCY_STORE_UNAVAILABLE'
+                ? 'Não foi possível confirmar o estado da marcação. Aguarde e, se o erro persistir, contacte o suporte.'
+                : humanError(error);
       setBookingError(message);
-      if (String(error).includes('SLOT_TAKEN') || String(error).includes('SLOT_UNAVAILABLE')) {
+      if (turnstileSiteKey) {
+        setTurnstileToken(null);
+        setTurnstileResetKey((value) => value + 1);
+      }
+      if (errorCode.includes('SLOT_TAKEN') || errorCode.includes('SLOT_UNAVAILABLE')) {
         updateSearchParams(searchParams, setSearchParams, { step: '5', start: null });
         await slotsQuery.refetch();
       }
@@ -657,6 +684,16 @@ export default function BookingWizard() {
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                     <p className="t-body text-ink-mid">Sem conta e sem palavra-passe. A sua marcação ficará acessível através do link de gestão enviado após a criação.</p>
                   </div>
+                  {turnstileSiteKey && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+                      <p className="t-label text-ink-mid">Confirme que é uma pessoa antes de finalizar.</p>
+                      <TurnstileWidget
+                        key={turnstileResetKey}
+                        siteKey={turnstileSiteKey}
+                        onTokenChange={setTurnstileToken}
+                      />
+                    </div>
+                  )}
                   {bookingError && <div aria-live="assertive"><ErrorState message={bookingError} /></div>}
                   <Button
                     type="submit"

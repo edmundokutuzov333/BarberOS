@@ -1,4 +1,4 @@
-export const SLOT_CONFLICT_CODES = new Set(["SLOT_TAKEN", "SLOT_UNAVAILABLE"]);
+export const SLOT_CONFLICT_CODES = new Set(["SLOT_TAKEN", "SLOT_UNAVAILABLE", "IDEMPOTENCY_IN_PROGRESS"]);
 
 export const CLIENT_ERROR_CODES = new Set([
   "INVALID_DATE",
@@ -14,6 +14,8 @@ export const CLIENT_ERROR_CODES = new Set([
   "RATE_LIMITED",
 ]);
 
+const SERVER_ERROR_CODES = new Set(["IDEMPOTENCY_STORE_UNAVAILABLE", "RATE_LIMIT_UNAVAILABLE"]);
+
 export function extractDomainCode(error: unknown): string {
   const message = typeof error === "string"
     ? error
@@ -21,7 +23,7 @@ export function extractDomainCode(error: unknown): string {
       ? String((error as { message?: unknown }).message ?? "")
       : "";
 
-  for (const code of [...SLOT_CONFLICT_CODES, ...CLIENT_ERROR_CODES]) {
+  for (const code of [...SLOT_CONFLICT_CODES, ...CLIENT_ERROR_CODES, ...SERVER_ERROR_CODES]) {
     if (message.includes(code)) return code;
   }
 
@@ -41,6 +43,11 @@ export function publicBookingMessage(code: string): string {
     case "SLOT_TAKEN":
     case "SLOT_UNAVAILABLE":
       return "Este horário acabou de ser ocupado. Escolha outro horário.";
+    case "IDEMPOTENCY_IN_PROGRESS":
+      return "Esta tentativa ainda está a ser processada. Aguarda um momento antes de tentares de novo.";
+    case "IDEMPOTENCY_STORE_UNAVAILABLE":
+    case "RATE_LIMIT_UNAVAILABLE":
+      return "Não foi possível confirmar a marcação agora. Tenta novamente dentro de instantes.";
     case "INVALID_NAME":
       return "Escreve um nome com pelo menos 2 letras.";
     case "INVALID_PHONE":

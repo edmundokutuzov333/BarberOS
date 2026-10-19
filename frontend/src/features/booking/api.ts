@@ -59,6 +59,10 @@ async function readFunctionError(error: unknown): Promise<{ code: string; status
     'HAIRCUT_NOT_FOUND',
     'BARBER_NOT_FOUND',
     'INVALID_DEPOSIT_CONFIGURATION',
+    'BOT_CHECK_FAILED',
+    'RATE_LIMITED',
+    'IDEMPOTENCY_IN_PROGRESS',
+    'IDEMPOTENCY_STORE_UNAVAILABLE',
   ];
 
   const code = knownCodes.find((candidate) => message.includes(candidate)) ?? 'BOOKING_CREATE_FAILED';

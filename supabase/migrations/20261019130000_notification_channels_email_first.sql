@@ -13,6 +13,22 @@ returns boolean language sql stable security definer set search_path = '' as $$
 $$;
 revoke all on function private.channel_enabled(text) from public, anon, authenticated;
 
+-- Enforce the platform channel setting for every producer, including legacy token RPCs.
+create or replace function private.enforce_notification_channel()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if not private.channel_enabled(new.channel::text) then
+    new.status := 'skipped';
+    new.error := 'CHANNEL_DISABLED';
+  end if;
+  return new;
+end $$;
+revoke all on function private.enforce_notification_channel() from public, anon, authenticated;
+drop trigger if exists enforce_notification_channel on public.notifications;
+create trigger enforce_notification_channel
+before insert on public.notifications
+for each row execute function private.enforce_notification_channel();
+
 update public.notifications set status='skipped', error='CHANNEL_DISABLED'
 where channel='whatsapp' and status in ('queued','processing') and not private.channel_enabled('whatsapp');
 
@@ -33,9 +49,9 @@ begin
       insert into public.notifications(barbershop_id,appointment_id,channel,template_key,recipient,scheduled_for,payload)
       values (a.barbershop_id,a.id,'whatsapp','reminder_24h',v_phone,a.starts_at-interval '24 hours',jsonb_build_object('manage_token',a.manage_token,'appointment_id',a.id));
     end if;
-    if a.starts_at - interval '2 hours' > now() then
+    if a.starts_at - interval '1 hour' > now() then
       insert into public.notifications(barbershop_id,appointment_id,channel,template_key,recipient,scheduled_for,payload)
-      values (a.barbershop_id,a.id,'whatsapp','reminder_1h',v_phone,a.starts_at-interval '2 hours',jsonb_build_object('manage_token',a.manage_token,'appointment_id',a.id));
+      values (a.barbershop_id,a.id,'whatsapp','reminder_1h',v_phone,a.starts_at-interval '1 hour',jsonb_build_object('manage_token',a.manage_token,'appointment_id',a.id));
     end if;
   end if;
   if v_email is not null and private.channel_enabled('email') then
@@ -45,9 +61,9 @@ begin
       insert into public.notifications(barbershop_id,appointment_id,channel,template_key,recipient,scheduled_for,payload)
       values (a.barbershop_id,a.id,'email','reminder_24h',v_email,a.starts_at-interval '24 hours',jsonb_build_object('manage_token',a.manage_token,'appointment_id',a.id));
     end if;
-    if a.starts_at - interval '2 hours' > now() then
+    if a.starts_at - interval '1 hour' > now() then
       insert into public.notifications(barbershop_id,appointment_id,channel,template_key,recipient,scheduled_for,payload)
-      values (a.barbershop_id,a.id,'email','reminder_1h',v_email,a.starts_at-interval '2 hours',jsonb_build_object('manage_token',a.manage_token,'appointment_id',a.id));
+      values (a.barbershop_id,a.id,'email','reminder_1h',v_email,a.starts_at-interval '1 hour',jsonb_build_object('manage_token',a.manage_token,'appointment_id',a.id));
     end if;
   end if;
 end $$;

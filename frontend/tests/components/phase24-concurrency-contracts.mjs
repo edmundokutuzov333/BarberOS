@@ -28,6 +28,22 @@ const tests = [
     assert.match(source, /needs_payment/);
     assert.doesNotMatch(source, /appointment_id.*manage_token/);
   }],
+  ['booking wizard sends Turnstile token when a site key is configured', () => {
+    const source = read('src/pages/BookingWizard.tsx');
+    assert.match(source, /VITE_TURNSTILE_SITE_KEY/);
+    assert.match(source, /turnstile_token:\s*turnstileToken/);
+    assert.match(source, /!turnstileSiteKey \|\| turnstileToken/);
+  }],
+  ['booking uses atomic SQL idempotency and locks down provider credentials', () => {
+    const edge = read('../supabase/functions/booking-create/index.ts');
+    const migration = read('../supabase/migrations/20261019160000_payment_rpc_privilege_lockdown.sql');
+    const bookingMigration = read('../supabase/migrations/20261019110000_booking_gateway_hardening.sql');
+    assert.match(edge, /rpc\("book_appointment_idempotent"/);
+    assert.match(migration, /on conflict \(key\) do nothing/i);
+    assert.match(migration, /revoke all on function public\.get_payment_runtime_for_token\(uuid\)/i);
+    assert.match(migration, /grant execute on function public\.book_appointment_idempotent/i);
+    assert.match(bookingMigration, /grant select on public\.booking_idempotency to service_role/i);
+  }],
 ];
 
 let failed = 0;

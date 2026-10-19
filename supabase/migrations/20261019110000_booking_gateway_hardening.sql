@@ -34,6 +34,7 @@ create table if not exists public.booking_idempotency (
 );
 alter table public.booking_idempotency enable row level security;
 revoke all on public.booking_idempotency from public, anon, authenticated;
+grant select on public.booking_idempotency to service_role;
 
 revoke execute on function public.book_appointment(text, uuid, uuid, uuid, timestamptz, text, text, text) from public, anon, authenticated;
 grant execute on function public.book_appointment(text, uuid, uuid, uuid, timestamptz, text, text, text) to service_role;

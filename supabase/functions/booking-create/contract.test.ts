@@ -34,3 +34,24 @@ Deno.test("conflict message is customer-recoverable", () => {
     throw new Error("conflict message must explain slot invalidation");
   }
 });
+
+Deno.test("bot check is forbidden", () => {
+  if (httpStatusForDomainCode("BOT_CHECK_FAILED") !== 403) {
+    throw new Error("BOT_CHECK_FAILED must map to HTTP 403");
+  }
+});
+
+Deno.test("rate limit is throttled", () => {
+  if (httpStatusForDomainCode("RATE_LIMITED") !== 429) {
+    throw new Error("RATE_LIMITED must map to HTTP 429");
+  }
+});
+
+Deno.test("duplicate in-flight idempotency request is a conflict", () => {
+  if (httpStatusForDomainCode("IDEMPOTENCY_IN_PROGRESS") !== 409) {
+    throw new Error("IDEMPOTENCY_IN_PROGRESS must map to HTTP 409");
+  }
+  if (!publicBookingMessage("IDEMPOTENCY_IN_PROGRESS").includes("processada")) {
+    throw new Error("in-flight idempotency message should be actionable");
+  }
+});
