@@ -24,16 +24,20 @@ for (const name of names) {
 const config = fs.readFileSync(path.join(root, 'supabase', 'config.toml'), 'utf8');
 if (!config.includes('project_id = "alseiinjzwjdiwtvkdzy"')) throw new Error('SUPABASE_PROJECT_REF_MISMATCH');
 
-const requiredMigration = '20261019170000_booking_and_token_gateway.sql';
+const requiredMigration = '20261019170000_token_rpc_lockdown.sql';
 if (!names.includes(requiredMigration)) throw new Error('BOOKING_SECURITY_MIGRATION_MISSING');
-const bookingMigration = fs.readFileSync(path.join(migrationDir, requiredMigration), 'utf8');
+const bookingMigration = fs.readFileSync(path.join(migrationDir, '20261019160000_payment_rpc_privilege_lockdown.sql'), 'utf8');
 for (const required of [
   'public.book_appointment_idempotent',
   'revoke all on function public.book_appointment_idempotent',
+  'revoke all on function public.book_appointment(text',
   'from public, anon, authenticated',
-  "p.proname like",
 ]) {
   if (!bookingMigration.includes(required)) throw new Error('BOOKING_SECURITY_MIGRATION_CONTRACT_MISSING:' + required);
+}
+const tokenMigration = fs.readFileSync(path.join(migrationDir, requiredMigration), 'utf8');
+if (!tokenMigration.includes('p.proname like') || !tokenMigration.includes('grant execute on function %s to service_role')) {
+  throw new Error('TOKEN_RPC_LOCKDOWN_CONTRACT_MISSING');
 }
 
 for (const fn of ['booking-create', 'token-gateway', 'health', 'resend-webhook']) {
