@@ -140,10 +140,11 @@ end
 $$;
 
 select
-  has_function_privilege('anon','public.get_appointment_by_token(uuid)','execute') as anon_view_execute,
-  has_function_privilege('anon','public.get_reschedule_slots_by_token(uuid,date)','execute') as anon_slots_execute,
-  has_function_privilege('anon','public.cancel_appointment_by_token(uuid,text)','execute') as anon_cancel_execute,
-  has_function_privilege('anon','public.reschedule_appointment_by_token(uuid,timestamptz)','execute') as anon_reschedule_execute,
+  not has_function_privilege('anon','public.get_appointment_by_token(uuid)','execute') as anon_view_denied,
+  not has_function_privilege('anon','public.get_reschedule_slots_by_token(uuid,date)','execute') as anon_slots_denied,
+  not has_function_privilege('anon','public.cancel_appointment_by_token(uuid,text)','execute') as anon_cancel_denied,
+  not has_function_privilege('anon','public.reschedule_appointment_by_token(uuid,timestamptz)','execute') as anon_reschedule_denied,
+  has_function_privilege('service_role','public.get_appointment_by_token(uuid)','execute') as service_role_view_allowed,
   not has_table_privilege('anon','public.appointments','SELECT') as anon_no_direct_appointment_select,
   (select count(*) from public.appointments) as appointments,
   (select count(*) from public.notifications) as notifications,
