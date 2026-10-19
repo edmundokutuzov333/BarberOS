@@ -9,9 +9,6 @@ port = 54322
 [studio]
 port = 54323
 
-[functions]
-enabled = true
-
 [functions.resend-webhook]
 verify_jwt = false
 
