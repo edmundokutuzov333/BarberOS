@@ -75,7 +75,7 @@ export default function App() {
     /^\/(?:marcacao|vaga)(?:\/|$)/.test(pathname) ||
     /^\/barbearia\/[^/]+\/marcar\/?$/.test(pathname);
   const atmosphereVariant: 'ambient' | 'hero' | 'quiet' | 'showcase' =
-    isLanding || isAbout ? 'hero' : isPublicShop ? 'showcase' : isQuietSurface ? 'quiet' : 'ambient';
+    isLanding ? 'hero' : isPublicShop ? 'showcase' : isAbout ? 'hero' : isQuietSurface ? 'quiet' : 'ambient';
 
   useEffect(() => {
     const root = document.documentElement;
