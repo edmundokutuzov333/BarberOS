@@ -28,17 +28,20 @@ This runbook governs the rollout of the booking hardening, token gateway, and em
 
 - Never reset or recreate the production database.
 - Do not restore anonymous execution on `book_appointment` as a rollback shortcut. If the new booking Edge Function is unhealthy, restore the last known-good Edge Function version and investigate before changing grants.
-- Keep the frontend rollout flag off until the Turnstile site key and server secret are verified. The UI remains compatible with the currently deployed booking function until the coordinated release is ready.
+- Do not deploy the frontend until `/functions/v1/health` and `token-gateway` are live. Token management must fail closed; direct RPC fallbacks are intentionally removed from the current frontend.
 - Email-first must not be activated until Resend is verified; do not silently re-enable WhatsApp without an approved provider and policy.
 
 ## Current known blockers
 
 - The production SPA routing defect was fixed in `frontend/vercel.json`: direct requests to `/entrar`, `/barbearia/magoanine-c`, `/barbearia/magoanine-c/marcar`, and `/marcacao/:token` now return the application shell with the expected security headers. This verifies routing/headers only, not the client-side booking transaction.
 - Emergency containment was applied directly to production on 2026-10-19: `EXECUTE` on `public.book_appointment(...)`, `get_payment_runtime_for_token(uuid)`, `get_payment_status_by_token(uuid)`, and `init_payment_from_token(...)` is revoked from `PUBLIC`, `anon`, and `authenticated`; `service_role` retains access. These exact grant changes are present in the checked-in hardening migration, so applying it later is idempotent.
-- The restored historical read-model migration still needs a successful clean database reset and an exact remote migration-list/dry-run comparison before the reconciliation gate can be set.
-- The existing dedicated Phase 24 test environment passed database concurrency, Edge Function conflict contracts, and HTTP 200/409 plus idempotency replay on commit `88f95677562a0278a873f6c4ad15b0fb2e4c4c2f`. This does not yet certify the new token gateway or real Resend delivery.
+- A clean local Supabase start exposed a malformed phone-validation SQL migration (`20260918153200_booking_phone_validation_strict.sql`). The migration has been repaired on `main`, but the latest clean-reset run must complete before the schema chain is certified.
+- The restored historical read-model migration still needs an exact remote migration-list/dry-run comparison before the reconciliation gate can be set.
+- Historical Phase 24 results from commit `88f95677562a0278a873f6c4ad15b0fb2e4c4c2f` are not current acceptance evidence. Current workflow logs show `BARBEROS_TEST_DATABASE_URL` and the dedicated HTTP concurrency environment are absent; those tests previously reported `SKIP`. The workflow has now been changed to fail when the dedicated environment is missing.
 - The production Edge Function inventory previously showed `booking-create` v1 and did not include `token-gateway`, `health`, or `resend-webhook`.
 - The Vercel project did not list `VITE_TURNSTILE_SITE_KEY` or `VITE_BOOKING_TURNSTILE_REQUIRED` when inspected on 2026-10-19.
 - A Supabase staging branch requires explicit cost approval before it can be created. The quoted branch compute cost was US$0.01344/hour.
+
+- The Vercel deployment workflow now requires a healthy, versioned Supabase health endpoint and a responding `token-gateway`; it blocks frontend production deployment while the backend release is incomplete.
 
 Until these blockers are cleared, production must remain uncertified and the gated Supabase production workflow must not be run.
