@@ -25,12 +25,14 @@ export async function invokeTokenGateway<T>(
   if (error) {
     const context = (error as { context?: Response }).context;
     if (context) {
+      let response: TokenGatewayResponse<unknown> | null = null;
       try {
-        const response = await context.clone().json() as TokenGatewayResponse<unknown>;
-        if (typeof response.error === 'string') throw new Error(response.error);
-      } catch (cause) {
-        if (cause instanceof Error && cause.message !== '') throw cause;
+        response = await context.clone().json() as TokenGatewayResponse<unknown>;
+      } catch {
+        // A missing Edge Function may return plain text rather than JSON.
       }
+      if (typeof response?.error === 'string') throw new Error(response.error);
+      if (context.status === 404) throw new Error('TOKEN_GATEWAY_NOT_DEPLOYED');
     }
     throw error;
   }
