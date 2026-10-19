@@ -31,6 +31,7 @@ jobs:
           CONFIRMATION: ${{ inputs.confirm_production_release }}
           HISTORY_RECONCILED: ${{ vars.BARBEROS_PRODUCTION_MIGRATION_HISTORY_RECONCILED }}
           TURNSTILE_CONFIGURED: ${{ vars.BARBEROS_TURNSTILE_CONFIGURED }}
+          RESEND_CONFIGURED: ${{ vars.BARBEROS_RESEND_CONFIGURED }}
         run: |
           if [ "$CONFIRMATION" != "APPLY-SUPABASE-PRODUCTION" ]; then
             echo "::error::Production release requires the exact confirmation phrase."
@@ -41,7 +42,11 @@ jobs:
             exit 1
           fi
           if [ "$TURNSTILE_CONFIGURED" != "true" ]; then
-            echo "::error::Production release blocked: configure VITE_TURNSTILE_SITE_KEY in Vercel and TURNSTILE_SECRET_KEY in Supabase before releasing booking-create."
+            echo "::error::Production release blocked: configure VITE_TURNSTILE_SITE_KEY and VITE_BOOKING_TURNSTILE_REQUIRED=true in Vercel, TURNSTILE_SECRET_KEY in Supabase, and verify the allowed production origins."
+            exit 1
+          fi
+          if [ "$RESEND_CONFIGURED" != "true" ]; then
+            echo "::error::Production release blocked: configure Resend, the sender identity, and the signed webhook secret before switching notifications to email-first."
             exit 1
           fi
 
@@ -67,6 +72,21 @@ jobs:
         with:
           version: latest
 
+      - name: Verify required runtime secrets without printing values
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase secrets list --project-ref "$SUPABASE_PROJECT_REF" > "$RUNNER_TEMP/barberos-supabase-secrets.txt"
+          for name in TURNSTILE_SECRET_KEY RATE_LIMIT_SALT ALLOWED_ORIGINS RESEND_API_KEY RESEND_WEBHOOK_SECRET NOTIFICATION_EMAIL_FROM; do
+            if ! grep -q "$name" "$RUNNER_TEMP/barberos-supabase-secrets.txt"; then
+              echo "::error::Required Supabase runtime secret is missing: $name"
+              exit 1
+            fi
+          done
+          echo "Required runtime secret names are present. Values were not read or printed."
+
       - name: Preview database changes
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -83,6 +103,24 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Verify production health endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          response="$(curl --retry 5 --retry-delay 2 --retry-all-errors --silent --show-error --fail "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/health")"
+          printf '%s' "$response" | node -e '
+            let input = "";
+            process.stdin.on("data", (chunk) => input += chunk);
+            process.stdin.on("end", () => {
+              const value = JSON.parse(input);
+              if (value.ok !== true || typeof value.db_ms !== "number" || typeof value.version !== "string") {
+                console.error("Health contract failed");
+                process.exit(1);
+              }
+              console.log(JSON.stringify({ ok: value.ok, db_ms: value.db_ms, version: value.version }));
+            });
+          '
 
       - name: Release summary
         run: |
