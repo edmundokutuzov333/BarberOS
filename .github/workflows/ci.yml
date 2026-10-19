@@ -54,7 +54,13 @@ jobs:
         with:
           version: latest
       - name: Start isolated local Supabase
-        run: supabase start
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase start --exclude studio,imgproxy,inbucket,logflare,vector 2>&1 | tee "$RUNNER_TEMP/barberos-supabase-start.log" || {
+            tail -n 120 "$RUNNER_TEMP/barberos-supabase-start.log"
+            exit 1
+          }
       - name: Apply the complete migration chain from empty state
         run: supabase db reset
       - name: Run database contract tests
