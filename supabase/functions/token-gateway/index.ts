@@ -48,6 +48,9 @@ Deno.serve(async (req) => {
     "appointment.reschedule",
     "review.get",
     "review.submit",
+    "waitlist.get",
+    "waitlist.claim",
+    "waitlist.expire",
   ]);
   if (!allowedActions.has(action)) return json({ ok: false, error: "TOKEN_ACTION_INVALID" }, 400, cors);
 
@@ -71,16 +74,38 @@ Deno.serve(async (req) => {
 
   try {
     const admin = adminClient();
-    const { data: appointment, error: lookupError } = await admin
-      .from("appointments")
-      .select("id, manage_token_expires_at")
-      .eq("manage_token", token)
-      .maybeSingle();
+    if (action.startsWith("waitlist.")) {
+      const { data: offer, error: lookupError } = await admin
+        .from("waitlist_entries")
+        .select("id, status, offer_expires_at")
+        .eq("offer_token", token)
+        .maybeSingle();
 
-    if (lookupError) return json({ ok: false, error: "TOKEN_GATEWAY_UNAVAILABLE" }, 503, cors);
-    if (!appointment || !appointment.manage_token_expires_at
-      || Date.parse(appointment.manage_token_expires_at) <= Date.now()) {
-      return json({ ok: false, error: "APPOINTMENT_NOT_FOUND" }, 404, cors);
+      if (lookupError) return json({ ok: false, error: "TOKEN_GATEWAY_UNAVAILABLE" }, 503, cors);
+      if (!offer) return json({ ok: false, error: "WAITLIST_OFFER_NOT_FOUND" }, 404, cors);
+
+      const expiresAt = offer.offer_expires_at ? Date.parse(offer.offer_expires_at) : Number.NaN;
+      if (action === "waitlist.claim"
+        && (offer.status !== "offered" || !offer.offer_expires_at || expiresAt <= Date.now())) {
+        return json({ ok: false, error: "WAITLIST_OFFER_EXPIRED" }, 410, cors);
+      }
+      if (action === "waitlist.expire"
+        && offer.status === "offered"
+        && (!offer.offer_expires_at || expiresAt > Date.now())) {
+        return json({ ok: false, error: "WAITLIST_OFFER_STILL_ACTIVE" }, 409, cors);
+      }
+    } else {
+      const { data: appointment, error: lookupError } = await admin
+        .from("appointments")
+        .select("id, manage_token_expires_at")
+        .eq("manage_token", token)
+        .maybeSingle();
+
+      if (lookupError) return json({ ok: false, error: "TOKEN_GATEWAY_UNAVAILABLE" }, 503, cors);
+      if (!appointment || !appointment.manage_token_expires_at
+        || Date.parse(appointment.manage_token_expires_at) <= Date.now()) {
+        return json({ ok: false, error: "APPOINTMENT_NOT_FOUND" }, 404, cors);
+      }
     }
 
     const salt = Deno.env.get("RATE_LIMIT_SALT")?.trim() ?? "";
@@ -121,11 +146,32 @@ Deno.serve(async (req) => {
         rpcName = "submit_review_by_token";
         args = { p_token: token, p_rating: Number(body.rating), p_comment: body.comment ?? null };
         break;
+      case "waitlist.get":
+        rpcName = "get_waitlist_offer";
+        args = { p_token: token };
+        break;
+      case "waitlist.claim":
+        rpcName = "claim_waitlist_offer";
+        args = { p_token: token };
+        break;
+      case "waitlist.expire":
+        rpcName = "expire_waitlist_offer";
+        args = { p_token: token };
+        break;
     }
 
     const { data, error } = await admin.rpc(rpcName, args as never);
     if (error) {
       const message = error.message ?? "";
+      if (/WAITLIST_OFFER_NOT_FOUND/i.test(message)) {
+        return json({ ok: false, error: "WAITLIST_OFFER_NOT_FOUND" }, 404, cors);
+      }
+      if (/WAITLIST_OFFER_EXPIRED/i.test(message)) {
+        return json({ ok: false, error: "WAITLIST_OFFER_EXPIRED" }, 410, cors);
+      }
+      if (/WAITLIST_OFFER_STILL_ACTIVE|WAITLIST_OFFER_NOT_ACTIVE|WAITLIST_SLOT_TAKEN/i.test(message)) {
+        return json({ ok: false, error: message.match(/WAITLIST_[A-Z_]+/)?.[0] ?? "WAITLIST_ACTION_FAILED" }, 409, cors);
+      }
       if (/TOKEN_EXPIRED|APPOINTMENT_NOT_FOUND|INVALID_TOKEN/i.test(message)) {
         return json({ ok: false, error: "APPOINTMENT_NOT_FOUND" }, 404, cors);
       }
