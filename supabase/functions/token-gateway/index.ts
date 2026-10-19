@@ -77,6 +77,20 @@ Deno.serve(async (req) => {
 
   try {
     const admin = adminClient();
+
+    const salt = Deno.env.get("RATE_LIMIT_SALT")?.trim() ?? "";
+    if (!salt) return json({ ok: false, error: "TOKEN_GATEWAY_UNAVAILABLE" }, 503, cors);
+    const tokenHash = await sha256Hex(salt + ":token:" + token);
+    const tokenLimit = await consume(admin, "token:" + tokenHash, 30, 60);
+    const ip = clientIp(req);
+    const ipLimit = await consume(admin, "token-ip:" + await sha256Hex(salt + ":ip:" + ip), 120, 60);
+    if (!tokenLimit.allowed || !ipLimit.allowed) {
+      const retryAfter = Math.max(tokenLimit.allowed ? 0 : tokenLimit.retryAfter, ipLimit.allowed ? 0 : ipLimit.retryAfter);
+      return json({ ok: false, error: "RATE_LIMITED", retry_after_seconds: retryAfter }, 429, {
+        ...cors,
+        "retry-after": String(retryAfter),
+      });
+    }
     if (action.startsWith("waitlist.")) {
       const { data: offer, error: lookupError } = await admin
         .from("waitlist_entries")
@@ -111,21 +125,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const salt = Deno.env.get("RATE_LIMIT_SALT")?.trim() ?? "";
-    if (!salt) return json({ ok: false, error: "TOKEN_GATEWAY_UNAVAILABLE" }, 503, cors);
-    const tokenHash = await sha256Hex(salt + ":token:" + token);
-    const tokenLimit = await consume(admin, "token:" + tokenHash, 30, 60);
-    const ip = clientIp(req);
-    const ipLimit = ip === "unknown"
-      ? { allowed: true, retryAfter: 60 }
-      : await consume(admin, "token-ip:" + await sha256Hex(salt + ":ip:" + ip), 120, 60);
-    if (!tokenLimit.allowed || !ipLimit.allowed) {
-      const retryAfter = Math.max(tokenLimit.allowed ? 0 : tokenLimit.retryAfter, ipLimit.allowed ? 0 : ipLimit.retryAfter);
-      return json({ ok: false, error: "RATE_LIMITED", retry_after_seconds: retryAfter }, 429, {
-        ...cors,
-        "retry-after": String(retryAfter),
-      });
-    }
+
 
     let rpcName: string;
     let args: Record<string, unknown>;
