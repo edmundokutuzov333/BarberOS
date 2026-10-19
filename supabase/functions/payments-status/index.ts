@@ -14,10 +14,20 @@ Deno.serve(async(req)=>{
  if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
  if(req.method!=="POST")return json({ok:false,error:"METHOD_NOT_ALLOWED"},405);
  let body:any;try{body=await req.json();}catch{return json({ok:false,error:"PAYMENT_REQUEST_INVALID"},400);}
- if(typeof body?.token!=="string")return json({ok:false,error:"PAYMENT_REQUEST_INVALID"},400);
+ if(typeof body?.token!=="string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.token))return json({ok:false,error:"PAYMENT_REQUEST_INVALID"},400);
 
  try{
   const admin=createClient(Deno.env.get("SUPABASE_URL")!,secretKey(),{auth:{autoRefreshToken:false,persistSession:false}});
+  const {data:appointment,error:tokenError}=await admin
+   .from("appointments")
+   .select("manage_token_expires_at")
+   .eq("manage_token",body.token)
+   .maybeSingle();
+  if(tokenError)return json({ok:false,error:"TOKEN_VALIDATION_UNAVAILABLE"},503);
+  if(!appointment || !appointment.manage_token_expires_at || Date.parse(appointment.manage_token_expires_at)<=Date.now()){
+   return json({ok:false,error:"APPOINTMENT_NOT_FOUND"},404);
+  }
+
   const {data:runtime,error:runtimeError}=await admin.rpc("get_payment_runtime_for_token",{p_token:body.token});
   if(runtimeError)return json({ok:false,error:"PAYMENT_STATUS_UNAVAILABLE"},500);
   const r=runtime?.[0];
