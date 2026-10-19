@@ -18,7 +18,7 @@ permissions:
 
 concurrency:
   group: barberos-vercel-production
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   preflight:
@@ -48,6 +48,29 @@ jobs:
         run: corepack yarn perf:budget
       - working-directory: frontend
         run: corepack yarn typecheck
+      - name: Require the Supabase gateway release before shipping frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://alseiinjzwjdiwtvkdzy.supabase.co/functions/v1"
+          health="$(curl --retry 3 --retry-delay 2 --retry-all-errors --silent --show-error --fail "$base/health")"
+          printf '%s' "$health" | node -e '
+            let input = "";
+            process.stdin.on("data", (chunk) => input += chunk);
+            process.stdin.on("end", () => {
+              let value;
+              try { value = JSON.parse(input); } catch { console.error("Supabase health returned invalid JSON"); process.exit(1); }
+              if (value.ok !== true || typeof value.db_ms !== "number" || typeof value.version !== "string" || value.version === "unknown") {
+                console.error("Supabase backend release is not certified; frontend deployment is blocked");
+                process.exit(1);
+              }
+            });
+          '
+          gateway_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --request OPTIONS "$base/token-gateway" --header 'Origin: https://barber-os-orpin.vercel.app' --header 'Access-Control-Request-Method: POST')"
+          if [ "$gateway_status" != "200" ]; then
+            echo "::error::token-gateway is not ready (HTTP $gateway_status); frontend deployment is blocked."
+            exit 1
+          fi
 
   deploy:
     name: Vercel production deployment
