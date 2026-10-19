@@ -24,6 +24,13 @@ for (const name of names) {
 const config = fs.readFileSync(path.join(root, 'supabase', 'config.toml'), 'utf8');
 if (!config.includes('project_id = "alseiinjzwjdiwtvkdzy"')) throw new Error('SUPABASE_PROJECT_REF_MISMATCH');
 
+const historicalMigration = '20260919005227_release_audit_appointments_read_model.sql';
+if (!names.includes(historicalMigration)) throw new Error('PRODUCTION_HISTORY_MIGRATION_MISSING');
+const historicalSource = fs.readFileSync(path.join(migrationDir, historicalMigration), 'utf8');
+if (!historicalSource.includes('public.get_appointments') || !historicalSource.includes('revoke all on function public.get_appointments')) {
+  throw new Error('PRODUCTION_HISTORY_MIGRATION_CONTRACT_MISSING');
+}
+
 const requiredMigration = '20261019170000_token_rpc_lockdown.sql';
 if (!names.includes(requiredMigration)) throw new Error('BOOKING_SECURITY_MIGRATION_MISSING');
 const bookingMigration = fs.readFileSync(path.join(migrationDir, '20261019160000_payment_rpc_privilege_lockdown.sql'), 'utf8');
