@@ -29,7 +29,7 @@ export default function QrScanDialog({ onSlug, onClose }: { onSlug: (slug: strin
   return <div role="dialog" aria-modal="true" aria-label="Ler QR da barbearia" className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4">
     <div className="w-full max-w-sm space-y-3 rounded-3xl glass p-4">
       {error ? <p role="alert" className="p-4 text-sm">{error}</p> : <video ref={video} className="aspect-square w-full rounded-2xl object-cover" muted playsInline />}
-      <button className="min-h-11 w-full rounded-full border border-white/20 px-4" onClick={onClose}>Fechar</button>
+      <button type="button" className="min-h-11 w-full rounded-full border border-white/20 px-4" onClick={onClose}>Fechar</button>
     </div>
   </div>;
 }
