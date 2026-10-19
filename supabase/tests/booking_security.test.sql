@@ -12,12 +12,12 @@ select ok(
 );
 
 select ok(
-  not has_function_privilege('anon', to_regprocedure('public.book_appointment(uuid,uuid,uuid,uuid,timestamptz,text,text,text)'), 'EXECUTE'),
+  not has_function_privilege('anon', to_regprocedure('public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)'), 'EXECUTE'),
   'anon cannot execute the raw booking RPC'
 );
 
 select ok(
-  not has_function_privilege('authenticated', to_regprocedure('public.book_appointment(uuid,uuid,uuid,uuid,timestamptz,text,text,text)'), 'EXECUTE'),
+  not has_function_privilege('authenticated', to_regprocedure('public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)'), 'EXECUTE'),
   'authenticated cannot execute the raw booking RPC'
 );
 
