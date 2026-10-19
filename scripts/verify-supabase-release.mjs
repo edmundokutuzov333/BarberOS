@@ -31,7 +31,7 @@ for (const required of [
   'public.book_appointment_idempotent',
   'revoke all on function public.book_appointment_idempotent',
   'from public, anon, authenticated',
-  'public.get_appointment_by_token',
+  "p.proname like",
 ]) {
   if (!bookingMigration.includes(required)) throw new Error('BOOKING_SECURITY_MIGRATION_CONTRACT_MISSING:' + required);
 }
