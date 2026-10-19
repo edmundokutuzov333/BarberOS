@@ -138,7 +138,7 @@ on conflict do nothing;
 update public.barbershops
 set name = 'Mufundisse Barber House',
     description = 'Perfil de demonstração • Barbearia fictícia em Magoanine C, Maputo. A fachada e os contactos são ilustrativos; substituir pelos dados reais antes da divulgação.',
-    logo_url = 'https://barber-os-orpin.vercel.app/brand-assets/mufundisse-barber-house.svg',
+    logo_url = 'https://raw.githubusercontent.com/edmundokutuzov333/BarberOS/79c8736446f390356334a658ee21fac86cef9ade/frontend/public/brand-assets/mufundisse-barber-house.svg',
     cover_url = 'https://images.pexels.com/photos/11513688/pexels-photo-11513688.jpeg?auto=compress&cs=tinysrgb&w=1600',
     phone = '+258840000001',
     whatsapp = '+258840000001',
@@ -151,7 +151,7 @@ where slug = 'magoanine-c';
 update public.barbershops
 set name = 'Oryon Barber Studio',
     description = 'Perfil de demonstração • Estúdio de grooming fictício na zona de Sommerschield, Maputo. A fachada, a equipa e os contactos são ilustrativos; substituir pelos dados reais antes da divulgação.',
-    logo_url = 'https://barber-os-orpin.vercel.app/brand-assets/oryon-barber-studio.svg',
+    logo_url = 'https://raw.githubusercontent.com/edmundokutuzov333/BarberOS/79c8736446f390356334a658ee21fac86cef9ade/frontend/public/brand-assets/oryon-barber-studio.svg',
     cover_url = 'https://images.pexels.com/photos/27520668/pexels-photo-27520668.jpeg?auto=compress&cs=tinysrgb&w=1600',
     phone = '+258850000002',
     whatsapp = '+258850000002',
@@ -164,7 +164,7 @@ where slug = 'oryon';
 update public.barbershops
 set name = 'Matola Prime Barber',
     description = 'Perfil de demonstração • Barbearia fictícia na Matola Cidade. A fachada, a equipa e os contactos são ilustrativos; substituir pelos dados reais antes da divulgação.',
-    logo_url = 'https://barber-os-orpin.vercel.app/brand-assets/matola-prime-barber.svg',
+    logo_url = 'https://raw.githubusercontent.com/edmundokutuzov333/BarberOS/79c8736446f390356334a658ee21fac86cef9ade/frontend/public/brand-assets/matola-prime-barber.svg',
     cover_url = 'https://images.pexels.com/photos/11703458/pexels-photo-11703458.jpeg?auto=compress&cs=tinysrgb&w=1600',
     phone = '+258860000003',
     whatsapp = '+258860000003',
