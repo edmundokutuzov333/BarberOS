@@ -43,7 +43,10 @@ for (const required of [
   if (!bookingMigration.includes(required)) throw new Error('BOOKING_SECURITY_MIGRATION_CONTRACT_MISSING:' + required);
 }
 const tokenMigration = fs.readFileSync(path.join(migrationDir, requiredMigration), 'utf8');
-if (!tokenMigration.includes('p.proname like') || !tokenMigration.includes('grant execute on function %s to service_role')) {
+if (!tokenMigration.includes('p.proname like')
+  || !tokenMigration.includes('get_waitlist_offer')
+  || !tokenMigration.includes('expire_waitlist_offer')
+  || !tokenMigration.includes('grant execute on function %s to service_role')) {
   throw new Error('TOKEN_RPC_LOCKDOWN_CONTRACT_MISSING');
 }
 
