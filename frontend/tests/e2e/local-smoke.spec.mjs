@@ -7,7 +7,7 @@ const publicRoutes = [
   { path: '/entrar', heading: /^Entrar$/i, label: 'login page', atmosphere: true, atmosphereVariant: 'quiet' },
   { path: '/registar', heading: /^Criar conta$/i, label: 'registration page', atmosphere: true, atmosphereVariant: 'quiet' },
   { path: '/recuperar', heading: /Recuperar palavra-passe/i, label: 'password recovery page', atmosphere: true, atmosphereVariant: 'quiet' },
-  { path: '/barbearia/oryon', heading: /^Barbearia Oryon$/i, label: 'public demonstration page', atmosphere: true, atmosphereVariant: 'showcase' },
+  { path: '/barbearia/oryon', heading: /^Oryon Barber Studio$/i, label: 'public demonstration page', atmosphere: true, atmosphereVariant: 'showcase' },
 ];
 
 test.describe('BarberOS local production-safe smoke tests', () => {
