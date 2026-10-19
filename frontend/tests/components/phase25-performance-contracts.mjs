@@ -144,7 +144,7 @@ const tests = [
   }],
   ['landing hero image remains an explicit high-priority asset', () => {
     const source = read('src/pages/Landing.tsx');
-    assert.match(source, /images\.pexels\.com\/photos\/17027433/);
+    assert.match(source, /src="\/hero-barbershop\.svg"/);
     assert.match(source, /alt="Interior de barbearia com cadeiras e iluminação quente"/);
     assert.match(source, /fetchPriority="high" decoding="async"/);
   }],

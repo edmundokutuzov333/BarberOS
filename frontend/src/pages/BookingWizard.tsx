@@ -9,6 +9,7 @@ import { buildWhatsAppLink } from '@/lib/calendar';
 import { formatMT, humanError } from '@/lib/utils';
 import { useAvailableDays, useAvailableSlots } from '@/features/availability/api';
 import { normalizeMozPhone, useBookAppointment } from '@/features/booking/api';
+import { rememberLocalBooking } from '@/lib/shop-link';
 import { WaitlistJoinPanel } from '@/features/waitlist/WaitlistJoinPanel';
 import {
   usePublicBarbershop,
@@ -237,6 +238,7 @@ export default function BookingWizard() {
   const [form, setForm] = useState<CustomerForm>({ name: '', phone: '', email: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [bookingAttemptKey, setBookingAttemptKey] = useState(() => crypto.randomUUID());
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   const rawStep = Number(searchParams.get('step') ?? '1');
@@ -414,8 +416,11 @@ export default function BookingWizard() {
         p_name: name,
         p_phone: normalizeMozPhone(phone),
         p_email: email || null,
+        idempotency_key: bookingAttemptKey,
       });
+      rememberLocalBooking({ token: result.manage_token, shopSlug: slug, startsAt: start, serviceName: selectableService.name });
       navigate(`/marcacao/${result.manage_token}`, { replace: true });
+      setBookingAttemptKey(crypto.randomUUID());
     } catch (error) {
       const message = String(error).includes('SLOT_TAKEN') || String(error).includes('SLOT_UNAVAILABLE')
         ? 'Este horário acabou de ser ocupado. Escolha outro horário.'

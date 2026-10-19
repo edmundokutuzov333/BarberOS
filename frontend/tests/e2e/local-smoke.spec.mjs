@@ -2,7 +2,8 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 const publicRoutes = [
-  { path: '/', heading: /A barbearia controla o dia/i, label: 'landing page', atmosphere: true, atmosphereVariant: 'hero' },
+  { path: '/', heading: /Como queres entrar\?/i, label: 'gateway page', atmosphere: true, atmosphereVariant: 'hero' },
+  { path: '/sobre', heading: /A barbearia controla o dia/i, label: 'about page', atmosphere: true, atmosphereVariant: 'hero' },
   { path: '/entrar', heading: /^Entrar$/i, label: 'login page', atmosphere: true, atmosphereVariant: 'quiet' },
   { path: '/registar', heading: /^Criar conta$/i, label: 'registration page', atmosphere: true, atmosphereVariant: 'quiet' },
   { path: '/recuperar', heading: /Recuperar palavra-passe/i, label: 'password recovery page', atmosphere: true, atmosphereVariant: 'quiet' },

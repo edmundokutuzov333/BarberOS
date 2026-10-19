@@ -3,7 +3,7 @@ import type { Database } from '@/lib/database.types';
 import { supabase } from '@/lib/supabase';
 
 export type BookAppointmentInput =
-  Database['public']['Functions']['book_appointment']['Args'];
+  Database['public']['Functions']['book_appointment']['Args'] & { idempotency_key?: string; turnstile_token?: string };
 
 export type BookAppointmentResult = {
   manage_token: string;
@@ -71,6 +71,7 @@ export async function bookAppointment(
   const { data, error } = await supabase.functions.invoke('booking-create', {
     body: {
       ...input,
+      idempotency_key: input.idempotency_key ?? crypto.randomUUID(),
       p_phone: normalizeMozPhone(input.p_phone),
     },
   });

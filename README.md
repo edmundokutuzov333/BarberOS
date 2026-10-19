@@ -76,7 +76,6 @@ Copie os templates:
 
 - `.env.example`
 - `frontend/.env.example`
-- `backend/.env.example`
 
 Nunca coloque secrets reais em Git.
 
@@ -172,6 +171,18 @@ O repositório contém:
 - `.github/workflows/deploy-vercel.yml` para preflight, build, deploy prebuilt e smoke;
 - `.github/workflows/deploy-supabase.yml` para dry-run, migrations e Edge Functions;
 - `.github/workflows/rollback-vercel.yml` para recuperação de produção.
+
+## Entrada pública
+
+- `/` é o gateway que separa Cliente de Barbearia.
+- `/b/:slug` é o link curto usado por QR e redirecciona para o perfil público.
+- `/barbearia/:slug` é o perfil público e `/barbearia/:slug/marcar` é o wizard sem conta.
+- `/sobre` contém a apresentação comercial.
+- O cliente pode guardar até dez marcações no dispositivo; apenas token, loja, serviço e data são guardados localmente.
+
+## Reserva pública endurecida
+
+`booking-create` é a única fronteira pública para criar marcações. A RPC `book_appointment` é exclusiva de `service_role`, e a Edge Function aplica CORS por `ALLOWED_ORIGINS`, Turnstile, rate limits por IP/telefone/loja e chave de idempotência. Em produção, configurar `TURNSTILE_SECRET_KEY`, `RATE_LIMIT_SALT`, `ALLOWED_ORIGINS` e manter `TURNSTILE_BYPASS` desligado.
 
 Nunca colocar Service Role, Vercel Token, passwords ou tokens de providers em `VITE_*`. A área pública recebe apenas dados e chaves próprias do browser.
 

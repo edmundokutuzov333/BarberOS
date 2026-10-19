@@ -45,7 +45,7 @@ export default function Landing() {
           </div>
           <div className="landing-visual">
             <div className="landing-visual-frame">
-              <img src="https://images.pexels.com/photos/17027433/pexels-photo-17027433.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=1100" alt="Interior de barbearia com cadeiras e iluminação quente" className="landing-visual-image" fetchPriority="high" decoding="async" />
+              <img src="/hero-barbershop.svg" alt="Interior de barbearia com cadeiras e iluminação quente" className="landing-visual-image" fetchPriority="high" decoding="async" />
               <div className="landing-visual-shade" aria-hidden="true" />
               <div className="landing-visual-index"><span>BARBEROS</span><span>01 / 03</span></div>
               <div className="landing-visual-caption"><p>OPERAÇÃO, COM IDENTIDADE</p><h2>Mais tempo para o corte.<br />Mais controlo sobre o negócio.</h2></div>

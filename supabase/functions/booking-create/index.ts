@@ -1,33 +1,10 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import {
   extractDomainCode,
   httpStatusForDomainCode,
   publicBookingMessage,
 } from "./contract.ts";
-
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-function json(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...cors,
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-    },
-  });
-}
-
-function serviceKey(): string {
-  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
-  if (!key) throw new Error("SUPABASE_SERVICE_ROLE_KEY_UNAVAILABLE");
-  return key;
-}
+import { adminClient, clientIp, consume, corsHeaders, sha256Hex, verifyTurnstile } from "../_shared/guard.ts";
 
 function isUuid(value: unknown): value is string {
   return typeof value === "string"
@@ -43,6 +20,8 @@ function isValidPayload(value: unknown): value is {
   p_name: string;
   p_phone: string;
   p_email: string | null;
+  idempotency_key: string;
+  turnstile_token?: string;
 } {
   if (!value || typeof value !== "object") return false;
   const body = value as Record<string, unknown>;
@@ -56,10 +35,13 @@ function isValidPayload(value: unknown): value is {
     && !Number.isNaN(Date.parse(body.p_start))
     && typeof body.p_name === "string"
     && typeof body.p_phone === "string"
-    && (body.p_email === null || typeof body.p_email === "undefined" || typeof body.p_email === "string");
+    && (body.p_email === null || typeof body.p_email === "undefined" || typeof body.p_email === "string")
+    && isUuid(body.idempotency_key);
 }
 
 Deno.serve(async (req) => {
+  const cors = corsHeaders(req);
+  const json = (body: unknown, status = 200, extra: Record<string, string> = {}) => new Response(JSON.stringify(body), { status, headers: { ...cors, ...extra, "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ ok: false, error: "METHOD_NOT_ALLOWED" }, 405);
 
@@ -75,14 +57,22 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const admin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      serviceKey(),
-      { auth: { autoRefreshToken: false, persistSession: false } },
-    );
+    const ip = clientIp(req);
+    if (!(await verifyTurnstile(body.turnstile_token, ip))) return json({ ok: false, error: "BOT_CHECK_FAILED" }, 403);
+    const admin = adminClient();
+    const key = body.idempotency_key;
+    const { data: previous } = await admin.from("booking_idempotency").select("response").eq("key", key).maybeSingle();
+    if (previous?.response) return json(previous.response);
+    const salt = Deno.env.get("RATE_LIMIT_SALT") ?? "";
+    const ipHash = await sha256Hex(`${salt}:${ip}`);
+    const phoneHash = await sha256Hex(`${salt}:${body.p_phone.replace(/\D/g, "")}`);
+    for (const [bucket, limit, window] of [[`bk:ip:${ipHash}`, 20, 3600], [`bk:phone:${phoneHash}`, 6, 86400], [`bk:shop:${body.p_slug.trim().toLowerCase()}`, 300, 3600]] as const) {
+      const result = await consume(admin, bucket, limit, window);
+      if (!result.allowed) return json({ ok: false, error: "RATE_LIMITED" }, 429, { "retry-after": String(result.retryAfter) });
+    }
 
     const { data, error } = await admin.rpc("book_appointment", {
-      p_slug: body.p_slug.trim(),
+      p_slug: body.p_slug.trim().toLowerCase(),
       p_service_id: body.p_service_id,
       p_haircut_id: body.p_haircut_id ?? null,
       p_barber_id: body.p_barber_id ?? null,
@@ -106,14 +96,16 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: "BOOKING_EMPTY_RESPONSE" }, 500);
     }
 
-    return json({
+    const response = {
       ok: true,
       booking: {
         manage_token: row.manage_token,
         deposit_cents: Number(row.deposit_cents ?? 0),
         needs_payment: Boolean(row.needs_payment),
       },
-    }, 200);
+    };
+    await admin.from("booking_idempotency").upsert({ key, response }, { onConflict: "key", ignoreDuplicates: true });
+    return json(response, 200);
   } catch (error) {
     const code = extractDomainCode(error);
     return json({

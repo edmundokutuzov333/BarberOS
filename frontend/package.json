@@ -47,6 +47,7 @@
     "lucide-react": "0.516.0",
     "next-themes": "0.4.6",
     "ogl": "^1.0.11",
+    "qr-scanner": "1.4.2",
     "qrcode.react": "^4.2.0",
     "react": "19.0.0",
     "react-day-picker": "8.10.1",
@@ -66,7 +67,9 @@
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "lint": "eslint src --max-warnings 0",
     "typecheck": "tsc --noEmit",
+    "test": "yarn test:unit:phase23 && yarn test:components:phase23 && yarn test:contracts:phase23 && yarn test:unit:phase24 && yarn test:contracts:phase24 && yarn test:contracts:phase25",
     "a11y:phase21": "node ../scripts/a11y-phase21.mjs",
     "test:unit:phase23": "node tests/unit/phase23-domain.mjs",
     "test:components:phase23": "node tests/components/phase23-components.mjs",
@@ -93,7 +96,9 @@
     ]
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@eslint/js": "9.23.0",
+    "@playwright/test": "1.64.1",
     "@types/lodash": "4.17.24",
     "@types/node": "^26.6.1",
     "@types/react": "^19.3.0",
@@ -107,13 +112,11 @@
     "eslint-plugin-react": "7.37.4",
     "eslint-plugin-react-hooks": "5.2.0",
     "globals": "15.15.0",
+    "playwright-core": "1.64.1",
     "postcss": "8.5.10",
     "tailwindcss": "3.4.17",
     "typescript": "^7.0.2",
-    "vite": "6",
-    "@axe-core/playwright": "4.14.0",
-    "@playwright/test": "1.64.1",
-    "playwright-core": "1.64.1"
+    "vite": "6"
   },
   "resolutions": {
     "react-router": "7.15.1",

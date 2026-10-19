@@ -10,6 +10,8 @@ export const CLIENT_ERROR_CODES = new Set([
   "HAIRCUT_NOT_FOUND",
   "BARBER_NOT_FOUND",
   "INVALID_DEPOSIT_CONFIGURATION",
+  "BOT_CHECK_FAILED",
+  "RATE_LIMITED",
 ]);
 
 export function extractDomainCode(error: unknown): string {
@@ -27,6 +29,8 @@ export function extractDomainCode(error: unknown): string {
 }
 
 export function httpStatusForDomainCode(code: string): number {
+  if (code === "BOT_CHECK_FAILED") return 403;
+  if (code === "RATE_LIMITED") return 429;
   if (SLOT_CONFLICT_CODES.has(code)) return 409;
   if (CLIENT_ERROR_CODES.has(code)) return 400;
   return 500;
@@ -55,6 +59,10 @@ export function publicBookingMessage(code: string): string {
       return "O sinal configurado para este serviço é inválido.";
     case "INVALID_DATE":
       return "Escolhe uma data válida.";
+    case "BOT_CHECK_FAILED":
+      return "Não foi possível validar esta tentativa. Tenta novamente.";
+    case "RATE_LIMITED":
+      return "Atingiste o limite de tentativas. Tenta novamente dentro de alguns minutos.";
     default:
       return "Não foi possível criar a marcação. Tenta de novo.";
   }

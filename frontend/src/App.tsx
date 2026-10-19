@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { BarberAtmosphere } from './components/background/BarberAtmosphere';
 
 const RequireAuth = lazy(() => import('./components/layout/AppShell').then((m) => ({ default: m.RequireAuth })));
@@ -9,6 +9,7 @@ const AdminShell = lazy(() => import('./components/layout/AdminShell').then((m) 
 const PrivateProviders = lazy(() => import('./components/layout/PrivateProviders'));
 
 const Landing = lazy(() => import('./pages/Landing'));
+const Gateway = lazy(() => import('./pages/Gateway'));
 const Entrar = lazy(() => import('./pages/auth/Entrar'));
 const Registar = lazy(() => import('./pages/auth/Registar'));
 const Recuperar = lazy(() => import('./pages/auth/Recuperar'));
@@ -88,7 +89,9 @@ export default function App() {
       <BarberAtmosphere variant={atmosphereVariant} />
       <Suspense fallback={<RouteLoading />}>
         <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<Gateway />} />
+        <Route path="/sobre" element={<Landing />} />
+        <Route path="/b/:slug" element={<ShortLink />} />
         <Route path="/entrar" element={<Entrar />} />
         <Route path="/registar" element={<Registar />} />
         <Route path="/recuperar" element={<Recuperar />} />
@@ -142,4 +145,9 @@ export default function App() {
       </Suspense>
     </>
   );
+}
+
+function ShortLink() {
+  const { slug } = useParams();
+  return <Navigate to={`/barbearia/${slug ?? ''}`} replace />;
 }
