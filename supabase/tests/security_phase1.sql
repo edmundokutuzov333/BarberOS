@@ -19,12 +19,24 @@ begin
     raise exception 'SECURITY_FAIL: anon can execute add_member_by_email';
   end if;
 
-  if not has_function_privilege(
+  if has_function_privilege(
     'anon',
     'public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)',
     'EXECUTE'
-  then
-    raise exception 'SECURITY_FAIL: anon cannot execute required public booking RPC';
+  ) or has_function_privilege(
+    'authenticated',
+    'public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)',
+    'EXECUTE'
+  ) then
+    raise exception 'SECURITY_FAIL: raw booking RPC must not be callable by browser roles';
+  end if;
+
+  if not has_function_privilege(
+    'service_role',
+    'public.book_appointment_idempotent(uuid,text,uuid,uuid,uuid,timestamptz,text,text,text)',
+    'EXECUTE'
+  ) then
+    raise exception 'SECURITY_FAIL: service_role cannot execute idempotent booking RPC';
   end if;
 
   if has_table_privilege('anon','public.appointments','INSERT') then
@@ -58,7 +70,8 @@ end
 $$;
 
 select
-  has_function_privilege('anon','public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)','EXECUTE') as anon_booking_rpc_ok,
+  not has_function_privilege('anon','public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)','EXECUTE') as anon_booking_rpc_denied,
+  has_function_privilege('service_role','public.book_appointment_idempotent(uuid,text,uuid,uuid,uuid,timestamptz,text,text,text)','EXECUTE') as service_role_idempotent_booking_rpc_ok,
   has_function_privilege('anon','public.get_available_slots(text,uuid,uuid,date)','EXECUTE') as anon_slots_rpc_ok,
   has_function_privilege('anon','public.get_available_days(text,uuid,uuid,date,date)','EXECUTE') as anon_days_rpc_ok,
   has_function_privilege('authenticated','public.create_barbershop(text,text,text,text)','EXECUTE') as auth_create_shop_ok,
