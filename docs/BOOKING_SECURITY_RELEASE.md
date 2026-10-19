@@ -34,7 +34,7 @@ This runbook governs the rollout of the booking hardening, token gateway, and em
 ## Current known blockers
 
 - The production SPA routing defect was fixed in `frontend/vercel.json`: direct requests to `/entrar`, `/barbearia/magoanine-c`, `/barbearia/magoanine-c/marcar`, and `/marcacao/:token` now return the application shell with the expected security headers. This verifies routing/headers only, not the client-side booking transaction.
-- Emergency containment was applied directly to production on 2026-10-19: `EXECUTE` on `public.book_appointment(...)` is revoked from `PUBLIC`, `anon`, and `authenticated`; `service_role` retains access. This exact grant change is also present in the checked-in hardening migration, so applying it later is idempotent.
+- Emergency containment was applied directly to production on 2026-10-19: `EXECUTE` on `public.book_appointment(...)`, `get_payment_runtime_for_token(uuid)`, `get_payment_status_by_token(uuid)`, and `init_payment_from_token(...)` is revoked from `PUBLIC`, `anon`, and `authenticated`; `service_role` retains access. These exact grant changes are present in the checked-in hardening migration, so applying it later is idempotent.
 - The restored historical read-model migration still needs a successful clean database reset and an exact remote migration-list/dry-run comparison before the reconciliation gate can be set.
 - The production Edge Function inventory previously showed `booking-create` v1 and did not include `token-gateway`, `health`, or `resend-webhook`.
 - The Vercel project did not list `VITE_TURNSTILE_SITE_KEY` or `VITE_BOOKING_TURNSTILE_REQUIRED` when inspected on 2026-10-19.
