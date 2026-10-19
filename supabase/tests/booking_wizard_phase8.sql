@@ -185,7 +185,8 @@ begin
     has_function_privilege('anon','public.get_public_barbershop(text)','execute')
     and has_function_privilege('anon','public.get_available_days(text,uuid,uuid,date,date)','execute')
     and has_function_privilege('anon','public.get_available_slots(text,uuid,uuid,date)','execute')
-    and has_function_privilege('anon','public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)','execute')
+    and not has_function_privilege('anon','public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)','execute')
+    and has_function_privilege('service_role','public.book_appointment_idempotent(uuid,text,uuid,uuid,uuid,timestamptz,text,text,text)','execute')
     and not has_table_privilege('anon','public.appointments','INSERT')
   ) then
     raise exception 'PUBLIC_BOOKING_SECURITY_FAILED';
