@@ -24,7 +24,7 @@ for (const name of names) {
 const config = fs.readFileSync(path.join(root, 'supabase', 'config.toml'), 'utf8');
 if (!config.includes('project_id = "alseiinjzwjdiwtvkdzy"')) throw new Error('SUPABASE_PROJECT_REF_MISMATCH');
 
-const requiredMigration = '20261019160000_booking_and_token_gateway.sql';
+const requiredMigration = '20261019170000_booking_and_token_gateway.sql';
 if (!names.includes(requiredMigration)) throw new Error('BOOKING_SECURITY_MIGRATION_MISSING');
 const bookingMigration = fs.readFileSync(path.join(migrationDir, requiredMigration), 'utf8');
 for (const required of [
