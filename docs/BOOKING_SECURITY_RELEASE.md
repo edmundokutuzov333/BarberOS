@@ -33,6 +33,7 @@ This runbook governs the rollout of the booking hardening, token gateway, and em
 
 ## Current known blockers
 
+- The production SPA routing defect was fixed in `frontend/vercel.json`: direct requests to `/entrar`, `/barbearia/magoanine-c`, `/barbearia/magoanine-c/marcar`, and `/marcacao/:token` now return the application shell with the expected security headers. This verifies routing/headers only, not the client-side booking transaction.
 - Emergency containment was applied directly to production on 2026-10-19: `EXECUTE` on `public.book_appointment(...)` is revoked from `PUBLIC`, `anon`, and `authenticated`; `service_role` retains access. This exact grant change is also present in the checked-in hardening migration, so applying it later is idempotent.
 - Production migration history and `main` are not fully reconciled.
 - The production Edge Function inventory previously showed `booking-create` v1 and did not include `token-gateway`, `health`, or `resend-webhook`.
