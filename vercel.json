@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "corepack yarn --cwd frontend install --frozen-lockfile",
-  "buildCommand": "corepack yarn --cwd frontend build && mkdir -p dist && cp -R frontend/dist/. dist/",
+  "installCommand": "corepack yarn install --frozen-lockfile",
+  "buildCommand": "corepack yarn build",
   "outputDirectory": "dist",
   "rewrites": [
     {

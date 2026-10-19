@@ -15,10 +15,10 @@ function readJson(file) {
 const vercel = readJson('vercel.json');
 
 if (vercel.outputDirectory !== 'dist') throw new Error('DEPLOY_CONFIG_OUTPUT_DIRECTORY_INVALID');
-if (!String(vercel.buildCommand || '').includes('corepack yarn --cwd frontend build')) {
+if (vercel.buildCommand !== 'corepack yarn build') {
   throw new Error('DEPLOY_CONFIG_BUILD_COMMAND_INVALID');
 }
-if (!String(vercel.installCommand || '').includes('corepack yarn --cwd frontend install --frozen-lockfile')) {
+if (vercel.installCommand !== 'corepack yarn install --frozen-lockfile') {
   throw new Error('DEPLOY_CONFIG_INSTALL_COMMAND_INVALID');
 }
 
