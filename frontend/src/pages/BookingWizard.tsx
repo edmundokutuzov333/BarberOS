@@ -432,7 +432,7 @@ export default function BookingWizard() {
         p_phone: normalizeMozPhone(phone),
         p_email: email || null,
         idempotency_key: bookingAttemptKey,
-        ...(turnstileSiteKey ? { turnstile_token: turnstileToken ?? undefined } : {}),
+        turnstile_token: turnstileToken,
       });
       rememberLocalBooking({ token: result.manage_token, shopSlug: slug, startsAt: start, serviceName: selectableService.name });
       navigate(`/marcacao/${result.manage_token}`, { replace: true });
