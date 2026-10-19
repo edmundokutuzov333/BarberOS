@@ -69,8 +69,12 @@ begin
     raise exception 'PHASE23_AVAILABILITY_PUBLIC_CONTRACT_MISSING';
   end if;
 
-  if not has_function_privilege('anon','public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)','execute') then
-    raise exception 'PHASE23_BOOKING_PUBLIC_CONTRACT_MISSING';
+  if has_function_privilege('anon','public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)','execute')
+     or has_function_privilege('authenticated','public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)','execute') then
+    raise exception 'PHASE23_RAW_BOOKING_RPC_EXPOSED';
+  end if;
+  if not has_function_privilege('service_role','public.book_appointment_idempotent(uuid,text,uuid,uuid,uuid,timestamptz,text,text,text)','execute') then
+    raise exception 'PHASE23_SERVICE_BOOKING_GATEWAY_MISSING';
   end if;
 
   if has_function_privilege('anon','public.get_waitlist(uuid,text,text,integer,integer)','execute') then
