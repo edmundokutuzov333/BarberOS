@@ -69,6 +69,7 @@ export function ProfileForm({ onDone, compact }: { onDone?: () => void; compact?
         <ImageUpload testId="profile-logo-upload" shape="circle" bucket="shop-logos" shopId={s.id} ratio={1} value={f.logo_url} onChange={(u) => setF({ ...f, logo_url: u })} label="Logo" />
         <ImageUpload testId="profile-cover-upload" bucket="shop-photos" shopId={s.id} ratio={16 / 9} value={f.cover_url} onChange={(u) => setF({ ...f, cover_url: u })} label="Capa 16:9" />
       </div>
+      <p className="text-xs leading-5 text-ink-mid">O logótipo e a capa iniciais são elementos de demonstração. Substitua-os por imagens reais da sua barbearia antes de divulgar a página aos clientes.</p>
       <Field data-testid="profile-name-input" label="Nome" name="p_name" value={f.name} onChange={set('name')} />
       <Textarea data-testid="profile-description-input" label="Descrição curta" value={f.description} onChange={set('description')} placeholder="O que faz a tua barbearia diferente, em duas frases." />
       <div className="grid sm:grid-cols-2 gap-3">
