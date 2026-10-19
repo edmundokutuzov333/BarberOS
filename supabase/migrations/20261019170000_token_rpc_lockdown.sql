@@ -12,7 +12,7 @@ begin
     where n.nspname = 'public'
       and (
         p.proname like '%\_by\_token' escape '\'
-        or p.proname in ('get_payment_runtime_for_token', 'init_payment_from_token')
+        or p.proname in ('get_payment_runtime_for_token', 'init_payment_from_token', 'get_waitlist_offer', 'claim_waitlist_offer', 'expire_waitlist_offer')
       )
   loop
     execute format('revoke execute on function %s from public, anon, authenticated', fn.signature);
