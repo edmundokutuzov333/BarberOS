@@ -33,6 +33,7 @@ This runbook governs the rollout of the booking hardening, token gateway, and em
 
 ## Current known blockers
 
+- Emergency containment was applied directly to production on 2026-10-19: `EXECUTE` on `public.book_appointment(...)` is revoked from `PUBLIC`, `anon`, and `authenticated`; `service_role` retains access. This exact grant change is also present in the checked-in hardening migration, so applying it later is idempotent.
 - Production migration history and `main` are not fully reconciled.
 - The production Edge Function inventory previously showed `booking-create` v1 and did not include `token-gateway`, `health`, or `resend-webhook`.
 - The Vercel project did not list `VITE_TURNSTILE_SITE_KEY` or `VITE_BOOKING_TURNSTILE_REQUIRED` when inspected on 2026-10-19.
