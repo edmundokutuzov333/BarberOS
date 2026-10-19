@@ -1,20 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Database } from '@/lib/database.types';
 import { supabase } from '@/lib/supabase';
+import { invokeTokenGateway } from '@/features/appointments/token-gateway';
 
 export type ReviewByToken = Database['public']['Functions']['get_review_by_token']['Returns'][number];
 export type ReviewRow = Database['public']['Functions']['get_reviews']['Returns'][number];
 export type ReviewListArgs = Database['public']['Functions']['get_reviews']['Args'];
 
 export async function getReviewByToken(token: string): Promise<ReviewByToken | null> {
-  const { data, error } = await supabase.rpc('get_review_by_token', { p_token: token });
-  if (error) throw error;
+  const data = await invokeTokenGateway<ReviewByToken[]>('review.get', { token });
   return data?.[0] ?? null;
 }
 
 export async function submitReviewByToken(input: Database['public']['Functions']['submit_review_by_token']['Args']) {
-  const { data, error } = await supabase.rpc('submit_review_by_token', input);
-  if (error) throw error;
+  const data = await invokeTokenGateway<Array<Database['public']['Functions']['submit_review_by_token']['Returns'][number]>>('review.submit', {
+    token: input.p_token,
+    rating: input.p_rating,
+    comment: input.p_comment,
+  });
   const row = data?.[0];
   if (!row) throw new Error('REVIEW_EMPTY_RESPONSE');
   return row;
