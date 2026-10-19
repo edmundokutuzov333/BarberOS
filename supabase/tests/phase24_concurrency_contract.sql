@@ -45,12 +45,24 @@ begin
     raise exception 'PHASE24_DIRECT_APPOINTMENT_INSERT_EXPOSED';
   end if;
 
-  if not has_function_privilege(
+  if has_function_privilege(
     'anon',
     'public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)',
     'execute'
+  ) or has_function_privilege(
+    'authenticated',
+    'public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)',
+    'execute'
   ) then
-    raise exception 'PHASE24_PUBLIC_BOOKING_RPC_MISSING';
+    raise exception 'PHASE24_RAW_BOOKING_RPC_EXPOSED';
+  end if;
+
+  if not has_function_privilege(
+    'service_role',
+    'public.book_appointment_idempotent(uuid,text,uuid,uuid,uuid,timestamptz,text,text,text)',
+    'execute'
+  ) then
+    raise exception 'PHASE24_SERVICE_BOOKING_GATEWAY_MISSING';
   end if;
 
   if not exists (
