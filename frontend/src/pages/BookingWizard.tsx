@@ -10,6 +10,7 @@ import { buildWhatsAppLink } from '@/lib/calendar';
 import { formatMT, humanError } from '@/lib/utils';
 import { useAvailableDays, useAvailableSlots } from '@/features/availability/api';
 import { normalizeMozPhone, useBookAppointment } from '@/features/booking/api';
+import { getDefaultHaircutPhoto } from '@/lib/default-haircut-photos';
 import { rememberLocalBooking } from '@/lib/shop-link';
 import { WaitlistJoinPanel } from '@/features/waitlist/WaitlistJoinPanel';
 import {
@@ -126,6 +127,8 @@ function ChoiceCard({
   onClick,
   disabled,
   testId,
+  imageUrl,
+  imageAlt,
 }: {
   title: string;
   body?: string | null;
@@ -134,6 +137,8 @@ function ChoiceCard({
   onClick: () => void;
   disabled?: boolean;
   testId?: string;
+  imageUrl?: string | null;
+  imageAlt?: string;
 }) {
   return (
     <button
@@ -144,6 +149,7 @@ function ChoiceCard({
       onClick={onClick}
       className={`w-full text-left rounded-3xl border p-4 sm:p-5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft ${selected ? 'border-accent-soft/60 bg-accent-soft/10' : 'border-white/10 bg-white/5 hover:bg-white/[.07]'} `}
     >
+      {imageUrl && <img src={imageUrl} alt={imageAlt ?? ''} className="mb-4 w-full aspect-[16/9] rounded-2xl object-cover bg-[var(--surface-2)]" loading="lazy" decoding="async" />}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="t-card text-ink-hi">{title}</p>
@@ -526,6 +532,8 @@ export default function BookingWizard() {
                           title={item.name}
                           body={item.description}
                           meta={item.price_cents != null ? formatMT(item.price_cents) : item.duration_min != null ? item.duration_min + ' min' : undefined}
+                          imageUrl={item.photo_url ?? getDefaultHaircutPhoto(item.name)?.url}
+                          imageAlt={`Fotografia de referência para ${item.name}`}
                           selected={item.id === haircutId}
                           onClick={() => chooseHaircut(item.id)}
                           testId={`booking-haircut-${item.id}`}
