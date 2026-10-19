@@ -7,7 +7,7 @@ import { buildWhatsAppLink } from '@/lib/calendar';
 import { formatMT, humanError } from '@/lib/utils';
 import { useScopedTheme } from '@/themes';
 import { usePublicBarbershop, type PublicBarber, type PublicHaircut, type PublicService, type PublicWorkingHour } from '@/features/public-shop/api';
-import { getDefaultHaircutPhoto } from '@/lib/default-haircut-photos';
+import { HaircutPhoto } from '@/components/HaircutPhoto';
 
 const WEEKDAYS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 
@@ -215,7 +215,7 @@ export default function PublicBarbershop() {
                 <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
                   {haircuts.map((cut: PublicHaircut) => (
                     <article key={cut.id} className="rounded-3xl border border-white/10 bg-white/5 overflow-hidden">
-                      {(cut.photo_url ?? getDefaultHaircutPhoto(cut.name)?.url) ? <img src={cut.photo_url ?? getDefaultHaircutPhoto(cut.name)?.url ?? undefined} alt={`Exemplo do corte ${cut.name}`} className="w-full aspect-[4/3] object-cover" loading="lazy" decoding="async" /> : null}
+                      <HaircutPhoto name={cut.name} photoUrl={cut.photo_url} alt={`Exemplo do corte ${cut.name}`} className="w-full aspect-[4/3] object-cover" />
                       <div className="p-4">
                         <h3 className="t-card text-ink-hi">{cut.name}</h3>
                         {cut.description && <p className="t-body text-ink-mid mt-1.5">{cut.description}</p>}

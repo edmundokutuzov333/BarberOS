@@ -24,8 +24,8 @@ As fotografias de referência abaixo são imagens reais publicadas no Pexels com
 | Dreads retwist — representação escuro | [Pexels]( https://www.pexels.com/photo/man-at-a-barbershop-19028067/ ) |
 | Corte à tesoura — representação escuro | [Pexels]( https://www.pexels.com/photo/man-with-afro-hair-14072328/ ) |
 | Corte infantil — representação variado | [Pexels]( https://www.pexels.com/photo/a-child-wearing-a-barber-s-cape-7697356/ ) |
-| Design freestyle — representação escuro | [Pexels]( https://www.pexels.com/photo/outdoor-barbershop-scene-with-customers-35276951/ ) |
-| Careca à navalha — representação escuro | [Pexels]( https://www.pexels.com/photo/man-face-in-darkness-17492272/ ) |
+| Design freestyle, fotografia de desenho geométrico no cabelo | [Pexels]( https://www.pexels.com/photo/creative-geometric-haircut-design-on-shaved-head-37339534/ ) |
+| Careca à navalha, fotografia de barbear com navalha | [Pexels]( https://www.pexels.com/photo/a-person-shaving-a-man-s-head-12464838/ ) |
 
 ## Fachadas demonstrativas
 

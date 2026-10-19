@@ -75,7 +75,7 @@ begin
 
   return query
   with days as (
-    select generate_series(p_from,p_to,interval '1 day')::date as day
+    select generate_series(p_from,p_to,interval '1 day')::date as calendar_day
   ),
   barber_base as (
     select b.id,b.sort_order
@@ -85,7 +85,7 @@ begin
   ),
   schedule as (
     select
-      d.day,
+      d.calendar_day,
       b.id as barber_id,
       case
         when ov.id is not null then ov.opens_at
@@ -106,7 +106,7 @@ begin
       select o.id,o.is_closed,o.opens_at,o.closes_at
       from public.schedule_overrides o
       where o.barbershop_id=p_shop
-        and o.override_date=d.day
+        and o.override_date=d.calendar_day
         and (o.barber_id=b.id or o.barber_id is null)
       order by case when o.barber_id=b.id then 0 else 1 end
       limit 1
@@ -115,7 +115,7 @@ begin
       select w.id,w.opens_at,w.closes_at,w.is_closed
       from public.working_hours w
       where w.barbershop_id=p_shop
-        and w.weekday=extract(dow from d.day)::int
+        and w.weekday=extract(dow from d.calendar_day)::int
         and (w.barber_id=b.id or w.barber_id is null)
       order by case when w.barber_id=b.id then 0 else 1 end
       limit 1
@@ -123,10 +123,10 @@ begin
   ),
   open_schedule as (
     select
-      day,
+      calendar_day,
       barber_id,
-      ((day::timestamp + opens_at) at time zone v_tz) as open_ts,
-      ((day::timestamp + closes_at) at time zone v_tz) as close_ts
+      ((calendar_day::timestamp + opens_at) at time zone v_tz) as open_ts,
+      ((calendar_day::timestamp + closes_at) at time zone v_tz) as close_ts
     from schedule
     where not is_closed
       and opens_at is not null
@@ -135,7 +135,7 @@ begin
   ),
   raw_blocks as (
     select
-      s.day,
+      s.calendar_day,
       s.barber_id,
       greatest(t.starts_at,s.open_ts) as starts_at,
       least(t.ends_at,s.close_ts) as ends_at
@@ -148,9 +148,9 @@ begin
   ),
   ordered_blocks as (
     select
-      day,barber_id,starts_at,ends_at,
+      calendar_day,barber_id,starts_at,ends_at,
       max(ends_at) over (
-        partition by day,barber_id
+        partition by calendar_day,barber_id
         order by starts_at,ends_at
         rows between unbounded preceding and 1 preceding
       ) as prev_max_end
@@ -162,27 +162,27 @@ begin
       sum(
         case when prev_max_end is null or starts_at > prev_max_end then 1 else 0 end
       ) over (
-        partition by day,barber_id
+        partition by calendar_day,barber_id
         order by starts_at,ends_at
         rows unbounded preceding
       ) as grp
     from ordered_blocks
   ),
   merged_blocks as (
-    select day,barber_id,min(starts_at) as starts_at,max(ends_at) as ends_at
+    select calendar_day,barber_id,min(starts_at) as starts_at,max(ends_at) as ends_at
     from marked_blocks
-    group by day,barber_id,grp
+    group by calendar_day,barber_id,grp
   ),
   blocked as (
     select
-      day,
+      calendar_day,
       barber_id,
       sum(extract(epoch from (ends_at-starts_at))/60.0) as blocked_minutes
     from merged_blocks
-    group by day,barber_id
+    group by calendar_day,barber_id
   )
   select
-    s.day,
+    s.calendar_day,
     s.barber_id,
     greatest(
       0::numeric,
@@ -194,8 +194,8 @@ begin
     )
   from open_schedule s
   left join blocked b
-    on b.day=s.day and b.barber_id=s.barber_id
-  order by s.day,s.barber_id;
+    on b.calendar_day=s.calendar_day and b.barber_id=s.barber_id
+  order by s.calendar_day,s.barber_id;
 end;
 $$;
 
@@ -354,7 +354,7 @@ begin
 
   return query
   with days as (
-    select generate_series(p_from,p_to,interval '1 day')::date as day
+    select generate_series(p_from,p_to,interval '1 day')::date as calendar_day
   ),
   appts as (
     select a.*, (a.starts_at at time zone v_tz)::date local_day
@@ -386,7 +386,7 @@ begin
     group by report_date
   )
   select
-    d.day,
+    d.calendar_day,
     coalesce(x.appointment_count,0),
     coalesce(x.completed_count,0),
     coalesce(x.cancelled_count,0),
@@ -402,9 +402,9 @@ begin
     coalesce(x.estimated_revenue_cents,0),
     coalesce(x.paid_deposit_cents,0)
   from days d
-  left join daily x on x.local_day=d.day
-  left join capacity c on c.report_date=d.day
-  order by d.day;
+  left join daily x on x.local_day=d.calendar_day
+  left join capacity c on c.report_date=d.calendar_day
+  order by d.calendar_day;
 end;
 $$;
 

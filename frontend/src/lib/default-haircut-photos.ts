@@ -30,8 +30,8 @@ const photos: Record<string, DefaultHaircutPhoto> = {
   "dreads retwist": { url: "https://images.pexels.com/photos/19028067/pexels-photo-19028067.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/man-at-a-barbershop-19028067/", skinTone: "Escuro" },
   "corte a tesoura": { url: "https://images.pexels.com/photos/14072328/pexels-photo-14072328.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/man-with-afro-hair-14072328/", skinTone: "Escuro" },
   "corte infantil": { url: "https://images.pexels.com/photos/7697356/pexels-photo-7697356.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/a-child-wearing-a-barber-s-cape-7697356/", skinTone: "Variado" },
-  "design freestyle": { url: "https://images.pexels.com/photos/35276951/pexels-photo-35276951.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/outdoor-barbershop-scene-with-customers-35276951/", skinTone: "Escuro" },
-  "careca a navalha": { url: "https://images.pexels.com/photos/17492272/pexels-photo-17492272.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/man-face-in-darkness-17492272/", skinTone: "Escuro" },
+  "design freestyle": { url: "https://images.pexels.com/photos/37339534/pexels-photo-37339534.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/creative-geometric-haircut-design-on-shaved-head-37339534/", skinTone: "Variado" },
+  "careca a navalha": { url: "https://images.pexels.com/photos/12464838/pexels-photo-12464838.jpeg?auto=compress&cs=tinysrgb&w=1200", sourceUrl: "https://www.pexels.com/photo/a-person-shaving-a-man-s-head-12464838/", skinTone: "Variado" },
 };
 
 function normalise(name: string): string {
@@ -40,4 +40,11 @@ function normalise(name: string): string {
 
 export function getDefaultHaircutPhoto(name: string): DefaultHaircutPhoto | null {
   return photos[normalise(name)] ?? null;
+}
+
+/** True when the saved URL is the catalogue reference, rather than a shop upload. */
+export function isDefaultHaircutPhoto(name: string, url?: string | null): boolean {
+  const savedUrl = url?.trim();
+  const defaultUrl = getDefaultHaircutPhoto(name)?.url;
+  return !savedUrl || savedUrl === defaultUrl;
 }
