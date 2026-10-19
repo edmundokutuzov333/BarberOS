@@ -342,7 +342,7 @@ export default function BookingWizard() {
   const depositConfigValid = !service || depositCents <= service.price_cents;
   const canBook = Boolean(
     selectableService && start && (barberParam === 'any' || barber) && depositConfigValid &&
-    (!turnstileSiteKey || turnstileToken),
+    Boolean(turnstileSiteKey && turnstileToken),
   );
 
   const setStep = (step: number) => updateSearchParams(searchParams, setSearchParams, { step: String(step) });
@@ -399,7 +399,11 @@ export default function BookingWizard() {
   };
 
   const submitBooking = async () => {
-    if (turnstileSiteKey && !turnstileToken) {
+    if (!turnstileSiteKey) {
+      setBookingError('A marcação está temporariamente indisponível porque a verificação de segurança não está configurada.');
+      return;
+    }
+    if (!turnstileToken) {
       setBookingError('Conclua a verificação de segurança antes de confirmar a marcação.');
       return;
     }
@@ -684,7 +688,7 @@ export default function BookingWizard() {
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                     <p className="t-body text-ink-mid">Sem conta e sem palavra-passe. A sua marcação ficará acessível através do link de gestão enviado após a criação.</p>
                   </div>
-                  {turnstileSiteKey && (
+                  {turnstileSiteKey ? (
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
                       <p className="t-label text-ink-mid">Confirme que é uma pessoa antes de finalizar.</p>
                       <TurnstileWidget
@@ -692,6 +696,12 @@ export default function BookingWizard() {
                         siteKey={turnstileSiteKey}
                         onTokenChange={setTurnstileToken}
                       />
+                    </div>
+                  ) : (
+                    <div role="alert" className="rounded-2xl border border-st-noshow/30 bg-st-noshow/10 p-4">
+                      <p className="t-label text-st-noshow">
+                        A verificação de segurança não está configurada. As marcações estão temporariamente bloqueadas.
+                      </p>
                     </div>
                   )}
                   {bookingError && <div aria-live="assertive"><ErrorState message={bookingError} /></div>}
