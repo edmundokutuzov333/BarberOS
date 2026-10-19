@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { adminClient, consume, corsHeaders, sha256Hex } from "../_shared/guard.ts";
+import { adminClient, clientIp, consume, corsHeaders, sha256Hex } from "../_shared/guard.ts";
 
 const TOKEN_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -110,12 +110,17 @@ Deno.serve(async (req) => {
 
     const salt = Deno.env.get("RATE_LIMIT_SALT")?.trim() ?? "";
     if (!salt) return json({ ok: false, error: "TOKEN_GATEWAY_UNAVAILABLE" }, 503, cors);
-    const tokenHash = await sha256Hex(salt + ":" + token);
-    const limit = await consume(admin, "token:" + tokenHash, 30, 60);
-    if (!limit.allowed) {
-      return json({ ok: false, error: "RATE_LIMITED", retry_after_seconds: limit.retryAfter }, 429, {
+    const tokenHash = await sha256Hex(salt + ":token:" + token);
+    const tokenLimit = await consume(admin, "token:" + tokenHash, 30, 60);
+    const ip = clientIp(req);
+    const ipLimit = ip === "unknown"
+      ? { allowed: true, retryAfter: 60 }
+      : await consume(admin, "token-ip:" + await sha256Hex(salt + ":ip:" + ip), 120, 60);
+    if (!tokenLimit.allowed || !ipLimit.allowed) {
+      const retryAfter = Math.max(tokenLimit.allowed ? 0 : tokenLimit.retryAfter, ipLimit.allowed ? 0 : ipLimit.retryAfter);
+      return json({ ok: false, error: "RATE_LIMITED", retry_after_seconds: retryAfter }, 429, {
         ...cors,
-        "retry-after": String(limit.retryAfter),
+        "retry-after": String(retryAfter),
       });
     }
 
