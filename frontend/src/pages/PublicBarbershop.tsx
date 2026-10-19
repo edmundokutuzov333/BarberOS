@@ -24,6 +24,11 @@ function formatReviewDate(value: string, timezone: string): string {
   return new Intl.DateTimeFormat('pt-PT', { timeZone: timezone, day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value));
 }
 
+function fallbackShopName(slug?: string): string {
+  const label = (slug ?? '').split('-').filter(Boolean).join(' ');
+  return label ? label.replace(/\b\w/g, (letter) => letter.toUpperCase()) : 'Barbearia';
+}
+
 function ServiceCard({ service }: { service: PublicService }) {
   return (
     <article className="rounded-3xl border border-white/10 bg-white/5 p-5 h-full">
@@ -81,6 +86,7 @@ export default function PublicBarbershop() {
   const { slug } = useParams<{ slug: string }>();
   const query = usePublicBarbershop(slug);
   const data = query.data;
+  const loadingShopName = fallbackShopName(slug);
 
   useScopedTheme(data?.shop.theme_key);
 
@@ -109,6 +115,11 @@ export default function PublicBarbershop() {
           <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
             <div className="relative min-h-[22rem] sm:min-h-[30rem]">
               <Skeleton className="absolute inset-0 h-full w-full rounded-none" lines={6} />
+              <div className="absolute inset-x-0 bottom-0 z-10 p-6 sm:p-9">
+                <p className="t-label text-accent-soft">BARBEROS</p>
+                <h1 className="text-3xl sm:text-5xl font-medium tracking-[-0.02em] text-white mt-2">{loadingShopName}</h1>
+                <p className="t-body text-white/65 mt-2">A preparar serviços, equipa e horários.</p>
+              </div>
             </div>
           </section>
           <section className="mt-6 grid lg:grid-cols-[1.5fr_.5fr] gap-6 items-start">
