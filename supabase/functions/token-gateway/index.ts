@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { adminClient, clientIp, consume, corsHeaders, sha256Hex } from "../_shared/guard.ts";
+import { adminClient, consume, corsHeaders, sha256Hex } from "../_shared/guard.ts";
 
 const TOKEN_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
