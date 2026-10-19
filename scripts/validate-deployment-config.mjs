@@ -13,6 +13,17 @@ function readJson(file) {
 }
 
 const vercel = readJson('vercel.json');
+const frontendVercel = readJson('frontend/vercel.json');
+
+if (frontendVercel.outputDirectory !== 'dist') throw new Error('DEPLOY_CONFIG_FRONTEND_OUTPUT_DIRECTORY_INVALID');
+if (frontendVercel.buildCommand !== 'corepack yarn build') throw new Error('DEPLOY_CONFIG_FRONTEND_BUILD_COMMAND_INVALID');
+if (frontendVercel.installCommand !== 'corepack yarn install --frozen-lockfile') throw new Error('DEPLOY_CONFIG_FRONTEND_INSTALL_COMMAND_INVALID');
+if (!Array.isArray(frontendVercel.rewrites) || !frontendVercel.rewrites.some((r) => r.source === '/(.*)' && r.destination === '/index.html')) {
+  throw new Error('DEPLOY_CONFIG_FRONTEND_SPA_REWRITE_MISSING');
+}
+if (!Array.isArray(frontendVercel.headers) || !frontendVercel.headers.some((h) => h.source === '/(.*)' && h.headers?.some((x) => x.key === 'Content-Security-Policy'))) {
+  throw new Error('DEPLOY_CONFIG_FRONTEND_SECURITY_HEADERS_MISSING');
+}
 
 if (vercel.outputDirectory !== 'dist') throw new Error('DEPLOY_CONFIG_OUTPUT_DIRECTORY_INVALID');
 if (vercel.buildCommand !== 'corepack yarn build') {
@@ -75,6 +86,7 @@ const expectedFunctions = [
   'payments-webhook',
   'payments-reconcile',
   'booking-create',
+  'token-gateway',
   'resend-webhook',
   'health',
 ];
