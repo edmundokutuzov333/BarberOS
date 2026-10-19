@@ -17,7 +17,7 @@ for (const name of names) {
   previous = version;
   const content = fs.readFileSync(path.join(migrationDir, name), 'utf8');
   if (/^\s*undefined\s*$/m.test(content)) throw new Error('SUPABASE_MIGRATION_LITERAL_UNDEFINED:' + name);
-  if (/\$(?:function|fn|block|body)\$\s*\n\s*(?:revoke|grant|create|alter|comment|insert|update|delete|drop)\b/i.test(content)) {
+  if (/\$(?:function|fn|block|body)\$|\$\$\s*\n\s*(?:revoke|grant|create|alter|comment|insert|update|delete|drop)\b/i.test(content)) {
     throw new Error('SUPABASE_MIGRATION_MISSING_DOLLAR_QUOTE_TERMINATOR:' + name);
   }
   if (/\bCOMMIT\s*;/i.test(content) || /\bROLLBACK\s*;/i.test(content)) {
