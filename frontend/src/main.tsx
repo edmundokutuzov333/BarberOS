@@ -29,11 +29,13 @@ function readPreloadRecovery(): PreloadRecovery | null {
   }
 }
 
-function writePreloadRecovery(value: PreloadRecovery): void {
+function writePreloadRecovery(value: PreloadRecovery): boolean {
   try {
     sessionStorage.setItem(PRELOAD_RECOVERY_KEY, `${value.startedAt}:${value.attempts}`);
+    return true;
   } catch {
-    // Recovery still works when browser storage is disabled.
+    // Without persistent state, reloading could create an infinite recovery loop.
+    return false;
   }
 }
 
@@ -66,15 +68,15 @@ window.addEventListener('vite:preloadError', (event) => {
   const now = Date.now();
 
   if (!recovery) {
+    if (!writePreloadRecovery({ startedAt: now, attempts: 1 })) return;
     event.preventDefault();
-    writePreloadRecovery({ startedAt: now, attempts: 1 });
     window.location.reload();
     return;
   }
 
   if (recovery.attempts < 2) {
+    if (!writePreloadRecovery({ startedAt: recovery.startedAt, attempts: 2 })) return;
     event.preventDefault();
-    writePreloadRecovery({ startedAt: recovery.startedAt, attempts: 2 });
     void clearStaleBarberOSAssets().catch(() => {}).finally(() => {
       const url = new URL(window.location.href);
       url.searchParams.set('__barberos_asset_recovery', String(now));
