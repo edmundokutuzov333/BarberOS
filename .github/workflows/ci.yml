@@ -53,6 +53,7 @@ jobs:
       - uses: supabase/setup-cli@v2
         with:
           version: latest
+          github-token: ${{ github.token }}
       - name: Start isolated local Supabase
         shell: bash
         run: |
