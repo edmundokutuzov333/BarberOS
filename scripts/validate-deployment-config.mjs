@@ -14,7 +14,7 @@ function readJson(file) {
 
 const vercel = readJson('vercel.json');
 
-if (vercel.outputDirectory !== 'frontend/dist') throw new Error('DEPLOY_CONFIG_OUTPUT_DIRECTORY_INVALID');
+if (vercel.outputDirectory !== 'dist') throw new Error('DEPLOY_CONFIG_OUTPUT_DIRECTORY_INVALID');
 if (!String(vercel.buildCommand || '').includes('corepack yarn --cwd frontend build')) {
   throw new Error('DEPLOY_CONFIG_BUILD_COMMAND_INVALID');
 }

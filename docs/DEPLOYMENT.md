@@ -24,7 +24,7 @@ Vercel is the frontend delivery layer. Supabase is the system of record and back
 vercel.json defines:
 
 - build from `frontend/` with Yarn 1.22.22 selected deterministically through Corepack and a frozen lockfile;
-- static output in frontend/dist;
+- static output is copied to the repository-root `dist/`, matching the Vercel project output directory;
 - SPA fallback to index.html so deep links work on direct navigation;
 - immutable caching for Vite assets;
 - security headers on application responses.

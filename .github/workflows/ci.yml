@@ -11,6 +11,9 @@ permissions:
 jobs:
   frontend:
     runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID' }}
     defaults:
       run:
         working-directory: frontend
@@ -27,9 +30,6 @@ jobs:
       - run: corepack yarn typecheck
       - run: corepack yarn test
       - run: corepack yarn build
-        env:
-          VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID' }}
       - run: corepack yarn perf:budget
 
   contracts:
