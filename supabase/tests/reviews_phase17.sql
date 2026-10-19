@@ -8,17 +8,15 @@ declare
   v_err text;
   v_owner uuid;
 begin
-  if not has_function_privilege('anon','public.get_review_by_token(uuid)','execute') then
-    raise exception 'FAIL: anon review view grant missing';
+  if has_function_privilege('anon','public.get_review_by_token(uuid)','execute')
+     or has_function_privilege('authenticated','public.get_review_by_token(uuid)','execute')
+     or has_function_privilege('anon','public.submit_review_by_token(uuid,integer,text)','execute')
+     or has_function_privilege('authenticated','public.submit_review_by_token(uuid,integer,text)','execute') then
+    raise exception 'FAIL: token review RPCs must be gateway-only';
   end if;
-  if not has_function_privilege('authenticated','public.get_review_by_token(uuid)','execute') then
-    raise exception 'FAIL: authenticated review view grant missing';
-  end if;
-  if not has_function_privilege('anon','public.submit_review_by_token(uuid,integer,text)','execute') then
-    raise exception 'FAIL: anon review submit grant missing';
-  end if;
-  if not has_function_privilege('authenticated','public.submit_review_by_token(uuid,integer,text)','execute') then
-    raise exception 'FAIL: authenticated review submit grant missing';
+  if not has_function_privilege('service_role','public.get_review_by_token(uuid)','execute')
+     or not has_function_privilege('service_role','public.submit_review_by_token(uuid,integer,text)','execute') then
+    raise exception 'FAIL: service role review gateway grants missing';
   end if;
   if not has_function_privilege('authenticated','public.get_reviews(uuid,uuid,integer,text,integer,integer)','execute') then
     raise exception 'FAIL: authenticated review list grant missing';
@@ -297,8 +295,9 @@ $block$;
 rollback;
 
 select
-  has_function_privilege('anon','public.get_review_by_token(uuid)','execute') as anon_review_view,
-  has_function_privilege('anon','public.submit_review_by_token(uuid,integer,text)','execute') as anon_review_submit,
+  not has_function_privilege('anon','public.get_review_by_token(uuid)','execute') as anon_review_view_denied,
+  not has_function_privilege('anon','public.submit_review_by_token(uuid,integer,text)','execute') as anon_review_submit_denied,
+  has_function_privilege('service_role','public.get_review_by_token(uuid)','execute') as service_role_review_view_allowed,
   not has_function_privilege('anon','public.get_reviews(uuid,uuid,integer,text,integer,integer)','execute') as anon_no_operator_list,
   not has_function_privilege('anon','public.set_review_publication(uuid,uuid,boolean)','execute') as anon_no_moderation,
   not has_table_privilege('anon','public.reviews','INSERT') as anon_no_direct_insert,
