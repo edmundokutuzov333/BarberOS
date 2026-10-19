@@ -32,6 +32,8 @@ test.describe('BarberOS Phase 24 booking concurrency', () => {
           p_name: 'Phase 24 A',
           p_phone: '+25884' + Date.now().toString().slice(-7),
           p_email: null,
+          idempotency_key: crypto.randomUUID(),
+          turnstile_token: 'phase24-staging-token',
         },
       }),
       request.post(endpoint, {
