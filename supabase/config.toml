@@ -15,6 +15,9 @@ enabled = true
 [functions.resend-webhook]
 verify_jwt = false
 
+[functions.token-gateway]
+verify_jwt = false
+
 [functions.health]
 verify_jwt = false
 
