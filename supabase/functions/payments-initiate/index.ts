@@ -26,12 +26,22 @@ Deno.serve(async(req)=>{
 
   let body:any;
   try{ body=await req.json(); }catch{return json({ok:false,error:"PAYMENT_REQUEST_INVALID"},400);}
-  if(typeof body?.token!=="string" || !validProvider(body?.provider) || typeof body?.msisdn!=="string"){
+  if(typeof body?.token!=="string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.token) || !validProvider(body?.provider) || typeof body?.msisdn!=="string"){
     return json({ok:false,error:"PAYMENT_REQUEST_INVALID"},400);
   }
 
   try{
     const admin=createClient(Deno.env.get("SUPABASE_URL")!,secretKey(),{auth:{autoRefreshToken:false,persistSession:false}});
+    const {data:appointment,error:tokenError}=await admin
+      .from("appointments")
+      .select("manage_token_expires_at")
+      .eq("manage_token",body.token)
+      .maybeSingle();
+    if(tokenError) return json({ok:false,error:"TOKEN_VALIDATION_UNAVAILABLE"},503);
+    if(!appointment || !appointment.manage_token_expires_at || Date.parse(appointment.manage_token_expires_at)<=Date.now()){
+      return json({ok:false,error:"APPOINTMENT_NOT_FOUND"},404);
+    }
+
     const idempotency=typeof body?.idempotency_key==="string" ? body.idempotency_key : crypto.randomUUID();
 
     const {data:init,error:initError}=await admin.rpc("init_payment_from_token",{
