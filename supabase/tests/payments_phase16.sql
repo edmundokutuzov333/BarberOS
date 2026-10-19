@@ -12,8 +12,18 @@ begin
   if has_function_privilege('anon','public.get_payment_runtime_for_token(uuid)','execute') then raise exception 'FAIL: runtime payment credentials exposed to anon'; end if;
   if has_function_privilege('authenticated','public.set_payment_provider_account(uuid,uuid,public.payment_provider,boolean,text,jsonb,jsonb)','execute') then raise exception 'FAIL: payment configuration RPC exposed to authenticated clients'; end if;
   if not has_function_privilege('service_role','public.set_payment_provider_account(uuid,uuid,public.payment_provider,boolean,text,jsonb,jsonb)','execute') then raise exception 'FAIL: service payment configuration RPC grant missing'; end if;
-  if not has_function_privilege('anon','public.init_payment_from_token(uuid,public.payment_provider,text,uuid)','execute') then raise exception 'FAIL: public payment initiation RPC grant missing'; end if;
-  if not has_function_privilege('anon','public.get_payment_status_by_token(uuid)','execute') then raise exception 'FAIL: public payment status RPC grant missing'; end if;
+  if has_function_privilege('anon','public.init_payment_from_token(uuid,public.payment_provider,text,uuid)','execute')
+     or has_function_privilege('authenticated','public.init_payment_from_token(uuid,public.payment_provider,text,uuid)','execute') then
+    raise exception 'FAIL: payment initiation RPC must be gateway-only';
+  end if;
+  if has_function_privilege('anon','public.get_payment_status_by_token(uuid)','execute')
+     or has_function_privilege('authenticated','public.get_payment_status_by_token(uuid)','execute') then
+    raise exception 'FAIL: payment status RPC must be gateway-only';
+  end if;
+  if not has_function_privilege('service_role','public.init_payment_from_token(uuid,public.payment_provider,text,uuid)','execute')
+     or not has_function_privilege('service_role','public.get_payment_status_by_token(uuid)','execute') then
+    raise exception 'FAIL: service role payment gateway grants missing';
+  end if;
 end
 $block$;
 
