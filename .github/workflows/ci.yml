@@ -43,3 +43,19 @@ jobs:
       - run: node scripts/verify-supabase-release.mjs
       - name: Secret scan
         run: node scripts/scan-repository-secrets.mjs
+
+  database:
+    name: Supabase migrations and security contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v2
+        with:
+          version: latest
+      - name: Start isolated local Supabase
+        run: supabase start
+      - name: Apply the complete migration chain from empty state
+        run: supabase db reset
+      - name: Run database contract tests
+        run: supabase test db
