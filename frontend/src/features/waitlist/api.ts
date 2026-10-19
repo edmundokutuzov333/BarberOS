@@ -118,45 +118,22 @@ export async function joinWaitlist(input: {
 }
 
 export async function getWaitlistOffer(token: string): Promise<WaitlistOffer> {
-  let data: WaitlistOffer[] | null;
-  try {
-    data = await invokeTokenGateway<WaitlistOffer[]>('waitlist.get', { token });
-  } catch (error) {
-    if (!(error instanceof Error) || error.message !== 'TOKEN_GATEWAY_NOT_DEPLOYED') throw error;
-    const result = await supabase.rpc('get_waitlist_offer', { p_token: token });
-    if (result.error) throw result.error;
-    data = result.data as WaitlistOffer[] | null;
-  }
+  const data = await invokeTokenGateway<WaitlistOffer[]>('waitlist.get', { token });
   const row = data?.[0];
   if (!row) throw new Error('WAITLIST_OFFER_NOT_FOUND');
   return row;
 }
 
 export async function claimWaitlistOffer(token: string): Promise<WaitlistClaim> {
-  let data: WaitlistClaim[] | null;
-  try {
-    data = await invokeTokenGateway<WaitlistClaim[]>('waitlist.claim', { token });
-  } catch (error) {
-    if (!(error instanceof Error) || error.message !== 'TOKEN_GATEWAY_NOT_DEPLOYED') throw error;
-    const result = await supabase.rpc('claim_waitlist_offer', { p_token: token });
-    if (result.error) throw result.error;
-    data = result.data as WaitlistClaim[] | null;
-  }
+  const data = await invokeTokenGateway<WaitlistClaim[]>('waitlist.claim', { token });
   const row = data?.[0];
   if (!row) throw new Error('WAITLIST_CLAIM_EMPTY_RESPONSE');
   return row;
 }
 
 export async function expireWaitlistOffer(token: string) {
-  try {
-    const data = await invokeTokenGateway<Array<{ waitlist_entry_id: string; status: WaitlistStatus; next_offer_token: string | null }>>('waitlist.expire', { token });
-    return data?.[0] ?? null;
-  } catch (error) {
-    if (!(error instanceof Error) || error.message !== 'TOKEN_GATEWAY_NOT_DEPLOYED') throw error;
-    const { data, error: rpcError } = await supabase.rpc('expire_waitlist_offer', { p_token: token });
-    if (rpcError) throw rpcError;
-    return data?.[0] ?? null;
-  }
+  const data = await invokeTokenGateway<Array<{ waitlist_entry_id: string; status: WaitlistStatus; next_offer_token: string | null }>>('waitlist.expire', { token });
+  return data?.[0] ?? null;
 }
 
 export async function cancelWaitlist(shopId: string, entryId: string) {
