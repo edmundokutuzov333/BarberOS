@@ -26,26 +26,7 @@ begin
 
   raise exception 'SHOP_OPERATOR_REQUIRED';
 end;
-$function$
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+$function$;
 
 revoke all on function public.get_agenda_appointments(uuid,timestamptz,timestamptz) from public,anon,authenticated;
 grant execute on function public.get_agenda_appointments(uuid,timestamptz,timestamptz) to authenticated;
