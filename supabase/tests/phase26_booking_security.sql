@@ -11,6 +11,19 @@ begin
     raise exception 'SECURITY_REGRESSION: idempotent booking RPC is callable by browser roles';
   end if;
 
+  if has_function_privilege('anon', 'public.get_appointment_by_token(uuid)', 'EXECUTE')
+    or has_function_privilege('authenticated', 'public.get_appointment_by_token(uuid)', 'EXECUTE')
+    or has_function_privilege('anon', 'public.get_review_by_token(uuid)', 'EXECUTE')
+    or has_function_privilege('authenticated', 'public.get_review_by_token(uuid)', 'EXECUTE')
+    or has_function_privilege('anon', 'public.get_waitlist_offer(uuid)', 'EXECUTE')
+    or has_function_privilege('authenticated', 'public.get_waitlist_offer(uuid)', 'EXECUTE')
+    or has_function_privilege('anon', 'public.claim_waitlist_offer(uuid)', 'EXECUTE')
+    or has_function_privilege('authenticated', 'public.claim_waitlist_offer(uuid)', 'EXECUTE')
+    or has_function_privilege('anon', 'public.expire_waitlist_offer(uuid)', 'EXECUTE')
+    or has_function_privilege('authenticated', 'public.expire_waitlist_offer(uuid)', 'EXECUTE') then
+    raise exception 'SECURITY_REGRESSION: appointment, review or waitlist token RPC is callable by browser roles';
+  end if;
+
   if has_function_privilege('anon', 'public.get_payment_runtime_for_token(uuid)', 'EXECUTE')
     or has_function_privilege('authenticated', 'public.get_payment_runtime_for_token(uuid)', 'EXECUTE') then
     raise exception 'SECURITY_REGRESSION: payment credentials RPC is callable by browser roles';
