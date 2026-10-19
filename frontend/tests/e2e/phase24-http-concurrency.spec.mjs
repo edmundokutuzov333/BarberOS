@@ -59,5 +59,11 @@ test.describe('BarberOS Phase 24 booking concurrency', () => {
     expect(winningBody.ok).toBe(true);
     expect(winningBody.booking?.manage_token).toBeTruthy();
     expect('appointment_id' in (winningBody.booking ?? {})).toBe(false);
+
+    const winningRequest = responseA.status() === 200 ? requestA : requestB;
+    const retryResponse = await request.post(endpoint, { data: winningRequest });
+    expect(retryResponse.status()).toBe(200);
+    const retryBody = await retryResponse.json();
+    expect(retryBody.booking?.manage_token).toBe(winningBody.booking?.manage_token);
   });
 });
