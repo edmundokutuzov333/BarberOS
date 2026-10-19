@@ -9,18 +9,88 @@ import './index.css';
 import './i18n';
 import { registerSW } from 'virtual:pwa-register';
 
-// A deployment can leave one browser tab with an older manifest while a new
-// lazy route chunk is already live. Recover once automatically instead of
-// surfacing the global error screen for a transient preload mismatch.
+const PRELOAD_RECOVERY_KEY = 'barberos.preload-recovery';
+const PRELOAD_RECOVERY_WINDOW_MS = 60_000;
+
+type PreloadRecovery = { startedAt: number; attempts: number };
+
+function readPreloadRecovery(): PreloadRecovery | null {
+  try {
+    const raw = sessionStorage.getItem(PRELOAD_RECOVERY_KEY);
+    if (!raw) return null;
+    const [startedAtText, attemptsText] = raw.split(':');
+    const startedAt = Number(startedAtText);
+    if (!Number.isFinite(startedAt) || Date.now() - startedAt > PRELOAD_RECOVERY_WINDOW_MS) return null;
+    // Older builds stored only a timestamp, which counts as the first attempt.
+    const attempts = attemptsText === undefined ? 1 : Number(attemptsText);
+    return { startedAt, attempts: Number.isFinite(attempts) ? attempts : 1 };
+  } catch {
+    return null;
+  }
+}
+
+function writePreloadRecovery(value: PreloadRecovery): void {
+  try {
+    sessionStorage.setItem(PRELOAD_RECOVERY_KEY, `${value.startedAt}:${value.attempts}`);
+  } catch {
+    // Recovery still works when browser storage is disabled.
+  }
+}
+
+function clearPreloadRecovery(): void {
+  try {
+    sessionStorage.removeItem(PRELOAD_RECOVERY_KEY);
+  } catch {
+    // Ignore storage restrictions.
+  }
+}
+
+async function clearStaleBarberOSAssets(): Promise<void> {
+  if ('serviceWorker' in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
+    await Promise.all(registrations.map((registration) => registration.unregister().catch(() => false)));
+  }
+
+  if ('caches' in window) {
+    const keys = await window.caches.keys().catch(() => []);
+    const appCaches = keys.filter((key) => key.startsWith('workbox-') || key === 'shop-media');
+    await Promise.all(appCaches.map((key) => window.caches.delete(key).catch(() => false)));
+  }
+}
+
+// When a deployment replaces hashed route chunks, an older service-worker
+// cache can keep requesting assets that no longer exist. Try a normal reload,
+// then clear only BarberOS/Workbox caches and retry with a fresh document URL.
 window.addEventListener('vite:preloadError', (event) => {
-  event.preventDefault();
-  const key = 'barberos.preload-recovery';
-  const previous = Number(sessionStorage.getItem(key) ?? 0);
-  if (previous && Date.now() - previous < 30_000) return;
-  sessionStorage.setItem(key, String(Date.now()));
-  window.location.reload();
+  const recovery = readPreloadRecovery();
+  const now = Date.now();
+
+  if (!recovery) {
+    event.preventDefault();
+    writePreloadRecovery({ startedAt: now, attempts: 1 });
+    window.location.reload();
+    return;
+  }
+
+  if (recovery.attempts < 2) {
+    event.preventDefault();
+    writePreloadRecovery({ startedAt: recovery.startedAt, attempts: 2 });
+    void clearStaleBarberOSAssets().catch(() => {}).finally(() => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('__barberos_asset_recovery', String(now));
+      window.location.replace(url.toString());
+    });
+    return;
+  }
+
+  // Do not suppress a third failure. Let Vite/React receive the real import
+  // error instead of allowing a failed lazy module to resolve as undefined.
+  clearPreloadRecovery();
 });
-window.addEventListener('load', () => window.setTimeout(() => sessionStorage.removeItem('barberos.preload-recovery'), 30_000), { once: true });
+
+window.addEventListener('load', () => {
+  window.setTimeout(clearPreloadRecovery, PRELOAD_RECOVERY_WINDOW_MS);
+}, { once: true });
 
 registerSW({ immediate: true });
 
@@ -31,7 +101,7 @@ const publicBookingMatch = pathname.match(/^\/barbearia\/([^/]+)\/marcar\/?$/);
 
 if (publicShopMatch) {
   const slug = decodeURIComponent(publicShopMatch[1]);
-  void import('./pages/PublicBarbershop');
+  void import('./pages/PublicBarbershop').catch(() => {});
   void import('./features/public-shop/api')
     .then(({ getPublicBarbershop }) => qc.prefetchQuery({
       queryKey: ['public-barbershop', slug],
@@ -42,7 +112,7 @@ if (publicShopMatch) {
     }))
     .catch(() => {});
 } else if (publicBookingMatch) {
-  void import('./pages/BookingWizard');
+  void import('./pages/BookingWizard').catch(() => {});
 }
 
 createRoot(document.getElementById('root')!).render(
