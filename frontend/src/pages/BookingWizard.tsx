@@ -243,6 +243,7 @@ export default function BookingWizard() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() ?? '';
+  const turnstileRequired = import.meta.env.VITE_BOOKING_TURNSTILE_REQUIRED === 'true';
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   const rawStep = Number(searchParams.get('step') ?? '1');
@@ -342,7 +343,7 @@ export default function BookingWizard() {
   const depositConfigValid = !service || depositCents <= service.price_cents;
   const canBook = Boolean(
     selectableService && start && (barberParam === 'any' || barber) && depositConfigValid &&
-    Boolean(turnstileSiteKey && turnstileToken),
+    (!turnstileRequired || Boolean(turnstileSiteKey && turnstileToken)),
   );
 
   const setStep = (step: number) => updateSearchParams(searchParams, setSearchParams, { step: String(step) });
@@ -399,11 +400,11 @@ export default function BookingWizard() {
   };
 
   const submitBooking = async () => {
-    if (!turnstileSiteKey) {
+    if (turnstileRequired && !turnstileSiteKey) {
       setBookingError('A marcação está temporariamente indisponível porque a verificação de segurança não está configurada.');
       return;
     }
-    if (!turnstileToken) {
+    if (turnstileRequired && !turnstileToken) {
       setBookingError('Conclua a verificação de segurança antes de confirmar a marcação.');
       return;
     }
@@ -432,7 +433,7 @@ export default function BookingWizard() {
         p_phone: normalizeMozPhone(phone),
         p_email: email || null,
         idempotency_key: bookingAttemptKey,
-        turnstile_token: turnstileToken,
+        ...(turnstileRequired ? { turnstile_token: turnstileToken ?? undefined } : {}),
       });
       rememberLocalBooking({ token: result.manage_token, shopSlug: slug, startsAt: start, serviceName: selectableService.name });
       navigate(`/marcacao/${result.manage_token}`, { replace: true });
@@ -697,13 +698,13 @@ export default function BookingWizard() {
                         onTokenChange={setTurnstileToken}
                       />
                     </div>
-                  ) : (
+                  ) : turnstileRequired ? (
                     <div role="alert" className="rounded-2xl border border-st-noshow/30 bg-st-noshow/10 p-4">
                       <p className="t-label text-st-noshow">
                         A verificação de segurança não está configurada. As marcações estão temporariamente bloqueadas.
                       </p>
                     </div>
-                  )}
+                  ) : null}
                   {bookingError && <div aria-live="assertive"><ErrorState message={bookingError} /></div>}
                   <Button
                     type="submit"
