@@ -10,7 +10,10 @@ type TokenAction =
   | "appointment.cancel"
   | "appointment.reschedule"
   | "review.get"
-  | "review.submit";
+  | "review.submit"
+  | "waitlist.get"
+  | "waitlist.claim"
+  | "waitlist.expire";
 
 function json(body: unknown, status = 200, cors: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {
