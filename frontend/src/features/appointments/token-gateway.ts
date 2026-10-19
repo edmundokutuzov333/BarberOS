@@ -6,7 +6,10 @@ export type TokenGatewayAction =
   | 'appointment.cancel'
   | 'appointment.reschedule'
   | 'review.get'
-  | 'review.submit';
+  | 'review.submit'
+  | 'waitlist.get'
+  | 'waitlist.claim'
+  | 'waitlist.expire';
 
 type TokenGatewayResponse<T> = {
   ok?: boolean;
