@@ -113,7 +113,7 @@ export default function PublicBarbershop() {
         </header>
         <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-20">
           <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
-            <div className="relative min-h-[22rem] sm:min-h-[30rem]">
+            <div className="relative min-h-[22rem] sm:min-h-[30rem]" style={{ minHeight: 'clamp(22rem, 62.5vw, 30rem)' }}>
               <Skeleton className="absolute inset-0 h-full w-full rounded-none" lines={6} />
               <div className="absolute inset-x-0 bottom-0 z-10 p-6 sm:p-9">
                 <p className="t-label text-accent-soft">BARBEROS</p>
