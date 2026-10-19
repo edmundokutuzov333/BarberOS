@@ -20,8 +20,7 @@ FILES = [
 
 database_url = os.getenv("BARBEROS_TEST_DATABASE_URL")
 if not database_url:
-    print("SKIP: BARBEROS_TEST_DATABASE_URL não definido.")
-    raise SystemExit(0)
+    raise SystemExit("REQUIRED_TEST_ENV_MISSING: BARBEROS_TEST_DATABASE_URL não definido; a suite de aceitação não pode ser considerada aprovada.")
 
 if os.getenv("BARBEROS_TEST_ALLOW_MUTATION") != "1":
     raise SystemExit("REFUSED: BARBEROS_TEST_ALLOW_MUTATION=1 é obrigatório para esta suite.")
