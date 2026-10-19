@@ -75,6 +75,6 @@ export default function Gateway() {
       {audience === 'shop' && <section className="gateway-shop-access glass"><div><p className="landing-section-kicker">GESTÃO</p><h2 className="gateway-section-title">A tua operação começa aqui.</h2><p className="t-body text-ink-mid mt-2">Entra no painel ou regista a tua barbearia para receberes um link próprio e um QR Code.</p></div><div className="flex flex-wrap gap-3"><Link to="/entrar" className="gateway-access-secondary">{t('login')}</Link><Link to="/registar" className="gateway-access-primary">Registar a minha barbearia <ArrowUpRight size={15} /></Link></div></section>}
       {audience && <button type="button" className="gateway-change" onClick={() => { localStorage.removeItem(AUDIENCE_KEY); setAudience(null); }}>{t('change')}</button>}
     </main>
-    {scan && <Suspense fallback={null}><QrScanDialog onSlug={(slug) => { setScan(false); window.location.assign(`/barbearia/${slug}`); }} onClose={() => setScan(false)} /></Suspense>}
+    {scan && <Suspense fallback={null}><QrScanDialog onSlug={(slug) => { setScan(false); window.location.assign(getShopPublicUrl(slug)); }} onClose={() => setScan(false)} /></Suspense>}
   </Page>;
 }
