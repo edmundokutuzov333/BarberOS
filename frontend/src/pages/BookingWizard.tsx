@@ -343,7 +343,7 @@ export default function BookingWizard() {
   const depositConfigValid = !service || depositCents <= service.price_cents;
   const canBook = Boolean(
     selectableService && start && (barberParam === 'any' || barber) && depositConfigValid &&
-    (!turnstileRequired || Boolean(turnstileSiteKey && turnstileToken)),
+    ((!turnstileRequired && !turnstileSiteKey) || Boolean(turnstileSiteKey && turnstileToken)),
   );
 
   const setStep = (step: number) => updateSearchParams(searchParams, setSearchParams, { step: String(step) });
@@ -400,11 +400,11 @@ export default function BookingWizard() {
   };
 
   const submitBooking = async () => {
-    if (turnstileRequired && !turnstileSiteKey) {
+    if ((turnstileRequired || turnstileSiteKey) && !turnstileSiteKey) {
       setBookingError('A marcação está temporariamente indisponível porque a verificação de segurança não está configurada.');
       return;
     }
-    if (turnstileRequired && !turnstileToken) {
+    if (turnstileSiteKey && !turnstileToken) {
       setBookingError('Conclua a verificação de segurança antes de confirmar a marcação.');
       return;
     }
@@ -433,7 +433,7 @@ export default function BookingWizard() {
         p_phone: normalizeMozPhone(phone),
         p_email: email || null,
         idempotency_key: bookingAttemptKey,
-        ...(turnstileRequired ? { turnstile_token: turnstileToken ?? undefined } : {}),
+        ...(turnstileSiteKey ? { turnstile_token: turnstileToken ?? undefined } : {}),
       });
       rememberLocalBooking({ token: result.manage_token, shopSlug: slug, startsAt: start, serviceName: selectableService.name });
       navigate(`/marcacao/${result.manage_token}`, { replace: true });
