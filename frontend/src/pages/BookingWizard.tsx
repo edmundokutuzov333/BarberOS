@@ -64,7 +64,7 @@ function validMozPhone(value: string): boolean {
 }
 
 function validEmail(value: string): boolean {
-  return !value || value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  return value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 function getDepositCents(service: PublicService, shop: { deposit_enabled: boolean; deposit_mode: 'percent' | 'fixed'; deposit_value: number }): number {
@@ -650,8 +650,9 @@ export default function BookingWizard() {
                     value={form.email}
                     onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
                     error={errors.email}
-                    hint="Opcional. Usado para confirmações quando disponível."
+                    hint="Obrigatório para receber confirmação e lembretes."
                     placeholder="nome@email.com"
+                    required
                   />
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                     <p className="t-body text-ink-mid">Sem conta e sem palavra-passe. A sua marcação ficará acessível através do link de gestão enviado após a criação.</p>

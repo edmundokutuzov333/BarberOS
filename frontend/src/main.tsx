@@ -6,6 +6,10 @@ import App from './App';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { RouteAnnouncer } from './components/ui/RouteAnnouncer';
 import './index.css';
+import './i18n';
+import { registerSW } from 'virtual:pwa-register';
+
+registerSW({ immediate: true });
 
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 15_000, retry: 1, refetchOnWindowFocus: false } } });
 const pathname = window.location.pathname;

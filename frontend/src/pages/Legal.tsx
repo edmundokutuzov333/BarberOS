@@ -1,0 +1,11 @@
+import { Link } from 'react-router-dom';
+import { Page } from '@/components/layout/Page';
+import { Brand } from '@/components/ui/Brand';
+
+export function Privacy() {
+  return <Page testId="privacy-page" className="barber-shell min-h-screen px-5 py-8"><header className="mx-auto max-w-3xl"><Link to="/"><Brand size="md" /></Link></header><main className="mx-auto mt-10 max-w-3xl space-y-6"><p className="landing-section-kicker">BARBEROS</p><h1 className="text-3xl font-semibold">Política de privacidade</h1><p className="text-white/75">O BarberOS trata apenas os dados necessários para gerir marcações, pagamentos, notificações e suporte. Clientes sem conta podem marcar sem criar um perfil de acesso.</p><section className="glass space-y-3 rounded-3xl p-5"><h2 className="text-xl font-medium">Dados e direitos</h2><p className="text-white/70">Os dados pertencem à barbearia responsável pelo tratamento. Pode pedir acesso, exportação, correcção ou anonimização através da barbearia. Dados de entrega e tokens de gestão não são usados para publicidade.</p></section><Link className="underline" to="/">Voltar ao início</Link></main></Page>;
+}
+
+export function Terms() {
+  return <Page testId="terms-page" className="barber-shell min-h-screen px-5 py-8"><header className="mx-auto max-w-3xl"><Link to="/"><Brand size="md" /></Link></header><main className="mx-auto mt-10 max-w-3xl space-y-6"><p className="landing-section-kicker">BARBEROS</p><h1 className="text-3xl font-semibold">Termos de utilização</h1><p className="text-white/75">O BarberOS fornece ferramentas de agenda, reservas, notificações e operação de barbearias. A disponibilidade de horários depende da configuração e da capacidade real de cada loja.</p><section className="glass space-y-3 rounded-3xl p-5"><h2 className="text-xl font-medium">Marcações</h2><p className="text-white/70">A confirmação, cancelamento e reagendamento seguem as regras apresentadas pela barbearia. O cliente deve guardar o link de gestão da sua marcação.</p></section><Link className="underline" to="/">Voltar ao início</Link></main></Page>;
+}

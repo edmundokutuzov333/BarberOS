@@ -75,6 +75,8 @@ const expectedFunctions = [
   'payments-webhook',
   'payments-reconcile',
   'booking-create',
+  'resend-webhook',
+  'health',
 ];
 for (const fn of expectedFunctions) {
   if (!fs.existsSync(path.join(root, 'supabase', 'functions', fn, 'index.ts'))) {

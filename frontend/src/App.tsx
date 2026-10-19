@@ -10,6 +10,8 @@ const PrivateProviders = lazy(() => import('./components/layout/PrivateProviders
 
 const Landing = lazy(() => import('./pages/Landing'));
 const Gateway = lazy(() => import('./pages/Gateway'));
+const Privacy = lazy(() => import('./pages/Legal').then((module) => ({ default: module.Privacy })));
+const Terms = lazy(() => import('./pages/Legal').then((module) => ({ default: module.Terms })));
 const Entrar = lazy(() => import('./pages/auth/Entrar'));
 const Registar = lazy(() => import('./pages/auth/Registar'));
 const Recuperar = lazy(() => import('./pages/auth/Recuperar'));
@@ -91,6 +93,8 @@ export default function App() {
         <Routes>
         <Route path="/" element={<Gateway />} />
         <Route path="/sobre" element={<Landing />} />
+        <Route path="/privacidade" element={<Privacy />} />
+        <Route path="/termos" element={<Terms />} />
         <Route path="/b/:slug" element={<ShortLink />} />
         <Route path="/entrar" element={<Entrar />} />
         <Route path="/registar" element={<Registar />} />

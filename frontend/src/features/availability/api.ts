@@ -8,6 +8,25 @@ export type AvailableSlot =
 export type AvailableDay =
   Database['public']['Functions']['get_available_days']['Returns'][number];
 
+export type WeekSlots = Record<string, { start: string; barbers: string[] }[]>;
+
+export async function getAvailableSlotsWeek(slug: string, serviceId: string, barberId: string | null, from: string): Promise<WeekSlots> {
+  const { data, error } = await supabase.rpc('get_available_slots_week', { p_slug: slug, p_service_id: serviceId, p_barber_id: barberId, p_from: from });
+  if (error) throw error;
+  return (data ?? {}) as WeekSlots;
+}
+
+export function useAvailableSlotsWeek(params: { slug?: string; serviceId?: string; barberId?: string | null; from?: string }) {
+  const { slug, serviceId, barberId = null, from } = params;
+  return useQuery({
+    queryKey: ['availability', 'week', slug, serviceId, barberId, from],
+    queryFn: () => getAvailableSlotsWeek(slug!, serviceId!, barberId, from!),
+    enabled: Boolean(slug && serviceId && from),
+    staleTime: 20_000,
+    refetchInterval: 60_000,
+  });
+}
+
 export async function getAvailableSlots(
   slug: string,
   serviceId: string,

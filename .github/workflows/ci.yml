@@ -1,0 +1,45 @@
+name: BarberOS verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - run: corepack enable
+      - run: corepack yarn install --frozen-lockfile
+      - run: corepack yarn lint
+      - run: corepack yarn typecheck
+      - run: corepack yarn test
+      - run: corepack yarn build
+        env:
+          VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID' }}
+      - run: corepack yarn perf:budget
+
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/validate-deployment-config.mjs
+      - run: node scripts/verify-supabase-release.mjs
+      - name: Secret scan
+        run: node scripts/scan-repository-secrets.mjs

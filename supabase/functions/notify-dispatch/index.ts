@@ -353,6 +353,8 @@ async function sendEmail(job: DispatchJob, message: string): Promise<string> {
 }
 
 function retryable(error: unknown): boolean {
+  const message = safeError(error);
+  if (message.includes("NOT_CONFIGURED") || message.includes("RECIPIENT_INVALID")) return false;
   const status = typeof error === "object" && error && "status" in error
     ? Number((error as { status?: unknown }).status)
     : NaN;
@@ -389,23 +391,6 @@ async function dispatchOne(client: RpcClient, job: DispatchJob): Promise<Record<
     await markSent(client, job, id, "email");
     return { id: job.id, status: "sent", provider: "email", fallback_url: fallback };
   } catch (primary) {
-    if (job.channel === "email" && fallback) {
-      try {
-        const id = await sendWhatsApp(job, message);
-        await markSent(client, job, id, "whatsapp_fallback");
-        return { id: job.id, status: "sent", provider: "whatsapp_fallback", fallback_url: fallback };
-      } catch (fallbackError) {
-        const finalError = "primary=" + safeError(primary) + "; fallback=" + safeError(fallbackError);
-        const row = await rpc(client, "mark_notification_failure", {
-          p_id: job.id,
-          p_error: finalError,
-          p_retryable: retryable(primary) || retryable(fallbackError),
-          p_fallback_url: fallback,
-        });
-        return { id: job.id, status: row?.[0]?.status === "queued" ? "retrying" : "failed", fallback_url: fallback };
-      }
-    }
-
     const row = await rpc(client, "mark_notification_failure", {
       p_id: job.id,
       p_error: safeError(primary),

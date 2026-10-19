@@ -1630,6 +1630,10 @@ export type Database = {
           slot_start: string
         }[]
       }
+      get_available_slots_week: {
+        Args: { p_barber_id?: string | null; p_from?: string | null; p_service_id: string; p_slug: string }
+        Returns: Json
+      }
       get_customer: {
         Args: { p_customer: string; p_shop: string }
         Returns: {
