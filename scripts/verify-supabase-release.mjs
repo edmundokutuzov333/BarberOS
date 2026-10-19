@@ -16,6 +16,10 @@ for (const name of names) {
   if (version <= previous) throw new Error('SUPABASE_MIGRATION_ORDER_INVALID:' + name);
   previous = version;
   const content = fs.readFileSync(path.join(migrationDir, name), 'utf8');
+  if (/^\s*undefined\s*$/m.test(content)) throw new Error('SUPABASE_MIGRATION_LITERAL_UNDEFINED:' + name);
+  if (/\$(?:function|fn|block|body)\$\s*\n\s*(?:revoke|grant|create|alter|comment|insert|update|delete|drop)\b/i.test(content)) {
+    throw new Error('SUPABASE_MIGRATION_MISSING_DOLLAR_QUOTE_TERMINATOR:' + name);
+  }
   if (/\bCOMMIT\s*;/i.test(content) || /\bROLLBACK\s*;/i.test(content)) {
     throw new Error('SUPABASE_MIGRATION_TRANSACTION_CONTROL_FORBIDDEN:' + name);
   }
