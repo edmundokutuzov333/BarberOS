@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { Database } from '@/lib/database.types';
-import { supabase } from '@/lib/supabase';
+import { invokeTokenGateway } from './token-gateway';
 
 export type AppointmentTokenView =
   Database['public']['Functions']['get_appointment_by_token']['Returns'][number];
@@ -22,29 +22,33 @@ function assertToken(token: string): void {
 
 export async function getAppointmentByToken(token: string): Promise<AppointmentTokenView | null> {
   assertToken(token);
-  const { data, error } = await supabase.rpc('get_appointment_by_token', { p_token: token });
-  if (error) throw error;
+  const data = await invokeTokenGateway<AppointmentTokenView[]>('appointment.get', { token });
   return data?.[0] ?? null;
 }
 
 export async function getRescheduleSlotsByToken(token: string, date: string): Promise<RescheduleSlot[]> {
   assertToken(token);
-  const { data, error } = await supabase.rpc('get_reschedule_slots_by_token', { p_token: token, p_date: date });
-  if (error) throw error;
+  const data = await invokeTokenGateway<RescheduleSlot[]>('appointment.reschedule_slots', { token, date });
   return data ?? [];
 }
 
 export async function cancelAppointmentByToken(input: TokenCancelInput): Promise<{ cancelled_at: string }> {
-  const { data, error } = await supabase.rpc('cancel_appointment_by_token', input);
-  if (error) throw error;
+  assertToken(input.p_token);
+  const data = await invokeTokenGateway<Array<{ cancelled_at: string }>>('appointment.cancel', {
+    token: input.p_token,
+    reason: input.p_reason,
+  });
   const row = data?.[0];
   if (!row) throw new Error('CANCEL_EMPTY_RESPONSE');
   return row;
 }
 
 export async function rescheduleAppointmentByToken(input: TokenRescheduleInput): Promise<{ new_starts_at: string; new_ends_at: string }> {
-  const { data, error } = await supabase.rpc('reschedule_appointment_by_token', input);
-  if (error) throw error;
+  assertToken(input.p_token);
+  const data = await invokeTokenGateway<Array<{ new_starts_at: string; new_ends_at: string }>>('appointment.reschedule', {
+    token: input.p_token,
+    new_start: input.p_new_start,
+  });
   const row = data?.[0];
   if (!row) throw new Error('RESCHEDULE_EMPTY_RESPONSE');
   return row;
