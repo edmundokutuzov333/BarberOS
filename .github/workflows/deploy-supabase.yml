@@ -32,6 +32,7 @@ jobs:
           HISTORY_RECONCILED: ${{ vars.BARBEROS_PRODUCTION_MIGRATION_HISTORY_RECONCILED }}
           TURNSTILE_CONFIGURED: ${{ vars.BARBEROS_TURNSTILE_CONFIGURED }}
           RESEND_CONFIGURED: ${{ vars.BARBEROS_RESEND_CONFIGURED }}
+          STAGING_VERIFIED: ${{ vars.BARBEROS_STAGING_VERIFIED }}
         run: |
           if [ "$CONFIRMATION" != "APPLY-SUPABASE-PRODUCTION" ]; then
             echo "::error::Production release requires the exact confirmation phrase."
@@ -47,6 +48,10 @@ jobs:
           fi
           if [ "$RESEND_CONFIGURED" != "true" ]; then
             echo "::error::Production release blocked: configure Resend, the sender identity, and the signed webhook secret before switching notifications to email-first."
+            exit 1
+          fi
+          if [ "$STAGING_VERIFIED" != "true" ]; then
+            echo "::error::Production release blocked: complete the isolated staging migration, booking, token-expiry, concurrency, and notification E2E suite first."
             exit 1
           fi
 
@@ -93,7 +98,31 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: supabase db push --dry-run --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
 
-      - name: Apply database migrations
+      - name: Apply schema prerequisites before token gateway
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          pre_gateway="$RUNNER_TEMP/barberos-pre-gateway"
+          mkdir -p "$pre_gateway/supabase/migrations"
+          cp supabase/config.toml "$pre_gateway/supabase/config.toml"
+          for file in supabase/migrations/*.sql; do
+            version="${file##*/}"
+            version="${version%%_*}"
+            if [[ "$version" < "20261019160000" ]]; then
+              cp "$file" "$pre_gateway/supabase/migrations/"
+            fi
+          done
+          supabase --workdir "$pre_gateway" db push --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Deploy token gateway before revoking direct token RPCs
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy token-gateway --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Apply remaining database migrations
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
