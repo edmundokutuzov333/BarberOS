@@ -12,7 +12,7 @@ begin
   select s.timezone into v_tz from public.barbershops s where s.id=p_shop;
   if v_tz is null then raise exception 'SHOP_REQUIRED'; end if;
   return query
-  with days as (select generate_series(p_from,p_to,interval '1 day')::date day),
+  with days as (select generate_series(p_from,p_to,interval '1 day')::date calendar_day),
   appts as (
     select a.*,(a.starts_at at time zone v_tz)::date local_day from public.appointments a
     where a.barbershop_id=p_shop and (v_barber is null or a.barber_id=v_barber)
@@ -33,10 +33,10 @@ begin
     select rc.report_date day_key,coalesce(sum(rc.capacity_minutes),0)::numeric capacity_minutes_value
     from private.report_capacity_by_day(p_shop,p_from,p_to,v_barber) rc group by rc.report_date
   )
-  select d.day,coalesce(dr.appointment_count_value,0),coalesce(dr.completed_count_value,0),coalesce(dr.cancelled_count_value,0),coalesce(dr.no_show_count_value,0),coalesce(dr.pending_count_value,0),coalesce(dr.confirmed_count_value,0),coalesce(dr.in_progress_count_value,0),coalesce(dr.booked_minutes_value,0),coalesce(cr.capacity_minutes_value,0),
+  select d.calendar_day,coalesce(dr.appointment_count_value,0),coalesce(dr.completed_count_value,0),coalesce(dr.cancelled_count_value,0),coalesce(dr.no_show_count_value,0),coalesce(dr.pending_count_value,0),coalesce(dr.confirmed_count_value,0),coalesce(dr.in_progress_count_value,0),coalesce(dr.booked_minutes_value,0),coalesce(cr.capacity_minutes_value,0),
     case when coalesce(cr.capacity_minutes_value,0)>0 then round((coalesce(dr.booked_minutes_value,0)/cr.capacity_minutes_value)*100,2) else 0 end,
     coalesce(dr.estimated_revenue_cents_value,0),coalesce(dr.paid_deposit_cents_value,0)
-  from days d left join daily_rows dr on dr.day_key=d.day left join capacity_rows cr on cr.day_key=d.day order by d.day;
+  from days d left join daily_rows dr on dr.day_key=d.calendar_day left join capacity_rows cr on cr.day_key=d.calendar_day order by d.calendar_day;
 end $$;
 revoke all on function public.get_report_daily(uuid,date,date,uuid) from public,anon,authenticated;
 grant execute on function public.get_report_daily(uuid,date,date,uuid) to authenticated;

@@ -12,30 +12,30 @@ begin
   select s.timezone into v_tz from public.barbershops s where s.id=p_shop;
   if v_tz is null then raise exception 'SHOP_REQUIRED'; end if;
   return query
-  with days as (select generate_series(p_from,p_to,interval '1 day')::date day),
+  with days as (select generate_series(p_from,p_to,interval '1 day')::date calendar_day),
   barber_base as (
     select b.id report_barber_id,b.sort_order from public.barbers b
     where b.barbershop_id=p_shop and ((v_barber is null and b.is_active) or b.id=v_barber)
   ), schedule as (
-    select d.day,bb.report_barber_id,
+    select d.calendar_day,bb.report_barber_id,
       case when ov.id is not null then ov.opens_at else wh.opens_at end opens_at,
       case when ov.id is not null then ov.closes_at else wh.closes_at end closes_at,
       case when ov.id is not null then ov.is_closed when wh.id is null then true else wh.is_closed end is_closed
     from days d cross join barber_base bb
     left join lateral (
       select o.id,o.is_closed,o.opens_at,o.closes_at from public.schedule_overrides o
-      where o.barbershop_id=p_shop and o.override_date=d.day and (o.barber_id=bb.report_barber_id or o.barber_id is null)
+      where o.barbershop_id=p_shop and o.override_date=d.calendar_day and (o.barber_id=bb.report_barber_id or o.barber_id is null)
       order by case when o.barber_id=bb.report_barber_id then 0 else 1 end limit 1
     ) ov on true
     left join lateral (
       select w.id,w.opens_at,w.closes_at,w.is_closed from public.working_hours w
-      where w.barbershop_id=p_shop and w.weekday=extract(dow from d.day)::int and (w.barber_id=bb.report_barber_id or w.barber_id is null)
+      where w.barbershop_id=p_shop and w.weekday=extract(dow from d.calendar_day)::int and (w.barber_id=bb.report_barber_id or w.barber_id is null)
       order by case when w.barber_id=bb.report_barber_id then 0 else 1 end limit 1
     ) wh on true
   ), open_schedule as (
-    select sc.day schedule_day,sc.report_barber_id,
-      ((sc.day::timestamp+sc.opens_at) at time zone v_tz) open_ts,
-      ((sc.day::timestamp+sc.closes_at) at time zone v_tz) close_ts
+    select sc.calendar_day schedule_day,sc.report_barber_id,
+      ((sc.calendar_day::timestamp+sc.opens_at) at time zone v_tz) open_ts,
+      ((sc.calendar_day::timestamp+sc.closes_at) at time zone v_tz) close_ts
     from schedule sc where not sc.is_closed and sc.opens_at is not null and sc.closes_at is not null and sc.closes_at>sc.opens_at
   ), raw_blocks as (
     select os.schedule_day,os.report_barber_id,greatest(tb.starts_at,os.open_ts) starts_at,least(tb.ends_at,os.close_ts) ends_at
