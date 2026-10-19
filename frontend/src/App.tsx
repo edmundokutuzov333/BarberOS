@@ -68,13 +68,14 @@ function RouteLoading() {
 export default function App() {
   const { pathname } = useLocation();
   const isLanding = pathname === '/';
+  const isAbout = pathname === '/sobre';
   const isPublicShop = /^\/barbearia\/[^/]+\/?$/.test(pathname);
   const isQuietSurface =
     /^\/(?:entrar|registar|recuperar)(?:\/|$)/.test(pathname) ||
     /^\/(?:marcacao|vaga)(?:\/|$)/.test(pathname) ||
     /^\/barbearia\/[^/]+\/marcar\/?$/.test(pathname);
   const atmosphereVariant: 'ambient' | 'hero' | 'quiet' | 'showcase' =
-    isLanding ? 'hero' : isPublicShop ? 'showcase' : isQuietSurface ? 'quiet' : 'ambient';
+    isLanding || isAbout ? 'hero' : isPublicShop ? 'showcase' : isQuietSurface ? 'quiet' : 'ambient';
 
   useEffect(() => {
     const root = document.documentElement;

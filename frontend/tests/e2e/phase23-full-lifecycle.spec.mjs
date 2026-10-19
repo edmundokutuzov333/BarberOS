@@ -22,7 +22,7 @@ test.describe('BarberOS Phase 23 full lifecycle', () => {
   const shopName = 'BarberOS QA ' + unique;
   const shopSlug = unique;
   const customerPhone = '84' + Math.floor(1000000 + Math.random() * 8999999).toString();
-  const configuredEmail = process.env.BARBEROS_E2E_EMAIL!;
+  const configuredEmail = process.env.BARBEROS_E2E_EMAIL || 'disabled@example.invalid';
   const emailParts = configuredEmail.split('@');
   const testEmail = emailParts.length === 2 ? emailParts[0] + '+' + unique + '@' + emailParts[1] : configuredEmail;
   let manageUrl = '';
@@ -33,7 +33,7 @@ test.describe('BarberOS Phase 23 full lifecycle', () => {
     await page.getByLabel('O teu nome').fill('BarberOS QA Owner');
     await page.getByLabel('Telemóvel').fill(customerPhone);
     await page.getByLabel('Email').fill(testEmail);
-    await page.getByLabel('Palavra-passe').fill(process.env.BARBEROS_E2E_PASSWORD!);
+    await page.getByLabel('Palavra-passe').fill(process.env.BARBEROS_E2E_PASSWORD);
     await page.getByTestId('register-submit-btn').click();
 
     if (await page.getByTestId('register-check-email').isVisible().catch(() => false)) {
@@ -127,13 +127,13 @@ test.describe('BarberOS Phase 23 full lifecycle', () => {
   });
 
   test.afterAll(async ({ browser }) => {
-    const resetUrl = process.env.BARBEROS_E2E_FULL_RESET_URL!;
+    const resetUrl = process.env.BARBEROS_E2E_FULL_RESET_URL;
     const context = await browser.newContext();
     try {
       const response = await context.request.post(resetUrl, {
         headers: {
           'content-type': 'application/json',
-          'x-barberos-e2e-reset': process.env.BARBEROS_E2E_PASSWORD!,
+          'x-barberos-e2e-reset': process.env.BARBEROS_E2E_PASSWORD,
         },
         data: { slug: shopSlug },
       });

@@ -36,5 +36,18 @@ export default defineConfig({
     manifest: '.vite/manifest.json',
     cssCodeSplit: true,
     chunkSizeWarningLimit: 500,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom)[\\/]/.test(id)) return 'framework';
+          if (id.includes('/@supabase/')) return 'supabase';
+          if (id.includes('/@tanstack/')) return 'query';
+          if (id.includes('/framer-motion/')) return 'motion';
+          if (id.includes('/lucide-react/')) return 'icons';
+          return undefined;
+        },
+      },
+    },
   },
 });
