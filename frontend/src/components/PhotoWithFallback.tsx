@@ -1,18 +1,32 @@
 import { useState } from 'react';
 import { Scissors } from 'lucide-react';
 
+const DEFAULT_SUPABASE_URL = 'https://alseiinjzwjdiwtvkdzy.supabase.co';
+const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\/+$/, '');
+
+export function barberAssetUrl(asset: string): string {
+  return SUPABASE_URL + '/functions/v1/barber-assets?asset=' + encodeURIComponent(asset);
+}
+
 export const BARBERSHOP_FALLBACK_PHOTOS = [
-  'https://images.pexels.com/photos/11513688/pexels-photo-11513688.jpeg?auto=compress&cs=tinysrgb&w=1600',
-  'https://images.pexels.com/photos/27520668/pexels-photo-27520668.jpeg?auto=compress&cs=tinysrgb&w=1600',
-  'https://images.pexels.com/photos/11703458/pexels-photo-11703458.jpeg?auto=compress&cs=tinysrgb&w=1600',
-  'https://images.pexels.com/photos/7518728/pexels-photo-7518728.jpeg?auto=compress&dpr=1&h=750&w=1260',
+  barberAssetUrl('shop-magoanine'),
+  barberAssetUrl('shop-oryon'),
+  barberAssetUrl('shop-matola'),
 ];
 
 export const BARBER_FALLBACK_PHOTOS = [
-  'https://images.pexels.com/photos/7389079/pexels-photo-7389079.jpeg?auto=compress&cs=tinysrgb&w=1200',
-  'https://images.pexels.com/photos/17086220/pexels-photo-17086220.jpeg?auto=compress&cs=tinysrgb&w=1200',
-  'https://images.pexels.com/photos/35157692/pexels-photo-35157692.jpeg?auto=compress&cs=tinysrgb&w=1200',
-  'https://images.pexels.com/photos/6487911/pexels-photo-6487911.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  barberAssetUrl('barber-magoanine-1'),
+  barberAssetUrl('barber-matola-1'),
+  barberAssetUrl('barber-oryon-1'),
+  barberAssetUrl('barber-magoanine-2'),
+];
+
+export const SERVICE_FALLBACK_PHOTOS = [
+  barberAssetUrl('service-corte-classico'),
+  barberAssetUrl('service-degrade'),
+  barberAssetUrl('service-corte-barba'),
+  barberAssetUrl('service-barba-completa'),
+  barberAssetUrl('service-corte-infantil'),
 ];
 
 type PhotoWithFallbackProps = {
@@ -28,10 +42,7 @@ type PhotoWithFallbackProps = {
   placeholderClassName?: string;
 };
 
-/**
- * Tries the saved photo, then trusted photographic fallbacks. A failed remote
- * URL must never leave an empty image box on a public barbershop page.
- */
+/** Tries the saved photo and then approved photographic references. Never use a logo as a cover. */
 export function PhotoWithFallback({
   src,
   fallbackSources = [],

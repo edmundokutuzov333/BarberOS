@@ -175,7 +175,7 @@ export default function PublicBarbershop() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10" aria-hidden />
             <div className="absolute inset-x-0 bottom-0 p-6 sm:p-9">
               <div className="flex flex-col sm:flex-row sm:items-end gap-5">
-                <PhotoWithFallback src={shop.logo_url} fallbackSources={['/brand-assets/barberos-default.svg']} alt="Logótipo da barbearia" className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl object-cover border border-white/15 bg-black/30" width="96" height="96" />
+                <PhotoWithFallback src={shop.logo_url} fallbackSources={['/brand-assets/barberos-default.svg']} alt="Logótipo da barbearia" className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl object-contain border border-white/15 bg-black/40 p-2" width="96" height="96" />
                 <div className="min-w-0">
                   <h1 className="text-3xl sm:text-5xl font-medium tracking-[-0.02em] text-white">{shop.name}</h1>
                   {shop.description && <p className="t-body text-white/75 mt-2 max-w-2xl">{shop.description}</p>}

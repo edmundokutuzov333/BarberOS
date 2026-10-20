@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Scissors } from 'lucide-react';
 import { getDefaultHaircutPhoto } from '@/lib/default-haircut-photos';
+import { barberAssetUrl } from '@/components/PhotoWithFallback';
 
-const LAST_RESORT_PHOTO =
-  'https://images.pexels.com/photos/7389079/pexels-photo-7389079.jpeg?auto=compress&cs=tinysrgb&w=1200';
+const LAST_RESORT_PHOTO = barberAssetUrl('haircut-low-fade');
 
 type HaircutPhotoProps = {
   name: string;
