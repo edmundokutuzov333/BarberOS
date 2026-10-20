@@ -1,5 +1,5 @@
 begin;
-select plan(5);
+select plan(6);
 
 select ok(
   to_regclass('public.platform_access_events') is not null,
@@ -19,6 +19,11 @@ select ok(
 select ok(
   (select relrowsecurity from pg_class where oid = 'public.platform_access_events'::regclass),
   'credential audit table has row-level security enabled'
+);
+
+select ok(
+  to_regprocedure('private.current_password_change_required(uuid)') is not null,
+  'server-side password rotation gate exists'
 );
 
 select ok(

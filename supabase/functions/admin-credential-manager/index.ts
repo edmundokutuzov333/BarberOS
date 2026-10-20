@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
-type Action = "reset_password" | "list_events";
+type Action = "reset_password" | "list_events" | "complete_password_change";
 
 function json(body: unknown, status = 200, cors: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {
@@ -50,7 +50,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 function temporaryPassword(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   const base64 = btoa(Array.from(bytes, (v) => String.fromCharCode(v)).join(""));
-  return "BOS-" + base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  return "BOS-aA0!" + base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
 function isUuid(value: unknown): value is string {
@@ -77,7 +77,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const action = payload.action as Action;
-  if (action !== "reset_password" && action !== "list_events") {
+  if (action !== "reset_password" && action !== "list_events" && action !== "complete_password_change") {
     return json({ ok: false, error: "INVALID_ACTION" }, 400, cors);
   }
 
@@ -96,8 +96,37 @@ Deno.serve(async (req: Request) => {
 
   const admin = adminClient();
   const { data: actorProfile, error: profileError } = await admin
-    .from("profiles").select("is_platform_admin").eq("id", actor.id).maybeSingle();
+    .from("profiles").select("is_platform_admin, password_change_required").eq("id", actor.id).maybeSingle();
   if (profileError) return json({ ok: false, error: "ADMIN_CHECK_UNAVAILABLE" }, 503, cors);
+
+  if (action === "complete_password_change") {
+    if (actorProfile?.password_change_required !== true) {
+      return json({ ok: false, error: "PASSWORD_CHANGE_NOT_REQUIRED" }, 409, cors);
+    }
+    const nextPassword = payload.new_password;
+    if (typeof nextPassword !== "string" || nextPassword.length < 12
+      || !/[a-z]/.test(nextPassword) || !/[A-Z]/.test(nextPassword) || !/[0-9]/.test(nextPassword)) {
+      return json({ ok: false, error: "PASSWORD_POLICY_FAILED", message: "Use pelo menos 12 caracteres, com maiúsculas, minúsculas e números." }, 400, cors);
+    }
+    try {
+      const limit = await consume(admin, "password-change-own:" + actor.id, 5, 3600);
+      if (!limit.allowed) return json({ ok: false, error: "RATE_LIMITED", retry_after_seconds: limit.retryAfter }, 429, cors);
+      const { error: updatePasswordError } = await admin.auth.admin.updateUserById(actor.id, { password: nextPassword });
+      if (updatePasswordError) return json({ ok: false, error: "PASSWORD_CHANGE_FAILED", message: "Não foi possível guardar a nova palavra-passe." }, 503, cors);
+      const { data: cleared, error: clearError } = await admin.from("profiles")
+        .update({ password_change_required: false })
+        .eq("id", actor.id)
+        .select("id")
+        .maybeSingle();
+      if (clearError || !cleared) {
+        return json({ ok: false, error: "PASSWORD_CHANGE_FINALIZATION_FAILED", message: "A palavra-passe foi guardada, mas a finalização da conta falhou. Volte a submeter a nova palavra-passe." }, 503, cors);
+      }
+      return json({ ok: true }, 200, cors);
+    } catch {
+      return json({ ok: false, error: "PASSWORD_CHANGE_UNAVAILABLE" }, 503, cors);
+    }
+  }
+
   if (actorProfile?.is_platform_admin !== true) return json({ ok: false, error: "PLATFORM_ADMIN_REQUIRED" }, 403, cors);
 
   if (action === "list_events") {
