@@ -52,6 +52,12 @@ export default function AdminUtilizadores() {
     }
   };
 
+  const clearCredential = () => {
+    setCredential(null);
+    setCopied(false);
+    reset.reset();
+  };
+
   return (
     <Page title="Utilizadores e acessos"
       subtitle={Number(total) + ' utilizador' + (Number(total) === 1 ? '' : 'es')}
@@ -110,12 +116,12 @@ export default function AdminUtilizadores() {
         ) : <EmptyState title="Ainda não há alterações de acesso." body="As reposições futuras ficam registadas aqui, sem guardar a palavra-passe gerada."/>}
       </Panel>
 
-      {credential && <div className="fixed inset-0 z-[100] grid place-items-center bg-black/80 p-4" onMouseDown={e => { if (e.target === e.currentTarget) { setCredential(null); setCopied(false); } }}>
+      {credential && <div className="fixed inset-0 z-[100] grid place-items-center bg-black/80 p-4" onMouseDown={e => { if (e.target === e.currentTarget) clearCredential(); }}>
         <section role="dialog" aria-modal="true" aria-labelledby="temporary-password-title" className="glass w-full max-w-lg rounded-3xl border border-white/15 p-6 sm:p-8">
           <div className="flex items-start gap-3">
             <div className="h-11 w-11 rounded-2xl bg-accent-soft/15 text-accent-soft grid place-items-center shrink-0"><KeyRound size={20}/></div>
             <div className="min-w-0 flex-1"><p className="t-label text-ink-mid">Credencial temporária</p><h2 id="temporary-password-title" className="text-xl font-semibold text-ink-hi mt-1">Acesso actualizado</h2><p className="t-body text-ink-mid mt-1">{credential.email}</p></div>
-            <button type="button" onClick={() => { setCredential(null); setCopied(false); }} className="p-2 rounded-xl text-ink-mid hover:text-ink-hi" aria-label="Fechar e limpar palavra-passe"><X size={18}/></button>
+            <button type="button" onClick={clearCredential} className="p-2 rounded-xl text-ink-mid hover:text-ink-hi" aria-label="Fechar e limpar palavra-passe"><X size={18}/></button>
           </div>
           <div className="mt-5 rounded-2xl border border-accent-soft/25 bg-accent-soft/5 p-4">
             <p className="t-label text-ink-mid mb-2">Palavra-passe temporária, apresentada apenas agora</p>
@@ -124,7 +130,7 @@ export default function AdminUtilizadores() {
           </div>
           <p className="t-body text-ink-mid mt-4">Entregue esta palavra-passe por um canal seguro. No primeiro acesso, o utilizador será obrigado a definir uma palavra-passe própria. Fechar esta janela remove a palavra-passe da interface. Se a copiou, limpe também a área de transferência depois de a partilhar.</p>
           {!credential.auditLogged && <p role="alert" className="t-label text-st-noshow mt-3">{credential.warning ?? 'A reposição foi feita, mas o histórico não foi registado.'}</p>}
-          <Button variant="secondary" className="mt-5 w-full" onClick={() => { setCredential(null); setCopied(false); }}>Fechar e limpar</Button>
+          <Button variant="secondary" className="mt-5 w-full" onClick={clearCredential}>Fechar e limpar</Button>
         </section>
       </div>}
     </Page>
