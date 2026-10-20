@@ -14,7 +14,7 @@ export default function Recuperar() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setBusy(true); setErr(null);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/entrar` });
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/alterar-palavra-passe` });
     setBusy(false);
     if (error) return setErr(humanError(error));
     setSent(true);

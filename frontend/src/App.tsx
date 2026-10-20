@@ -16,6 +16,7 @@ const Terms = lazy(() => import('./pages/Legal').then((module) => ({ default: mo
 const Entrar = lazy(() => import('./pages/auth/Entrar'));
 const Registar = lazy(() => import('./pages/auth/Registar'));
 const Recuperar = lazy(() => import('./pages/auth/Recuperar'));
+const AlterarPalavraPasse = lazy(() => import('./pages/auth/AlterarPalavraPasse'));
 const AppointmentManage = lazy(() => import('./pages/AppointmentManage'));
 const PublicBarbershop = lazy(() => import('./pages/PublicBarbershop'));
 const BookingWizard = lazy(() => import('./pages/BookingWizard'));
@@ -102,6 +103,7 @@ export default function App() {
         <Route path="/entrar" element={<Entrar />} />
         <Route path="/registar" element={<Registar />} />
         <Route path="/recuperar" element={<Recuperar />} />
+        <Route path="/alterar-palavra-passe" element={<AlterarPalavraPasse />} />
         <Route path="/marcacao/:token" element={<AppointmentManage />} />
         <Route path="/marcacao/:token/avaliar" element={<ReviewSubmit />} />
         <Route path="/vaga/:token" element={<Vaga />} />

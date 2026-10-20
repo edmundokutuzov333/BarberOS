@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.booking-create]
 verify_jwt = false
+
+[functions.admin-credential-manager]
+verify_jwt = true

@@ -42,10 +42,11 @@ function RoleDenied({ pathname }: { pathname: string }) {
 }
 
 export function RequireAuth() {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const loc = useLocation();
-  if (loading) return <FullSkeleton />;
+  if (loading || (user && !profile)) return <FullSkeleton />;
   if (!user) return <Navigate to="/entrar" state={{ from: loc.pathname }} replace />;
+  if (profile?.password_change_required) return <Navigate to="/alterar-palavra-passe" state={{ from: loc.pathname }} replace />;
   return <Outlet />;
 }
 
