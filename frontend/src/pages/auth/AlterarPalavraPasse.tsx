@@ -30,23 +30,20 @@ export default function AlterarPalavraPasse() {
     if (password !== confirmPassword) return setErr('As palavras-passe não coincidem.');
 
     setBusy(true);
-    const passwordResult = await supabase.auth.updateUser({ password });
-    if (passwordResult.error) {
+    const result = await supabase.functions.invoke('admin-credential-manager', {
+      body: { action: 'complete_password_change', new_password: password },
+    });
+    if (result.error || !result.data?.ok) {
+      const response = (result.error as { context?: Response } | null)?.context;
+      const payload = response && typeof response.json === 'function'
+        ? await response.clone().json().catch(() => null) as { message?: string; error?: string } | null
+        : null;
       setBusy(false);
-      return setErr(humanError(passwordResult.error));
+      return setErr(payload?.message ?? payload?.error ?? result.error?.message ?? 'Não foi possível finalizar a alteração da palavra-passe.');
     }
 
-    const profileResult = await supabase.from('profiles')
-      .update({ password_change_required: false })
-      .eq('id', user.id);
-    if (profileResult.error) {
-      setBusy(false);
-      return setErr('A palavra-passe foi actualizada, mas não foi possível concluir a validação da conta. Tente novamente ou contacte o suporte.');
-    }
-
-    await supabase.auth.refreshSession();
-    const next = (location.state as { from?: string } | null)?.from ?? '/app';
-    window.location.assign(next);
+    await supabase.auth.signOut();
+    window.location.replace('/entrar');
   };
 
   return (
