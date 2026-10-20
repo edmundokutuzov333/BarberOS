@@ -126,6 +126,8 @@ const tests = [
     const api = read('src/features/admin/api.ts');
     assert.match(plans, /useUpdateAdminPlan\(/);
     assert.match(plans, /mutation\.error/);
+    assert.match(plans, /selected\.assigned_shops > 0/);
+    assert.match(plans, /disabled=\{selected\.assigned_shops > 0\}/);
     assert.match(support, /useCreateAdminSupport\(/);
     assert.match(support, /useUpdateAdminSupport\(/);
     assert.match(support, /create\.error/);
