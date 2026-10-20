@@ -8,7 +8,7 @@ import { formatMT, humanError } from '@/lib/utils';
 import { useScopedTheme } from '@/themes';
 import { usePublicBarbershop, type PublicBarber, type PublicHaircut, type PublicService, type PublicWorkingHour } from '@/features/public-shop/api';
 import { HaircutPhoto } from '@/components/HaircutPhoto';
-import { BARBER_FALLBACK_PHOTOS, BARBERSHOP_FALLBACK_PHOTOS, PhotoWithFallback } from '@/components/PhotoWithFallback';
+import { BARBER_FALLBACK_PHOTOS, BARBERSHOP_FALLBACK_PHOTOS, SERVICE_FALLBACK_PHOTOS, PhotoWithFallback } from '@/components/PhotoWithFallback';
 
 const WEEKDAYS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 
@@ -33,15 +33,18 @@ function fallbackShopName(slug?: string): string {
 
 function ServiceCard({ service }: { service: PublicService }) {
   return (
-    <article className="rounded-3xl border border-white/10 bg-white/5 p-5 h-full">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="t-card text-ink-hi">{service.name}</h3>
-          <p className="t-label text-ink-mid mt-1">{service.duration_min} min</p>
+    <article className="rounded-3xl border border-white/10 bg-white/5 overflow-hidden h-full">
+      <PhotoWithFallback src={service.photo_url} fallbackSources={SERVICE_FALLBACK_PHOTOS} alt={`Fotografia de referência para ${service.name}`} className="w-full aspect-[16/9] object-cover" loading="lazy" decoding="async" />
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h3 className="t-card text-ink-hi">{service.name}</h3>
+            <p className="t-label text-ink-mid mt-1">{service.duration_min} min</p>
+          </div>
+          <p className="t-card text-accent-soft whitespace-nowrap">{formatMT(service.price_cents)}</p>
         </div>
-        <p className="t-card text-accent-soft whitespace-nowrap">{formatMT(service.price_cents)}</p>
+        {service.requires_deposit && <p className="t-label text-ink-mid mt-4">Sinal aplicável neste serviço.</p>}
       </div>
-      {service.requires_deposit && <p className="t-label text-ink-mid mt-4">Sinal aplicável neste serviço.</p>}
     </article>
   );
 }

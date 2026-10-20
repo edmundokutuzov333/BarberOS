@@ -882,6 +882,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          photo_url: string | null
           price_cents: number
           requires_deposit: boolean
           sort_order: number
@@ -892,6 +893,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          photo_url?: string | null
           price_cents: number
           requires_deposit?: boolean
           sort_order?: number
@@ -902,6 +904,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          photo_url?: string | null
           price_cents?: number
           requires_deposit?: boolean
           sort_order?: number

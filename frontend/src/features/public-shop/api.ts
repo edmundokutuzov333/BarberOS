@@ -10,7 +10,7 @@ export type PublicShop = {
   deposit_mode: 'percent' | 'fixed'; deposit_value: number; deposit_hold_min: number;
   slot_interval_min: number; min_lead_time_min: number; max_advance_days: number; cancellation_rule: 'flex_2h' | 'moderate_6h' | 'strict_24h' | 'contact_only';
 };
-export type PublicService = { id: string; name: string; price_cents: number; duration_min: number; requires_deposit: boolean };
+export type PublicService = { id: string; name: string; price_cents: number; duration_min: number; requires_deposit: boolean; photo_url: string | null };
 export type PublicHaircut = { id: string; service_id: string | null; name: string; description: string | null; photo_url: string | null; price_cents: number | null; duration_min: number | null };
 export type PublicBarber = { id: string; display_name: string; photo_url: string | null; bio: string | null; years_experience: number; rating_avg: number; rating_count: number; service_ids: string[] };
 export type PublicWorkingHour = { weekday: number; opens_at: string; closes_at: string; is_closed: boolean };
@@ -37,7 +37,7 @@ const publicPayloadSchema = z.object({
     slot_interval_min: z.number().int().positive(), min_lead_time_min: z.number().int().nonnegative(), max_advance_days: z.number().int().positive(),
     cancellation_rule: z.enum(['flex_2h', 'moderate_6h', 'strict_24h', 'contact_only']),
   }),
-  services: z.array(z.object({ id: z.string().uuid(), name: z.string().min(1), price_cents: z.number().int().nonnegative(), duration_min: z.number().int().positive(), requires_deposit: z.boolean() })),
+  services: z.array(z.object({ id: z.string().uuid(), name: z.string().min(1), price_cents: z.number().int().nonnegative(), duration_min: z.number().int().positive(), requires_deposit: z.boolean(), photo_url: nullableUrl.default(null) })),
   haircuts: z.array(z.object({ id: z.string().uuid(), service_id: z.string().uuid().nullable(), name: z.string().min(1), description: z.string().nullable(), photo_url: nullableUrl, price_cents: z.number().int().nonnegative().nullable(), duration_min: z.number().int().positive().nullable() })),
   barbers: z.array(z.object({ id: z.string().uuid(), display_name: z.string().min(1), photo_url: nullableUrl, bio: z.string().nullable(), years_experience: z.number().int().nonnegative(), rating_avg: z.number().nonnegative(), rating_count: z.number().int().nonnegative(), service_ids: z.array(z.string().uuid()) })),
   working_hours: z.array(z.object({ weekday: z.number().int().min(0).max(6), opens_at: z.string(), closes_at: z.string(), is_closed: z.boolean() })),

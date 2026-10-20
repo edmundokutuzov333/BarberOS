@@ -8,11 +8,12 @@ import { formatMT, humanError } from '@/lib/utils';
 import type { Service } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
-import { Modal, Switch } from '@/components/ui/Primitives';
+import { ImageUpload, Modal, Switch } from '@/components/ui/Primitives';
+import { PhotoWithFallback, SERVICE_FALLBACK_PHOTOS } from '@/components/PhotoWithFallback';
 import { Skeleton, EmptyState, ErrorState } from '@/components/ui/States';
 import { SortableList } from '@/components/ui/SortableList';
 
-const empty = { name: '', price: '', duration: '30', requires_deposit: false };
+const empty = { name: '', price: '', duration: '30', requires_deposit: false, photo_url: null as string | null };
 
 export function useServices(shopId: string) {
   return useQuery({
@@ -34,7 +35,7 @@ export function ServicesEditor() {
   const key = ['services', shop!.id];
 
   const open = (s: Service | 'new') => {
-    setForm(s === 'new' ? empty : { name: s.name, price: String(s.price_cents / 100), duration: String(s.duration_min), requires_deposit: s.requires_deposit });
+    setForm(s === 'new' ? empty : { name: s.name, price: String(s.price_cents / 100), duration: String(s.duration_min), requires_deposit: s.requires_deposit, photo_url: s.photo_url ?? null });
     setEditing(s);
   };
 
@@ -45,7 +46,7 @@ export function ServicesEditor() {
       if (form.name.trim().length < 2) throw new Error('INVALID_NAME');
       if (!Number.isFinite(price) || price < 0) throw new Error('Preço inválido.');
       if (!Number.isFinite(duration) || duration < 5 || duration > 480) throw new Error('Duração entre 5 e 480 minutos.');
-      const row = { name: form.name.trim(), price_cents: price, duration_min: duration, requires_deposit: form.requires_deposit };
+      const row = { name: form.name.trim(), price_cents: price, duration_min: duration, requires_deposit: form.requires_deposit, photo_url: form.photo_url };
       const r = editing === 'new'
         ? await supabase.from('services').insert({ ...row, barbershop_id: shop!.id, sort_order: q.data?.length ?? 0 })
         : await supabase.from('services').update(row).eq('id', (editing as Service).id);
@@ -73,6 +74,7 @@ export function ServicesEditor() {
       ) : (
         <SortableList items={q.data!} shopId={shop!.id} rpcName="reorder_services" queryKey={key} testId="services-list" render={(s) => (
           <div className="flex items-center gap-3">
+            <PhotoWithFallback src={s.photo_url} fallbackSources={SERVICE_FALLBACK_PHOTOS} alt={`Fotografia de ${s.name}`} className="h-12 w-12 shrink-0 rounded-xl object-cover" loading="lazy" decoding="async" />
             <div className="flex-1 min-w-0">
               <p className={`text-sm font-normal truncate ${!s.is_active && 'text-ink-mid line-through'}`}>{s.name}</p>
               <p className="t-label text-ink-mid">{s.duration_min} min · {formatMT(s.price_cents)}{s.requires_deposit && ' · exige sinal'}</p>
@@ -87,6 +89,7 @@ export function ServicesEditor() {
       <Modal open={editing !== null} onOpenChange={(o) => !o && setEditing(null)} title={editing === 'new' ? 'Novo serviço' : 'Editar serviço'} testId="service-modal">
         <form className="space-y-4" onSubmit={(e: FormEvent) => { e.preventDefault(); save.mutate(); }}>
           <Field data-testid="service-name-input" label="Nome" name="svc_name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex.: Corte + barba" autoFocus />
+          <ImageUpload testId="service-photo-upload" bucket="shop-photos" shopId={shop!.id} ratio={16 / 9} value={form.photo_url} onChange={(url) => setForm({ ...form, photo_url: url })} label="Fotografia do serviço" />
           <div className="grid grid-cols-2 gap-3">
             <Field data-testid="service-price-input" label="Preço (MT)" name="svc_price" inputMode="decimal" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="500" />
             <Field data-testid="service-duration-input" label="Duração (min)" name="svc_duration" inputMode="numeric" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, Clock3, Mail, MessageCircle, Scissors, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useScopedTheme } from '@/themes';
-import { BARBER_FALLBACK_PHOTOS, PhotoWithFallback } from '@/components/PhotoWithFallback';
+import { BARBER_FALLBACK_PHOTOS, SERVICE_FALLBACK_PHOTOS, PhotoWithFallback } from '@/components/PhotoWithFallback';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { Field } from '@/components/ui/Field';
 import { TurnstileWidget } from '@/components/security/TurnstileWidget';
@@ -131,6 +131,7 @@ function ChoiceCard({
   imageName,
   imageUrl,
   imageAlt,
+  imageFallbackSources,
 }: {
   title: string;
   body?: string | null;
@@ -142,6 +143,7 @@ function ChoiceCard({
   imageName?: string;
   imageUrl?: string | null;
   imageAlt?: string;
+  imageFallbackSources?: string[];
 }) {
   return (
     <button
@@ -152,7 +154,9 @@ function ChoiceCard({
       onClick={onClick}
       className={`w-full text-left rounded-3xl border p-4 sm:p-5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft ${selected ? 'border-accent-soft/60 bg-accent-soft/10' : 'border-white/10 bg-white/5 hover:bg-white/[.07]'} `}
     >
-      {(imageName || imageUrl) && <HaircutPhoto name={imageName ?? title} photoUrl={imageUrl} alt={imageAlt ?? "Fotografia de referência para " + (imageName ?? title)} className="mb-4 w-full aspect-[16/9] rounded-2xl object-cover bg-[var(--surface-2)]" />}
+      {(imageName || imageUrl) && (imageFallbackSources
+        ? <PhotoWithFallback src={imageUrl} fallbackSources={imageFallbackSources} alt={imageAlt ?? "Fotografia de referência para " + (imageName ?? title)} className="mb-4 w-full aspect-[16/9] rounded-2xl object-cover bg-[var(--surface-2)]" loading="lazy" decoding="async" />
+        : <HaircutPhoto name={imageName ?? title} photoUrl={imageUrl} alt={imageAlt ?? "Fotografia de referência para " + (imageName ?? title)} className="mb-4 w-full aspect-[16/9] rounded-2xl object-cover bg-[var(--surface-2)]" />)}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="t-card text-ink-hi">{title}</p>
@@ -501,6 +505,10 @@ export default function BookingWizard() {
                           disabled={!bookable}
                           onClick={() => { if (bookable) chooseService(item.id); }}
                           testId={`booking-service-${item.id}`}
+                          imageName={item.name}
+                          imageUrl={item.photo_url}
+                          imageAlt={`Fotografia de referência para ${item.name}`}
+                          imageFallbackSources={SERVICE_FALLBACK_PHOTOS}
                         />
                       );
                     })}
