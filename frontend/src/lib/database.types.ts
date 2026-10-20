@@ -34,6 +34,7 @@ export type Database = {
           id: string
           internal_note: string | null
           manage_token: string
+          manage_token_expires_at: string | null
           no_show_at: string | null
           price_cents: number
           service_id: string
@@ -61,6 +62,7 @@ export type Database = {
           id?: string
           internal_note?: string | null
           manage_token?: string
+          manage_token_expires_at?: string | null
           no_show_at?: string | null
           price_cents: number
           service_id: string
@@ -88,6 +90,7 @@ export type Database = {
           id?: string
           internal_note?: string | null
           manage_token?: string
+          manage_token_expires_at?: string | null
           no_show_at?: string | null
           price_cents?: number
           service_id?: string
