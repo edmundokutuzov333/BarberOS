@@ -173,10 +173,29 @@ export default function PublicBarbershop() {
 
       <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-20">
         <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
-          <div className="relative min-h-[22rem] sm:min-h-[30rem]">
-            <PhotoWithFallback src={shop.cover_url} fallbackSources={BARBERSHOP_FALLBACK_PHOTOS} alt="Fotografia de referência do espaço de barbearia" className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" decoding="async" loading="eager" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10" aria-hidden />
-            <div className="absolute inset-x-0 bottom-0 p-6 sm:p-9">
+          <div
+            className="relative min-h-[22rem] sm:min-h-[30rem]"
+            style={{ position: 'relative', minHeight: 'clamp(22rem, 62.5vw, 30rem)' }}
+          >
+            <PhotoWithFallback
+              src={shop.cover_url}
+              fallbackSources={BARBERSHOP_FALLBACK_PHOTOS}
+              alt="Fotografia de referência do espaço de barbearia"
+              className="absolute inset-0 h-full w-full object-cover"
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+              fetchPriority="high"
+              decoding="async"
+              loading="eager"
+            />
+            <div
+              className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10"
+              style={{ position: 'absolute', inset: 0 }}
+              aria-hidden
+            />
+            <div
+              className="absolute inset-x-0 bottom-0 p-6 sm:p-9"
+              style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 'clamp(1.5rem, 4vw, 2.25rem)' }}
+            >
               <div className="flex flex-col sm:flex-row sm:items-end gap-5">
                 <PhotoWithFallback src={shop.logo_url} fallbackSources={['/brand-assets/barberos-default.svg']} alt="Logótipo da barbearia" className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl object-contain border border-white/15 bg-black/40 p-2" width="96" height="96" />
                 <div className="min-w-0">

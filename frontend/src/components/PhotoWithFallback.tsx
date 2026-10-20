@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { Scissors } from 'lucide-react';
 
 const DEFAULT_SUPABASE_URL = 'https://alseiinjzwjdiwtvkdzy.supabase.co';
@@ -40,6 +40,7 @@ type PhotoWithFallbackProps = {
   width?: number | string;
   height?: number | string;
   placeholderClassName?: string;
+  style?: CSSProperties;
 };
 
 /** Tries the saved photo and then approved photographic references. Never use a logo as a cover. */
@@ -54,6 +55,7 @@ export function PhotoWithFallback({
   width,
   height,
   placeholderClassName = '',
+  style,
 }: PhotoWithFallbackProps) {
   const candidates = Array.from(
     new Set([src?.trim(), ...fallbackSources].filter((value): value is string => Boolean(value))),
@@ -67,6 +69,7 @@ export function PhotoWithFallback({
         role="img"
         aria-label={alt + ' indisponível'}
         className={className + ' grid place-items-center bg-[var(--surface-2)] text-ink-mid ' + placeholderClassName}
+        style={style}
       >
         <Scissors size={22} aria-hidden="true" />
       </div>
@@ -79,6 +82,7 @@ export function PhotoWithFallback({
       src={activeSource}
       alt={alt}
       className={className}
+      style={style}
       loading={loading}
       decoding={decoding}
       fetchPriority={fetchPriority}
