@@ -30,16 +30,25 @@ export default function AlterarPalavraPasse() {
     if (password !== confirmPassword) return setErr('As palavras-passe não coincidem.');
 
     setBusy(true);
-    const result = await supabase.functions.invoke('admin-credential-manager', {
-      body: { action: 'complete_password_change', new_password: password },
-    });
-    if (result.error || !result.data?.ok) {
-      const response = (result.error as { context?: Response } | null)?.context;
-      const payload = response && typeof response.json === 'function'
-        ? await response.clone().json().catch(() => null) as { message?: string; error?: string } | null
-        : null;
-      setBusy(false);
-      return setErr(payload?.message ?? payload?.error ?? result.error?.message ?? 'Não foi possível finalizar a alteração da palavra-passe.');
+    if (profile?.password_change_required) {
+      const result = await supabase.functions.invoke('admin-credential-manager', {
+        body: { action: 'complete_password_change', new_password: password },
+      });
+      if (result.error || !result.data?.ok) {
+        const response = (result.error as { context?: Response } | null)?.context;
+        const payload = response && typeof response.json === 'function'
+          ? await response.clone().json().catch(() => null) as { message?: string; error?: string } | null
+          : null;
+        setBusy(false);
+        return setErr(payload?.message ?? payload?.error ?? result.error?.message ?? 'Não foi possível finalizar a alteração da palavra-passe.');
+      }
+    } else {
+      // Standard Supabase recovery link: the signed-in user updates only their own password.
+      const result = await supabase.auth.updateUser({ password });
+      if (result.error) {
+        setBusy(false);
+        return setErr(humanError(result.error));
+      }
     }
 
     await supabase.auth.signOut();
