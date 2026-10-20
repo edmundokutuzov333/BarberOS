@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useLocation, useOutlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation, useNavigate, useOutlet } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/auth';
 import { useShop } from '@/lib/shop';
@@ -51,13 +51,52 @@ export function RequireAuth() {
 }
 
 export function RequireAdmin() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const returnTo = location.pathname + location.search;
 
   if (loading) return <FullSkeleton />;
   if (!user) return <Navigate to="/entrar" state={{ from: returnTo }} replace />;
-  if (!profile?.is_platform_admin) return <Navigate to="/app" replace />;
+  if (profile?.password_change_required) {
+    return <Navigate to="/alterar-palavra-passe" state={{ from: returnTo }} replace />;
+  }
+  if (profile?.is_platform_admin !== true) {
+    return (
+      <main className="min-h-screen p-6 grid place-items-center" data-testid="platform-admin-access-denied">
+        <section className="glass w-full max-w-xl rounded-3xl p-6 sm:p-8" aria-labelledby="platform-admin-denied-title">
+          <p className="t-label text-ink-mid">Administração global</p>
+          <h1 id="platform-admin-denied-title" className="text-2xl font-semibold text-ink-hi mt-2">
+            Esta conta não tem acesso à administração global.
+          </h1>
+          <p className="t-body text-ink-mid mt-3">
+            Está a usar uma conta de barbearia. Para controlar toda a plataforma, precisa de entrar com a conta que tem permissões de administrador global.
+          </p>
+          <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3">
+            <p className="t-label text-ink-lo">Conta actual</p>
+            <p className="text-sm text-ink-hi mt-1 break-all">{profile?.full_name || user.email || 'Conta autenticada'}</p>
+            {user.email && profile?.full_name && <p className="t-label text-ink-lo mt-0.5 break-all">{user.email}</p>}
+          </div>
+          <div className="mt-5 flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              data-testid="platform-admin-switch-account"
+              onClick={() => void signOut().then(() => navigate('/entrar', { state: { from: returnTo }, replace: true }))}
+              className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-accent-soft px-4 text-sm font-medium text-accent-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
+            >
+              Terminar sessão e trocar de conta
+            </button>
+            <a
+              href="/app"
+              className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 px-4 text-sm text-ink-mid hover:text-ink-hi hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
+            >
+              Voltar à barbearia
+            </a>
+          </div>
+        </section>
+      </main>
+    );
+  }
   return <Outlet />;
 }
 
