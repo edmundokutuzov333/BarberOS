@@ -11,7 +11,22 @@ import { FeatureToggle } from '@/features/admin/AdminComponents';
 export default function AdminPlanos(){
   const q=useAdminPlans(); const mutation=useUpdateAdminPlan(); const [selected,setSelected]=useState<AdminPlan|null>(null);
   useEffect(()=>{if(!selected&&q.data?.[0])setSelected(q.data[0]);},[q.data,selected]);
-  const save=async()=>{if(!selected)return;await mutation.mutateAsync({id:selected.id,name:selected.name,priceCents:selected.price_cents,maxBarbers:selected.max_barbers,features:(selected.features||{}) as Record<string, Json>,isActive:selected.is_active});setSelected(null);};
+  const save = async () => {
+    if (!selected) return;
+    try {
+      await mutation.mutateAsync({
+        id: selected.id,
+        name: selected.name,
+        priceCents: selected.price_cents,
+        maxBarbers: selected.max_barbers,
+        features: (selected.features || {}) as Record<string, Json>,
+        isActive: selected.is_active,
+      });
+      setSelected(null);
+    } catch {
+      // Keep the form open and expose the mutation error for correction/retry.
+    }
+  };
   return <Page title="Planos" subtitle="Configuração comercial dos planos do BarberOS." actions={<Button variant="secondary" size="sm" onClick={()=>void q.refetch()} disabled={q.isFetching}><RefreshCw size={14} className={q.isFetching?'animate-spin':''}/>Actualizar</Button>}>
     {q.isLoading?<Skeleton className="h-72"/>:q.error?<ErrorState message={humanError(q.error)} onRetry={()=>void q.refetch()}/>:q.data?.length===0?<EmptyState title="Ainda não existem planos."/>:
     <div className="grid xl:grid-cols-[1fr_420px] gap-3">
