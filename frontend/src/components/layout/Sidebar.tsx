@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ChevronsLeft, ChevronsRight, LogOut, ChevronsUpDown } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, LogOut, ChevronsUpDown, ShieldCheck } from 'lucide-react';
 import { navForRole } from './nav';
 import { Brand } from '@/components/ui/Brand';
 import { useAuth } from '@/lib/auth';
@@ -72,6 +72,39 @@ export function Sidebar() {
             </NavLink>
           );
         })}
+        {profile?.is_platform_admin === true && (
+          <NavLink
+            to="/admin"
+            data-testid="nav-platform-admin"
+            title={collapsed ? 'Administração da plataforma' : undefined}
+            className={cn(
+              'group relative flex items-center gap-3 h-11 rounded-2xl px-3 transition-colors duration-150',
+              pathname.startsWith('/admin') ? 'text-accent-ink' : 'text-ink-mid hover:text-ink-hi',
+              collapsed && 'justify-center px-0',
+            )}
+          >
+            {pathname.startsWith('/admin') && (
+              <motion.div
+                layoutId="nav-active"
+                className="absolute inset-0 rounded-2xl bg-accent-soft"
+                transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 350, damping: 30 }}
+              />
+            )}
+            <ShieldCheck
+              size={18}
+              aria-hidden="true"
+              className={cn(
+                'relative shrink-0 transition-[opacity,color] duration-150',
+                pathname.startsWith('/admin') ? 'opacity-100' : 'opacity-55 text-ink-lo group-hover:opacity-100 group-hover:text-accent-soft',
+              )}
+            />
+            {!collapsed && (
+              <span className={cn('relative text-sm truncate', pathname.startsWith('/admin') ? 'font-medium' : 'font-light')}>
+                Administração da plataforma
+              </span>
+            )}
+          </NavLink>
+        )}
       </nav>
 
       <div className="p-3 shrink-0 border-t border-white/5">
