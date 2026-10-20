@@ -4,6 +4,7 @@
 do $phase24$
 declare
   v_def text;
+  v_core_def text;
   v_count integer;
 begin
   if not exists (
@@ -27,15 +28,39 @@ begin
     raise exception 'PHASE24_BOOKING_FUNCTION_MISSING';
   end if;
 
-  if position('pg_advisory_xact_lock' in v_def) = 0 then
+  -- The public SQL RPC is intentionally a thin wrapper. The implementation and
+  -- concurrency boundary live in private.book_appointment_core, shared by online
+  -- and operator bookings. Test the actual implementation instead of the wrapper.
+  if position('private.book_appointment_core' in lower(v_def)) = 0 then
+    raise exception 'PHASE24_BOOKING_CORE_DELEGATION_MISSING';
+  end if;
+
+  select count(*) into v_count
+  from pg_proc p
+  join pg_namespace n on n.oid=p.pronamespace
+  where n.nspname='private'
+    and p.proname='book_appointment_core';
+
+  if v_count <> 1 then
+    raise exception 'PHASE24_BOOKING_CORE_AMBIGUOUS:%',v_count;
+  end if;
+
+  select pg_get_functiondef(p.oid)
+    into v_core_def
+  from pg_proc p
+  join pg_namespace n on n.oid=p.pronamespace
+  where n.nspname='private'
+    and p.proname='book_appointment_core';
+
+  if position('pg_advisory_xact_lock' in v_core_def) = 0 then
     raise exception 'PHASE24_ADVISORY_LOCK_MISSING';
   end if;
 
-  if position('SLOT_TAKEN' in v_def) = 0 then
+  if position('SLOT_TAKEN' in v_core_def) = 0 then
     raise exception 'PHASE24_SLOT_TAKEN_CONTRACT_MISSING';
   end if;
 
-  if position('exclusion_violation' in lower(v_def)) = 0 then
+  if position('exclusion_violation' in lower(v_core_def)) = 0 then
     raise exception 'PHASE24_EXCLUSION_TRANSLATION_MISSING';
   end if;
 

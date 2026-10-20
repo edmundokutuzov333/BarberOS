@@ -28,9 +28,11 @@ Não existem testes mutáveis contra produção.
 
 ## CI
 
-`.github/workflows/phase23-tests.yml` executa accessibility, typecheck, production build, unit, component e browser E2E. A suite de database entra quando o secret `BARBEROS_TEST_DATABASE_URL` está configurado.
+`.github/workflows/ci.yml` aplica a cadeia de migrations numa base local vazia e executa apenas os contratos de schema, permissões, booking, performance e gestão segura de acessos que não exigem fixtures de negócio. A suite global `supabase test db` não deve ser usada indistintamente contra uma base vazia, porque os testes históricos de acceptance exigem barbearias, contas, pagamentos e marcações de fixture.
 
-A ausência desse secret não é transformada numa falsa aprovação de database.
+`.github/workflows/phase23-tests.yml` executa accessibility, typecheck, production build, unit, component e browser E2E quando mudam as superfícies relevantes do frontend ou do backend. As acceptance suites completas das fases anteriores correm contra uma base de testes dedicada através de `BARBEROS_TEST_DATABASE_URL`.
+
+A ausência desse secret não é transformada numa falsa aprovação de database. Os testes mutáveis não correm contra produção.
 
 ## Release Gate
 
