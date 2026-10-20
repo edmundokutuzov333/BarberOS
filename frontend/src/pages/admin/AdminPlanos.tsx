@@ -36,7 +36,17 @@ export default function AdminPlanos(){
           <label className="block"><span className="t-label text-ink-mid">Nome</span><input className="field w-full mt-1.5" value={selected.name} onChange={e=>setSelected({...selected,name:e.target.value})}/></label>
           <div className="grid grid-cols-2 gap-3"><label className="block"><span className="t-label text-ink-mid">Preço (MT)</span><input className="field w-full mt-1.5" type="number" min="0" step="50" value={selected.price_cents/100} onChange={e=>setSelected({...selected,price_cents:Math.round(Number(e.target.value||0)*100)})}/></label><label className="block"><span className="t-label text-ink-mid">Máx. barbeiros</span><input className="field w-full mt-1.5" type="number" min="1" max="1000" value={selected.max_barbers} onChange={e=>setSelected({...selected,max_barbers:Math.round(Number(e.target.value||1))})}/></label></div>
           <div className="space-y-2"><p className="t-label text-ink-mid">Funcionalidades</p>{['deposits','whatsapp','multi_location'].map(k=><FeatureToggle key={k} label={k==='deposits'?'Sinais':k==='whatsapp'?'WhatsApp':'Multi-localização'} checked={Boolean((selected.features as Record<string,unknown>)?.[k])} onChange={value=>setSelected({...selected,features:{...(selected.features as Record<string, Json>),[k]:value} as Json})}/>)}</div>
-          <FeatureToggle label="Plano activo" checked={selected.is_active} onChange={value=>setSelected({...selected,is_active:value})}/>
+          {selected.assigned_shops > 0 && (
+            <p className="t-label text-ink-mid">
+              Este plano está atribuído a {selected.assigned_shops} barbearia(s). Para o desactivar, atribua primeiro outro plano a todas as barbearias.
+            </p>
+          )}
+          <FeatureToggle
+            label="Plano activo"
+            checked={selected.is_active}
+            disabled={selected.assigned_shops > 0}
+            onChange={value=>setSelected({...selected,is_active:value})}
+          />
           <div className="flex gap-2"><Button onClick={()=>void save()} loading={mutation.isPending}><Save size={14}/>Guardar</Button><Button variant="secondary" onClick={()=>setSelected(null)}>Cancelar</Button></div>
           {mutation.error&&<ErrorState message={humanError(mutation.error)}/>}
         </div>:<EmptyState title="Nenhum plano seleccionado."/>}
