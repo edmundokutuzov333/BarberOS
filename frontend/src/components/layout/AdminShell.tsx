@@ -1,10 +1,11 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Building2, Users, CreditCard, Wallet, LifeBuoy, LineChart, LayoutDashboard, ArrowLeft } from 'lucide-react';
+import { Building2, Users, CreditCard, Wallet, LifeBuoy, LineChart, LayoutDashboard, ArrowLeft, LogOut } from 'lucide-react';
 import { AnimatedOutlet } from './AppShell';
 import { Brand } from '@/components/ui/Brand';
 import { cn } from '@/lib/utils';
 import { SkipLink } from '@/components/ui/SkipLink';
+import { useAuth } from '@/lib/auth';
 
 const ADMIN_NAV = [
   { to: '/admin', label: 'Visão geral', icon: LayoutDashboard, end: true },
@@ -18,6 +19,7 @@ const ADMIN_NAV = [
 
 export function AdminShell() {
   const { pathname } = useLocation();
+  const { profile, user, signOut } = useAuth();
   const reduce = useReducedMotion();
   const active = ADMIN_NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)));
 
@@ -64,7 +66,12 @@ export function AdminShell() {
           })}
         </nav>
 
-        <div className="p-3 border-t border-[var(--border-subtle)]">
+        <div className="p-3 border-t border-[var(--border-subtle)] space-y-2">
+          <div className="rounded-2xl bg-white/[0.025] border border-white/5 px-3 py-3">
+            <p className="t-label text-ink-lo">Administrador da plataforma</p>
+            <p className="text-sm text-ink-hi truncate mt-1">{profile?.full_name || user?.email || 'Admin Oryon'}</p>
+            {user?.email && profile?.full_name && <p className="t-label text-ink-lo truncate mt-0.5">{user.email}</p>}
+          </div>
           <NavLink
             to="/app"
             data-testid="admin-back-to-app"
@@ -73,6 +80,15 @@ export function AdminShell() {
             <ArrowLeft size={16} className="opacity-60" aria-hidden />
             Voltar à barbearia
           </NavLink>
+          <button
+            type="button"
+            data-testid="admin-sign-out"
+            onClick={() => void signOut()}
+            className="flex items-center gap-3 min-h-11 w-full rounded-2xl px-3 text-sm text-ink-mid hover:text-ink-hi hover:bg-[var(--surface-hover)] outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
+          >
+            <LogOut size={16} className="opacity-60" aria-hidden />
+            Terminar sessão
+          </button>
         </div>
       </aside>
 
