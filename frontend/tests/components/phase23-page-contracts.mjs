@@ -156,6 +156,17 @@ const tests = [
     assert.match(detail, /Keep the mutation error in the page/);
     assert.match(api, /invalidateQueries\(\{queryKey:\['admin','metrics'\]\}\)/);
   }],
+
+  ['Global admin entry preserves the requested route through login and blocks tenant-only accounts explicitly', () => {
+    const guard = read('src/components/layout/AppShell.tsx');
+    const login = read('src/pages/auth/Entrar.tsx');
+    assert.match(guard, /if \(!user\) return <Navigate to="\/entrar" state=\{\{ from: returnTo \}\} replace \/>/);
+    assert.match(guard, /profile\?\.is_platform_admin !== true/);
+    assert.match(guard, /platform-admin-access-denied/);
+    assert.match(guard, /platform-admin-switch-account/);
+    assert.doesNotMatch(guard, /if \(!profile\?\.is_platform_admin\) return <Navigate to="\/app" replace \/>/);
+    assert.match(login, /nav\(loc\.state\?\.from \?\? '\/app', \{ replace: true \}\)/);
+  }],
 ];
 
 let failed = 0;
