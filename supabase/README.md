@@ -1,34 +1,43 @@
 # BarberOS Supabase
 
-## Structure
+Este directório contém o contrato backend do BarberOS: migrations ordenadas, testes SQL, Edge Functions e configuração do projecto Supabase.
 
-`migrations/`
-Schema, RLS, engine and security changes. This is the canonical database change history.
+A arquitectura, os fluxos de domínio, a configuração local e a política de release estão documentados no [README principal](../README.md).
 
-`functions/`
-Edge Functions for asynchronous integrations and server-side boundaries. They are intentionally introduced only when the corresponding product domain is implemented.
+## Estrutura
 
-`tests/`
-Read-only database acceptance tests and later domain-specific database tests.
+| Caminho | Responsabilidade |
+|---|---|
+| `migrations/` | Histórico canónico do schema, RLS, grants, constraints, índices, funções e triggers |
+| `tests/` | Contratos pgTAP, testes read-only e suites de acceptance específicas de domínio |
+| `functions/` | Fronteiras HTTP, gateway de tokens, booking, payments, notificações, health e integrações |
+| `config.toml` | Project ref e configurações das Edge Functions |
 
-`seed/`
-Only deterministic non-user reference data belongs here. Do not add fake customers, bookings, payments or reviews.
+## Regras de migration
 
-## Migration policy
+1. Nunca renomear nem reordenar uma migration já aplicada.
+2. Cada mudança de schema deve entrar numa nova migration timestamped.
+3. Validar a cadeia completa num ambiente local vazio.
+4. Confirmar o histórico remoto/local e as diferenças semânticas antes de produção.
+5. Regenerar os tipos frontend quando o contrato de schema mudar.
+6. Não usar `supabase db reset --linked`, replay cego ou scripts mutáveis contra produção.
 
-Never rename or reorder an already-applied migration.
+## Segurança
 
-The current migration chain is:
+PostgreSQL é a fonte de verdade do domínio. RLS, grants explícitos, funções privilegiadas e constraints são parte do contrato. Não conceder DML directo de browser em tabelas de domínio para contornar uma RPC em falta.
 
-- 20260918132000 initial_schema
-- 20260918132200 rls
-- 20260918132400 engine
-- 20260918132513 security_hardening
+Os secrets usados por Edge Functions ficam na configuração server-side. Nunca os guardar neste directório nem expô-los por variáveis `VITE_*`.
 
-Future changes must receive a new timestamped migration.
+## Testes
 
-## Production rule
+Os testes pgTAP compatíveis podem correr na base local criada pelo workflow de CI. As suites comportamentais que precisam de lojas, clientes, marcações, pagamentos ou actores reais requerem uma base de teste dedicada e as variáveis explícitas definidas pelos runners. A ausência dessas variáveis deve continuar a bloquear a certificação.
 
-No reset, recreate, blind replay, or data-destructive migration is allowed against the live BarberOS database.
+## Release
 
-All domain writes must respect the existing PostgreSQL and RLS architecture.
+A publicação Supabase é manual e está protegida por aprovação, reconciliação do histórico, configuração de segurança e verificação de staging. Consultar:
+
+- `../docs/DATABASE.md`
+- `../docs/SECURITY.md`
+- `../docs/PRODUCTION_RELEASE_SAFETY.md`
+- `../docs/BOOKING_SECURITY_RELEASE.md`
+- `../.github/workflows/deploy-supabase.yml`

@@ -1,70 +1,51 @@
-# Getting Started with Create React App
+# BarberOS Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Esta pasta contém a aplicação React/Vite do BarberOS. A documentação central do produto, arquitectura, ambiente, rotas, domínios, testes e deployment está no [README principal](../README.md).
 
-## Available Scripts
+## Stack
 
-In the project directory, you can run:
+- Node.js 22 e Corepack + Yarn 1.22.22
+- React 19, TypeScript e Vite
+- React Router e TanStack Query
+- Supabase JS, Auth e RPC
+- Tailwind CSS, Radix UI e tokens CSS
+- Playwright e axe-core para browser testing e acessibilidade
+- Vite PWA plugin para manifest e service worker
 
-### `npm start`
+## Desenvolvimento
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Na pasta `frontend/`:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```sh
+corepack enable
+corepack yarn install --frozen-lockfile
+cp .env.example .env.local
+corepack yarn start
+```
 
-### `npm test`
+Configurar `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` com valores de desenvolvimento. Nunca colocar service-role keys, passwords ou secrets de providers em variáveis `VITE_*`.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Comandos de validação
 
-### `npm run build`
+```sh
+corepack yarn lint
+corepack yarn typecheck
+corepack yarn test
+corepack yarn a11y:phase21
+corepack yarn test:e2e:smoke
+corepack yarn perf:budget
+corepack yarn build
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Os comandos de browser podem construir e servir o build local, conforme a configuração do Playwright. Testes que precisam de autenticação, dados de negócio ou chamadas mutáveis exigem um ambiente dedicado.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Convenções
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- As páginas ficam em `src/pages`.
+- As APIs e hooks de domínio ficam em `src/features`.
+- A autenticação, permissões, cliente Supabase e tipos partilhados ficam em `src/lib`.
+- Os componentes globais ficam em `src/components`.
+- O contrato de rotas encontra-se em `src/App.tsx`.
+- O sistema visual runtime está em `src/styles/tokens.css` e `src/index.css`.
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Não duplicar no frontend as regras críticas de disponibilidade, concorrência, sinal ou transições de estado que pertencem ao PostgreSQL. Consultar o README principal e os runbooks de domínio antes de alterar um fluxo.
