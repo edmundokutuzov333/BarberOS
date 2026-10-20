@@ -23,8 +23,8 @@ type PhotoWithFallbackProps = {
   loading?: 'eager' | 'lazy';
   decoding?: 'async' | 'sync' | 'auto';
   fetchPriority?: 'high' | 'low' | 'auto';
-  width?: number;
-  height?: number;
+  width?: number | string;
+  height?: number | string;
   placeholderClassName?: string;
 };
 
