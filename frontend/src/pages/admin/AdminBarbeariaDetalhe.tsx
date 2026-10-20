@@ -23,9 +23,20 @@ export default function AdminBarbeariaDetalhe() {
   const saveStatus=async()=>{
     if(!shopId||status===shop?.status)return;
     if((status==='suspended'||status==='cancelled')&&!window.confirm('Confirmar a alteração do estado desta barbearia para '+status+'?'))return;
-    await statusMutation.mutateAsync({shopId,status});
+    try {
+      await statusMutation.mutateAsync({ shopId, status });
+    } catch {
+      // Keep the mutation error in the page so the administrator can retry safely.
+    }
   };
-  const savePlan=async()=>{if(!shopId||!planId||planId===q.data?.plan?.id)return;await planMutation.mutateAsync({shopId,planId});};
+  const savePlan = async () => {
+    if (!shopId || !planId || planId === q.data?.plan?.id) return;
+    try {
+      await planMutation.mutateAsync({ shopId, planId });
+    } catch {
+      // Keep the mutation error in the page so the administrator can retry safely.
+    }
+  };
 
   return <Page title={shop?.name??'Barbearia'} subtitle={shop?'/barbearia/'+shop.slug:undefined} actions={<div className="flex gap-2"><Link to="/admin/barbearias"><Button variant="secondary" size="sm"><ArrowLeft size={14}/>Voltar</Button></Link>{shop&&<a href={'/barbearia/'+shop.slug} target="_blank" rel="noreferrer"><Button variant="secondary" size="sm"><ExternalLink size={14}/>Página pública</Button></a>}</div>}>
     {q.isLoading?<><Skeleton className="h-40"/><Skeleton className="h-72 mt-3"/></>:q.error?<ErrorState message={humanError(q.error)} onRetry={()=>void q.refetch()}/>:q.data&&shop?<>
@@ -37,7 +48,11 @@ export default function AdminBarbeariaDetalhe() {
           <div className="space-y-4"><div><label className="t-label text-ink-mid block mb-1.5" htmlFor="admin-shop-status">Estado</label><select id="admin-shop-status" className="field w-full" value={status} onChange={e=>setStatus(e.target.value as ShopStatus)}>{STATUS_VALUES.map(v=><option key={v} value={v}>{v==='trial'?'Teste':v==='active'?'Activa':v==='suspended'?'Suspensa':'Cancelada'}</option>)}</select></div><Button size="sm" onClick={()=>void saveStatus()} loading={statusMutation.isPending} disabled={status===shop.status}><Save size={14}/>Guardar estado</Button></div>
         </Panel>
         <Panel title="Plano">
-          <div className="space-y-4"><div><label className="t-label text-ink-mid block mb-1.5" htmlFor="admin-shop-plan">Plano atribuído</label><select id="admin-shop-plan" className="field w-full" value={planId} onChange={e=>setPlanId(e.target.value)}>{plans.data?.map(p=><option key={p.id} value={p.id}>{p.name} · {formatMT(p.price_cents)}</option>)}</select></div><p className="t-label text-ink-lo">{q.data.plan?.max_barbers??0} barbeiros máximos · {q.data.plan?.is_active?'activo':'inactivo'}</p><Button size="sm" onClick={()=>void savePlan()} loading={planMutation.isPending} disabled={!planId||planId===q.data.plan?.id}><Check size={14}/>Atribuir plano</Button></div>
+          <div className="space-y-4"><div><label className="t-label text-ink-mid block mb-1.5" htmlFor="admin-shop-plan">Plano atribuído</label><select id="admin-shop-plan" className="field w-full" value={planId} onChange={e=>setPlanId(e.target.value)}>{plans.data?.filter((plan) => plan.is_active || plan.id === q.data?.plan?.id).map((plan) => (
+              <option key={plan.id} value={plan.id} disabled={!plan.is_active}>
+                {plan.name} · {formatMT(plan.price_cents)}{plan.is_active ? '' : ' · inactivo'}
+              </option>
+            ))}</select></div><p className="t-label text-ink-lo">{q.data.plan?.max_barbers??0} barbeiros máximos · {q.data.plan?.is_active?'activo':'inactivo'}</p><Button size="sm" onClick={()=>void savePlan()} loading={planMutation.isPending} disabled={!planId||planId===q.data.plan?.id}><Check size={14}/>Atribuir plano</Button></div>
         </Panel>
       </section>
       <Panel className="mt-3" title="Dados da barbearia"><dl className="grid sm:grid-cols-2 gap-x-8 gap-y-4">{[['Descrição',shop.description||'Não definida'],['Telefone',shop.phone||'Não definido'],['WhatsApp',shop.whatsapp||'Não definido'],['Instagram',shop.instagram||'Não definido'],['Morada',shop.address||'Não definida'],['Timezone',shop.timezone],['Criada',fmt(shop.created_at,'dd MMM yyyy, HH:mm')]].map(([l,v])=><div key={l}><dt className="t-label text-ink-lo">{l}</dt><dd className="text-sm text-ink-hi mt-1">{v}</dd></div>)}</dl></Panel>
