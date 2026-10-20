@@ -8,6 +8,7 @@ import { formatMT, humanError } from '@/lib/utils';
 import { useScopedTheme } from '@/themes';
 import { usePublicBarbershop, type PublicBarber, type PublicHaircut, type PublicService, type PublicWorkingHour } from '@/features/public-shop/api';
 import { HaircutPhoto } from '@/components/HaircutPhoto';
+import { BARBER_FALLBACK_PHOTOS, BARBERSHOP_FALLBACK_PHOTOS, PhotoWithFallback } from '@/components/PhotoWithFallback';
 
 const WEEKDAYS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 
@@ -49,11 +50,7 @@ function BarberCard({ barber }: { barber: PublicBarber }) {
   return (
     <article className="rounded-3xl border border-white/10 bg-white/5 p-5 h-full">
       <div className="flex items-center gap-4">
-        {barber.photo_url ? (
-          <img src={barber.photo_url} alt={barber.display_name} className="h-16 w-16 rounded-2xl object-cover" width="64" height="64" loading="lazy" decoding="async" />
-        ) : (
-          <div aria-hidden className="h-16 w-16 rounded-2xl bg-accent-soft/15 border border-accent-soft/15 grid place-items-center text-accent-soft text-xl">{barber.display_name.slice(0, 1).toUpperCase()}</div>
-        )}
+        <PhotoWithFallback src={barber.photo_url} fallbackSources={BARBER_FALLBACK_PHOTOS} alt="Fotografia de referência de barbeiro" className="h-16 w-16 rounded-2xl object-cover" width={64} height={64} />
         <div className="min-w-0">
           <h3 className="t-card text-ink-hi truncate">{barber.display_name}</h3>
           <p className="t-label text-ink-mid mt-1">{barber.years_experience} {barber.years_experience === 1 ? 'ano' : 'anos'} de experiência</p>
@@ -174,19 +171,11 @@ export default function PublicBarbershop() {
       <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-20">
         <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
           <div className="relative min-h-[22rem] sm:min-h-[30rem]">
-            {shop.cover_url ? (
-              <img src={shop.cover_url} alt={shop.name} className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" decoding="async" />
-            ) : (
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(var(--accent-rgb),.3),transparent_45%),linear-gradient(135deg,var(--surface-2),var(--canvas-void))]" aria-hidden />
-            )}
+            <PhotoWithFallback src={shop.cover_url} fallbackSources={BARBERSHOP_FALLBACK_PHOTOS} alt="Fotografia de referência do espaço de barbearia" className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" loading="eager" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10" aria-hidden />
             <div className="absolute inset-x-0 bottom-0 p-6 sm:p-9">
               <div className="flex flex-col sm:flex-row sm:items-end gap-5">
-                {shop.logo_url ? (
-                  <img src={shop.logo_url} alt="Logótipo da barbearia" className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl object-cover border border-white/15 bg-black/30" width="96" height="96" decoding="async" />
-                ) : (
-                  <div aria-hidden className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl border border-white/15 bg-black/30 backdrop-blur-xl grid place-items-center text-3xl font-medium text-ink-hi">{shop.name.slice(0, 1).toUpperCase()}</div>
-                )}
+                <PhotoWithFallback src={shop.logo_url} fallbackSources={['/brand-assets/barberos-default.svg']} alt="Logótipo da barbearia" className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl object-cover border border-white/15 bg-black/30" width={96} height={96} />
                 <div className="min-w-0">
                   <h1 className="text-3xl sm:text-5xl font-medium tracking-[-0.02em] text-white">{shop.name}</h1>
                   {shop.description && <p className="t-body text-white/75 mt-2 max-w-2xl">{shop.description}</p>}

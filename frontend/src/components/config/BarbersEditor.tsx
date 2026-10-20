@@ -11,6 +11,7 @@ import { Field } from '@/components/ui/Field';
 import { Modal, Switch, Select, Textarea, ImageUpload, Chip } from '@/components/ui/Primitives';
 import { Skeleton, EmptyState, ErrorState } from '@/components/ui/States';
 import { SortableList } from '@/components/ui/SortableList';
+import { BARBER_FALLBACK_PHOTOS, PhotoWithFallback } from '@/components/PhotoWithFallback';
 import { useServices } from './ServicesEditor';
 
 const empty = { display_name: '', bio: '', years: '0', photo_url: null as string | null, user_id: '', services: [] as string[] };
@@ -89,7 +90,7 @@ export function BarbersEditor() {
         <SortableList items={q.data!} shopId={shop!.id} rpcName="reorder_barbers" queryKey={key} testId="barbers-list" render={(b) => (
           <div className="flex items-center gap-3">
             <div className="h-11 w-11 rounded-full overflow-hidden bg-[var(--surface-2)] grid place-items-center text-sm font-medium shrink-0">
-              {b.photo_url ? <img src={b.photo_url} alt="" className="h-full w-full object-cover" /> : b.display_name.slice(0, 1)}
+              {b.photo_url ? <PhotoWithFallback src={b.photo_url} fallbackSources={BARBER_FALLBACK_PHOTOS} alt="Fotografia de referência de barbeiro" className="h-full w-full object-cover" /> : b.display_name.slice(0, 1)}
             </div>
             <div className="flex-1 min-w-0">
               <p className={`text-sm font-normal truncate ${!b.is_active && 'text-ink-mid line-through'}`}>{b.display_name}</p>

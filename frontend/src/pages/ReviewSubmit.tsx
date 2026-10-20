@@ -6,6 +6,7 @@ import { ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { Brand } from '@/components/ui/Brand';
 import { humanError } from '@/lib/utils';
 import { useReviewByToken, useSubmitReview } from '@/features/reviews/api';
+import { BARBER_FALLBACK_PHOTOS, PhotoWithFallback } from '@/components/PhotoWithFallback';
 
 function dateTimeLabel(value: string | null, timezone: string): string {
   if (!value) return '';
@@ -161,13 +162,7 @@ export default function ReviewSubmit() {
 
       <Panel className="p-6 sm:p-8">
         <div className="flex items-start gap-4">
-          {data.barber_photo_url ? (
-            <img src={data.barber_photo_url} alt={data.barber_name} className="h-16 w-16 rounded-2xl object-cover" loading="lazy" />
-          ) : (
-            <div className="h-16 w-16 rounded-2xl bg-accent-soft/15 border border-accent-soft/15 grid place-items-center text-xl text-accent-soft" aria-hidden>
-              {data.barber_name.slice(0, 1).toUpperCase()}
-            </div>
-          )}
+          <PhotoWithFallback src={data.barber_photo_url} fallbackSources={BARBER_FALLBACK_PHOTOS} alt="Fotografia de referência de barbeiro" className="h-16 w-16 rounded-2xl object-cover" />
           <div className="min-w-0">
             <p className="t-card text-ink-hi">{data.barber_name}</p>
             <p className="t-body text-ink-mid mt-1">{data.service_name}{data.haircut_name ? ' · ' + data.haircut_name : ''}</p>

@@ -9,6 +9,7 @@ import { ErrorState, Skeleton } from '@/components/ui/States';
 import { usePublicBarbershops, type PublicDirectoryShop } from '@/features/public-shop/api';
 import { distanceInKm, formatDistance, getDirectionsUrl, getShopPublicUrl } from '@/lib/public-routing';
 import { readLocalBookings, type LocalBooking } from '@/lib/shop-link';
+import { BARBERSHOP_FALLBACK_PHOTOS, PhotoWithFallback } from '@/components/PhotoWithFallback';
 
 const QrScanDialog = lazy(() => import('@/features/gateway/QrScanDialog'));
 type Audience = 'client' | 'shop' | null;
@@ -27,7 +28,7 @@ function ShopCard({ shop, distance }: { shop: PublicDirectoryShop; distance: num
   const publicUrl = getShopPublicUrl(shop.slug);
   const directionsUrl = getDirectionsUrl(shop);
   return <article className="gateway-shop-card">
-    <div className="gateway-shop-card-media">{shop.cover_url || shop.logo_url ? <img src={shop.cover_url || shop.logo_url || ''} alt="" loading="lazy" decoding="async" /> : <Scissors size={24} aria-hidden />}</div>
+    <div className="gateway-shop-card-media"><PhotoWithFallback src={shop.cover_url} fallbackSources={[...BARBERSHOP_FALLBACK_PHOTOS, shop.logo_url ?? '/brand-assets/barberos-default.svg']} alt="Fotografia de referência do espaço da barbearia" className="h-full w-full object-cover" /></div>
     <div className="gateway-shop-card-body">
       <div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="t-card truncate">{shop.name}</h3><p className="t-label text-ink-mid mt-1 flex items-center gap-1.5"><MapPin size={13} aria-hidden />{shop.address || 'Localização a configurar'}</p></div>{distance != null && <span className="gateway-distance" title="Distância aproximada em linha recta" aria-label={`Distância aproximada em linha recta: ${formatDistance(distance)}`}>{formatDistance(distance)}</span>}</div>
       {shop.description && <p className="t-body text-ink-mid mt-3 line-clamp-2">{shop.description}</p>}

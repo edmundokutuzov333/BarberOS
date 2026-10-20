@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, Clock3, Mail, MessageCircle, Scissors, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useScopedTheme } from '@/themes';
+import { BARBER_FALLBACK_PHOTOS, PhotoWithFallback } from '@/components/PhotoWithFallback';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { Field } from '@/components/ui/Field';
 import { TurnstileWidget } from '@/components/security/TurnstileWidget';
@@ -173,13 +174,7 @@ function BarberChoice({ barber, selected, onClick }: { barber: PublicBarber; sel
       className={`w-full text-left rounded-3xl border p-4 sm:p-5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft ${selected ? 'border-accent-soft/60 bg-accent-soft/10' : 'border-white/10 bg-white/5 hover:bg-white/[.07]'}`}
     >
       <div className="flex items-center gap-4">
-        {barber.photo_url ? (
-          <img src={barber.photo_url} alt="" className="h-14 w-14 rounded-2xl object-cover" loading="lazy" />
-        ) : (
-          <div aria-hidden className="h-14 w-14 rounded-2xl bg-accent-soft/15 border border-accent-soft/15 grid place-items-center text-accent-soft text-lg">
-            {barber.display_name.slice(0, 1).toUpperCase()}
-          </div>
-        )}
+        <PhotoWithFallback src={barber.photo_url} fallbackSources={BARBER_FALLBACK_PHOTOS} alt="Fotografia de referência de barbeiro" className="h-14 w-14 rounded-2xl object-cover" />
         <div className="min-w-0 flex-1">
           <p className="t-card text-ink-hi truncate">{barber.display_name}</p>
           <p className="t-label text-ink-mid mt-1">{barber.years_experience} {barber.years_experience === 1 ? 'ano' : 'anos'} de experiência</p>
