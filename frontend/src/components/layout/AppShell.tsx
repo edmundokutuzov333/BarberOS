@@ -51,8 +51,12 @@ export function RequireAuth() {
 }
 
 export function RequireAdmin() {
-  const { profile, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
+  const location = useLocation();
+  const returnTo = location.pathname + location.search;
+
   if (loading) return <FullSkeleton />;
+  if (!user) return <Navigate to="/entrar" state={{ from: returnTo }} replace />;
   if (!profile?.is_platform_admin) return <Navigate to="/app" replace />;
   return <Outlet />;
 }
