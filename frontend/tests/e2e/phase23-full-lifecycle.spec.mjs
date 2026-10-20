@@ -12,7 +12,7 @@ test.describe('BarberOS Phase 23 full lifecycle', () => {
     process.env.BARBEROS_E2E_FULL !== '1' ||
       !process.env.BARBEROS_E2E_EMAIL ||
       !process.env.BARBEROS_E2E_PASSWORD ||
-      !process.env.BARBEROS_E2E_FULL_RESET_URL,
+      (!process.env.BARBEROS_E2E_FULL_RESET_URL && process.env.BARBEROS_E2E_EPHEMERAL_LOCAL !== '1'),
     'Full lifecycle requires a dedicated, resettable E2E environment.',
   );
 
@@ -106,6 +106,17 @@ test.describe('BarberOS Phase 23 full lifecycle', () => {
     await expect(page).toHaveURL(/\/marcacao\/[0-9a-f-]+$/);
     manageUrl = page.url();
 
+    // Manage the booking through the anonymous capability token: rescheduling must
+    // work without exposing appointment identifiers or requiring a customer login.
+    await page.goto(manageUrl);
+    await expect(page.getByRole('heading', { name: 'A sua marcação' })).toBeVisible();
+    await page.getByRole('button', { name: 'Remarcar' }).click();
+    const availableRescheduleSlots = page.locator('main [aria-live="polite"] button[aria-pressed="false"]');
+    await expect(availableRescheduleSlots.first()).toBeVisible({ timeout: 15000 });
+    await availableRescheduleSlots.first().click();
+    await page.getByRole('button', { name: 'Confirmar novo horário' }).click();
+    await expect(page.getByText('Marcação remarcada.')).toBeVisible({ timeout: 10000 });
+
     await page.goto('/app/agenda');
     await expect(page.getByTestId(/agenda-appointment-/).first()).toBeVisible();
 
@@ -124,9 +135,61 @@ test.describe('BarberOS Phase 23 full lifecycle', () => {
     await page.getByText('Cliente QA ' + unique).click();
     await expect(page.getByTestId('customer-detail-page')).toBeVisible();
     await expect(page.getByText('1')).toBeVisible();
+
+    // Create a second booking and cancel it from its manage link, using the same
+    // public capability boundary as a real customer.
+    await page.goto('/barbearia/' + shopSlug + '/marcar');
+    await page.getByRole('button', { name: /Corte QA/i }).click();
+    await page.getByTestId('booking-haircut-any').click();
+    await page.getByTestId('booking-barber-any').click();
+    const secondDates = page.locator('[role="option"]:not([aria-disabled="true"])');
+    await expect(secondDates.last()).toBeVisible();
+    await secondDates.last().click();
+    const secondTimes = page.locator('[role="option"]');
+    await expect(secondTimes.last()).toBeVisible();
+    await secondTimes.last().click();
+    await page.getByLabel('Nome').fill('Cliente QA Cancelamento ' + unique);
+    await page.getByLabel('Telefone').fill('86' + customerPhone.slice(2));
+    await page.getByRole('button', { name: /Confirmar marcação/i }).click();
+    await expect(page).toHaveURL(/\\/marcacao\\/[0-9a-f-]+$/);
+    const cancelUrl = page.url();
+
+    await page.goto(cancelUrl);
+    await page.getByRole('button', { name: 'Cancelar marcação' }).click();
+    await page.getByRole('button', { name: 'Confirmar cancelamento' }).click();
+    await expect(page.getByText('Marcação cancelada', { exact: true })).toBeVisible({ timeout: 10000 });
+  });
+
+  test('a second tenant cannot see another tenant private operational data', async ({ browser }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const secondEmail = emailParts.length === 2
+      ? emailParts[0] + '+second-' + unique + '@' + emailParts[1]
+      : 'second-' + unique + '@example.test';
+    const secondPhone = '87' + Math.floor(1000000 + Math.random() * 8999999).toString();
+
+    try {
+      await page.goto('/registar');
+      await page.getByLabel('O teu nome').fill('BarberOS QA Other Tenant');
+      await page.getByLabel('Telemóvel').fill(secondPhone);
+      await page.getByLabel('Email').fill(secondEmail);
+      await page.getByLabel('Palavra-passe').fill(process.env.BARBEROS_E2E_PASSWORD);
+      await page.getByTestId('register-submit-btn').click();
+      await expect(page).toHaveURL(/\\/app\\/onboarding/);
+
+      await page.goto('/app/agenda');
+      await expect(page.locator('body')).not.toContainText('Cliente QA ' + unique);
+      await page.goto('/app/clientes');
+      await expect(page.locator('body')).not.toContainText('Cliente QA ' + unique);
+      await page.goto('/barbearia/' + shopSlug);
+      await expect(page.getByText(shopName)).toBeVisible();
+    } finally {
+      await context.close();
+    }
   });
 
   test.afterAll(async ({ browser }) => {
+    if (process.env.BARBEROS_E2E_EPHEMERAL_LOCAL === '1') return;
     const resetUrl = process.env.BARBEROS_E2E_FULL_RESET_URL;
     const context = await browser.newContext();
     try {
