@@ -6,6 +6,10 @@ on:
     paths:
       - ".github/workflows/phase27-release-certification.yml"
       - ".github/workflows/ci.yml"
+      - ".github/workflows/phase23-tests.yml"
+      - ".github/workflows/phase24-concurrency.yml"
+      - ".github/workflows/phase25-performance.yml"
+      - "docs/PRODUCTION_RELEASE_SAFETY.md"
       - "supabase/**"
       - "scripts/test_database_phase23.py"
       - "scripts/test_booking_concurrency_phase23.py"
@@ -17,6 +21,10 @@ on:
     branches: [main, "phase-*"]
     paths:
       - ".github/workflows/phase27-release-certification.yml"
+      - ".github/workflows/phase23-tests.yml"
+      - ".github/workflows/phase24-concurrency.yml"
+      - ".github/workflows/phase25-performance.yml"
+      - "docs/PRODUCTION_RELEASE_SAFETY.md"
       - "supabase/**"
       - "scripts/test_database_phase23.py"
       - "scripts/test_booking_concurrency_phase23.py"
