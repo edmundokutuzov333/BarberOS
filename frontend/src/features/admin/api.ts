@@ -183,4 +183,82 @@ export function useUpdateAdminSupport() {
   });
 }
 
+
+export type AdminCredentialEvent = {
+  id: string;
+  actor_email: string;
+  target_email: string;
+  action: 'password_reset';
+  shop_slugs: string[];
+  created_at: string;
+};
+
+export type AdminPasswordResetResult = {
+  userId: string;
+  email: string;
+  shopSlugs: string[];
+  temporaryPassword: string;
+  auditLogged: boolean;
+  warning?: string;
+};
+
+async function credentialFunction<T>(body: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.functions.invoke('admin-credential-manager', { body });
+  if (error) {
+    const response = (error as { context?: Response }).context;
+    const payload = response && typeof response.json === 'function'
+      ? await response.clone().json().catch(() => null) as { message?: string; error?: string } | null
+      : null;
+    throw new Error(payload?.message ?? payload?.error ?? error.message ?? 'Falha na gestão de acessos.');
+  }
+  if (!data?.ok) throw new Error(data?.message ?? data?.error ?? 'Falha na gestão de acessos.');
+  return data as T;
+}
+
+export async function resetAdminUserPassword(userId: string): Promise<AdminPasswordResetResult> {
+  const result = await credentialFunction<{
+    user: { id: string; email: string };
+    shop_slugs: string[];
+    temporary_password: string;
+    audit_logged: boolean;
+    warning?: string;
+  }>({ action: 'reset_password', target_user_id: userId });
+  if (!result.user?.id || !result.user.email || !result.temporary_password) {
+    throw new Error('A reposição não devolveu uma credencial válida.');
+  }
+  return {
+    userId: result.user.id,
+    email: result.user.email,
+    shopSlugs: result.shop_slugs ?? [],
+    temporaryPassword: result.temporary_password,
+    auditLogged: result.audit_logged === true,
+    warning: result.warning,
+  };
+}
+
+export async function getAdminCredentialEvents(): Promise<AdminCredentialEvent[]> {
+  const result = await credentialFunction<{ events: AdminCredentialEvent[] }>({ action: 'list_events' });
+  return result.events ?? [];
+}
+
+export function useResetAdminUserPassword() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: resetAdminUserPassword,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'users'] });
+      void qc.invalidateQueries({ queryKey: ['admin', 'credential-events'] });
+    },
+  });
+}
+
+export function useAdminCredentialEvents() {
+  return useQuery({
+    queryKey: ['admin', 'credential-events'],
+    queryFn: getAdminCredentialEvents,
+    staleTime: 10_000,
+    retry: 1,
+  });
+}
+
 export type { ShopStatus, PaymentState, PaymentProvider, SupportStatus, SupportPriority };
