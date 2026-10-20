@@ -183,9 +183,7 @@ export default function PublicBarbershop() {
               alt="Fotografia de referência do espaço de barbearia"
               className="absolute inset-0 h-full w-full object-cover"
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-              fetchPriority="high"
-              decoding="async"
-              loading="eager"
+              fetchPriority="high" decoding="async" loading="eager"
             />
             <div
               className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10"
