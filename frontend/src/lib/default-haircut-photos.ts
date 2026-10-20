@@ -10,7 +10,7 @@ export type DefaultHaircutPhoto = {
 };
 
 const DEFAULT_SUPABASE_URL = 'https://alseiinjzwjdiwtvkdzy.supabase.co';
-const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\\/+$/, '');
+const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\/+$/, '');
 const photo = (asset: string) => SUPABASE_URL + '/functions/v1/barber-assets?asset=' + encodeURIComponent(asset);
 
 const photos: Record<string, DefaultHaircutPhoto> = {
