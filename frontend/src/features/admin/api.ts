@@ -161,7 +161,7 @@ export function useSetAdminShopStatus() {
 export function useAssignAdminShopPlan() {
   const qc = useQueryClient();
   return useMutation({ mutationFn: ({shopId,planId}:{shopId:string;planId:string}) => assignAdminShopPlan(shopId,planId),
-    onSuccess: (_, vars) => { void qc.invalidateQueries({queryKey:['admin','shops']}); void qc.invalidateQueries({queryKey:['admin','shop',vars.shopId]}); void qc.invalidateQueries({queryKey:['admin','overview']}); }
+    onSuccess: (_, vars) => { void qc.invalidateQueries({queryKey:['admin','shops']}); void qc.invalidateQueries({queryKey:['admin','shop',vars.shopId]}); void qc.invalidateQueries({queryKey:['admin','overview']}); void qc.invalidateQueries({queryKey:['admin','metrics']}); }
   });
 }
 export function useUpdateAdminPlan() {
