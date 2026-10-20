@@ -5,7 +5,11 @@
 [![Contrato de deployment](https://github.com/edmundokutuz333/BarberOS/actions/workflows/phase26-deployment-contract.yml/badge.svg)](https://github.com/edmundokutuz333/BarberOS/actions/workflows/phase26-deployment-contract.yml)
 [![Performance](https://github.com/edmundokutuz333/BarberOS/actions/workflows/phase25-performance.yml/badge.svg)](https://github.com/edmundokutuz333/BarberOS/actions/workflows/phase25-performance.yml)
 
-**BarberOS** é uma plataforma SaaS multi-tenant para a operação de barbearias. Combina uma experiência pública de descoberta e marcação sem conta com um espaço de gestão para proprietários, gestores e barbeiros, além de uma área administrativa para a operação da própria plataforma.
+**BarberOS** é
+
+![Pré-visualização visual da interface do BarberOS no tema noir e latão](docs/assets/readme/barberos-dashboard.svg)
+
+ uma plataforma SaaS multi-tenant para a operação de barbearias. Combina uma experiência pública de descoberta e marcação sem conta com um espaço de gestão para proprietários, gestores e barbeiros, além de uma área administrativa para a operação da própria plataforma.
 
 O produto foi concebido para o contexto moçambicano: interface em português, apresentação de preços em meticais, normalização de números móveis de Moçambique e regras de agenda que respeitam o fuso horário de cada barbearia. A arquitectura mantém o domínio crítico no PostgreSQL, em vez de duplicar as regras de negócio no browser.
 
@@ -45,6 +49,10 @@ O produto foi concebido para o contexto moçambicano: interface em português, a
 ## Visão do produto
 
 O BarberOS cobre três contextos de utilização distintos.
+
+
+![Mapa visual das três áreas de utilização do BarberOS](docs/assets/readme/product-map.svg)
+
 
 | Contexto | Utilizador | Objectivo |
 |---|---|---|
@@ -169,6 +177,11 @@ As rotas wildcard de áreas internas podem apresentar o estado de funcionalidade
 
 ### Visão lógica
 
+![Diagrama visual da arquitectura do BarberOS](docs/assets/readme/barberos-architecture.svg)
+
+<details>
+<summary>Ver o diagrama Mermaid original</summary>
+
 ```mermaid
 flowchart TB
     Browser["Browser / PWA"]
@@ -211,6 +224,8 @@ flowchart TB
     NotifyEdge --> Providers
     PaymentEdge --> Providers
 ```
+
+</details>
 
 O diagrama representa fronteiras lógicas no código. Não serve como prova de que todas as Edge Functions e migrations estão publicadas no ambiente de produção.
 
@@ -862,6 +877,10 @@ O runner de acceptance exige variáveis explícitas e recusa continuar se a base
 O Playwright usa Chromium desktop e um projecto mobile, locale `pt-PT` e timezone `Africa/Maputo`. Os testes de smoke podem ignorar os percursos que dependem de um ambiente real dedicado, conforme a configuração. O full lifecycle autenticado não deve utilizar contas de produção.
 
 ### Estado recente dos gates
+
+
+
+![Gráfico do estado de qualidade e performance documentado a 20 de Outubro de 2026](docs/assets/readme/quality-snapshot.svg)
 
 Snapshot de revisão de **20 de Outubro de 2026**, antes de alterações documentais:
 
