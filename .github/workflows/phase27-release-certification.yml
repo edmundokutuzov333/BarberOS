@@ -1,0 +1,104 @@
+name: BarberOS Phase 27 Isolated Release Certification
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/phase27-release-certification.yml"
+      - ".github/workflows/ci.yml"
+      - "supabase/**"
+      - "scripts/test_database_phase23.py"
+      - "scripts/test_booking_concurrency_phase23.py"
+      - "scripts/test_booking_concurrency_phase24.py"
+      - "docs/TESTING.md"
+      - "docs/PHASE24-CONCURRENCY.md"
+      - "docs/PHASE25-PERFORMANCE.md"
+  push:
+    branches: [main, "phase-*"]
+    paths:
+      - ".github/workflows/phase27-release-certification.yml"
+      - "supabase/**"
+      - "scripts/test_database_phase23.py"
+      - "scripts/test_booking_concurrency_phase23.py"
+      - "scripts/test_booking_concurrency_phase24.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: barberos-phase27-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  isolated-database:
+    name: Disposable Supabase acceptance, concurrency and performance
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      BARBEROS_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+      BARBEROS_TEST_ALLOW_MUTATION: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v2
+        with:
+          version: latest
+          github-token: ${{ github.token }}
+      - name: Start an isolated local Supabase stack
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase start --debug --exclude studio,imgproxy,inbucket,logflare,vector 2>&1 | tee "$RUNNER_TEMP/barberos-supabase-start.log" || {
+            tail -n 120 "$RUNNER_TEMP/barberos-supabase-start.log"
+            exit 1
+          }
+      - name: Apply all migrations and seed the disposable database from zero
+        run: supabase db reset
+      - name: Validate platform security and core contracts
+        run: |
+          supabase test db \
+            supabase/tests/platform_access_security.test.sql \
+            supabase/tests/platform_core_contracts.test.sql
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install database test client
+        run: pip install "psycopg[binary]==3.2.12"
+      - name: Run all database domain acceptance suites
+        run: python scripts/test_database_phase23.py
+      - name: Run real PostgreSQL booking concurrency acceptance (Phase 23)
+        run: python scripts/test_booking_concurrency_phase23.py
+      - name: Run deterministic concurrent booking acceptance (Phase 24)
+        run: python scripts/test_booking_concurrency_phase24.py
+      - name: Run Phase 24 database concurrency contract
+        run: |
+          python - <<'PY'
+          import os
+          import psycopg
+          with psycopg.connect(os.environ["BARBEROS_TEST_DATABASE_URL"], autocommit=True) as conn:
+              conn.execute(open("supabase/tests/phase24_concurrency_contract.sql", encoding="utf-8").read())
+          print("PASS | supabase/tests/phase24_concurrency_contract.sql")
+          PY
+      - name: Run Phase 25 database performance contract and RPC benchmark
+        run: |
+          python - <<'PY'
+          import os
+          import psycopg
+          files = [
+              "supabase/tests/phase25_performance_contract.sql",
+              "supabase/tests/phase25_public_rpc_benchmark.sql",
+          ]
+          with psycopg.connect(os.environ["BARBEROS_TEST_DATABASE_URL"], autocommit=True) as conn:
+              for filename in files:
+                  conn.execute(open(filename, encoding="utf-8").read())
+                  print("PASS | " + filename)
+          PY
+      - name: Preserve Supabase startup logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: barberos-phase27-supabase-start-log
+          path: ${{ runner.temp }}/barberos-supabase-start.log
+          if-no-files-found: ignore
