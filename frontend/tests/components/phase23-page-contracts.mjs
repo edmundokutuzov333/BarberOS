@@ -61,6 +61,78 @@ const tests = [
     assert.match(source, /canManageTeam/);
     assert.match(source, /canConfigurePayments/);
   }],
+
+  ['Platform admin routes are isolated behind the dedicated admin guard', () => {
+    const app = read('src/App.tsx');
+    assert.match(app, /<Route element={<RequireAdmin \/>}>[\\s\\S]*?<Route path="\/admin" element={<AdminShell \/>}>/);
+    for (const route of ['barbearias', 'utilizadores', 'planos', 'pagamentos', 'suporte', 'metricas']) {
+      assert.match(app, new RegExp('path="' + route + '"'));
+    }
+  }],
+  ['Platform barbershop listing uses the privileged RPC and opens management details', () => {
+    const page = read('src/pages/admin/AdminBarbearias.tsx');
+    const api = read('src/features/admin/api.ts');
+    assert.match(page, /useAdminShops\(/);
+    assert.doesNotMatch(page, /supabase\.from\(['"]barbershops['"]\)/);
+    assert.match(page, /admin-shop-row-/);
+    assert.match(page, /\/admin\/barbearias\/['"]?\s*\+\s*shop\.id/);
+    assert.match(page, /<Pager/);
+    assert.match(page, /aria-label="Filtrar barbearias por estado"/);
+    assert.match(api, /'admin_list_barbershops'/);
+  }],
+  ['Platform admin write operations are routed through database RPC contracts', () => {
+    const api = read('src/features/admin/api.ts');
+    for (const rpc of [
+      'admin_get_overview',
+      'admin_list_barbershops',
+      'admin_get_barbershop',
+      'admin_set_barbershop_status',
+      'admin_assign_barbershop_plan',
+      'admin_list_users',
+      'admin_list_plans',
+      'admin_update_plan',
+      'admin_list_payments',
+      'admin_list_support_tickets',
+      'admin_create_support_ticket',
+      'admin_update_support_ticket',
+      'admin_get_activity',
+      'admin_get_metrics',
+    ]) {
+      assert.ok(api.includes(rpc), 'Missing admin RPC contract: ' + rpc);
+    }
+  }],
+  ['Administrative credential recovery is server-side and audited', () => {
+    const page = read('src/pages/admin/AdminUtilizadores.tsx');
+    const api = read('src/features/admin/api.ts');
+    const edge = read('../supabase/functions/admin-credential-manager/index.ts');
+    assert.match(api, /functions\.invoke\('admin-credential-manager'/);
+    assert.match(page, /temporaryPassword/);
+    assert.match(page, /Histórico de acessos/);
+    assert.match(edge, /is_platform_admin/);
+    assert.match(edge, /Cache-Control|cache-control/);
+    assert.match(edge, /platform_access_events/);
+  }],
+  ['Admin payments remain read-only and rely on the protected payment listing RPC', () => {
+    const page = read('src/pages/admin/AdminPagamentos.tsx');
+    const api = read('src/features/admin/api.ts');
+    assert.match(page, /useAdminPayments\(/);
+    assert.match(page, /requires_refund/);
+    assert.doesNotMatch(page, /supabase\.from\(|supabase\.rpc\(/);
+    assert.match(api, /'admin_list_payments'/);
+  }],
+  ['Admin plan and support screens expose mutations with visible failure states', () => {
+    const plans = read('src/pages/admin/AdminPlanos.tsx');
+    const support = read('src/pages/admin/AdminSuporte.tsx');
+    const api = read('src/features/admin/api.ts');
+    assert.match(plans, /useUpdateAdminPlan\(/);
+    assert.match(plans, /mutation\.error/);
+    assert.match(support, /useCreateAdminSupport\(/);
+    assert.match(support, /useUpdateAdminSupport\(/);
+    assert.match(support, /create\.error/);
+    assert.match(support, /update\.error/);
+    assert.match(api, /'admin_update_plan'/);
+    assert.match(api, /'admin_update_support_ticket'/);
+  }],
 ];
 
 let failed = 0;
