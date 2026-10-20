@@ -30,6 +30,92 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  local-full-lifecycle:
+    name: Local auth, shop publishing and booking lifecycle
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      BARBEROS_E2E_FULL: "1"
+      BARBEROS_E2E_EPHEMERAL_LOCAL: "1"
+      BARBEROS_E2E_EMAIL: qa-owner@barberos.test
+      BARBEROS_E2E_PASSWORD: "Local-QA-Only-Password-2026!"
+      BARBEROS_E2E_SHOP_SLUG: oryon
+      RATE_LIMIT_SALT: barberos-phase27-local-test-salt
+      ALLOWED_ORIGINS: http://127.0.0.1:4173
+      TURNSTILE_BYPASS: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v2
+        with:
+          version: latest
+          github-token: ${{ github.token }}
+      - name: Start local Supabase and apply complete migration chain
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase start --debug --exclude studio,imgproxy,inbucket,logflare,vector 2>&1 | tee "$RUNNER_TEMP/barberos-e2e-supabase-start.log" || {
+            tail -n 120 "$RUNNER_TEMP/barberos-e2e-supabase-start.log"
+            exit 1
+          }
+          supabase db reset
+          supabase status -o env > "$RUNNER_TEMP/barberos-local-supabase.env"
+      - name: Start local Edge Functions with test-only anti-bot bypass
+        shell: bash
+        run: |
+          cat > "$RUNNER_TEMP/barberos-functions.env" <<'EOF'
+          RATE_LIMIT_SALT=barberos-phase27-local-test-salt
+          ALLOWED_ORIGINS=http://127.0.0.1:4173
+          TURNSTILE_BYPASS=true
+          EOF
+          supabase functions serve --env-file "$RUNNER_TEMP/barberos-functions.env" --no-verify-jwt > "$RUNNER_TEMP/barberos-edge-functions.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/barberos-edge-functions.pid"
+          for attempt in $(seq 1 60); do
+            if curl --silent --show-error --fail http://127.0.0.1:54321/functions/v1/health > /dev/null; then
+              echo "Local Edge Functions are accepting requests."
+              exit 0
+            fi
+            sleep 2
+          done
+          tail -n 160 "$RUNNER_TEMP/barberos-edge-functions.log"
+          exit 1
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - name: Install dependencies
+        working-directory: frontend
+        run: corepack enable && corepack yarn install --frozen-lockfile
+      - name: Build application against local Supabase only
+        working-directory: frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          source "$RUNNER_TEMP/barberos-local-supabase.env"
+          test -n "$API_URL"
+          test -n "$ANON_KEY"
+          VITE_SUPABASE_URL="$API_URL" VITE_SUPABASE_PUBLISHABLE_KEY="$ANON_KEY" corepack yarn build
+      - name: Install Playwright Chromium
+        working-directory: frontend
+        run: corepack yarn playwright install --with-deps chromium
+      - name: Run full registration, publication, booking, reschedule, agenda, CRM and cancellation flow
+        working-directory: frontend
+        env:
+          VITE_SUPABASE_URL: http://127.0.0.1:54321
+        run: corepack yarn playwright test tests/e2e/phase23-full-lifecycle.spec.mjs --config=playwright.config.mjs --project=chromium
+      - name: Preserve local Supabase and Edge Function logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: barberos-phase27-local-e2e-logs
+          path: |
+            ${{ runner.temp }}/barberos-e2e-supabase-start.log
+            ${{ runner.temp }}/barberos-edge-functions.log
+          if-no-files-found: ignore
+
   isolated-database:
     name: Disposable Supabase acceptance, concurrency and performance
     runs-on: ubuntu-latest
