@@ -64,7 +64,7 @@ const tests = [
 
   ['Platform admin routes are isolated behind the dedicated admin guard', () => {
     const app = read('src/App.tsx');
-    assert.match(app, /<Route element={<RequireAdmin \/>}>[\\s\\S]*?<Route path="\/admin" element={<AdminShell \/>}>/);
+    assert.match(app, /<Route element={<RequireAdmin \/>}>[\s\S]*?<Route path="\/admin" element={<AdminShell \/>}>/);
     for (const route of ['barbearias', 'utilizadores', 'planos', 'pagamentos', 'suporte', 'metricas']) {
       assert.match(app, new RegExp('path="' + route + '"'));
     }
@@ -132,6 +132,27 @@ const tests = [
     assert.match(support, /update\.error/);
     assert.match(api, /'admin_update_plan'/);
     assert.match(api, /'admin_update_support_ticket'/);
+  }],
+
+  ['Admin shell identifies the administrator and provides an explicit sign-out action', () => {
+    const shell = read('src/components/layout/AdminShell.tsx');
+    assert.match(shell, /useAuth\(/);
+    assert.match(shell, /admin-sign-out/);
+    assert.match(shell, /signOut\(\)/);
+    assert.match(shell, /Voltar à barbearia/);
+  }],
+  ['Tenant administrators can discover platform administration without exposing it to other roles', () => {
+    const sidebar = read('src/components/layout/Sidebar.tsx');
+    assert.match(sidebar, /profile\?\.is_platform_admin === true/);
+    assert.match(sidebar, /nav-platform-admin/);
+    assert.match(sidebar, /to="\/admin"/);
+  }],
+  ['Shop detail prevents selecting an inactive plan and safely handles failed writes', () => {
+    const detail = read('src/pages/admin/AdminBarbeariaDetalhe.tsx');
+    const api = read('src/features/admin/api.ts');
+    assert.match(detail, /plan\.is_active \|\| plan\.id === q\.data\?\.plan\?\.id/);
+    assert.match(detail, /Keep the mutation error in the page/);
+    assert.match(api, /invalidateQueries\(\{queryKey:\['admin','metrics'\]\}\)/);
   }],
 ];
 
