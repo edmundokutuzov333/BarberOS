@@ -83,12 +83,12 @@ export function SearchToolbar({ children }: { children: ReactNode }) {
   return <Panel className="p-3 mb-4"><div className="flex flex-col lg:flex-row gap-2 items-stretch lg:items-center">{children}</div></Panel>;
 }
 
-export function FeatureToggle({ label, checked, onChange, testId }: { label:string; checked:boolean; onChange:(value:boolean)=>void; testId?:string }) {
+export function FeatureToggle({ label, checked, onChange, testId, disabled = false }: { label:string; checked:boolean; onChange:(value:boolean)=>void; testId?:string; disabled?:boolean }) {
   const id = testId ?? 'feature-toggle-' + label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   return (
-    <label htmlFor={id} className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3 cursor-pointer min-h-12">
+    <label htmlFor={id} className={cn('flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3 min-h-12', disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer')}>
       <span className="text-sm text-ink-hi">{label}</span>
-      <input id={id} data-testid={id} type="checkbox" checked={checked} onChange={e=>onChange(e.target.checked)} className="h-5 w-5 accent-[var(--accent)] focus-visible:ring-2 focus-visible:ring-accent-soft" />
+      <input id={id} data-testid={id} type="checkbox" checked={checked} disabled={disabled} onChange={e=>onChange(e.target.checked)} className="h-5 w-5 accent-[var(--accent)] focus-visible:ring-2 focus-visible:ring-accent-soft disabled:cursor-not-allowed" />
     </label>
   );
 }
