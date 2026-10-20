@@ -119,11 +119,13 @@ export default function PublicBarbershop() {
             style={{ position: 'relative', minHeight: 'clamp(22rem, 62.5vw, 30rem)' }}
           >
               <Skeleton
+                key="shop-hero-loading-skeleton"
                 className="absolute inset-0 h-full w-full rounded-none"
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', padding: 0 }}
                 lines={6}
               />
               <div
+                key="shop-hero-loading-copy"
                 className="absolute inset-x-0 bottom-0 z-10 p-6 sm:p-9"
                 style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 'clamp(1.5rem, 4vw, 2.25rem)' }}
               >
@@ -188,6 +190,7 @@ export default function PublicBarbershop() {
             style={{ position: 'relative', minHeight: 'clamp(22rem, 62.5vw, 30rem)' }}
           >
             <PhotoWithFallback
+              key="shop-hero-cover"
               src={shop.cover_url}
               fallbackSources={BARBERSHOP_FALLBACK_PHOTOS}
               alt="Fotografia de referência do espaço de barbearia"
@@ -196,11 +199,13 @@ export default function PublicBarbershop() {
               fetchPriority="high" decoding="async" loading="eager"
             />
             <div
+              key="shop-hero-gradient"
               className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10"
               style={{ position: 'absolute', inset: 0 }}
               aria-hidden
             />
             <div
+              key="shop-hero-copy"
               className="absolute inset-x-0 bottom-0 p-6 sm:p-9"
               style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 'clamp(1.5rem, 4vw, 2.25rem)' }}
             >
