@@ -64,13 +64,8 @@ jobs:
           }
       - name: Apply the complete migration chain from empty state
         run: supabase db reset
-      - name: Run isolated schema and security contracts
+      - name: Run pgTAP security and core platform contracts
         run: |
           supabase test db \
-            supabase/tests/security_phase1.sql \
-            supabase/tests/domain_integrity_phase3.sql \
-            supabase/tests/phase23_contract.sql \
-            supabase/tests/phase24_concurrency_contract.sql \
-            supabase/tests/phase25_performance_contract.sql \
-            supabase/tests/phase26_booking_security.sql \
-            supabase/tests/platform_access_security.test.sql
+            supabase/tests/platform_access_security.test.sql \
+            supabase/tests/platform_core_contracts.test.sql

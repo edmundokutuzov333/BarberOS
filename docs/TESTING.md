@@ -28,16 +28,11 @@ Não existem testes mutáveis contra produção.
 
 ## CI
 
-`.github/workflows/ci.yml` aplica a cadeia de migrations numa base local vazia e executa apenas os contratos de schema, permissões, booking, performance e gestão segura de acessos que não exigem fixtures de negócio. A suite global `supabase test db` não deve ser usada indistintamente contra uma base vazia, porque os testes históricos de acceptance exigem barbearias, contas, pagamentos e marcações de fixture.
+`.github/workflows/ci.yml` applies the full migration chain to an isolated local database and runs the pgTAP-compatible checks in `platform_access_security.test.sql` and `platform_core_contracts.test.sql`. These cover account recovery policy, audit-table access, booking concurrency, browser-role privileges, idempotency and public query indexes.
 
-`.github/workflows/phase23-tests.yml` executa accessibility, typecheck, production build, unit, component e browser E2E quando mudam as superfícies relevantes do frontend ou do backend. As acceptance suites completas das fases anteriores correm contra uma base de testes dedicada através de `BARBEROS_TEST_DATABASE_URL`.
+The legacy SQL acceptance files that depend on real shop, appointment, customer or payment fixtures remain in the dedicated-database workflow. They must not be treated as passed when `BARBEROS_TEST_DATABASE_URL` is absent; no production mutations are used to compensate for missing staging credentials.
 
-A ausência desse secret não é transformada numa falsa aprovação de database. Os testes mutáveis não correm contra produção.
-
-## Release Gate
-
-A FASE 23 só fica fechada quando a pirâmide de testes está instalada e as suites que tenham ambiente dedicado executam contra esse ambiente.
-
+`.github/workflows/phase23-tests.yml` triggers when the relevant frontend or backend surfaces change and runs accessibility, typecheck, production build, unit, component and browser E2E. Full lifecycle E2E requires a dedicated resettable test environment and dedicated credentials.
 ## Booking concurrency
 
 `scripts/test_booking_concurrency_phase23.py` opens two PostgreSQL transactions against the same slot and asserts one successful booking plus one `SLOT_TAKEN` or `SLOT_UNAVAILABLE`. Cleanup removes only the dedicated fixture appointments.
