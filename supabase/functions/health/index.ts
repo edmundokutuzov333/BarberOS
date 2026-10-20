@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
   });
 
   const startedAt = performance.now();
-  const version = Deno.env.get("BARBEROS_VERSION")?.trim() || "unknown";
+  const version = Deno.env.get("BARBEROS_VERSION")?.trim() || "20261020-access-management-v1";
   try {
     const { error } = await adminClient().from("barbershops").select("id").limit(1);
     if (error) throw error;
