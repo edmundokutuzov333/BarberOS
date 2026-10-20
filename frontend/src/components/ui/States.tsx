@@ -1,7 +1,7 @@
-import { useId, type ReactNode } from 'react';
+import { useId, type CSSProperties, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-export function Skeleton({ className, lines = 3 }: { className?: string; lines?: number }) {
+export function Skeleton({ className, lines = 3, style }: { className?: string; lines?: number; style?: CSSProperties }) {
   return (
     <div
       data-testid="skeleton"
@@ -9,6 +9,7 @@ export function Skeleton({ className, lines = 3 }: { className?: string; lines?:
       aria-label="A carregar conteúdo"
       role="status"
       className={cn('glass overflow-hidden p-6', className)}
+      style={style}
     >
       <div className="aurora-sweep animate-aurora" aria-hidden="true" />
       <div className="space-y-3 opacity-40" aria-hidden="true">

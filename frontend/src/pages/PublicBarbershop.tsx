@@ -114,9 +114,19 @@ export default function PublicBarbershop() {
         </header>
         <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-20">
           <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
-            <div className="relative min-h-[22rem] sm:min-h-[30rem]" style={{ minHeight: 'clamp(22rem, 62.5vw, 30rem)' }}>
-              <Skeleton className="absolute inset-0 h-full w-full rounded-none" lines={6} />
-              <div className="absolute inset-x-0 bottom-0 z-10 p-6 sm:p-9">
+            <div
+            className="relative min-h-[22rem] sm:min-h-[30rem]"
+            style={{ position: 'relative', minHeight: 'clamp(22rem, 62.5vw, 30rem)' }}
+          >
+              <Skeleton
+                className="absolute inset-0 h-full w-full rounded-none"
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', padding: 0 }}
+                lines={6}
+              />
+              <div
+                className="absolute inset-x-0 bottom-0 z-10 p-6 sm:p-9"
+                style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 'clamp(1.5rem, 4vw, 2.25rem)' }}
+              >
                 <p className="t-label text-accent-soft">BARBEROS</p>
                 <h1 className="text-3xl sm:text-5xl font-medium tracking-[-0.02em] text-white mt-2">{loadingShopName}</h1>
                 <p className="t-body text-white/65 mt-2">A preparar serviços, equipa e horários.</p>
