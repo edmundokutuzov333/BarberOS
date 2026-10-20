@@ -171,7 +171,7 @@ export default function PublicBarbershop() {
       <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-20">
         <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
           <div className="relative min-h-[22rem] sm:min-h-[30rem]">
-            <PhotoWithFallback src={shop.cover_url} fallbackSources={BARBERSHOP_FALLBACK_PHOTOS} alt="Fotografia de referência do espaço de barbearia" className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" loading="eager" />
+            <PhotoWithFallback src={shop.cover_url} fallbackSources={BARBERSHOP_FALLBACK_PHOTOS} alt="Fotografia de referência do espaço de barbearia" className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" decoding="async" loading="eager" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10" aria-hidden />
             <div className="absolute inset-x-0 bottom-0 p-6 sm:p-9">
               <div className="flex flex-col sm:flex-row sm:items-end gap-5">
