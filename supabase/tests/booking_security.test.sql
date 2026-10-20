@@ -1,5 +1,5 @@
 begin;
-select plan(10);
+select plan(12);
 
 select ok(
   to_regprocedure('public.book_appointment_idempotent(uuid,text,uuid,uuid,uuid,timestamptz,text,text,text)') is not null,
@@ -49,6 +49,26 @@ select ok(
 select ok(
   not has_function_privilege('anon', to_regprocedure('public.expire_waitlist_offer(uuid)'), 'EXECUTE'),
   'anon cannot expire waitlist offers through a direct RPC'
+);
+
+
+select ok(
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'appointments'
+      and column_name = 'manage_token_expires_at'
+  ),
+  'appointment management token expiry column exists'
+);
+
+select ok(
+  exists (
+    select 1 from pg_trigger
+    where tgname = 'appointments_manage_token_expiry'
+      and not tgisinternal
+  ),
+  'new appointments automatically receive a management token expiry'
 );
 
 select * from finish();
