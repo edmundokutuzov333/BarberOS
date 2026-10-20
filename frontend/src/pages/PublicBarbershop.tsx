@@ -50,7 +50,7 @@ function BarberCard({ barber }: { barber: PublicBarber }) {
   return (
     <article className="rounded-3xl border border-white/10 bg-white/5 p-5 h-full">
       <div className="flex items-center gap-4">
-        <PhotoWithFallback src={barber.photo_url} fallbackSources={BARBER_FALLBACK_PHOTOS} alt="Fotografia de referência de barbeiro" className="h-16 w-16 rounded-2xl object-cover" width={64} height={64} />
+        <PhotoWithFallback src={barber.photo_url} fallbackSources={BARBER_FALLBACK_PHOTOS} alt="Fotografia de referência de barbeiro" className="h-16 w-16 rounded-2xl object-cover" loading="lazy" decoding="async" width={64} height={64} />
         <div className="min-w-0">
           <h3 className="t-card text-ink-hi truncate">{barber.display_name}</h3>
           <p className="t-label text-ink-mid mt-1">{barber.years_experience} {barber.years_experience === 1 ? 'ano' : 'anos'} de experiência</p>
