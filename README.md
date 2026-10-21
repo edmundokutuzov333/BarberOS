@@ -100,7 +100,7 @@ A cadeia de migrations inclui ainda fundações para convites de membros, portf�
 
 ### Integrações condicionadas pelo ambiente
 
-O código contém integrações para envio de email, WhatsApp, pagamentos M-Pesa/e-Mola, Cloudflare Turnstile, reconciliação de pagamentos, assets fotográficos e tarefas agendadas. A disponibilidade real depende de secrets, configuração do provider, migrations aplicadas, Edge Functions publicadas e testes de aceitação no ambiente certo. O repositório, isoladamente, não garante que cada integração esteja activa em produção.
+O código contém integrações para envio de email, WhatsApp, pagamentos M-Pesa/e-Mola, Cloudflare Turnstile, reconciliação de pagamentos, assets fotográficos e tarefas agendadas. A disponibilidade real depende de secrets, configuração do provider, migrations aplicadas, Edge Functions publicadas e testes de aceitação no ambiente certo. A integração Gmail está versionada no frontend, Edge Function e migration, mas só funciona após configurar as credenciais OAuth do Google e os segredos de runtime descritos em `docs/GMAIL_INTEGRATION.md`. O repositório, isoladamente, não garante que cada integração esteja activa em produção.
 
 ---
 
@@ -142,6 +142,7 @@ Todas as rotas abaixo estão sob `/app` e exigem autenticação.
 | `/app/clientes/:customerId` | Detalhe de cliente |
 | `/app/lista-espera` | Lista de espera |
 | `/app/notificacoes` | Estado e operação da fila de notificações |
+| `/app/comunicacoes` | Caixa de entrada Gmail, leitura de conversas e respostas (requer OAuth configurado) |
 | `/app/pagamentos` | Pagamentos e métricas |
 | `/app/avaliacoes` | Avaliações e publicação |
 | `/app/relatorios` | Relatórios de operação |
@@ -573,6 +574,7 @@ As Edge Functions encontram-se em `supabase/functions`. Os nomes e as implementa
 | `resend-webhook` | Tratamento de eventos de entrega do provider de email |
 | `barber-assets` | Servir referências fotográficas allowlisted sem aceitar URLs arbitrários como proxy aberto |
 | `health` | Health check técnico com verificação de acesso à base de dados |
+| `gmail-integration` | OAuth Google, caixa de entrada Gmail e envio seguro por tenant |
 
 ### Código partilhado
 
