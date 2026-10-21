@@ -25,16 +25,19 @@ if not database_url:
 if os.getenv("BARBEROS_TEST_ALLOW_MUTATION") != "1":
     raise SystemExit("REFUSED: BARBEROS_TEST_ALLOW_MUTATION=1 é obrigatório para esta suite.")
 
+READ_ONLY_FILES = {"domain_integrity_phase3.sql"}
+BOOTSTRAP_FILES = {"migration_phase2.sql", "security_phase1.sql", "phase23_contract.sql"}
+
 for filename in FILES:
     path = TESTS / filename
-    if not path.exists(): raise SystemExit(f"MISSING_TEST_FILE: {filename}")
+    if not path.exists():
+        raise SystemExit(f"MISSING_TEST_FILE: {filename}")
     sql = path.read_text(encoding="utf-8")
-    if re.search(r"\bcommit\b", sql, re.I): raise SystemExit(f"SAFETY_ABORT_COMMIT_IN_TEST: {filename}")
-    # Most acceptance files mutate fixtures only inside BEGIN/ROLLBACK. This one file
-# is a deliberately read-only SELECT/EXISTS contract and does not need a transaction.
-READ_ONLY_FILES = {"domain_integrity_phase3.sql"}
-
-    if filename not in {"migration_phase2.sql", "security_phase1.sql", "phase23_contract.sql"} | READ_ONLY_FILES:
+    if re.search(r"\bcommit\b", sql, re.I):
+        raise SystemExit(f"SAFETY_ABORT_COMMIT_IN_TEST: {filename}")
+    # The integrity contract contains only read-only SELECT/EXISTS checks.
+    # All other mutating acceptance files must be rollback guarded.
+    if filename not in BOOTSTRAP_FILES | READ_ONLY_FILES:
         if not re.search(r"\bbegin\b", sql, re.I) or not re.search(r"\brollback\b", sql, re.I):
             raise SystemExit(f"SAFETY_ABORT_TRANSACTION_GUARD: {filename}")
 
