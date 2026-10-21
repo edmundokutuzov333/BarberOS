@@ -34,6 +34,10 @@ export function readLocalBookings(): LocalBooking[] {
 }
 
 export function rememberLocalBooking(booking: LocalBooking): void {
-  const next = [booking, ...readLocalBookings().filter((item) => item.token !== booking.token)].slice(0, 10);
-  localStorage.setItem(BOOKINGS_KEY, JSON.stringify(next));
+  try {
+    const next = [booking, ...readLocalBookings().filter((item) => item.token !== booking.token)].slice(0, 10);
+    localStorage.setItem(BOOKINGS_KEY, JSON.stringify(next));
+  } catch {
+    // This history is only a convenience. Storage restrictions must never turn a saved booking into a reported failure.
+  }
 }
