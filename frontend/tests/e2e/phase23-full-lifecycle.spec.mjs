@@ -151,7 +151,7 @@ test.describe('BarberOS Phase 23 full lifecycle', () => {
     await page.getByLabel('Nome').fill('Cliente QA Cancelamento ' + unique);
     await page.getByLabel('Telefone').fill('86' + customerPhone.slice(2));
     await page.getByRole('button', { name: /Confirmar marcação/i }).click();
-    await expect(page).toHaveURL(/\\/marcacao\\/[0-9a-f-]+$/);
+    await expect(page).toHaveURL(/\/marcacao\/[0-9a-f-]+$/);
     const cancelUrl = page.url();
 
     await page.goto(cancelUrl);
