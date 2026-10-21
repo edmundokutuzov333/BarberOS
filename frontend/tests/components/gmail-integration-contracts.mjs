@@ -29,7 +29,7 @@ const tests = [
     assert.match(edge, /crypto\.getRandomValues\(new Uint8Array\(32\)\)/);
     assert.match(edge, /state_hash:await hash\(state\)/);
     assert.match(edge, /Date\.now\(\)\+600_000/);
-    assert.match(edge, /from\("gmail_oauth_states"\)\.delete\(\)\.eq\("state_hash",stateHash\)/);
+    assert.match(edge, /from\("gmail_oauth_states"\)\.delete\(\)[\s\S]*?eq\("state_hash",stateHash\)[\s\S]*?select\("state_hash,barbershop_id,user_id,expires_at"\)/);
   }],
   ["OAuth access and refresh tokens use authenticated encryption", () => {
     assert.match(edge, /name: "AES-GCM"/);
