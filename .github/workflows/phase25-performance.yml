@@ -76,22 +76,34 @@ jobs:
         run: corepack yarn playwright test tests/e2e/phase25-performance.spec.mjs --config=playwright.config.mjs
 
   database-contract:
-    name: Phase 25 database performance contract
+    name: Phase 25 database performance contract (disposable Supabase)
     runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      BARBEROS_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v2
+        with:
+          version: latest
+          github-token: ${{ github.token }}
+      - name: Start isolated Supabase and apply all migrations
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase start --debug --exclude studio,imgproxy,inbucket,logflare,vector 2>&1 | tee "$RUNNER_TEMP/barberos-phase25-supabase.log" || {
+            tail -n 120 "$RUNNER_TEMP/barberos-phase25-supabase.log"
+            exit 1
+          }
+          supabase db reset
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install "psycopg[binary]==3.2.12"
-      - name: Run read-only performance contract
-        env:
-          BARBEROS_TEST_DATABASE_URL: ${{ secrets.BARBEROS_TEST_DATABASE_URL }}
+      - name: Run read-only performance contract and public RPC benchmark
         run: |
-          if [ -z "$BARBEROS_TEST_DATABASE_URL" ]; then
-            echo "::error::BARBEROS_TEST_DATABASE_URL is required; the database performance contract cannot be skipped."
-            exit 1
-          fi
           python - <<'PY'
           import os
           import psycopg
@@ -100,9 +112,14 @@ jobs:
               "supabase/tests/phase25_performance_contract.sql",
               "supabase/tests/phase25_public_rpc_benchmark.sql",
           ]:
-              sql = open(filename, encoding="utf-8").read()
               with psycopg.connect(db, autocommit=True) as conn:
-                  with conn.cursor() as cur:
-                      cur.execute(sql)
+                  conn.execute(open(filename, encoding="utf-8").read())
               print("PASS | " + filename)
           PY
+      - name: Preserve database startup logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: barberos-phase25-database-logs
+          path: ${{ runner.temp }}/barberos-phase25-supabase.log
+          if-no-files-found: ignore

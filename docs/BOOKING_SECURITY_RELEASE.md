@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This runbook governs the rollout of the booking hardening, token gateway, and email-first notification changes. Do not certify the release from a successful frontend build alone.
+This runbook governs the rollout of booking hardening, token management, public waitlist hardening, and email-first notifications. Do not certify the release from a successful frontend build alone.
 
 ## Preconditions
 
@@ -19,7 +19,7 @@ This runbook governs the rollout of the booking hardening, token gateway, and em
 
 1. Inspect `supabase migration list` and `supabase db push --dry-run`. Compare the exact pending versions to the approved release manifest.
 2. Apply migrations only after staging acceptance and migration-history reconciliation.
-3. Deploy `booking-create`, `token-gateway`, `notify-dispatch`, `health`, and `resend-webhook` from `main`.
+3. Deploy `booking-create`, `token-gateway`, `waitlist-join`, `notify-dispatch`, `health`, and `resend-webhook` from `main`. The `waitlist-join` Edge Function must be deployed before the migration that revokes direct browser execution of `public.join_waitlist(...)`.
 4. Verify `/functions/v1/health` returns `ok=true`, numeric `db_ms`, and a version field.
 5. Run the dedicated E2E suite: create a real staging booking, retry the same idempotency key, attempt an occupied slot, verify an expired token is rejected, verify public RPC grants are revoked, and trace the confirmation email through Resend's signed webhook into the notification row.
 6. Only mark the production release successful when the above checks pass. A skipped test or missing secret is a failure to certify, not a pass.
@@ -28,7 +28,7 @@ This runbook governs the rollout of the booking hardening, token gateway, and em
 
 - Never reset or recreate the production database.
 - Do not restore anonymous execution on `book_appointment` as a rollback shortcut. If the new booking Edge Function is unhealthy, restore the last known-good Edge Function version and investigate before changing grants.
-- Do not deploy the frontend until `/functions/v1/health` and `token-gateway` are live. Token management must fail closed; direct RPC fallbacks are intentionally removed from the current frontend.
+- Do not deploy the frontend until `/functions/v1/health`, `token-gateway`, `booking-create`, and `waitlist-join` are live. Token management must fail closed; direct token and waitlist mutation RPCs must not be restored as a rollback shortcut.
 - Email-first must not be activated until Resend is verified; do not silently re-enable WhatsApp without an approved provider and policy.
 
 ## Current known blockers
@@ -43,5 +43,17 @@ This runbook governs the rollout of the booking hardening, token gateway, and em
 - A Supabase staging branch requires explicit cost approval before it can be created. The quoted branch compute cost was US$0.01344/hour.
 
 - The Vercel deployment workflow now requires a healthy, versioned Supabase health endpoint and a responding `token-gateway`; it blocks frontend production deployment while the backend release is incomplete.
+
+
+## Evidence recorded on 2026-10-21
+
+- Production's direct token RPC grants were restricted in a targeted, additive migration recorded as `20261021063049`. Verification confirmed that `anon` and `authenticated` cannot execute the appointment, review, waitlist-offer or payment token RPCs; `service_role` retains execution for `token-gateway`.
+- The Mufundisse Barber House phone and WhatsApp fields were normalized from a duplicated `+258` prefix to `+258840000001`. A guarded repository migration records the same data repair for future resets/releases.
+- The production `booking-create` Edge Function was observed at v1. Its source lacks the current Turnstile, rate-limit and idempotent-booking path. Production also lacked `public.booking_idempotency`, `public.rate_limit_consume` and `public.book_appointment_idempotent` at inspection time. The new migrations and idempotent RPC are present on the certification branch, but are not certified or deployed yet.
+- Vercel does not currently list `VITE_TURNSTILE_SITE_KEY` or `VITE_BOOKING_TURNSTILE_REQUIRED`. Do not deploy the hardened booking Edge Function until the real production site/secret keys and runtime secrets are configured and verified. A test key or production bypass is not an acceptable substitute.
+- A rate-limited `waitlist-join` Edge Function and frontend integration are prepared on the certification branch. Do not apply the migration that revokes direct `join_waitlist` RPC execution until that Edge Function is deployed and the frontend cutover is ready, otherwise the existing waitlist form would fail during the transition.
+- Fomento Barbershop remains an incomplete trial tenant with no active services or barbers. The public directory now filters out shops without both an active service and active team member. Do not populate fictitious staff or prices to make the page appear bookable.
+
+The successful frontend build alone is not evidence that this release can safely serve production bookings. Keep the production release blocked until the isolated migration, database, concurrency, E2E and performance gates pass, the deployment secrets are verified, and the cutover order is rehearsed.
 
 Until these blockers are cleared, production must remain uncertified and the gated Supabase production workflow must not be run.

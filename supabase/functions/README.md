@@ -9,6 +9,7 @@ A documentação completa está no [README principal](../../README.md), na secç
 | Função | Responsabilidade principal |
 |---|---|
 | `booking-create` | Booking público, protecção anti-abuso e gateway para criação idempotente |
+| `waitlist-join` | Entrada pública na lista de espera com validação e limites por IP, telefone e barbearia |
 | `token-gateway` | Consulta/cancelamento/remarcação por token, reviews e lista de espera |
 | `admin-credential-manager` | Reset controlado e troca obrigatória de palavra-passe |
 | `payments-configure` | Configuração de providers |
@@ -28,7 +29,7 @@ O código partilhado encontra-se em `_shared/`, incluindo guards de runtime e ad
 - Validar método, payload, origem e autorização do pedido.
 - Usar service role apenas dentro do runtime server-side, nunca como credencial pública.
 - Respeitar grants e funções PostgreSQL existentes.
-- Aplicar rate limit, idempotência, anti-bot e CORS onde o contrato do endpoint o exige.
+- Aplicar rate limit, idempotência, anti-bot e CORS onde o contrato do endpoint o exige. A entrada pública na lista de espera passa por `waitlist-join`; `public.join_waitlist(...)` é apenas o RPC transaccional interno.
 - Nunca incluir tokens, PII ou secrets em logs ou respostas públicas.
 - Devolver códigos de erro previsíveis e respostas sem cache para fluxos sensíveis.
 - Manter o comportamento mutável no domínio PostgreSQL sempre que a atomicidade dependa de transacção.

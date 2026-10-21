@@ -1,4 +1,4 @@
-export const SLOT_CONFLICT_CODES = new Set(["SLOT_TAKEN", "SLOT_UNAVAILABLE", "IDEMPOTENCY_IN_PROGRESS"]);
+export const SLOT_CONFLICT_CODES = new Set(["SLOT_TAKEN", "SLOT_UNAVAILABLE", "IDEMPOTENCY_IN_PROGRESS", "IDEMPOTENCY_KEY_REUSED"]);
 
 export const CLIENT_ERROR_CODES = new Set([
   "INVALID_DATE",
@@ -45,6 +45,8 @@ export function publicBookingMessage(code: string): string {
       return "Este horário acabou de ser ocupado. Escolha outro horário.";
     case "IDEMPOTENCY_IN_PROGRESS":
       return "Esta tentativa ainda está a ser processada. Aguarda um momento antes de tentares de novo.";
+    case "IDEMPOTENCY_KEY_REUSED":
+      return "Esta tentativa já foi usada com dados diferentes. Actualiza a página e tenta novamente.";
     case "IDEMPOTENCY_STORE_UNAVAILABLE":
     case "RATE_LIMIT_UNAVAILABLE":
       return "Não foi possível confirmar a marcação agora. Tenta novamente dentro de instantes.";

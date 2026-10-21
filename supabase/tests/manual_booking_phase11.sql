@@ -1,6 +1,8 @@
 -- BarberOS Phase 11: manual booking acceptance suite.
 -- All booking fixtures are created inside an explicit transaction and rolled back.
 
+begin;
+
 do $$
 declare
   v_owner uuid;
@@ -143,3 +145,5 @@ select
     where pubname='supabase_realtime' and schemaname='public' and tablename='appointments'
   ) as realtime_appointments_intact,
   (select count(*) from public.appointments) as appointments_current;
+
+rollback;
