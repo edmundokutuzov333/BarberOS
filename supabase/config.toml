@@ -18,6 +18,9 @@ verify_jwt = false
 [functions.health]
 verify_jwt = false
 
+[functions.gmail-integration]
+verify_jwt = false
+
 [functions.notify-dispatch]
 verify_jwt = false
 
