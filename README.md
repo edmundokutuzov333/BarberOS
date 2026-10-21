@@ -562,6 +562,7 @@ As Edge Functions encontram-se em `supabase/functions`. Os nomes e as implementa
 | Função | Responsabilidade |
 |---|---|
 | `booking-create` | Fronteira HTTP para booking público, validação do payload, protecção anti-abuso e chamada do RPC idempotente |
+| `waitlist-join` | Fronteira HTTP para entrada pública na lista de espera, com validação e limites por IP, telefone e barbearia |
 | `token-gateway` | Operações públicas de gestão da marcação, avaliações e lista de espera através de acções permitidas |
 | `admin-credential-manager` | Gestão privilegiada de reset e troca obrigatória de palavra-passe, com actor autenticado e auditoria |
 | `payments-configure` | Configuração de provider de pagamento pela área autorizada |
