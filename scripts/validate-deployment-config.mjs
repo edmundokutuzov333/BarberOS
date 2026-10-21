@@ -87,6 +87,7 @@ const expectedFunctions = [
   'payments-reconcile',
   'booking-create',
   'token-gateway',
+  'waitlist-join',
   'resend-webhook',
   'health',
 ];
