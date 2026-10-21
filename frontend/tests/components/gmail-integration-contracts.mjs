@@ -21,6 +21,7 @@ const tests = [
   }],
   ["Browser calls a server-side Edge Function rather than Gmail directly", () => {
     assert.match(api, /functions\.invoke<GmailResponse>\("gmail-integration"/);
+    assert.match(api, /GMAIL_FUNCTION_NOT_DEPLOYED/);
     assert.doesNotMatch(api, /accounts\.google\.com|gmail\.googleapis\.com/);
     assert.match(page, /Gmail ainda não configurado/);
   }],
@@ -55,6 +56,7 @@ const tests = [
     assert.match(edge, /In-Reply-To/);
     assert.match(edge, /References/);
     assert.match(edge, /gmail\.send/);
+    assert.match(edge, /searchParams\.get\("scope"\)/);
   }],
   ["Function is registered without gateway JWT so Google can reach OAuth callback", () => {
     assert.match(config, /\[functions\.gmail-integration\]\s+verify_jwt = false/);
