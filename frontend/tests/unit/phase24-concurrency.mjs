@@ -11,6 +11,7 @@ async function main() {
 
   try {
     const booking = await server.ssrLoadModule('/src/features/booking/api.ts');
+    const shopLink = await server.ssrLoadModule('/src/lib/shop-link.ts');
 
     const tests = [
       ['BookingRequestError preserves HTTP conflict semantics', () => {
@@ -35,6 +36,27 @@ async function main() {
       ['Mozambique phone normalisation stays unchanged at the public boundary', () => {
         assert.equal(booking.normalizeMozPhone('84 000 0000'), '+258840000000');
         assert.equal(booking.normalizeMozPhone('258840000000'), '+258840000000');
+      }],
+      ['blocked local storage cannot turn a server-confirmed booking into a client-side failure', () => {
+        const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+        Object.defineProperty(globalThis, 'localStorage', {
+          configurable: true,
+          value: {
+            getItem: () => '[]',
+            setItem: () => { throw new Error('STORAGE_BLOCKED'); },
+          },
+        });
+        try {
+          assert.doesNotThrow(() => shopLink.rememberLocalBooking({
+            token: 'opaque-management-token',
+            shopSlug: 'oryon',
+            startsAt: '2026-10-22T08:00:00.000Z',
+            serviceName: 'Corte',
+          }));
+        } finally {
+          if (descriptor) Object.defineProperty(globalThis, 'localStorage', descriptor);
+          else Reflect.deleteProperty(globalThis, 'localStorage');
+        }
       }],
     ];
 
