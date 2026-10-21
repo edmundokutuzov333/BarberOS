@@ -61,24 +61,31 @@ export async function getPublicBarbershop(slug: string): Promise<PublicBarbersho
  * with the existing RLS boundary and does not expose private shop metadata.
  */
 export async function getPublicBarbershops(): Promise<PublicDirectoryShop[]> {
-  const [shopsResult, servicesResult, reviewsResult] = await Promise.all([
+  const [shopsResult, servicesResult, barbersResult, reviewsResult] = await Promise.all([
     supabase
       .from('barbershops')
       .select('id, name, slug, description, logo_url, cover_url, address, maps_url, lat, lng, status')
       .in('status', ['active', 'trial'])
       .order('name'),
     supabase.from('services').select('barbershop_id').eq('is_active', true),
+    supabase.from('barbers').select('barbershop_id').eq('is_active', true),
     supabase.from('reviews').select('barbershop_id, rating').eq('is_published', true),
   ]);
 
   if (shopsResult.error) throw shopsResult.error;
   if (servicesResult.error) throw servicesResult.error;
+  if (barbersResult.error) throw barbersResult.error;
   if (reviewsResult.error) throw reviewsResult.error;
 
   const serviceCounts = new Map<string, number>();
   for (const service of servicesResult.data ?? []) {
     serviceCounts.set(service.barbershop_id, (serviceCounts.get(service.barbershop_id) ?? 0) + 1);
   }
+  const barberCounts = new Map<string, number>();
+  for (const barber of barbersResult.data ?? []) {
+    barberCounts.set(barber.barbershop_id, (barberCounts.get(barber.barbershop_id) ?? 0) + 1);
+  }
+
   const reviewStats = new Map<string, { total: number; count: number }>();
   for (const review of reviewsResult.data ?? []) {
     const current = reviewStats.get(review.barbershop_id) ?? { total: 0, count: 0 };
@@ -87,7 +94,11 @@ export async function getPublicBarbershops(): Promise<PublicDirectoryShop[]> {
     reviewStats.set(review.barbershop_id, current);
   }
 
-  return (shopsResult.data ?? []).map((shop) => {
+  // Do not list half-configured trial tenants that have no bookable catalogue or team.
+  // This keeps onboarding drafts manageable privately without presenting dead booking pages.
+  return (shopsResult.data ?? [])
+    .filter((shop) => (serviceCounts.get(shop.id) ?? 0) > 0 && (barberCounts.get(shop.id) ?? 0) > 0)
+    .map((shop) => {
     const reviews = reviewStats.get(shop.id) ?? { total: 0, count: 0 };
     return {
       ...shop,
