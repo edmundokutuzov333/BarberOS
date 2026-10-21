@@ -27,12 +27,25 @@ declare
   v_offered_count bigint;
   v_error text;
 begin
+  if has_function_privilege(
+       'anon',
+       'public.join_waitlist(text,uuid,text,text,uuid,uuid,text,date,date,text)',
+       'EXECUTE'
+     )
+     or has_function_privilege(
+       'authenticated',
+       'public.join_waitlist(text,uuid,text,text,uuid,uuid,text,date,date,text)',
+       'EXECUTE'
+     ) then
+    raise exception 'WAITLIST_JOIN_MUST_USE_EDGE_GATEWAY';
+  end if;
+
   if not has_function_privilege(
-    'anon',
+    'service_role',
     'public.join_waitlist(text,uuid,text,text,uuid,uuid,text,date,date,text)',
     'EXECUTE'
   ) then
-    raise exception 'WAITLIST_JOIN_ANON_EXECUTE_REQUIRED';
+    raise exception 'WAITLIST_JOIN_SERVICE_EXECUTE_REQUIRED';
   end if;
 
   if has_function_privilege('anon','public.get_waitlist_offer(uuid)','EXECUTE')
@@ -187,7 +200,7 @@ begin
   end if;
 
   -- Join using the public contract, no internal table write from the client path.
-  set local role anon;
+  set local role service_role;
   select status
   into v_status
   from public.join_waitlist(
@@ -308,7 +321,7 @@ begin
   end if;
 
   -- The public offer payload must not expose internal appointment/customer identifiers.
-  set local role anon;
+  set local role service_role;
   if not exists (
     select 1
     from public.get_waitlist_offer(v_offer_token1)
@@ -377,7 +390,7 @@ begin
   set offer_expires_at=now()-interval '1 minute'
   where id=v_offer2;
 
-  set local role anon;
+  set local role service_role;
   select *
   into v_expire
   from public.expire_waitlist_offer(v_offer_token2)
