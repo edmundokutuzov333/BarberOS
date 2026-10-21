@@ -13,7 +13,7 @@ export function Modal({ open, onOpenChange, title, children, testId }: { open: b
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm" />
         <Dialog.Content
           data-testid={testId}
-          className="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-lg glass glass-2 p-6 sm:p-7 max-h-[90vh] overflow-y-auto no-scrollbar outline-none"
+          className="fixed inset-x-4 top-4 bottom-4 z-50 m-auto h-fit w-auto max-w-lg glass glass-2 p-6 sm:p-7 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain touch-pan-y no-scrollbar outline-none"
         >
           <div className="flex items-start justify-between gap-4 mb-5">
             <Dialog.Title className="t-title">{title}</Dialog.Title>
