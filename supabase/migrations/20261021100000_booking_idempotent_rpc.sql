@@ -14,6 +14,7 @@ create or replace function public.book_appointment_idempotent(
   p_email text default null
 )
 returns table (
+  appointment_id uuid,
   manage_token uuid,
   deposit_cents integer,
   needs_payment boolean
@@ -68,7 +69,8 @@ begin
     end if;
 
     return query
-      select (v_cached ->> 'manage_token')::uuid,
+      select (v_cached ->> 'appointment_id')::uuid,
+             (v_cached ->> 'manage_token')::uuid,
              coalesce((v_cached ->> 'deposit_cents')::integer, 0),
              coalesce((v_cached ->> 'needs_payment')::boolean, false);
     return;
@@ -92,6 +94,7 @@ begin
   end if;
 
   v_cached := jsonb_build_object(
+    'appointment_id', v_booking.appointment_id,
     'manage_token', v_booking.manage_token,
     'deposit_cents', coalesce(v_booking.deposit_cents, 0),
     'needs_payment', coalesce(v_booking.needs_payment, false),
@@ -103,7 +106,8 @@ begin
    where key = p_idempotency_key;
 
   return query
-    select v_booking.manage_token,
+    select v_booking.appointment_id,
+           v_booking.manage_token,
            coalesce(v_booking.deposit_cents, 0),
            coalesce(v_booking.needs_payment, false);
 end
