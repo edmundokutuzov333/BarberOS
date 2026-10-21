@@ -37,6 +37,7 @@ const Clientes = lazy(() => import('./pages/app/Clientes'));
 const ClienteDetalhe = lazy(() => import('./pages/app/ClienteDetalhe'));
 const ListaEspera = lazy(() => import('./pages/app/ListaEspera'));
 const Notificacoes = lazy(() => import('./pages/app/Notificacoes'));
+const Comunicacoes = lazy(() => import('./pages/app/Comunicacoes'));
 const Pagamentos = lazy(() => import('./pages/app/Pagamentos'));
 const Relatorios = lazy(() => import('./pages/app/Relatorios'));
 const Avaliacoes = lazy(() => import('./pages/app/Avaliacoes'));
@@ -121,6 +122,7 @@ export default function App() {
               <Route path="clientes/:customerId" element={<ClienteDetalhe />} />
               <Route path="lista-espera" element={<ListaEspera />} />
               <Route path="notificacoes" element={<Notificacoes />} />
+              <Route path="comunicacoes" element={<Comunicacoes />} />
               <Route path="pagamentos" element={<Pagamentos />} />
               <Route path="avaliacoes" element={<Avaliacoes />} />
               <Route path="relatorios" element={<Relatorios />} />
