@@ -54,12 +54,23 @@ if (!tokenMigration.includes('p.proname like')
   throw new Error('TOKEN_RPC_LOCKDOWN_CONTRACT_MISSING');
 }
 
-for (const fn of ['booking-create', 'token-gateway', 'health', 'resend-webhook']) {
+for (const fn of ['booking-create', 'token-gateway', 'health', 'resend-webhook', 'gmail-integration']) {
   if (!fs.existsSync(path.join(functionDir, fn, 'index.ts'))) {
     throw new Error('REQUIRED_EDGE_FUNCTION_MISSING:' + fn);
   }
 }
 if (!config.includes('[functions.token-gateway]')) throw new Error('TOKEN_GATEWAY_NOT_REGISTERED');
+if (!config.includes('[functions.gmail-integration]')) throw new Error('GMAIL_FUNCTION_NOT_REGISTERED');
+const gmailMigration = names.find((name) => name.endsWith('_gmail_workspace_integration.sql'));
+if (!gmailMigration) throw new Error('GMAIL_STORAGE_MIGRATION_MISSING');
+const gmailSchema = fs.readFileSync(path.join(migrationDir, gmailMigration), 'utf8');
+for (const required of ['public.gmail_connections', 'public.gmail_oauth_states', 'force row level security', 'revoke all on table public.gmail_connections', 'grant all on public.gmail_connections to service_role']) {
+  if (!gmailSchema.toLowerCase().includes(required.toLowerCase())) throw new Error('GMAIL_STORAGE_CONTRACT_MISSING:' + required);
+}
+const gmailSource = fs.readFileSync(path.join(functionDir, 'gmail-integration', 'index.ts'), 'utf8');
+for (const required of ['GMAIL_TOKEN_ENCRYPTION_KEY', 'gmail_oauth_states', 'gmail_connections', 'gmail.readonly', 'gmail.send', 'shopAccess']) {
+  if (!gmailSource.includes(required)) throw new Error('GMAIL_EDGE_SECURITY_CONTRACT_MISSING:' + required);
+}
 
 const bookingSource = fs.readFileSync(path.join(functionDir, 'booking-create', 'index.ts'), 'utf8');
 if (!bookingSource.includes('book_appointment_idempotent')) throw new Error('BOOKING_EDGE_RPC_CONTRACT_MISSING');
