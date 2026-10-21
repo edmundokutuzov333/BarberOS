@@ -99,6 +99,13 @@ export default function Comunicacoes() {
 
   const visibleThreads = useMemo(() => threads.data?.threads ?? [], [threads.data?.threads]);
   useEffect(() => {
+    setSelectedThreadId(null);
+    setReplyBody("");
+    setSearch("");
+    setSearchDraft("");
+    setComposeOpen(false);
+  }, [shopId]);
+  useEffect(() => {
     if (!selectedThreadId && visibleThreads.length) setSelectedThreadId(visibleThreads[0].id);
     if (selectedThreadId && !visibleThreads.some((item) => item.id === selectedThreadId) && visibleThreads.length) {
       setSelectedThreadId(visibleThreads[0].id);
