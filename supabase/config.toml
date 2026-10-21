@@ -41,3 +41,7 @@ verify_jwt = false
 
 [functions.admin-credential-manager]
 verify_jwt = true
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
