@@ -45,3 +45,6 @@ verify_jwt = true
 [db.seed]
 enabled = true
 sql_paths = ["./seed.sql"]
+
+[functions.waitlist-join]
+verify_jwt = false
