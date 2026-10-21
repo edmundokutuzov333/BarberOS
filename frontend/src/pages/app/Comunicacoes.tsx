@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -166,7 +166,7 @@ export default function Comunicacoes() {
     }
   };
 
-  const sendReply = async (event: React.FormEvent<HTMLFormElement>) => {
+  const sendReply = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!shopId || !selectedThreadId || !replyBody.trim()) return;
     setBusyAction(true);
@@ -184,7 +184,7 @@ export default function Comunicacoes() {
     }
   };
 
-  const sendNewMessage = async (event: React.FormEvent<HTMLFormElement>) => {
+  const sendNewMessage = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!shopId || !to.trim() || !subject.trim() || !newBody.trim()) return;
     setBusyAction(true);
