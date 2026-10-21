@@ -20,8 +20,17 @@ A documentação completa está no [README principal](../../README.md), na secç
 | `resend-webhook` | Webhook do provider de email |
 | `barber-assets` | Serving de fotografias de referência allowlisted |
 | `health` | Verificação técnica de dependência da base de dados |
+| `gmail-integration` | OAuth Google, ligação Gmail por barbearia, caixa de entrada, leitura de conversas e envio de respostas com tokens cifrados |
 
 O código partilhado encontra-se em `_shared/`, incluindo guards de runtime e adapters de pagamentos.
+
+### Gmail
+
+`gmail-integration` aceita acções autenticadas `status`, `connect`, `disconnect`, `list`, `thread` e `send`. O callback OAuth do Google é recebido por GET; os pedidos de gestão usam Supabase Bearer JWT e são validados no servidor como owner/manager da barbearia indicada.
+
+A ligação exige `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REDIRECT_URI`, `GMAIL_APP_URL`, `GMAIL_TOKEN_ENCRYPTION_KEY` (mínimo 32 caracteres) e `ALLOWED_ORIGINS`. Os tokens são cifrados com AES-GCM antes da persistência. A função requer a migration `20261021130000_gmail_workspace_integration.sql`. Nunca configurar estes valores com prefixo `VITE_` e nunca registar tokens ou conteúdo integral de email nos logs.
+
+O Google Cloud deve ter Gmail API activada e o URI de callback autorizado exactamente igual a `https://alseiinjzwjdiwtvkdzy.supabase.co/functions/v1/gmail-integration`. Os escopos `gmail.readonly` e `gmail.send` podem exigir verificação OAuth/revisão do Google antes da disponibilização pública.
 
 ## Contratos obrigatórios
 
