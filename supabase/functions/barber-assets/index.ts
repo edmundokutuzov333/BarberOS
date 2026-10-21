@@ -91,7 +91,8 @@ Deno.serve(async (request: Request) => {
     return new Response("Unknown photographic asset", { status: 404, headers: responseHeaders("text/plain; charset=utf-8") });
   }
 
-  const width = asset.startsWith("shop-") ? 1600 : 1200;
+  // Keep the hero crisp without shipping desktop-sized photos to mobile; catalogue portraits need less detail.
+  const width = asset.startsWith("shop-") ? 1200 : 720;
   const photoIds = [...new Set([PHOTO_IDS[asset], ...SAFE_FALLBACK_IDS])];
 
   for (const photoId of photoIds) {
