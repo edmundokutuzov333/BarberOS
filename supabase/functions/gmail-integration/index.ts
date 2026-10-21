@@ -256,7 +256,9 @@ async function oauthCallback(req: Request, admin: SupabaseClient): Promise<Respo
   try {
     const cfg = settings();
     const token = await googleToken({code:authCode,client_id:cfg.clientId,client_secret:cfg.clientSecret,redirect_uri:cfg.redirect,grant_type:"authorization_code"});
-    if (!SCOPES.every((s) => token.scopes.includes(s))) throw new AppError("GMAIL_PROVIDER_REQUEST_FAILED",403);
+    const grantedScopeText = token.scopes.length ? token.scopes.join(" ") : (url.searchParams.get("scope") ?? "");
+    const grantedScopes = new Set(grantedScopeText.split(/\s+/).filter(Boolean));
+    if (!SCOPES.every((scope) => grantedScopes.has(scope))) throw new AppError("GMAIL_PROVIDER_REQUEST_FAILED",403);
     const resp = await fetch(GMAIL + "/profile", {headers:{authorization:"Bearer "+token.access}});
     const profile: unknown = await resp.json().catch(()=>({}));
     if (!resp.ok || !obj(profile) || typeof profile.emailAddress !== "string" || !EMAIL_RE.test(profile.emailAddress)) throw new AppError("GMAIL_PROVIDER_REQUEST_FAILED",502);
