@@ -22,6 +22,7 @@ import {
 function explainGmailError(error: unknown): string {
   const code = error instanceof Error ? error.message : "";
   const messages: Record<string, string> = {
+    GMAIL_FUNCTION_NOT_DEPLOYED: "A interface Gmail foi publicada, mas a função Supabase ainda aguarda o release de backend.",
     GMAIL_CONFIGURATION_MISSING: "A integração Gmail ainda não está configurada pelo administrador da plataforma.",
     GMAIL_STORAGE_NOT_READY: "A base de dados da integração Gmail ainda não está preparada.",
     GMAIL_NOT_CONNECTED: "Ligue uma conta Gmail para começar.",
