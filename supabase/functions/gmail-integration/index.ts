@@ -130,7 +130,9 @@ async function googleToken(params: Record<string, string>) {
   return {
     access: data.access_token,
     refresh: typeof data.refresh_token === "string" ? data.refresh_token : null,
-    scopes: typeof data.scope === "string" ? data.scope.split(/\s+/).filter(Boolean) : [],
+    // Google may omit "scope" from a token response when it matches the original request.
+    // This integration's OAuth request explicitly asks for these two Gmail scopes.
+    scopes: typeof data.scope === "string" ? data.scope.split(/\s+/).filter(Boolean) : [...SCOPES],
     expires: new Date(Date.now() + Math.max(60, Number(data.expires_in ?? 3600)) * 1000).toISOString(),
   };
 }
