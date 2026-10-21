@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This runbook governs the rollout of the booking hardening, token gateway, and email-first notification changes. Do not certify the release from a successful frontend build alone.
+This runbook governs the rollout of booking hardening, token management, public waitlist hardening, and email-first notifications. Do not certify the release from a successful frontend build alone.
 
 ## Preconditions
 
@@ -19,7 +19,7 @@ This runbook governs the rollout of the booking hardening, token gateway, and em
 
 1. Inspect `supabase migration list` and `supabase db push --dry-run`. Compare the exact pending versions to the approved release manifest.
 2. Apply migrations only after staging acceptance and migration-history reconciliation.
-3. Deploy `booking-create`, `token-gateway`, `notify-dispatch`, `health`, and `resend-webhook` from `main`.
+3. Deploy `booking-create`, `token-gateway`, `waitlist-join`, `notify-dispatch`, `health`, and `resend-webhook` from `main`. The `waitlist-join` Edge Function must be deployed before the migration that revokes direct browser execution of `public.join_waitlist(...)`.
 4. Verify `/functions/v1/health` returns `ok=true`, numeric `db_ms`, and a version field.
 5. Run the dedicated E2E suite: create a real staging booking, retry the same idempotency key, attempt an occupied slot, verify an expired token is rejected, verify public RPC grants are revoked, and trace the confirmation email through Resend's signed webhook into the notification row.
 6. Only mark the production release successful when the above checks pass. A skipped test or missing secret is a failure to certify, not a pass.
@@ -28,7 +28,7 @@ This runbook governs the rollout of the booking hardening, token gateway, and em
 
 - Never reset or recreate the production database.
 - Do not restore anonymous execution on `book_appointment` as a rollback shortcut. If the new booking Edge Function is unhealthy, restore the last known-good Edge Function version and investigate before changing grants.
-- Do not deploy the frontend until `/functions/v1/health` and `token-gateway` are live. Token management must fail closed; direct RPC fallbacks are intentionally removed from the current frontend.
+- Do not deploy the frontend until `/functions/v1/health`, `token-gateway`, `booking-create`, and `waitlist-join` are live. Token management must fail closed; direct token and waitlist mutation RPCs must not be restored as a rollback shortcut.
 - Email-first must not be activated until Resend is verified; do not silently re-enable WhatsApp without an approved provider and policy.
 
 ## Current known blockers
