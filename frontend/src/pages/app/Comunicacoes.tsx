@@ -134,8 +134,8 @@ export default function Comunicacoes() {
     next.delete("shop_id");
     next.delete("reason");
     setSearchParams(next, { replace: true });
-    void actions.refresh();
-  }, [searchParams, setSearchParams, shopId, shops, setShopId]);
+    void status.refetch();
+  }, [searchParams, setSearchParams, shopId, shops, setShopId, status.refetch]);
 
   const connect = async () => {
     if (!shopId) return;
