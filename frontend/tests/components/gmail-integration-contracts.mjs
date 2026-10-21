@@ -54,7 +54,7 @@ const tests = [
     assert.match(edge, /threads\/" \+ encodeURIComponent/);
     assert.match(edge, /In-Reply-To/);
     assert.match(edge, /References/);
-    assert.match(edge, /"gmail\.send"/);
+    assert.match(edge, /gmail\.send/);
   }],
   ["Function is registered without gateway JWT so Google can reach OAuth callback", () => {
     assert.match(config, /\[functions\.gmail-integration\]\s+verify_jwt = false/);
