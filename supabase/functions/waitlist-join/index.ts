@@ -33,11 +33,11 @@ function validPayload(value: unknown): value is WaitlistJoinPayload {
 
   return typeof body.slug === "string" && body.slug.trim().length > 0 && body.slug.trim().length <= 120
     && UUID_PATTERN.test(String(body.service_id ?? ""))
-    && (haircut === null || typeof haircut === "undefined" || UUID_PATTERN.test(String(haircut)))
-    && (barber === null || typeof barber === "undefined" || UUID_PATTERN.test(String(barber)))
+    && (haircut === null || UUID_PATTERN.test(String(haircut)))
+    && (barber === null || UUID_PATTERN.test(String(barber)))
     && typeof body.customer_name === "string" && body.customer_name.trim().length >= 2 && body.customer_name.trim().length <= 120
     && typeof body.phone === "string" && body.phone.trim().length >= 8 && body.phone.trim().length <= 30
-    && (email === null || typeof email === "undefined" || (typeof email === "string" && email.length <= 254))
+    && (email === null || (typeof email === "string" && email.length <= 254))
     && isDate(body.date_from) && isDate(body.date_to) && body.date_to >= body.date_from
     && typeof body.period === "string" && PERIODS.has(body.period);
 }
