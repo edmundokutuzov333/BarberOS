@@ -99,22 +99,24 @@ export async function joinWaitlist(input: {
   dateTo: string;
   period: string;
 }) {
-  const { data, error } = await supabase.rpc('join_waitlist', {
-    p_slug: input.slug,
-    p_service_id: input.serviceId,
-    p_customer_name: input.customerName,
-    p_phone: input.phone,
-    ...(input.haircutId ? { p_haircut_id: input.haircutId } : {}),
-    ...(input.barberId ? { p_barber_id: input.barberId } : {}),
-    ...(input.email ? { p_email: input.email } : {}),
-    p_date_from: input.dateFrom,
-    p_date_to: input.dateTo,
-    p_period: input.period,
+  const { data, error } = await supabase.functions.invoke('waitlist-join', {
+    body: {
+      slug: input.slug,
+      service_id: input.serviceId,
+      customer_name: input.customerName,
+      phone: input.phone,
+      haircut_id: input.haircutId ?? null,
+      barber_id: input.barberId ?? null,
+      email: input.email ?? null,
+      date_from: input.dateFrom,
+      date_to: input.dateTo,
+      period: input.period,
+    },
   });
   if (error) throw error;
-  const row = data?.[0];
-  if (!row) throw new Error('WAITLIST_JOIN_EMPTY_RESPONSE');
-  return row;
+  const row = data?.waitlist;
+  if (!row?.status || !row?.queued_at) throw new Error(data?.error ?? 'WAITLIST_JOIN_EMPTY_RESPONSE');
+  return row as { status: WaitlistStatus; queued_at: string };
 }
 
 export async function getWaitlistOffer(token: string): Promise<WaitlistOffer> {
