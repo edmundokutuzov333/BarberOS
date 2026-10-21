@@ -94,8 +94,11 @@ payments-status
 payments-webhook
 payments-reconcile
 booking-create
+gmail-integration
 
-All seven active function sources are versioned under supabase/functions/. Future function changes must enter through Git and the Supabase release workflow.
+Gmail requires the server-side secrets in `docs/GMAIL_INTEGRATION.md`, the tenant-scoped storage migration, OAuth consent configuration, and a release through the Supabase workflow. The Edge Function is not active until that release is complete.
+
+All Edge Function sources are versioned under supabase/functions/. Future function changes must enter through Git and the Supabase release workflow.
 
 ## Credential boundary
 
