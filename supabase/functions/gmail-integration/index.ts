@@ -244,12 +244,12 @@ async function oauthCallback(req: Request, admin: SupabaseClient): Promise<Respo
   if (!state || state.length > 512) return new Response("Invalid OAuth state", {status:400,headers:{"cache-control":"no-store"}});
   try { appUrl(); settings(); } catch { return new Response("Gmail integration not configured", {status:503,headers:{"cache-control":"no-store"}}); }
   const stateHash = await hash(state);
-  const { data, error } = await admin.from("gmail_oauth_states").select("state_hash,barbershop_id,user_id,expires_at")
-    .eq("state_hash",stateHash).gt("expires_at",new Date().toISOString()).maybeSingle();
+  const { data: consumedStates, error } = await admin.from("gmail_oauth_states").delete()
+    .eq("state_hash",stateHash).gt("expires_at",new Date().toISOString())
+    .select("state_hash,barbershop_id,user_id,expires_at");
   if (error) return redirect({gmail:"error",reason:"backend_not_ready"});
+  const data = consumedStates?.[0];
   if (!data) return redirect({gmail:"error",reason:"invalid_state"});
-  const { error: deleteError } = await admin.from("gmail_oauth_states").delete().eq("state_hash",stateHash);
-  if (deleteError) return redirect({gmail:"error",reason:"backend_not_ready"});
   if (url.searchParams.get("error")) return redirect({gmail:"error",reason:"consent_denied"});
   const authCode = url.searchParams.get("code");
   if (!authCode || authCode.length > 4096) return redirect({gmail:"error",reason:"invalid_response"});
