@@ -60,10 +60,12 @@ async function gmailRequest<T extends GmailResponse>(
   if (error) {
     let code = "GMAIL_PROVIDER_REQUEST_FAILED";
     const context = (error as { context?: Response }).context;
+    if (context?.status === 404) code = "GMAIL_FUNCTION_NOT_DEPLOYED";
     if (context) {
       try {
-        const response = await context.clone().json() as { error?: string };
+        const response = await context.clone().json() as { error?: string; code?: string };
         if (response.error) code = response.error;
+        else if (context.status === 404 || response.code === "NOT_FOUND") code = "GMAIL_FUNCTION_NOT_DEPLOYED";
       } catch {
         // The endpoint may return a non-JSON gateway error.
       }
