@@ -41,7 +41,8 @@ def fixture(conn):
             join public.barbers br
               on br.id=bs.barber_id
              and br.is_active
-            where b.status in ('trial','active')
+            where b.slug = 'barberos-ci-fixture'
+            and b.status in ('trial','active')
             order by b.created_at, s.sort_order, br.sort_order
             limit 1
             """
