@@ -88,7 +88,7 @@ console.log(JSON.stringify({
   migrations: names.length,
   latest: names.at(-1),
   project_ref: 'alseiinjzwjdiwtvkdzy',
-  required_edge_functions: ['booking-create', 'token-gateway', 'health', 'resend-webhook'],
+  required_edge_functions: ['booking-create', 'token-gateway', 'health', 'resend-webhook', 'gmail-integration'],
   booking_security_contract: 'fail-closed Turnstile + idempotency + token gateway',
 }, null, 2));
 console.log('PASS | Supabase release contract');
