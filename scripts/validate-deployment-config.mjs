@@ -60,6 +60,7 @@ if (frontendPackage.engines?.node !== '22.x') throw new Error('DEPLOY_CONFIG_FRO
 const supabaseConfig = read('supabase/config.toml');
 if (!supabaseConfig.includes('project_id = "alseiinjzwjdiwtvkdzy"')) throw new Error('DEPLOY_CONFIG_SUPABASE_PROJECT_INVALID');
 if (!supabaseConfig.includes('[functions.booking-create]') || !supabaseConfig.includes('[functions.token-gateway]')) throw new Error('DEPLOY_CONFIG_SUPABASE_FUNCTIONS_CONFIG_MISSING');
+if (!supabaseConfig.includes('[functions.gmail-integration]')) throw new Error('DEPLOY_CONFIG_GMAIL_FUNCTION_MISSING');
 const supabaseWorkflow = read('.github/workflows/deploy-supabase.yml');
 if (!supabaseWorkflow.includes('supabase db push --dry-run')) throw new Error('DEPLOY_SUPABASE_DRY_RUN_MISSING');
 if (!supabaseWorkflow.includes('supabase db push --project-ref')) throw new Error('DEPLOY_SUPABASE_PUSH_MISSING');
@@ -89,6 +90,7 @@ const expectedFunctions = [
   'token-gateway',
   'resend-webhook',
   'health',
+  'gmail-integration',
 ];
 for (const fn of expectedFunctions) {
   if (!fs.existsSync(path.join(root, 'supabase', 'functions', fn, 'index.ts'))) {
