@@ -36,6 +36,18 @@ const tests = [
     assert.match(source, /Boolean\(turnstileSiteKey && turnstileToken\)/);
     assert.match(source, /VITE_BOOKING_TURNSTILE_REQUIRED/);
   }],
+  ['public waitlist mutations pass through the rate-limited Edge gateway', () => {
+    const api = read('src/features/waitlist/api.ts');
+    const edge = read('../supabase/functions/waitlist-join/index.ts');
+    const migration = read('../supabase/migrations/20261021102000_waitlist_gateway_hardening.sql');
+    assert.match(api, /functions\.invoke\('waitlist-join'/);
+    assert.doesNotMatch(api, /rpc\('join_waitlist'/);
+    assert.match(edge, /consume\(/);
+    assert.match(edge, /sha256Hex/);
+    assert.match(edge, /admin\.rpc\("join_waitlist"/);
+    assert.match(migration, /revoke all on function public\.join_waitlist/i);
+    assert.match(migration, /to service_role/i);
+  }],
   ['booking uses atomic SQL idempotency and locks down provider credentials', () => {
     const edge = read('../supabase/functions/booking-create/index.ts');
     const migration = read('../supabase/migrations/20261019160000_payment_rpc_privilege_lockdown.sql');
