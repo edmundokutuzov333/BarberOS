@@ -6,6 +6,15 @@ const root = process.cwd();
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
 const tests = [
+  ['shared dialogs stay centered and internally scrollable on short viewports', () => {
+    const modal = read('src/components/ui/Primitives.tsx');
+    const dialog = read('src/components/ui/dialog.jsx');
+    assert.match(modal, /fixed inset-x-4 top-4 bottom-4 z-50 m-auto/);
+    assert.match(modal, /max-h-\[calc\(100dvh-2rem\)\] overflow-y-auto/);
+    assert.match(dialog, /fixed inset-x-4 top-4 bottom-4 z-50 m-auto/);
+    assert.match(dialog, /max-h-\[calc\(100dvh-2rem\)\] overflow-y-auto/);
+    assert.doesNotMatch(dialog, /translate-y-\[-50%\]|slide-in-from-top-\[48%\]/);
+  }],
   ['booking API uses server HTTP boundary and not direct sensitive appointment writes', () => {
     const source = read('src/features/booking/api.ts');
     assert.match(source, /functions\.invoke\('booking-create'/);
