@@ -2,6 +2,15 @@ import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import { supabase } from '@/lib/supabase';
 
+declare global {
+  interface Window {
+    __barberosPublicShopPrefetch?: {
+      slug: string;
+      promise: Promise<unknown | null>;
+    };
+  }
+}
+
 export type PublicShop = {
   name: string; slug: string; description: string | null; logo_url: string | null; cover_url: string | null;
   theme_key: string; phone: string | null; whatsapp: string | null; instagram: string | null;
@@ -47,8 +56,15 @@ const publicPayloadSchema = z.object({
 export async function getPublicBarbershop(slug: string): Promise<PublicBarbershopPayload> {
   const normalized = slug.trim().toLowerCase();
   if (!normalized) throw new Error('BARBERSHOP_NOT_FOUND');
-  const { data, error } = await supabase.rpc('get_public_barbershop', { p_slug: normalized });
-  if (error) throw error;
+  let data: unknown = null;
+  if (typeof window !== 'undefined' && window.__barberosPublicShopPrefetch?.slug === normalized) {
+    data = await window.__barberosPublicShopPrefetch.promise;
+  }
+  if (data == null) {
+    const result = await supabase.rpc('get_public_barbershop', { p_slug: normalized });
+    if (result.error) throw result.error;
+    data = result.data;
+  }
   if (!data) throw new Error('BARBERSHOP_NOT_FOUND');
   const parsed = publicPayloadSchema.safeParse(data);
   if (!parsed.success) throw new Error('PUBLIC_SHOP_INVALID_RESPONSE');

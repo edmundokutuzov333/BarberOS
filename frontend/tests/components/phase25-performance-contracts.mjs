@@ -30,6 +30,15 @@ const tests = [
     assert.ok(main.includes('else if (publicBookingMatch)'));
     assert.ok(!main.includes("pathname.startsWith('/barbearia/')"));
   }],
+  ['public shop RPC prefetch starts before the React application entry', () => {
+    const html = read('index.html');
+    const prefetch = read('src/public-shop-prefetch.ts');
+    const api = read('src/features/public-shop/api.ts');
+    assert.match(html, /src="\/src\/public-shop-prefetch\.ts"><\/script>\s*<script type="module" src="\/src\/main\.tsx"/);
+    assert.match(prefetch, /get_public_barbershop/);
+    assert.match(prefetch, /VITE_SUPABASE_PUBLISHABLE_KEY/);
+    assert.match(api, /__barberosPublicShopPrefetch/);
+  }],
   ['public shop defers below-fold card rendering until after the hero paint', () => {
     const source = read('src/pages/PublicBarbershop.tsx');
     assert.match(source, /const \[belowFoldReady, setBelowFoldReady\] = useState\(false\)/);
