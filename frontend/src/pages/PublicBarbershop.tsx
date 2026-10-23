@@ -96,8 +96,8 @@ export default function PublicBarbershop() {
       return;
     }
 
-    // Let the hero title paint before mounting the full service/cut/team/review
-    // card tree. This reduces main-thread work before LCP on constrained devices.
+    // Paint the shop hero first. Mount the full card tree after the first frame
+    // to reduce main-thread work before LCP on constrained mobile networks.
     let timeoutId: number | null = null;
     const frameId = window.requestAnimationFrame(() => {
       timeoutId = window.setTimeout(() => setBelowFoldReady(true), 0);
@@ -156,108 +156,109 @@ export default function PublicBarbershop() {
             </div>
           </section>
           <section className="mt-6 grid lg:grid-cols-[1.5fr_.5fr] gap-6 items-start">
+            <Skeleton className="h-64" lines={6} />
+            <div className="space-y-6">
+              <Skeleton className="h-64" lines={6} />
+              <Skeleton className="h-48" lines={5} />
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  if (query.error || !data) {
+    return (
+      <div className="barber-shell min-h-screen px-5 py-10 sm:px-8 grid place-items-center">
+        
+        <div className="w-full max-w-lg">
+          <ErrorState message={humanError(query.error ?? new Error('BARBERSHOP_NOT_FOUND'))} onRetry={() => query.refetch()} />
+          <div className="text-center mt-5"><Link to="/"><Button variant="secondary" size="sm" pill>Voltar ao BarberOS</Button></Link></div>
+        </div>
+      </div>
+    );
+  }
+
+  const { shop, services, haircuts, barbers, working_hours, reviews } = data;
+  const hasWhatsApp = Boolean(shop.whatsapp);
+  const hasPhone = Boolean(shop.phone);
+  const hasInstagram = Boolean(shop.instagram);
+  const bookableServiceCount = services.filter((service) => barbers.some((barber) => barber.service_ids.includes(service.id))).length;
+  const bookingReady = bookableServiceCount > 0;
+
+  return (
+    <div className="barber-shell min-h-screen">
+      
+      <header className="max-w-6xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between gap-4">
+        <Link to={`/barbearia/${shop.slug}`}><span className="t-card text-ink-hi">BarberOS <span className="font-light text-ink-mid">by Oryon</span></span></Link>
+        <div className="flex items-center gap-4">
+          <a href="#contacto" className="hidden sm:block t-label text-ink-mid hover:text-ink-hi transition-colors">Contactos</a>
+          {bookingReady ? (
+            <Link to={`/barbearia/${shop.slug}/marcar`}>
+              <Button size="sm">Marcar agora</Button>
+            </Link>
+          ) : (
+            <Button size="sm" disabled>Marcação indisponível</Button>
+          )}
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-20">
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
+          <div
+            className="relative min-h-[22rem] sm:min-h-[30rem]"
+            style={{ position: 'relative', minHeight: 'clamp(22rem, 62.5vw, 30rem)' }}
+          >
+            <PhotoWithFallback
+              key="shop-hero-cover"
+              src={shop.cover_url}
+              fallbackSources={BARBERSHOP_FALLBACK_PHOTOS}
+              alt="Fotografia de referência do espaço de barbearia"
+              className="absolute inset-0 h-full w-full object-cover"
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+              fetchPriority="high" decoding="async" loading="eager"
+            />
+            <div
+              key="shop-hero-gradient"
+              className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10"
+              style={{ position: 'absolute', inset: 0 }}
+              aria-hidden
+            />
+            <div
+              key="shop-hero-copy"
+              className="absolute inset-x-0 bottom-0 p-6 sm:p-9"
+              style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 'clamp(1.5rem, 4vw, 2.25rem)' }}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-end gap-5">
+                <PhotoWithFallback src={shop.logo_url} fallbackSources={['/brand-assets/barberos-default.svg']} alt="Logótipo da barbearia" className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl object-contain border border-white/15 bg-black/40 p-2" width="96" height="96" />
+                <div className="min-w-0">
+                  <h1 className="text-3xl sm:text-5xl font-medium tracking-[-0.02em] text-white">{shop.name}</h1>
+                  {shop.description && <p className="t-body text-white/75 mt-2 max-w-xl line-clamp-1" title={shop.description}>{shop.description}</p>}
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4">
+                    {reviews.rating_count > 0 && <span className="inline-flex items-center gap-1.5 t-label text-white"><Star size={14} fill="currentColor" /> {reviews.rating_avg.toFixed(1)} · {reviews.rating_count} {reviews.rating_count === 1 ? 'avaliação' : 'avaliações'}</span>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {shop.description && (
+          <section className="mt-6" data-testid="public-shop-description">
+            <details className="rounded-2xl border border-white/10 bg-white/[.02] p-4">
+              <summary className="min-h-10 cursor-pointer list-none t-card text-ink-hi focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft">
+                Sobre a barbearia
+                <span aria-hidden="true" className="float-right text-ink-mid">+</span>
+              </summary>
+              <p className="t-body text-ink-mid whitespace-pre-line mt-3">{shop.description}</p>
+            </details>
+          </section>
+        )}
+
+        <section className="mt-6 grid lg:grid-cols-[1.5fr_.5fr] gap-6 items-start">
           <div className="space-y-6">
             {belowFoldReady ? (
               <>
-                              <Skeleton className="h-64" lines={6} />
-                              <Skeleton className="h-48" lines={5} />
-                            </div>
-                          </section>
-                        </main>
-                      </div>
-                    );
-                  }
-                
-                  if (query.error || !data) {
-                    return (
-                      <div className="barber-shell min-h-screen px-5 py-10 sm:px-8 grid place-items-center">
-                        
-                        <div className="w-full max-w-lg">
-                          <ErrorState message={humanError(query.error ?? new Error('BARBERSHOP_NOT_FOUND'))} onRetry={() => query.refetch()} />
-                          <div className="text-center mt-5"><Link to="/"><Button variant="secondary" size="sm" pill>Voltar ao BarberOS</Button></Link></div>
-                        </div>
-                      </div>
-                    );
-                  }
-                
-                  const { shop, services, haircuts, barbers, working_hours, reviews } = data;
-                  const hasWhatsApp = Boolean(shop.whatsapp);
-                  const hasPhone = Boolean(shop.phone);
-                  const hasInstagram = Boolean(shop.instagram);
-                  const bookableServiceCount = services.filter((service) => barbers.some((barber) => barber.service_ids.includes(service.id))).length;
-                  const bookingReady = bookableServiceCount > 0;
-                
-                  return (
-                    <div className="barber-shell min-h-screen">
-                      
-                      <header className="max-w-6xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between gap-4">
-                        <Link to={`/barbearia/${shop.slug}`}><span className="t-card text-ink-hi">BarberOS <span className="font-light text-ink-mid">by Oryon</span></span></Link>
-                        <div className="flex items-center gap-4">
-                          <a href="#contacto" className="hidden sm:block t-label text-ink-mid hover:text-ink-hi transition-colors">Contactos</a>
-                          {bookingReady ? (
-                            <Link to={`/barbearia/${shop.slug}/marcar`}>
-                              <Button size="sm">Marcar agora</Button>
-                            </Link>
-                          ) : (
-                            <Button size="sm" disabled>Marcação indisponível</Button>
-                          )}
-                        </div>
-                      </header>
-                
-                      <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-20">
-                        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
-                          <div
-                            className="relative min-h-[22rem] sm:min-h-[30rem]"
-                            style={{ position: 'relative', minHeight: 'clamp(22rem, 62.5vw, 30rem)' }}
-                          >
-                            <PhotoWithFallback
-                              key="shop-hero-cover"
-                              src={shop.cover_url}
-                              fallbackSources={BARBERSHOP_FALLBACK_PHOTOS}
-                              alt="Fotografia de referência do espaço de barbearia"
-                              className="absolute inset-0 h-full w-full object-cover"
-                              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                              fetchPriority="high" decoding="async" loading="eager"
-                            />
-                            <div
-                              key="shop-hero-gradient"
-                              className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10"
-                              style={{ position: 'absolute', inset: 0 }}
-                              aria-hidden
-                            />
-                            <div
-                              key="shop-hero-copy"
-                              className="absolute inset-x-0 bottom-0 p-6 sm:p-9"
-                              style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 'clamp(1.5rem, 4vw, 2.25rem)' }}
-                            >
-                              <div className="flex flex-col sm:flex-row sm:items-end gap-5">
-                                <PhotoWithFallback src={shop.logo_url} fallbackSources={['/brand-assets/barberos-default.svg']} alt="Logótipo da barbearia" className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl object-contain border border-white/15 bg-black/40 p-2" width="96" height="96" />
-                                <div className="min-w-0">
-                                  <h1 className="text-3xl sm:text-5xl font-medium tracking-[-0.02em] text-white">{shop.name}</h1>
-                                  {shop.description && <p className="t-body text-white/75 mt-2 max-w-xl line-clamp-1" title={shop.description}>{shop.description}</p>}
-                                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4">
-                                    {reviews.rating_count > 0 && <span className="inline-flex items-center gap-1.5 t-label text-white"><Star size={14} fill="currentColor" /> {reviews.rating_avg.toFixed(1)} · {reviews.rating_count} {reviews.rating_count === 1 ? 'avaliação' : 'avaliações'}</span>}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </section>
-                
-                        {shop.description && (
-                          <section className="mt-6" data-testid="public-shop-description">
-                            <details className="rounded-2xl border border-white/10 bg-white/[.02] p-4">
-                              <summary className="min-h-10 cursor-pointer list-none t-card text-ink-hi focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft">
-                                Sobre a barbearia
-                                <span aria-hidden="true" className="float-right text-ink-mid">+</span>
-                              </summary>
-                              <p className="t-body text-ink-mid whitespace-pre-line mt-3">{shop.description}</p>
-                            </details>
-                          </section>
-                        )}
-                
-                        <section className="mt-6 grid lg:grid-cols-[1.5fr_.5fr] gap-6 items-start">
-                          <div className="space-y-6">
                             <div className="perf-deferred">
                             <Panel title="Serviços" aside={<span className="t-label text-ink-mid">{services.length}</span>}>
                               {services.length ? (
