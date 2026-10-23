@@ -18,7 +18,13 @@ const Registar = lazy(() => import('./pages/auth/Registar'));
 const Recuperar = lazy(() => import('./pages/auth/Recuperar'));
 const AlterarPalavraPasse = lazy(() => import('./pages/auth/AlterarPalavraPasse'));
 const AppointmentManage = lazy(() => import('./pages/AppointmentManage'));
-const PublicBarbershop = lazy(() => import('./pages/PublicBarbershop'));
+const loadPublicBarbershop = () => import('./pages/PublicBarbershop');
+// Start downloading the public shop route chunk as soon as the URL is known,
+// in parallel with app bootstrap and before the suspense boundary renders.
+if (typeof window !== 'undefined' && /^\/barbearia\/[^/]+\/?$/.test(window.location.pathname)) {
+  void loadPublicBarbershop();
+}
+const PublicBarbershop = lazy(loadPublicBarbershop);
 const BookingWizard = lazy(() => import('./pages/BookingWizard'));
 const Vaga = lazy(() => import('./pages/Vaga'));
 const ReviewSubmit = lazy(() => import('./pages/ReviewSubmit'));

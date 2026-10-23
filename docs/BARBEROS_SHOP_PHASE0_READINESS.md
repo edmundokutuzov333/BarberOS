@@ -209,3 +209,6 @@ Os gates SQL de aceitação e performance usam uma base Supabase local efémera 
 ### Correcção final do candidato LCP (23 de Outubro de 2026)
 
 A medição Fast 3G no deployment público confirmou que o maior elemento era a descrição completa dentro de `Sobre a barbearia` (2.560–2.940 ms). A descrição completa mantém-se disponível, mas passa para um `details/summary` fechado por defeito, evitando que um parágrafo longo seja pintado no primeiro viewport. A próxima medição do workflow é a evidência necessária para declarar o gate LCP aprovado; até lá o gate permanece aberto.
+
+
+A segunda medição identificou o título da barbearia como candidato LCP (2.732 ms no primeiro Chromium, 2.388 ms no retry; mobile Chrome 2.456 ms). Para reduzir o atraso de carregamento do módulo de rota, `App.tsx` passa a pré-carregar `PublicBarbershop` imediatamente quando a URL já é `/barbearia/:slug`, em paralelo com o bootstrap. A próxima execução Fast 3G deve confirmar se a melhoria é estável; o gate anterior passou apenas com retry e ainda não é considerado robusto.
