@@ -54,16 +54,20 @@ test.describe('BarberOS Phase 24 booking concurrency', () => {
         request.post(endpoint, { headers, data: requestB }),
       ]);
 
+      const [textA, textB] = await Promise.all([responseA.text(), responseB.text()]);
+      const parseBody = (text) => { try { return JSON.parse(text); } catch { return { raw: text }; } };
+      const bodyA = parseBody(textA);
+      const bodyB = parseBody(textB);
       const statuses = [responseA.status(), responseB.status()].sort((a, b) => a - b);
-      expect(statuses).toEqual([200, 409]);
+      expect(statuses, JSON.stringify({ statusA: responseA.status(), bodyA, statusB: responseB.status(), bodyB })).toEqual([200, 409]);
 
       const losingResponse = responseA.status() === 409 ? responseA : responseB;
-      const losingBody = await losingResponse.json();
+      const losingBody = responseA.status() === 409 ? bodyA : bodyB;
       expect(losingBody.ok).toBe(false);
       expect(losingBody.error).toBe('SLOT_TAKEN');
 
       const winningResponse = responseA.status() === 200 ? responseA : responseB;
-      const winningBody = await winningResponse.json();
+      const winningBody = responseA.status() === 200 ? bodyA : bodyB;
       expect(winningBody.ok).toBe(true);
       expect(winningBody.booking?.manage_token).toBeTruthy();
       expect('appointment_id' in (winningBody.booking ?? {})).toBe(false);
