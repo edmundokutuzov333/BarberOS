@@ -5,6 +5,7 @@ import os
 import re
 from pathlib import Path
 import psycopg
+from database_safety import require_isolated_test_database
 
 ROOT = Path(__file__).resolve().parents[1]
 TESTS = ROOT / "supabase" / "tests"
@@ -18,9 +19,7 @@ FILES = [
     "phase22_permissions.sql","phase23_contract.sql","phase23_behavior.sql",
 ]
 
-database_url = os.getenv("BARBEROS_TEST_DATABASE_URL")
-if not database_url:
-    raise SystemExit("REQUIRED_TEST_ENV_MISSING: BARBEROS_TEST_DATABASE_URL não definido; a suite de aceitação não pode ser considerada aprovada.")
+database_url = require_isolated_test_database(os.getenv("BARBEROS_TEST_DATABASE_URL"))
 
 if os.getenv("BARBEROS_TEST_ALLOW_MUTATION") != "1":
     raise SystemExit("REFUSED: BARBEROS_TEST_ALLOW_MUTATION=1 é obrigatório para esta suite.")
