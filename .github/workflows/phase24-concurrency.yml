@@ -137,55 +137,65 @@ jobs:
 
   http-concurrency:
     name: Phase 24 HTTP 200/409 concurrency
-    runs-on: ubuntu-latest
     needs:
       - frontend
-    env:
-      BARBEROS_E2E_CONCURRENCY_URL: https://asikuyxaapcmayptimxi.supabase.co/functions/v1/booking-create
-      BARBEROS_E2E_CONCURRENCY_SLUG: theme-v2-qa
-      BARBEROS_E2E_CONCURRENCY_SERVICE_ID: 158a79dc-2405-40f7-8c19-fe54b15ee145
-      BARBEROS_E2E_CONCURRENCY_BARBER_ID: d6b53c2f-2d49-430b-82fe-8f39ded89dfb
-      VITE_SUPABASE_URL: https://asikuyxaapcmayptimxi.supabase.co
-      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_rjwoRrbWYYaEzLjOPy64pg_vtG9NGxZ
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: supabase/setup-cli@v2
         with:
-          node-version: 22
+          version: latest
+          github-token: ${{ github.token }}
+      - name: Start isolated local Supabase
+        run: supabase start --exclude studio,imgproxy,inbucket,logflare,vector
+      - name: Reset isolated database from versioned migrations
+        run: supabase db reset
+      - name: Prepare local test environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase status -o env > "$RUNNER_TEMP/supabase.env"
+          set -a
+          source "$RUNNER_TEMP/supabase.env"
+          set +a
+          cat > "$RUNNER_TEMP/phase24-functions.env" <<'ENV'
+          TURNSTILE_BYPASS=true
+          RATE_LIMIT_SALT=phase24-local-ci-only-rate-limit-salt
+          ALLOWED_ORIGINS=http://127.0.0.1:54321
+          ENV
+          echo "VITE_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
+          echo "VITE_SUPABASE_PUBLISHABLE_KEY=$ANON_KEY" >> "$GITHUB_ENV"
+          echo "BARBEROS_E2E_CONCURRENCY_URL=$API_URL/functions/v1/booking-create" >> "$GITHUB_ENV"
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep -E 'supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/phase24_http_concurrency_setup.sql
+          FIXTURE="$(docker exec "$DB_CONTAINER" psql -U postgres -d postgres -At -F '|' -c "select slug, service_id, barber_id, slot_start from private.phase24_http_concurrency_fixture where singleton")"
+          IFS='|' read -r SHOP_SLUG SERVICE_ID BARBER_ID SLOT_START <<< "$FIXTURE"
+          test -n "$SHOP_SLUG" && test -n "$SERVICE_ID" && test -n "$BARBER_ID" && test -n "$SLOT_START"
+          {
+            echo "BARBEROS_E2E_CONCURRENCY_SLUG=$SHOP_SLUG"
+            echo "BARBEROS_E2E_CONCURRENCY_SERVICE_ID=$SERVICE_ID"
+            echo "BARBEROS_E2E_CONCURRENCY_BARBER_ID=$BARBER_ID"
+            echo "BARBEROS_E2E_CONCURRENCY_START=$SLOT_START"
+          } >> "$GITHUB_ENV"
+      - name: Serve local Edge Functions with CI-only Turnstile bypass
+        run: |
+          supabase functions serve --env-file "$RUNNER_TEMP/phase24-functions.env" --no-verify-jwt > "$RUNNER_TEMP/phase24-functions.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/phase24-functions.pid"
+          for attempt in $(seq 1 45); do
+            status="$(curl --silent --output /dev/null --write-out '%{http_code}' -X OPTIONS "$BARBEROS_E2E_CONCURRENCY_URL" || true)"
+            if [ "$status" = "200" ]; then exit 0; fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/phase24-functions.log"
+          exit 1
       - name: Install Playwright runner
         working-directory: frontend
         run: npm install --no-save --package-lock=false --legacy-peer-deps @playwright/test@1.56.1
       - name: Install Chromium
         working-directory: frontend
         run: npx playwright install --with-deps chromium
-      - name: Resolve a free staging slot
-        working-directory: frontend
-        run: |
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          const base = process.env.VITE_SUPABASE_URL;
-          const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-          const slug = process.env.BARBEROS_E2E_CONCURRENCY_SLUG;
-          const serviceId = process.env.BARBEROS_E2E_CONCURRENCY_SERVICE_ID;
-          const barberId = process.env.BARBEROS_E2E_CONCURRENCY_BARBER_ID;
-          let chosen = null;
-          for (let offset = 2; offset <= 21 && !chosen; offset += 1) {
-            const day = new Date(Date.now() + offset * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-            const response = await fetch(base + '/rest/v1/rpc/get_available_slots', {
-              method: 'POST',
-              headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ p_slug: slug, p_service_id: serviceId, p_barber_id: barberId, p_date: day }),
-            });
-            if (!response.ok) throw new Error('STAGING_AVAILABILITY_RPC_FAILED:' + response.status + ':' + await response.text());
-            const rows = await response.json();
-            chosen = Array.isArray(rows) ? rows.find((row) => Date.parse(row.slot_start) > Date.now() + 30 * 60 * 1000) : null;
-          }
-          if (!chosen) throw new Error('STAGING_CONCURRENCY_SLOT_UNAVAILABLE');
-          fs.appendFileSync(process.env.GITHUB_ENV, 'BARBEROS_E2E_CONCURRENCY_START=' + chosen.slot_start + '\n');
-          console.log('Resolved staging slot:', chosen.slot_start);
-          NODE
-      - name: Run HTTP concurrency acceptance against staging
+      - name: Run HTTP concurrency acceptance against isolated local functions
         working-directory: frontend
         run: npx playwright test tests/e2e/phase24-http-concurrency.spec.mjs --config=playwright.http.config.mjs
