@@ -242,3 +242,10 @@ A suite Phase 23 no SHA `d5c3c3b` chegou à expiração da waitlist e falhou em 
 A comparação read-only encontrou 110 registos de migration em produção, 97 em staging e 134 ficheiros versionados no repositório. Produção não tem as tabelas/RPC da Loja nem `barbershops.shop_enabled`; `booking-create` permanece na versão 1, o gate global e as variáveis públicas Turnstile não constam da configuração Vercel consultada. A aceitação completa de browser mantém-se ignorada por falta de credenciais dedicadas. Não foram aplicadas migrations nem activadas flags de produção. Ver `docs/BARBEROS_SHOP_PRODUCTION_RECONCILIATION.md`.
 
 **Estado actual: Fase 4 transaccional aprovada em CI local/staging; lançamento em produção NO-GO até a reconciliação e os gates externos estarem concluídos.**
+
+
+### Suite de aceitação: isolamento da fila de notificações (23 de Outubro de 2026)
+
+O run [39977291970](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39977291970) passou waitlist_phase13.sql e a limpeza de fixtures, confirmando a migration de estado de expiração e o rollback do runner. A falha seguinte foi notifications_phase14.sql: o teste seleccionava a última marcação global e ligava-a a um tenant possivelmente diferente ou a um estado já cancelado/concluído, contrariando os filtros de elegibilidade do worker. A correcção remove a dependência de uma marcação arbitrária e testa o ciclo da fila com appointment_id = NULL, uma situação suportada pelo esquema e pela função. A próxima CI deve confirmar a suite completa.
+
+A nova execução de performance no SHA 65c504bade15dffa3944fe1a50ce5ac33ccefd3e também passou: LCP 2.184/2.216 ms, DCL 1.267/1.272 ms, CLS 0, RPC 603/615 ms e INP 88/80 ms. Este commit altera novamente a documentação de performance para desencadear o gate no novo SHA candidato.

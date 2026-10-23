@@ -44,7 +44,6 @@ do $$
 declare
   v_shop uuid;
   v_actor uuid;
-  v_appt uuid;
   v_notification uuid;
   v_claim record;
   v_failure record;
@@ -52,7 +51,6 @@ declare
   v_attempts integer;
 begin
   select id into v_shop from public.barbershops order by created_at limit 1;
-  select id into v_appt from public.appointments order by created_at desc limit 1;
   if v_shop is null then raise exception 'FAIL: no real barbershop fixture'; end if;
 
   select m.user_id
@@ -71,10 +69,10 @@ begin
   where status='queued';
 
   insert into public.notifications(
-    barbershop_id,appointment_id,channel,template_key,recipient,scheduled_for,payload
+    barbershop_id,channel,template_key,recipient,scheduled_for,payload
   )
   values(
-    v_shop,v_appt,'whatsapp','appointment_confirmed','+258841234567',now()-interval '1 second','{"fixture":true}'::jsonb
+    v_shop,'whatsapp','appointment_confirmed','+258841234567',now()-interval '1 second','{"fixture":true}'::jsonb
   )
   returning id into v_notification;
 

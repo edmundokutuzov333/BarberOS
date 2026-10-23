@@ -74,16 +74,16 @@ Nenhuma medição de performance mutante é executada contra a produção. A pá
 
 ## Última medição confirmada (23 de Outubro de 2026)
 
-O workflow [39974629196](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39974629196), no commit `67d299b4b25b81cba0848b7c57e63e2819742ca6`, concluiu com sucesso nos três jobs: budget de assets, Fast 3G e contrato SQL de performance. O benchmark Fast 3G registou:
+O workflow [39977291895](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39977291895), no commit `65c504bade15dffa3944fe1a50ce5ac33ccefd3e`, concluiu com sucesso nos três jobs: budget de assets, Fast 3G e contrato SQL de performance. O benchmark registou:
 
 | Métrica | Chromium 1 | Retry Chromium |
 |---|---:|---:|
-| LCP | 2.172 ms | 2.264 ms |
-| DOMContentLoaded | 1.280 ms | 1.263 ms |
+| LCP | 2.184 ms | 2.216 ms |
+| DOMContentLoaded | 1.267 ms | 1.272 ms |
 | CLS | 0 | 0 |
-| Roundtrip RPC público | 415 ms | 440 ms |
-| INP de laboratório | 80 ms | 104 ms |
+| Roundtrip RPC público | 603 ms | 615 ms |
+| INP de laboratório | 88 ms | 80 ms |
 
-O maior elemento LCP foi o título `Oryon Barber Studio`. Todos os valores cumprem os limites definidos: LCP ≤ 2.500 ms, CLS ≤ 0,10, DOMContentLoaded ≤ 1.800 ms, RPC observado ≤ 1.200 ms e INP de laboratório ≤ 200 ms.
+O maior elemento LCP foi o título `Oryon Barber Studio`. Todos os valores cumprem os limites: LCP ≤ 2.500 ms, CLS ≤ 0,10, DOMContentLoaded ≤ 1.800 ms, RPC observado ≤ 1.200 ms e INP de laboratório ≤ 200 ms.
 
-A aprovação acima é evidência real de execução no SHA `67d299b`, mas não deve ser apresentada como aprovação do SHA de lançamento se este avançar. O commit que actualiza este documento, a migration e o executor de aceitação faz o workflow ser novamente elegível e deve ser validado contra o seu SHA exacto. O teste público continua read-only e não certifica a integração transaccional da Loja nem a produção do schema de pedidos.
+Esta aprovação é evidência do SHA `65c504b`. Como o candidato avança com a correcção da fixture de notificações, esta documentação é actualizada novamente para desencadear uma execução no novo SHA exacto. O benchmark público é read-only e não substitui os testes do pedido transaccional da Loja nem certifica que produção já tem o schema de pedidos.
