@@ -59,7 +59,9 @@ const tests = [
     assert.match(edge, /p_request_hash: requestHash/);
     assert.match(edge, /select\("response,request_hash"\)/);
     assert.match(edge, /cached\.request_hash !== requestHash/);
-    assert.doesNotMatch(edge, /rpc\("book_appointment_idempotent"/);
+    assert.match(edge, /rpc\("book_appointment_idempotent"/);
+    assert.match(edge, /if \(shopItems.length > 0\)/);
+    assert.match(edge, /\.select\("response"\)/);
     assert.match(tokenApi, /invokeTokenGateway<unknown>\('shop_order\.get'/);
     assert.match(gateway, /get_shop_order_by_manage_token/);
     assert.match(manage, /data-testid="appointment-shop-order"/);

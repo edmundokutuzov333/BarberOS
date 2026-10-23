@@ -197,3 +197,10 @@ A produção continua sem `barbershops.shop_enabled`, sem tabelas de pedidos/res
 ### Optimização de LCP da página pública
 
 O gate Fast 3G identificou como maior elemento de conteúdo a descrição longa da barbearia no hero, com LCP entre 2,6 s e 3,2 s, enquanto DCL ficou perto de 1,3 s. A descrição completa foi preservada numa secção “Sobre a barbearia” e o hero passou a mostrar uma linha de resumo, reduzindo a área do candidato LCP sem remover conteúdo. A aprovação só será declarada após o workflow de performance medir o deployment desta revisão.
+
+
+### Correcção da revisão Fase 4 (23 de Outubro de 2026)
+
+A revisão inicial `1f0d9ee513b213b24a56fb3a12845750c2d4b004` falhou no CI por erros de TypeScript e porque o SQL reconstruído não terminava as definições de funções com ponto e vírgula. A revisão correctiva mantém o percurso de marcação sem produtos compatível com a produção: o lookup usa apenas `response` e a RPC permanece `book_appointment_idempotent`. O fingerprint e o RPC combinado só são consultados quando há artigos. A chamada de produtos continua a falhar fechada em produção até o schema ser reconciliado.
+
+A configuração do secret `BARBEROS_TEST_DATABASE_URL` não pode ser restaurada pela integração GitHub disponível, que não expõe operações de escrita de secrets. Não foi colocado DSN em ficheiros nem usado o DSN de produção. Os gates de aceitação e performance da base dedicada continuam abertos até existir um ambiente de teste isolado autorizado.

@@ -1,6 +1,6 @@
 # BarberOS | Fase 4: pedido de produtos atómico com a marcação
 
-**Estado de código:** implementado em preparação para `main`; teste transaccional executado em staging.  
+**Estado de código:** publicado em `main`; a revisão inicial falhou em typecheck e no parsing SQL e está a ser corrigida por commit normal. Teste transaccional executado em staging.  
 **Estado de lançamento:** **NO-GO**. Não activar `VITE_SHOP_PUBLIC_CATALOG_ENABLED` nem `barbershops.shop_enabled` em produção enquanto o schema/histórico, Turnstile, aceitação dedicada e gate de performance não estiverem reconciliados e aprovados.
 
 ## Contrato funcional
@@ -33,7 +33,7 @@ O teste transaccional passou em staging em 23 de Outubro de 2026 e as consultas 
 
 ## Migration e ambientes
 
-O staging já registava a migration `20261023124453_shop_order_atomic_phase4`, mas o ficheiro não existia em `main`. O artefacto foi reconstruído a partir das definições de funções verificadas no staging e reposto com o mesmo identificador. A migration cria/adiciona `request_hash`, instala o RPC combinado, a leitura por token e o trigger de ciclo de vida.
+O staging já registava a migration `20261023124453_shop_order_atomic_phase4`, mas o ficheiro não existia em `main`. O artefacto foi reconstruído a partir das definições de funções verificadas no staging e reposto com o mesmo identificador. A versão versionada foi corrigida para terminar cada definição SQL com ponto e vírgula, sem reescrever o histórico Git. A migration cria/adiciona `request_hash`, instala o RPC combinado, a leitura por token e o trigger de ciclo de vida.
 
 **Não foi aplicada migration à produção.** A produção continua sem `barbershops.shop_enabled`, sem as tabelas de pedidos/reservas e sem `book_appointment_with_shop_order_idempotent`. O histórico de migrations tem versões equivalentes com timestamps diferentes; não é seguro marcar versões como aplicadas ou executar um `db push` amplo. Main terá 133 ficheiros SQL, staging 96 versões registadas e produção 110.
 
@@ -45,7 +45,7 @@ O staging já registava a migration `20261023124453_shop_order_atomic_phase4`, m
 4. Configuração de Turnstile confirmada no deployment de produção.
 5. Deploy das Edge Functions e do schema de Fase 4 em produção, seguido de testes reais com a flag global e a flag do tenant desligadas primeiro e activação controlada apenas após os gates.
 
-Até todos estes pontos passarem, a Fase 4 pode ser considerada implementada e testável em staging, mas a Loja não está autorizada a receber pedidos de clientes em produção.
+Até todos estes pontos passarem, a Fase 4 está implementada no código e o contrato transaccional já foi executado em staging, mas a compilação frontend, o replay compatível com o schema de produção e o teste concorrente ainda precisam de aprovação na revisão actual. A Loja não está autorizada a receber pedidos de clientes em produção.
 
 
 ## Performance do percurso público
