@@ -424,7 +424,7 @@ export default function BookingWizard() {
 
     if (name.length < 2 || name.length > 120) nextErrors.name = 'Escreve o teu nome (2 a 120 caracteres).';
     if (!validMozPhone(phone)) nextErrors.phone = 'Usa um número móvel de Moçambique, por exemplo 84 000 0000.';
-    if (!validEmail(email)) nextErrors.email = 'Indica um email válido.';
+    if (email && !validEmail(email)) nextErrors.email = 'Indica um email válido.';
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
 
@@ -688,7 +688,7 @@ export default function BookingWizard() {
                     />
                   </div>
                   <Field
-                    label="Email"
+                    label="Email (opcional)"
                     name="email"
                     type="email"
                     inputMode="email"
@@ -696,12 +696,11 @@ export default function BookingWizard() {
                     value={form.email}
                     onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
                     error={errors.email}
-                    hint="Obrigatório para receber confirmação e lembretes."
+                    hint="Opcional. As notificações por email dependem da configuração da barbearia."
                     placeholder="nome@email.com"
-                    required
                   />
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <p className="t-body text-ink-mid">Sem conta e sem palavra-passe. A sua marcação ficará acessível através do link de gestão enviado após a criação.</p>
+                    <p className="t-body text-ink-mid">Não precisa de criar conta. O email é opcional. Guarde o link de gestão apresentado no ecrã após confirmar; as notificações por email dependem da configuração da barbearia.</p>
                   </div>
                   {turnstileSiteKey ? (
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">

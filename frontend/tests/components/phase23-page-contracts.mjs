@@ -19,6 +19,17 @@ const tests = [
     assert.match(source, /booking-summary/);
     assert.match(source, /searchParams\.get\('service'\)/);
   }],
+  ['Public booking allows optional email without overstating automatic delivery', () => {
+    const source = read('src/pages/BookingWizard.tsx');
+    assert.match(source, /if \(email && !validEmail\(email\)\)/);
+    const emailStart = source.indexOf('label="Email (opcional)"');
+    assert.notEqual(emailStart, -1);
+    const fieldStart = source.lastIndexOf('<Field', emailStart);
+    const fieldEnd = source.indexOf('/>', emailStart);
+    assert.ok(fieldStart >= 0 && fieldEnd > emailStart);
+    assert.doesNotMatch(source.slice(fieldStart, fieldEnd), /\brequired\b/);
+    assert.match(source, /guarde o link de gestão apresentado no ecrã/i);
+  }],
   ['Appointments page is wired to the real agenda contract', () => {
     const source = read('src/pages/app/Marcacoes.tsx');
     assert.match(source, /useAgendaAppointments\(/);

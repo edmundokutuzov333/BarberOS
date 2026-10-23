@@ -17,6 +17,10 @@ O wizard é público e não requer autenticação.
 
 As escolhas operacionais ficam em `searchParams` para permitir refresh e partilha do estado do percurso sem colocar PII do cliente na URL. Nome, telefone e email ficam apenas no estado da página até à submissão.
 
+## Email do cliente e notificações
+
+O email do cliente é opcional no percurso público. Quando está vazio, o backend guarda a marcação sem email e não cria uma notificação por email; as notificações por WhatsApp e a sua entrega dependem da configuração real do provider. O ecrã de marcação deve instruir o cliente a guardar o link de gestão apresentado após a confirmação. Não assumir que uma notificação foi enviada apenas porque a marcação foi criada.
+
 ## Fonte de verdade
 
 O catálogo inicial vem de `get_public_barbershop(slug)`.
