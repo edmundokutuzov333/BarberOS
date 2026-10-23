@@ -74,9 +74,21 @@ for filename in FILES:
         raise SystemExit(f"SAFETY_ABORT_TRANSACTION_GUARD: {filename}")
 
 with psycopg.connect(database_url, autocommit=True, prepare_threshold=None) as conn:
-    for filename in FILES:
-        print(f"RUN {filename}")
-        conn.execute((TESTS / filename).read_text(encoding="utf-8"))
-        print(f"PASS {filename}")
+    fixture_created = False
+    try:
+        print("SETUP phase23_fixture_setup.sql")
+        conn.execute((TESTS / "phase23_fixture_setup.sql").read_text(encoding="utf-8"))
+        fixture_created = True
+        print("PASS phase23_fixture_setup.sql")
 
-print(f"Phase 23 database suite: {len(FILES)}/{len(FILES)} files executed.")
+        for filename in FILES:
+            print(f"RUN {filename}")
+            conn.execute((TESTS / filename).read_text(encoding="utf-8"))
+            print(f"PASS {filename}")
+    finally:
+        if fixture_created:
+            print("CLEANUP phase23_fixture_cleanup.sql")
+            conn.execute((TESTS / "phase23_fixture_cleanup.sql").read_text(encoding="utf-8"))
+            print("PASS phase23_fixture_cleanup.sql")
+
+print(f"Phase 23 database suite: {len(FILES)}/{len(FILES)} contracts executed.")
