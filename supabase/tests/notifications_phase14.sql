@@ -47,6 +47,10 @@ declare
   v_notification uuid;
   v_claim record;
   v_failure record;
+  v_actual_status public.notif_status;
+  v_actual_attempts integer;
+  v_actual_scheduled_for timestamptz;
+  v_actual_next_attempt_at timestamptz;
   v_sent public.notif_status;
   v_attempts integer;
 begin
@@ -69,10 +73,11 @@ begin
   where status='queued';
 
   insert into public.notifications(
-    barbershop_id,channel,template_key,recipient,scheduled_for,payload
+    barbershop_id,channel,template_key,recipient,scheduled_for,status,attempts,next_attempt_at,payload
   )
   values(
-    v_shop,'whatsapp','appointment_confirmed','+258841234567',now()-interval '1 second','{"fixture":true}'::jsonb
+    v_shop,'whatsapp','appointment_confirmed','+258841234567',
+    now()-interval '1 second','queued',0,now()-interval '1 second','{"fixture":true}'::jsonb
   )
   returning id into v_notification;
 
@@ -84,7 +89,16 @@ begin
   where n.id=v_notification;
 
   if v_claim.id is null or v_claim.status is distinct from 'processing' or v_claim.attempts <> 1 then
-    raise exception 'FAIL: atomic claim did not move fixture to processing';
+    select n.status,n.attempts,n.scheduled_for,n.next_attempt_at
+    into v_actual_status,v_actual_attempts,v_actual_scheduled_for,v_actual_next_attempt_at
+    from public.notifications n
+    where n.id=v_notification;
+
+    raise exception 'FAIL: atomic claim did not move fixture to processing (status=%, attempts=%, scheduled_for=%, next_attempt_at=%)',
+      coalesce(v_actual_status::text,'<missing>'),
+      coalesce(v_actual_attempts,-1),
+      v_actual_scheduled_for,
+      v_actual_next_attempt_at;
   end if;
 
   select * into v_failure

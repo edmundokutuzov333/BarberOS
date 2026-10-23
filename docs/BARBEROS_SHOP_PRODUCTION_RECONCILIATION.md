@@ -7,7 +7,7 @@ Data da verificação: 23 de Outubro de 2026. Repositório: `edmundokutuzov333/B
 | Verificação | Produção `alseiinjzwjdiwtvkdzy` | Staging `asikuyxaapcmayptimxi` |
 |---|---|---|
 | Registos em `supabase_migrations.schema_migrations` | 110 | 97 |
-| Ficheiros SQL em `main` | 134 no repositório | 134 no repositório |
+| Ficheiros SQL em `main` | 135 no repositório | 134 no repositório |
 | Migrations a partir de `20261023000000` | 0 | 22 |
 | `barbershops.shop_enabled` | ausente | presente |
 | Tabelas de catálogo, variantes, pedidos e reservas | ausentes | presentes |
@@ -37,3 +37,8 @@ Não foram aplicadas migrations à produção, nem executado `supabase db push`,
 ## Estado
 
 **NO-GO para produção.** O código da Fase 4 e os contratos transaccionais passam no CI local de `main`, mas produção ainda não tem o schema, as funções nem a versão de Edge Function necessários. A aceitação browser completa continua ignorada quando faltam credenciais dedicadas. Este relatório não altera nem substitui o histórico real do Supabase.
+
+
+## Reconciliação nominal do histórico (verificação adicional)
+
+A comparação read-only entre os 110 registos de produção e os ficheiros SQL de `main` encontrou correspondência directa por `version_name` em 65 registos, correspondência pelo nome de ficheiro sem prefixo em 11 e correspondência única por sufixo em 26. Oito registos não têm ficheiro correspondente por nome no repositório: `manual_booking_phone_structural` (20260918153729), `20260918172000_payments_domain_reconcile` (20260918172547), `phase_22_permissions_hardening` (20260918222131), `phase_22_config_write_grants` (20260918222334), `phase_22_public_read_grants` (20260918222928), `phase_22_permission_reconciliation` (20260918223047), `phase27_token_rpc_gateway_lockdown` (20261021063049) e `theme_engine_v2` (20261021141221). Os 26 matches por sufixo ainda precisam de comparação de conteúdo e checksum, não são certificados só por nome. A tabela de histórico conserva as statements e os seus hashes, pelo que o próximo passo é comparar o conteúdo de cada registo com a migration correspondente antes de emitir qualquer plano de aplicação.
