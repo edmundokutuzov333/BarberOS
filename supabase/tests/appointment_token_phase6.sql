@@ -124,6 +124,10 @@ begin
       if v_error<>'CANCELLATION_POLICY_CONTACT_ONLY' then raise; end if;
     end;
     update public.barbershops set cancellation_rule=v_rule where id=v_shop;
+    raise exception 'ROLLBACK_POLICY_RULE';
+  exception when others then
+    get stacked diagnostics v_error=message_text;
+    if v_error<>'ROLLBACK_POLICY_RULE' then raise; end if;
   end;
 
   begin
