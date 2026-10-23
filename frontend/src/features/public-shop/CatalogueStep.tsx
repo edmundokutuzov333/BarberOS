@@ -5,7 +5,7 @@ import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States'
 import { formatMT, humanError } from '@/lib/utils';
 import type { PublicShopCatalog, PublicShopProduct, PublicShopVariant } from '@/features/public-shop/catalog';
 
-export type ShopCart = Record<string, { qty: number; options: string[] }>;
+export type ShopCart = Record<string, { qty: number; options: string[]; fulfilmentMode: 'consume_here' | 'takeaway' }>;
 
 type Props = {
   catalog: PublicShopCatalog;
@@ -15,6 +15,7 @@ type Props = {
   onRetry: () => void;
   onQuantityChange: (product: PublicShopProduct, variant: PublicShopVariant, delta: number) => void;
   onOptionChange: (variantId: string, option: string, checked: boolean) => void;
+  onFulfilmentModeChange: (variantId: string, mode: 'consume_here' | 'takeaway') => void;
   onContinueWithoutProducts: () => void;
 };
 
@@ -43,7 +44,7 @@ export function ShopCatalogueStep({
   }, [products, search, category]);
   const selectedLines = useMemo(() => products.flatMap((product) => product.variants.flatMap((variant) => {
     const selected = cart[variant.id];
-    return selected?.qty > 0 ? [{ product, variant, qty: selected.qty, options: selected.options }] : [];
+    return selected?.qty > 0 ? [{ product, variant, qty: selected.qty, options: selected.options, fulfilmentMode: selected.fulfilmentMode }] : [];
   })), [products, cart]);
   const totalQuantity = selectedLines.reduce((total, line) => total + line.qty, 0);
   const subtotal = selectedLines.reduce((total, line) => total + line.qty * line.variant.price_minor, 0);
@@ -53,7 +54,7 @@ export function ShopCatalogueStep({
       <div className="space-y-5">
         <div>
           <p className="t-body text-ink-mid">Escolha bebidas, snacks ou produtos. É opcional.</p>
-          <p className="t-label text-ink-mid mt-2">A pré-selecção não é ainda registada como pedido nem representa pagamento. O envio seguro do pedido será activado numa fase posterior.</p>
+          <p className="t-label text-ink-mid mt-2">A sua selecção será validada com a marcação. O pedido de produtos não é um pagamento; a equipa confirma a disponibilidade e a preparação.</p>
         </div>
         <div className="space-y-2">
           <label htmlFor="public-shop-search" className="t-label text-ink-mid">Pesquisar produtos</label>
@@ -108,7 +109,7 @@ export function ShopCatalogueStep({
                 </div>
                 <div className="mt-4 space-y-3">
                   {product.variants.map((variant) => {
-                    const selected = cart[variant.id] ?? { qty: 0, options: [] };
+                    const selected = cart[variant.id] ?? { qty: 0, options: [], fulfilmentMode: product.product_kind === 'takeaway' ? 'takeaway' as const : 'consume_here' as const };
                     const selectedOptions = new Set(selected.options);
                     return (
                       <div key={variant.id} className="rounded-xl border border-white/10 p-3" data-testid={'public-shop-variant-' + variant.id}>
@@ -131,6 +132,27 @@ export function ShopCatalogueStep({
                             </div>
                           )}
                         </div>
+                        {selected.qty > 0 && product.product_kind === 'both' && (
+                          <fieldset className="mt-3 border-t border-white/10 pt-3" data-testid={'public-shop-fulfilment-' + variant.id}>
+                            <legend className="t-label text-ink-mid mb-2">Como pretende o artigo?</legend>
+                            <div className="flex flex-wrap gap-4">
+                              <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm text-ink-mid">
+                                <input type="radio" name={'fulfilment-' + variant.id} value="consume_here"
+                                  checked={selected.fulfilmentMode === 'consume_here'}
+                                  onChange={() => onFulfilmentModeChange(variant.id, 'consume_here')}
+                                  className="h-4 w-4 accent-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft" />
+                                Consumir na barbearia
+                              </label>
+                              <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm text-ink-mid">
+                                <input type="radio" name={'fulfilment-' + variant.id} value="takeaway"
+                                  checked={selected.fulfilmentMode === 'takeaway'}
+                                  onChange={() => onFulfilmentModeChange(variant.id, 'takeaway')}
+                                  className="h-4 w-4 accent-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft" />
+                                Levar consigo
+                              </label>
+                            </div>
+                          </fieldset>
+                        )}
                         {selected.qty > 0 && product.order_options.length > 0 && (
                           <fieldset className="mt-3 border-t border-white/10 pt-3">
                             <legend className="t-label text-ink-mid mb-2">Preferências (opcional)</legend>

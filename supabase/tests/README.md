@@ -38,3 +38,8 @@ Execução validada em `BarberOS Remediation Staging` em 23 de Outubro de 2026. 
 
 
 `shop_public_catalog_phase3.sql` valida a RPC pública da Loja: flag desligada sem fuga de dados, isolamento por slug/tenant, categorias e produtos publicados, variantes activas, disponibilidade após reservas, produtos sem controlo de stock e ausência de campos privados na resposta. Todos os fixtures terminam em `ROLLBACK`; executar apenas em staging/teste após as migrations da Fase 3.
+
+
+### Fase 4: concorrência real da reserva de stock
+
+`shop_order_concurrency_setup_phase4.sql`, `shop_order_concurrency_call_a_phase4.sql`, `shop_order_concurrency_call_b_phase4.sql` e `shop_order_concurrency_assert_phase4.sql` são executados apenas pelo workflow `ci.yml` na base Supabase local e efémera. O setup cria uma barbearia QA, dois horários distintos e uma unidade de stock; duas sessões concorrentes tentam reservar essa unidade. O contrato exige exactamente uma transacção bem-sucedida, a outra a falhar com `SHOP_STOCK_UNAVAILABLE`, uma linha de pedido, uma reserva e nenhuma linha de idempotência residual da transacção falhada. Não executar os ficheiros de setup/call contra staging ou produção.

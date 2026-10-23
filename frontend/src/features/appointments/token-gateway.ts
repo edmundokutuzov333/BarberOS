@@ -5,6 +5,7 @@ export type TokenGatewayAction =
   | 'appointment.reschedule_slots'
   | 'appointment.cancel'
   | 'appointment.reschedule'
+  | 'shop_order.get'
   | 'review.get'
   | 'review.submit'
   | 'waitlist.get'

@@ -9,6 +9,7 @@ type TokenAction =
   | "appointment.reschedule_slots"
   | "appointment.cancel"
   | "appointment.reschedule"
+  | "shop_order.get"
   | "review.get"
   | "review.submit"
   | "waitlist.get"
@@ -49,6 +50,7 @@ Deno.serve(async (req) => {
     "appointment.reschedule_slots",
     "appointment.cancel",
     "appointment.reschedule",
+    "shop_order.get",
     "review.get",
     "review.submit",
     "waitlist.get",
@@ -145,6 +147,10 @@ Deno.serve(async (req) => {
       case "appointment.reschedule":
         rpcName = "reschedule_appointment_by_token";
         args = { p_token: token, p_new_start: body.new_start };
+        break;
+      case "shop_order.get":
+        rpcName = "get_shop_order_by_manage_token";
+        args = { p_token: token };
         break;
       case "review.get":
         rpcName = "get_review_by_token";

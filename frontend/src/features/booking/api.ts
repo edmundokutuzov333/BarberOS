@@ -2,13 +2,31 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Database } from '@/lib/database.types';
 import { supabase } from '@/lib/supabase';
 
+export type ShopOrderItemInput = {
+  variant_id: string;
+  qty: number;
+  options: string[];
+  fulfilment_mode: 'consume_here' | 'takeaway';
+};
+
+export type ShopOrderSummary = {
+  status: Database['public']['Enums']['shop_order_status'];
+  item_count: number;
+  subtotal_minor: number;
+};
+
 export type BookAppointmentInput =
-  Database['public']['Functions']['book_appointment']['Args'] & { idempotency_key?: string; turnstile_token?: string };
+  Database['public']['Functions']['book_appointment']['Args'] & {
+    idempotency_key?: string;
+    turnstile_token?: string;
+    p_shop_items?: ShopOrderItemInput[];
+  };
 
 export type BookAppointmentResult = {
   manage_token: string;
   deposit_cents: number;
   needs_payment: boolean;
+  shop_order?: ShopOrderSummary;
 };
 
 export class BookingRequestError extends Error {
@@ -63,6 +81,14 @@ async function readFunctionError(error: unknown): Promise<{ code: string; status
     'RATE_LIMITED',
     'IDEMPOTENCY_IN_PROGRESS',
     'IDEMPOTENCY_STORE_UNAVAILABLE',
+    'IDEMPOTENCY_KEY_REUSED',
+    'SHOP_NOT_ENABLED',
+    'SHOP_ITEM_UNAVAILABLE',
+    'SHOP_STOCK_UNAVAILABLE',
+    'INVALID_SHOP_ORDER_ITEMS',
+    'INVALID_SHOP_ORDER_QUANTITY',
+    'INVALID_SHOP_ORDER_OPTIONS',
+    'INVALID_SHOP_FULFILMENT_MODE',
   ];
 
   const code = knownCodes.find((candidate) => message.includes(candidate)) ?? 'BOOKING_CREATE_FAILED';
@@ -77,6 +103,7 @@ export async function bookAppointment(
       ...input,
       idempotency_key: input.idempotency_key ?? crypto.randomUUID(),
       p_phone: normalizeMozPhone(input.p_phone),
+      p_shop_items: input.p_shop_items ?? [],
     },
   });
 
@@ -97,6 +124,7 @@ export async function bookAppointment(
     manage_token: data.booking.manage_token,
     deposit_cents: Number(data.booking.deposit_cents ?? 0),
     needs_payment: Boolean(data.booking.needs_payment),
+    ...(data.booking.shop_order ? { shop_order: data.booking.shop_order as ShopOrderSummary } : {}),
   };
 }
 

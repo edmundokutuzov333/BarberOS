@@ -12,6 +12,7 @@ import { useInitiatePayment, usePaymentStatus, type PaymentProvider } from '@/fe
 import { buildWhatsAppLink, downloadAppointmentCalendar } from '@/lib/calendar';
 import {
   useAppointmentByToken,
+  useShopOrderByToken,
   useRescheduleSlotsByToken,
   useTokenCancellation,
   useTokenReschedule,
@@ -52,6 +53,7 @@ export default function AppointmentManage() {
   const [paymentStarted, setPaymentStarted] = useState(false);
   const paymentMutation = useInitiatePayment();
   const query = useAppointmentByToken(token);
+  const shopOrderQuery = useShopOrderByToken(token);
   const cancelMutation = useTokenCancellation();
   const rescheduleMutation = useTokenReschedule();
   const slotQuery = useRescheduleSlotsByToken(token, date, mode === 'reschedule');
@@ -191,6 +193,54 @@ export default function AppointmentManage() {
               {data.shop_maps_url && <a href={data.shop_maps_url} target="_blank" rel="noreferrer" className="t-label text-accent-soft hover:text-ink-hi inline-block mt-1">Abrir no mapa</a>}
             </div>
           </div>
+
+          {shopOrderQuery.isError && (
+            <div className="mt-7" data-testid="shop-order-load-error">
+              <ErrorState message="Não foi possível carregar o resumo dos produtos desta marcação." onRetry={() => { void shopOrderQuery.refetch(); }} />
+            </div>
+          )}
+          {shopOrderQuery.data && (
+            <section className="mt-7 rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6" data-testid="appointment-shop-order">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="t-card text-ink-hi">Artigos pedidos</h2>
+                  <p className="t-body text-ink-mid mt-1">Pedido associado à marcação. Não é um pagamento confirmado.</p>
+                </div>
+                <span className="t-label rounded-full border border-white/10 px-3 py-1 text-ink-mid">
+                  {({
+                    received: 'Pedido recebido',
+                    needs_confirmation: 'A confirmar',
+                    accepted: 'Aceite',
+                    preparing: 'Em preparação',
+                    ready: 'Pronto',
+                    partially_delivered: 'Parcialmente entregue',
+                    delivered: 'Entregue',
+                    cancelled: 'Cancelado',
+                    failed: 'Não disponível',
+                  } as Record<string, string>)[shopOrderQuery.data.status]}
+                </span>
+              </div>
+              <ul className="mt-4 space-y-3">
+                {shopOrderQuery.data.items.map((item, index) => (
+                  <li key={item.product_name + '-' + item.variant + '-' + index} className="border-t border-white/10 pt-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="t-body text-ink-hi">{item.qty} × {item.product_name}</p>
+                        <p className="t-label text-ink-mid mt-1">{item.variant} · {item.options.fulfilment_mode === 'consume_here' ? 'Consumir na barbearia' : 'Levar consigo'}</p>
+                        {item.options.preferences.length > 0 && <p className="t-label text-ink-mid mt-1">Preferências: {item.options.preferences.join(', ')}</p>}
+                      </div>
+                      <p className="t-body text-ink-hi tabular-nums shrink-0">{formatMT(item.line_total_minor)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-4">
+                <span className="t-label text-ink-mid">Subtotal dos produtos</span>
+                <span className="t-card text-ink-hi tabular-nums">{formatMT(shopOrderQuery.data.subtotal_minor)}</span>
+              </div>
+              <p className="t-label text-ink-mid mt-2">O pagamento e a entrega são registados separadamente do pedido.</p>
+            </section>
+          )}
 
           {canActions && data.deposit_status === 'awaiting' && data.deposit_cents > 0 && (
             <div className="mt-7 rounded-3xl border border-accent/25 bg-accent/10 p-5 sm:p-6" data-testid="payment-section">

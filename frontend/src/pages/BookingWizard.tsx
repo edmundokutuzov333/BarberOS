@@ -99,7 +99,7 @@ function StepHeader({ currentStep, shopName, shopSlug, stepLabels }: { currentSt
           <Link to={`/barbearia/${shopSlug}`} className="t-label text-ink-mid hover:text-ink-hi transition-colors">{shopName}</Link>
           <p className="t-label text-accent-soft mt-1">Marcação online</p>
         </div>
-        <span className="t-label text-ink-mid">{currentStep} de {STEP_LABELS.length}</span>
+        <span className="t-label text-ink-mid">{currentStep} de {stepLabels.length}</span>
       </div>
       <nav aria-label="Progresso da marcação" className="mt-5">
         <ol className={'grid gap-1.5 ' + (stepLabels.length === 7 ? 'grid-cols-7' : 'grid-cols-6')}>
@@ -243,6 +243,7 @@ function Summary({
               {shopLines.map((line) => (
                 <li key={line.variant.id} className="text-sm">
                   <div className="flex justify-between gap-3"><span className="text-ink-mid">{line.qty} × {line.product.name} · {line.variant.label}</span><span className="text-ink-hi tabular-nums">{formatMT(line.qty * line.variant.price_minor)}</span></div>
+                  <p className="t-label text-ink-mid mt-1">{line.fulfilmentMode === 'consume_here' ? 'Consumir na barbearia' : 'Levar consigo'}</p>
                   {line.options.length > 0 && <p className="t-label text-ink-mid mt-1">Preferências: {line.options.join(', ')}</p>}
                 </li>
               ))}
@@ -271,10 +272,11 @@ export default function BookingWizard() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingAttemptKey, setBookingAttemptKey] = useState(() => crypto.randomUUID());
+  const bookingAttemptFingerprint = useRef<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [shopCart, setShopCart] = useState<ShopCart>({});
-  useEffect(() => { setShopCart({}); setBookingError(null); }, [slug]);
+  useEffect(() => { setShopCart({}); setBookingError(null); setBookingAttemptKey(crypto.randomUUID()); bookingAttemptFingerprint.current = null; }, [slug]);
   const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() ?? '';
   const turnstileRequired = import.meta.env.VITE_BOOKING_TURNSTILE_REQUIRED === 'true' || import.meta.env.PROD;
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -291,7 +293,7 @@ export default function BookingWizard() {
   const start = searchParams.get('start');
   const shopLines = useMemo(() => (shopCatalogQuery.data?.products ?? []).flatMap((product) => product.variants.flatMap((variant) => {
     const selected = shopCart[variant.id];
-    return selected?.qty > 0 ? [{ product, variant, qty: selected.qty, options: selected.options }] : [];
+    return selected?.qty > 0 ? [{ product, variant, qty: selected.qty, options: selected.options, fulfilmentMode: selected.fulfilmentMode }] : [];
   })), [shopCatalogQuery.data?.products, shopCart]);
   const shopItemCount = shopLines.reduce((total, line) => total + line.qty, 0);
   const shopSubtotal = shopLines.reduce((total, line) => total + line.qty * line.variant.price_minor, 0);
@@ -386,7 +388,7 @@ export default function BookingWizard() {
   const canBook = Boolean(
     !shopCatalogQuery.isLoading && selectableService && start && (barberParam === 'any' || barber) && depositConfigValid &&
     ((!turnstileRequired && !turnstileSiteKey) || Boolean(turnstileSiteKey && turnstileToken)) &&
-    (!shopStepAvailable || shopItemCount === 0),
+    shopLines.length <= 20,
   );
 
   const setStep = (step: number) => updateSearchParams(searchParams, setSearchParams, { step: String(step) });
@@ -412,12 +414,26 @@ export default function BookingWizard() {
   });
 
   const changeShopQuantity = (product: PublicShopProduct, variant: PublicShopVariant, delta: number) => {
+    const selectedVariantCount = Object.values(shopCart).filter((line) => line.qty > 0).length;
+    if (delta > 0 && !shopCart[variant.id] && selectedVariantCount >= 20) {
+      setBookingError('Pode seleccionar até 20 variantes diferentes por marcação. Retire um artigo antes de adicionar outro.');
+      return;
+    }
     setShopCart((current) => {
-      const previous = current[variant.id] ?? { qty: 0, options: [] };
+      const previous = current[variant.id] ?? {
+        qty: 0,
+        options: [],
+        fulfilmentMode: product.product_kind === 'takeaway' ? 'takeaway' as const : 'consume_here' as const,
+      };
       const qty = Math.max(0, Math.min(100, previous.qty + delta));
       const next = { ...current };
       if (qty === 0) delete next[variant.id];
-      else next[variant.id] = { qty, options: previous.options.filter((option) => product.order_options.includes(option)) };
+      else next[variant.id] = {
+        ...previous,
+        qty,
+        options: previous.options.filter((option) => product.order_options.includes(option)),
+        fulfilmentMode: product.product_kind === 'takeaway' ? 'takeaway' : product.product_kind === 'consume_here' ? 'consume_here' : previous.fulfilmentMode,
+      };
       return next;
     });
     setBookingError(null);
@@ -430,6 +446,16 @@ export default function BookingWizard() {
       const options = checked ? [...new Set([...previous.options, option])] : previous.options.filter((item) => item !== option);
       return { ...current, [variantId]: { ...previous, options: options.slice(0, 10) } };
     });
+    setBookingError(null);
+  };
+
+  const changeShopFulfilmentMode = (variantId: string, mode: 'consume_here' | 'takeaway') => {
+    setShopCart((current) => {
+      const previous = current[variantId];
+      if (!previous || previous.qty === 0) return current;
+      return { ...current, [variantId]: { ...previous, fulfilmentMode: mode } };
+    });
+    setBookingError(null);
   };
 
   const continueWithoutProducts = () => {
@@ -474,10 +500,6 @@ export default function BookingWizard() {
   };
 
   const submitBooking = async () => {
-    if (shopStepAvailable && shopItemCount > 0) {
-      setBookingError('Os artigos seleccionados ainda não podem ser anexados à marcação. Volte ao passo Loja e retire os artigos, ou escolha “Continuar sem produtos”, antes de confirmar.');
-      return;
-    }
     if ((turnstileRequired || turnstileSiteKey) && !turnstileSiteKey) {
       setBookingError('A marcação está temporariamente indisponível porque a verificação de segurança não está configurada.');
       return;
@@ -499,6 +521,30 @@ export default function BookingWizard() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
 
+    const shopItems = shopLines.map((line) => ({
+      variant_id: line.variant.id,
+      qty: line.qty,
+      options: line.options,
+      fulfilment_mode: line.fulfilmentMode,
+    }));
+    const requestFingerprint = JSON.stringify({
+      slug: slug?.trim().toLowerCase(),
+      service: selectableService.id,
+      haircut: haircut?.id ?? null,
+      barber: selectedBarberId,
+      start,
+      name,
+      phone: normalizeMozPhone(phone),
+      email: email || null,
+      shopItems,
+    });
+    let requestKey = bookingAttemptKey;
+    if (bookingAttemptFingerprint.current !== requestFingerprint) {
+      requestKey = crypto.randomUUID();
+      bookingAttemptFingerprint.current = requestFingerprint;
+      setBookingAttemptKey(requestKey);
+    }
+
     setBookingError(null);
     try {
       const result = await bookMutation.mutateAsync({
@@ -510,16 +556,23 @@ export default function BookingWizard() {
         p_name: name,
         p_phone: normalizeMozPhone(phone),
         p_email: email || null,
-        idempotency_key: bookingAttemptKey,
+        p_shop_items: shopItems,
+        idempotency_key: requestKey,
         ...(turnstileSiteKey ? { turnstile_token: turnstileToken ?? undefined } : {}),
       });
       rememberLocalBooking({ token: result.manage_token, shopSlug: slug, startsAt: start, serviceName: selectableService.name });
       navigate(`/marcacao/${result.manage_token}`, { replace: true });
+      bookingAttemptFingerprint.current = null;
       setBookingAttemptKey(crypto.randomUUID());
+      bookingAttemptFingerprint.current = null;
     } catch (error) {
       const errorCode = error && typeof error === 'object' && 'code' in error
         ? String((error as { code?: unknown }).code ?? '')
         : String(error);
+      if (errorCode === 'IDEMPOTENCY_KEY_REUSED') {
+        bookingAttemptFingerprint.current = null;
+        setBookingAttemptKey(crypto.randomUUID());
+      }
       const message = errorCode.includes('SLOT_TAKEN') || errorCode.includes('SLOT_UNAVAILABLE')
         ? 'Este horário acabou de ser ocupado. Escolha outro horário.'
         : errorCode === 'BOT_CHECK_FAILED'
@@ -530,7 +583,11 @@ export default function BookingWizard() {
               ? 'Esta tentativa ainda está a ser processada. Aguarde um momento antes de tentar novamente.'
               : errorCode === 'IDEMPOTENCY_STORE_UNAVAILABLE'
                 ? 'Não foi possível confirmar o estado da marcação. Aguarde e, se o erro persistir, contacte o suporte.'
-                : humanError(error);
+                : errorCode === 'SHOP_STOCK_UNAVAILABLE' || errorCode === 'SHOP_ITEM_UNAVAILABLE'
+                  ? 'Um dos artigos deixou de estar disponível. Volte à Loja, reveja a selecção e confirme novamente.'
+                  : errorCode === 'IDEMPOTENCY_KEY_REUSED'
+                    ? 'A selecção mudou desde a última tentativa. Confirme novamente para continuar com os dados actuais.'
+                    : humanError(error);
       setBookingError(message);
       if (turnstileSiteKey) {
         setTurnstileToken(null);
@@ -734,6 +791,7 @@ export default function BookingWizard() {
                 onRetry={() => { void shopCatalogQuery.refetch(); }}
                 onQuantityChange={changeShopQuantity}
                 onOptionChange={changeShopOption}
+                onFulfilmentModeChange={changeShopFulfilmentMode}
                 onContinueWithoutProducts={continueWithoutProducts}
               />
             )}
@@ -804,8 +862,8 @@ export default function BookingWizard() {
                     </div>
                   ) : null}
                   {shopStepAvailable && shopItemCount > 0 && (
-                    <div role="alert" className="rounded-2xl border border-amber-400/25 bg-amber-400/5 p-4" data-testid="booking-shop-not-submittable">
-                      <p className="t-body text-ink-mid">A selecção de artigos ainda não pode ser registada como pedido nesta fase. Para evitar uma falsa confirmação, a marcação só pode ser submetida sem artigos até a integração segura de pedidos ser concluída.</p>
+                    <div role="status" className="rounded-2xl border border-white/10 bg-white/5 p-4" data-testid="booking-shop-order-summary">
+                      <p className="t-body text-ink-mid">Os artigos serão registados como pedido associado à marcação. O pagamento não é efectuado nesta etapa; a equipa confirma a disponibilidade e a preparação.</p>
                       <Button type="button" variant="secondary" size="sm" onClick={() => setStep(6)} className="mt-3">Voltar à Loja para rever artigos</Button>
                     </div>
                   )}

@@ -11,6 +11,13 @@ function isUuid(value: unknown): value is string {
     && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
+type ShopOrderItemInput = {
+  variant_id: string;
+  qty: number;
+  options: string[];
+  fulfilment_mode: "consume_here" | "takeaway";
+};
+
 type BookingPayload = {
   p_slug: string;
   p_service_id: string;
@@ -20,9 +27,29 @@ type BookingPayload = {
   p_name: string;
   p_phone: string;
   p_email: string | null;
+  p_shop_items?: ShopOrderItemInput[];
   idempotency_key: string;
   turnstile_token?: string;
 };
+
+function isShopOrderItems(value: unknown): value is ShopOrderItemInput[] {
+  if (typeof value === "undefined") return true;
+  if (!Array.isArray(value) || value.length > 20) return false;
+  const variants = new Set<string>();
+  for (const item of value) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return false;
+    const row = item as Record<string, unknown>;
+    if (Object.keys(row).some((key) => !["variant_id", "qty", "options", "fulfilment_mode"].includes(key))) return false;
+    if (!isUuid(row.variant_id) || !Number.isInteger(row.qty) || Number(row.qty) < 1 || Number(row.qty) > 100) return false;
+    if (variants.has(String(row.variant_id).toLowerCase())) return false;
+    variants.add(String(row.variant_id).toLowerCase());
+    if (!Array.isArray(row.options) || row.options.length > 10
+      || row.options.some((option) => typeof option !== "string" || option.trim().length < 1 || option.trim().length > 80)) return false;
+    if (new Set(row.options as string[]).size !== row.options.length) return false;
+    if (row.fulfilment_mode !== "consume_here" && row.fulfilment_mode !== "takeaway") return false;
+  }
+  return true;
+}
 
 function isValidPayload(value: unknown): value is BookingPayload {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
@@ -47,6 +74,7 @@ function isValidPayload(value: unknown): value is BookingPayload {
       typeof body.p_email === "string" && body.p_email.length <= 254
     ))
     && isUuid(body.idempotency_key)
+    && isShopOrderItems(body.p_shop_items)
     && (typeof body.turnstile_token === "undefined" || (
       typeof body.turnstile_token === "string" && body.turnstile_token.length <= 4096
     ));
@@ -56,13 +84,42 @@ function publicResponse(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const response = value as Record<string, unknown>;
   if (typeof response.manage_token !== "string") return null;
+  const booking: Record<string, unknown> = {
+    manage_token: response.manage_token,
+    deposit_cents: Number(response.deposit_cents ?? 0),
+    needs_payment: Boolean(response.needs_payment),
+  };
+  const order = response.shop_order;
+  if (order && typeof order === "object" && !Array.isArray(order)) {
+    const summary = order as Record<string, unknown>;
+    if (typeof summary.status !== "string"
+      || !Number.isInteger(summary.item_count) || Number(summary.item_count) < 1
+      || !Number.isSafeInteger(Number(summary.subtotal_minor)) || Number(summary.subtotal_minor) < 0) return null;
+    booking.shop_order = {
+      status: summary.status,
+      item_count: Number(summary.item_count),
+      subtotal_minor: Number(summary.subtotal_minor),
+    };
+  }
+  return { ok: true, booking };
+}
+
+function fingerprintShape(payload: BookingPayload, slug: string, items: ShopOrderItemInput[]) {
   return {
-    ok: true,
-    booking: {
-      manage_token: response.manage_token,
-      deposit_cents: Number(response.deposit_cents ?? 0),
-      needs_payment: Boolean(response.needs_payment),
-    },
+    slug,
+    service_id: payload.p_service_id,
+    haircut_id: payload.p_haircut_id ?? null,
+    barber_id: payload.p_barber_id ?? null,
+    start: new Date(payload.p_start).toISOString(),
+    name: payload.p_name.trim(),
+    phone: payload.p_phone.trim(),
+    email: payload.p_email?.trim() || null,
+    shop_items: items.map((item) => ({
+      variant_id: item.variant_id.toLowerCase(),
+      qty: item.qty,
+      options: [...item.options].map((option) => option.trim()).sort(),
+      fulfilment_mode: item.fulfilment_mode,
+    })),
   };
 }
 
@@ -94,16 +151,24 @@ Deno.serve(async (req) => {
 
     const admin = adminClient();
     const key = payload.idempotency_key;
+    const slug = payload.p_slug.trim().toLowerCase();
+    const shopItems = (payload.p_shop_items ?? []).map((item) => ({
+      ...item,
+      variant_id: item.variant_id.toLowerCase(),
+      options: [...item.options].map((option) => option.trim()).sort(),
+    }));
+    const requestHash = await sha256Hex(JSON.stringify(fingerprintShape(payload, slug, shopItems)));
+
+    // Resolve idempotent retries before rate limiting, but never replay a key
+    // with a different request fingerprint.
     const { data: cached, error: cacheError } = await admin
       .from("booking_idempotency")
-      .select("response")
+      .select("response,request_hash")
       .eq("key", key)
       .maybeSingle();
 
     if (cacheError) throw new Error("IDEMPOTENCY_STORE_UNAVAILABLE");
     if (cached) {
-      const response = publicResponse(cached.response);
-      if (response) return json(response);
       if (cached.response === null) {
         return json(
           { ok: false, error: "IDEMPOTENCY_IN_PROGRESS", message: publicBookingMessage("IDEMPOTENCY_IN_PROGRESS") },
@@ -111,6 +176,17 @@ Deno.serve(async (req) => {
           { "retry-after": "2" },
         );
       }
+      if (cached.request_hash && cached.request_hash !== requestHash) {
+        return json({ ok: false, error: "IDEMPOTENCY_KEY_REUSED", message: publicBookingMessage("IDEMPOTENCY_KEY_REUSED") }, 409);
+      }
+      if (!cached.request_hash) {
+        // Legacy idempotency rows have no request fingerprint. Do not guess whether
+        // the incoming payload matches; require a fresh key instead of replaying
+        // an un-verifiable booking response.
+        return json({ ok: false, error: "IDEMPOTENCY_KEY_REUSED", message: publicBookingMessage("IDEMPOTENCY_KEY_REUSED") }, 409);
+      }
+      const response = publicResponse(cached.response);
+      if (response) return json(response);
       throw new Error("IDEMPOTENCY_STORE_UNAVAILABLE");
     }
 
@@ -119,7 +195,6 @@ Deno.serve(async (req) => {
 
     const ipHash = await sha256Hex(salt + ":" + ip);
     const phoneHash = await sha256Hex(salt + ":" + payload.p_phone.replace(/\D/g, ""));
-    const slug = payload.p_slug.trim().toLowerCase();
     const buckets = [
       ["bk:ip:" + ipHash, 20, 3600],
       ["bk:phone:" + phoneHash, 6, 86400],
@@ -137,8 +212,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // The SQL RPC claims the idempotency key and creates/caches the booking in one transaction.
-    const { data, error } = await admin.rpc("book_appointment_idempotent", {
+    // PostgreSQL creates the appointment, order, snapshots, reservations and
+    // idempotency response in one transaction. Browser prices are never sent.
+    const { data, error } = await admin.rpc("book_appointment_with_shop_order_idempotent", {
       p_idempotency_key: key,
       p_slug: slug,
       p_service_id: payload.p_service_id,
@@ -148,6 +224,8 @@ Deno.serve(async (req) => {
       p_name: payload.p_name.trim(),
       p_phone: payload.p_phone.trim(),
       p_email: payload.p_email?.trim() || null,
+      p_shop_items: shopItems,
+      p_request_hash: requestHash,
     });
 
     if (error) {
@@ -158,14 +236,18 @@ Deno.serve(async (req) => {
     const row = data?.[0];
     if (!row?.manage_token) return json({ ok: false, error: "BOOKING_EMPTY_RESPONSE" }, 500);
 
-    return json({
-      ok: true,
-      booking: {
-        manage_token: row.manage_token,
-        deposit_cents: Number(row.deposit_cents ?? 0),
-        needs_payment: Boolean(row.needs_payment),
-      },
+    const response = publicResponse({
+      manage_token: row.manage_token,
+      deposit_cents: Number(row.deposit_cents ?? 0),
+      needs_payment: Boolean(row.needs_payment),
+      shop_order: Number(row.shop_order_item_count ?? 0) > 0 ? {
+        status: row.shop_order_status,
+        item_count: Number(row.shop_order_item_count),
+        subtotal_minor: Number(row.shop_subtotal_minor),
+      } : null,
     });
+    if (!response) return json({ ok: false, error: "BOOKING_EMPTY_RESPONSE" }, 500);
+    return json(response);
   } catch (error) {
     const code = extractDomainCode(error);
     return json({ ok: false, error: code, message: publicBookingMessage(code) }, httpStatusForDomainCode(code));

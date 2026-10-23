@@ -19,14 +19,14 @@ const tests = [
     assert.match(source, /booking-summary/);
     assert.match(source, /searchParams\.get\('service'\)/);
   }],
-  ['Optional public shop catalogue is tenant-gated and never pretends to submit orders before Phase 4', () => {
+  ['Optional public shop catalogue submits server-validated atomic orders when enabled', () => {
     const booking = read('src/pages/BookingWizard.tsx');
     const catalog = read('src/features/public-shop/catalog.ts');
     const step = read('src/features/public-shop/CatalogueStep.tsx');
     assert.match(booking, /usePublicShopCatalog\(slug\)/);
     assert.match(booking, /const customerStep = shopStepAvailable \? 7 : 6/);
     assert.match(booking, /const showShopStep = shopStepAvailable && effectiveStep === 6/);
-    assert.match(booking, /shopItemCount === 0/);
+    assert.match(booking, /shopLines\.map\(\(line\) => \(\{/);
     assert.match(catalog, /supabase\.rpc\('get_public_shop_catalog'/);
     assert.match(catalog, /VITE_SHOP_PUBLIC_CATALOG_ENABLED === 'true'/);
     assert.match(catalog, /PUBLIC_SHOP_CATALOG_INVALID_RESPONSE/);
@@ -34,11 +34,36 @@ const tests = [
     assert.match(step, /Indisponível neste momento/);
     assert.match(step, /Continuar sem produtos/);
     assert.match(step, /Subtotal dos produtos/);
-    assert.match(booking, /A selecção de artigos ainda não pode ser registada como pedido nesta fase/);
+    assert.match(booking, /p_shop_items: shopItems/);
+    assert.match(booking, /fulfilmentMode/);
+    assert.match(booking, /bookingAttemptFingerprint\.current !== requestFingerprint/);
+    assert.match(step, /onFulfilmentModeChange/);
+    assert.match(booking, /Pode seleccionar até 20 variantes diferentes/);
     const submitStart = booking.indexOf('const result = await bookMutation.mutateAsync');
     const submitEnd = booking.indexOf('rememberLocalBooking(', submitStart);
     assert.ok(submitStart >= 0 && submitEnd > submitStart, 'The existing booking submission boundary must remain intact');
-    assert.doesNotMatch(booking.slice(submitStart, submitEnd), /shopCart|price_minor|shopLines/);
+    assert.doesNotMatch(booking.slice(submitStart, submitEnd), /unit_price_snapshot|line_total_snapshot|p_price|subtotal_minor/);
+  }],
+  ['Phase 4 binds product orders atomically to the booking and exposes the persisted summary by manage token', () => {
+    const booking = read('src/pages/BookingWizard.tsx');
+    const api = read('src/features/booking/api.ts');
+    const tokenApi = read('src/features/appointments/token-api.ts');
+    const manage = read('src/pages/AppointmentManage.tsx');
+    const edge = read('../supabase/functions/booking-create/index.ts');
+    const gateway = read('../supabase/functions/token-gateway/index.ts');
+    assert.match(booking, /p_shop_items: shopItems/);
+    assert.match(booking, /bookingAttemptFingerprint\.current !== requestFingerprint/);
+    assert.match(api, /p_shop_items: input\.p_shop_items \?\? \[\]/);
+    assert.match(api, /shop_order\?: ShopOrderSummary/);
+    assert.match(edge, /book_appointment_with_shop_order_idempotent/);
+    assert.match(edge, /p_request_hash: requestHash/);
+    assert.match(edge, /select\("response,request_hash"\)/);
+    assert.match(edge, /cached\.request_hash !== requestHash/);
+    assert.doesNotMatch(edge, /rpc\("book_appointment_idempotent"/);
+    assert.match(tokenApi, /invokeTokenGateway<unknown>\('shop_order\.get'/);
+    assert.match(gateway, /get_shop_order_by_manage_token/);
+    assert.match(manage, /data-testid="appointment-shop-order"/);
+    assert.match(manage, /Subtotal dos produtos/);
   }],
   ['Public booking allows optional email without overstating automatic delivery', () => {
     const source = read('src/pages/BookingWizard.tsx');

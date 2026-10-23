@@ -55,3 +55,16 @@ Deno.test("duplicate in-flight idempotency request is a conflict", () => {
     throw new Error("in-flight idempotency message should be actionable");
   }
 });
+
+
+Deno.test("shop order conflicts are recoverable and never reported as success", () => {
+  for (const code of ["IDEMPOTENCY_KEY_REUSED", "SHOP_NOT_ENABLED", "SHOP_ITEM_UNAVAILABLE", "SHOP_STOCK_UNAVAILABLE"]) {
+    if (httpStatusForDomainCode(code) !== 409) throw new Error(code + " must map to HTTP 409");
+  }
+});
+
+Deno.test("shop order validation errors are client errors", () => {
+  for (const code of ["INVALID_SHOP_ORDER_ITEMS", "INVALID_SHOP_ORDER_QUANTITY", "INVALID_SHOP_ORDER_OPTIONS", "INVALID_SHOP_FULFILMENT_MODE"]) {
+    if (httpStatusForDomainCode(code) !== 400) throw new Error(code + " must map to HTTP 400");
+  }
+});

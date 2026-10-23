@@ -1941,6 +1941,30 @@ export type Database = {
           needs_payment: boolean
         }[]
       }
+      book_appointment_with_shop_order_idempotent: {
+        Args: {
+          p_barber_id: string | null
+          p_email?: string | null
+          p_haircut_id: string | null
+          p_idempotency_key: string
+          p_name: string
+          p_phone: string
+          p_request_hash: string
+          p_service_id: string
+          p_shop_items: Json
+          p_slug: string
+          p_start: string
+        }
+        Returns: {
+          appointment_id: string
+          deposit_cents: number
+          manage_token: string
+          needs_payment: boolean
+          shop_order_item_count: number
+          shop_order_status: Database["public"]["Enums"]["shop_order_status"] | null
+          shop_subtotal_minor: number
+        }[]
+      }
       book_appointment_manual: {
         Args: {
           p_barber_id: string | null
@@ -2419,6 +2443,7 @@ export type Database = {
       }
       get_public_barbershop: { Args: { p_slug: string }; Returns: Json }
       get_public_shop_catalog: { Args: { p_slug: string }; Returns: Json }
+      get_shop_order_by_manage_token: { Args: { p_token: string }; Returns: Json }
       get_public_payment_methods: {
         Args: { p_slug: string }
         Returns: {

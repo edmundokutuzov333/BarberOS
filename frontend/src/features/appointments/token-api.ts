@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { z } from 'zod';
 import type { Database } from '@/lib/database.types';
 import { invokeTokenGateway } from './token-gateway';
 
@@ -14,6 +15,27 @@ export type TokenRescheduleInput =
 export type RescheduleSlot =
   Database['public']['Functions']['get_reschedule_slots_by_token']['Returns'][number];
 
+const shopOrderSchema = z.object({
+  status: z.enum(['received', 'needs_confirmation', 'accepted', 'preparing', 'ready', 'partially_delivered', 'delivered', 'cancelled', 'failed']),
+  requested_for: z.string(),
+  item_count: z.number().int().nonnegative(),
+  subtotal_minor: z.number().int().nonnegative(),
+  items: z.array(z.object({
+    product_name: z.string(),
+    variant: z.string(),
+    qty: z.number().int().positive(),
+    unit_price_minor: z.number().int().nonnegative(),
+    line_total_minor: z.number().int().nonnegative(),
+    options: z.object({
+      preferences: z.array(z.string()).default([]),
+      fulfilment_mode: z.enum(['consume_here', 'takeaway']),
+    }),
+    status: z.enum(['requested', 'accepted', 'unavailable', 'preparing', 'ready', 'partially_delivered', 'delivered', 'cancelled', 'failed']),
+  }).strict()),
+}).strict();
+
+export type ShopOrderTokenView = z.infer<typeof shopOrderSchema>;
+
 const TOKEN_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function assertToken(token: string): void {
@@ -24,6 +46,15 @@ export async function getAppointmentByToken(token: string): Promise<AppointmentT
   assertToken(token);
   const data = await invokeTokenGateway<AppointmentTokenView[]>('appointment.get', { token });
   return data?.[0] ?? null;
+}
+
+export async function getShopOrderByToken(token: string): Promise<ShopOrderTokenView | null> {
+  assertToken(token);
+  const data = await invokeTokenGateway<unknown>('shop_order.get', { token });
+  if (data === null || typeof data === 'undefined') return null;
+  const parsed = shopOrderSchema.safeParse(data);
+  if (!parsed.success) throw new Error('SHOP_ORDER_RESPONSE_INVALID');
+  return parsed.data;
 }
 
 export async function getRescheduleSlotsByToken(token: string, date: string): Promise<RescheduleSlot[]> {
@@ -83,4 +114,15 @@ export function useTokenCancellation() {
 
 export function useTokenReschedule() {
   return useMutation({ mutationFn: rescheduleAppointmentByToken, retry: false });
+}
+
+
+export function useShopOrderByToken(token?: string) {
+  return useQuery({
+    queryKey: ['shop-order-token', token],
+    queryFn: () => getShopOrderByToken(token!),
+    enabled: Boolean(token) && import.meta.env.VITE_SHOP_PUBLIC_CATALOG_ENABLED === 'true',
+    staleTime: 15_000,
+    retry: false,
+  });
 }

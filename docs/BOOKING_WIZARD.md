@@ -90,3 +90,14 @@ A entrega real por WhatsApp/email continua dependente do Notifications Dispatche
 O wizard consulta `get_public_shop_catalog(p_slug)` apenas quando `VITE_SHOP_PUBLIC_CATALOG_ENABLED=true` no build e acrescenta o passo opcional Loja somente quando a resposta do backend indica que a flag do tenant está activa. O gate global fica desligado por defeito; `shop_enabled` é a segunda barreira por tenant. Com a flag desligada, o percurso actual de seis passos é preservado. O catálogo expõe apenas categorias/produtos/variantes activos, preço e disponibilidade booleana; stock físico, reservas, dados de cliente, marcações e metadados privados de imagem não são devolvidos.
 
 A selecção permanece no estado da página e **não** é guardada como pedido nesta fase. Para evitar uma falsa confirmação, uma marcação não pode ser submetida enquanto existirem artigos seleccionados. A acção explícita «Continuar sem produtos» limpa a pré-selecção e permite continuar a marcação normal. A flag deve permanecer desligada até à Fase 4 integrar a transacção segura de marcação+pedido.
+
+
+## Fase 4: pedido atómico com a marcação
+
+Quando o gate global `VITE_SHOP_PUBLIC_CATALOG_ENABLED` está activo e a barbearia tem `shop_enabled=true`, o wizard envia `p_shop_items` com IDs de variante, quantidade, preferências configuradas e modo de consumo. Não envia preços nem totais. A Edge Function valida o envelope, calcula um fingerprint SHA-256 determinístico do payload comercial normalizado e invoca `book_appointment_with_shop_order_idempotent` com a chave de idempotência.
+
+O PostgreSQL revalida tenant, publicação, variante, preço corrente, opções, modo de consumo e stock sob lock. A criação da marcação, do pedido, dos snapshots de linhas, das reservas e da resposta idempotente ocorre numa única transacção. Se qualquer validação falhar, toda a operação é revertida. Repetir a mesma chave e o mesmo fingerprint devolve o mesmo resultado; reutilizar a chave com outro fingerprint é rejeitado. O preço vem sempre da variante no servidor. O wizard limita a selecção a 20 variantes e exige modo de consumo para produtos que suportam ambas as modalidades.
+
+A reserva não reduz imediatamente `stock_on_hand`; o saldo disponível é stock físico menos reservas activas. Cancelar a marcação cancela o pedido associado quando este ainda não foi entregue e liberta as reservas. O resumo persistido é obtido por `shop_order.get` no token gateway, protegido pelo token de gestão existente. O pedido não representa pagamento; o pagamento dos produtos permanece fora do escopo desta fase.
+
+A feature flag global deve permanecer desligada até ao schema de produção e o historial de migrations serem reconciliados, Turnstile estar configurado, a suite de aceitação dedicada estar disponível e o gate de performance passar.
