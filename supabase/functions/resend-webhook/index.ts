@@ -1,30 +1,64 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { adminClient } from "../_shared/guard.ts";
+import { verifyResendSignature } from "./signature.ts";
 
-const bytes = (value: string) => Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
+type ResendEvent = {
+  type?: string;
+  data?: { email_id?: string };
+};
 
-async function verify(request: Request, body: string, secret: string): Promise<boolean> {
-  const id = request.headers.get("svix-id");
-  const timestamp = request.headers.get("svix-timestamp");
-  const signature = request.headers.get("svix-signature");
-  if (!id || !timestamp || !signature || Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return false;
-  const key = await crypto.subtle.importKey("raw", bytes(secret.replace(/^whsec_/, "")), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${id}.${timestamp}.${body}`)));
-  const expected = btoa(String.fromCharCode(...mac));
-  return signature.split(" ").some((part) => part.split(",")[1] === expected);
-}
+const eventMap: Record<string, "delivered" | "bounced" | "complained"> = {
+  "email.delivered": "delivered",
+  "email.bounced": "bounced",
+  "email.complained": "complained",
+};
 
 Deno.serve(async (request) => {
-  if (request.method !== "POST") return new Response("method not allowed", { status: 405 });
-  const body = await request.text();
-  const secret = Deno.env.get("RESEND_WEBHOOK_SECRET")?.trim() ?? "";
-  if (!secret || !(await verify(request, body, secret))) return new Response("unauthorized", { status: 401 });
-  const event = JSON.parse(body) as { type?: string; data?: { email_id?: string } };
-  const eventMap: Record<string, string> = { "email.delivered": "delivered", "email.bounced": "bounced", "email.complained": "complained" };
-  const mapped = event.type ? eventMap[event.type] : undefined;
-  if (mapped && event.data?.email_id) {
-    const { error } = await adminClient().rpc("record_email_event", { p_provider_message_id: event.data.email_id, p_event: mapped });
-    if (error) return new Response("rpc error", { status: 500 });
+  if (request.method !== "POST") {
+    return new Response("method not allowed", { status: 405 });
   }
+
+  const secret = Deno.env.get("RESEND_WEBHOOK_SECRET")?.trim() ?? "";
+  if (!secret) {
+    // Treat missing setup as an operational outage, not as an invalid caller.
+    // Resend can retry once the signed-webhook secret is configured.
+    return new Response("webhook unavailable", { status: 503 });
+  }
+
+  const body = await request.text();
+  if (!(await verifyResendSignature(request, body, secret))) {
+    return new Response("unauthorized", { status: 401 });
+  }
+
+  let event: ResendEvent;
+  try {
+    event = JSON.parse(body) as ResendEvent;
+  } catch {
+    return new Response("invalid payload", { status: 400 });
+  }
+
+  const mapped = event.type ? eventMap[event.type] : undefined;
+  // Acknowledge valid but currently unsupported events so the provider does not
+  // retry events that this consumer intentionally does not persist.
+  if (!mapped) return new Response("ok");
+
+  const providerMessageId = event.data?.email_id?.trim();
+  const providerEventId = request.headers.get("svix-id")?.trim();
+  if (!providerMessageId || !providerEventId) {
+    return new Response("invalid payload", { status: 400 });
+  }
+
+  try {
+    const { error } = await adminClient().rpc("record_email_event", {
+      p_provider_message_id: providerMessageId,
+      p_event: mapped,
+      p_provider_event_id: providerEventId,
+    });
+    if (error) return new Response("event persistence failed", { status: 500 });
+  } catch {
+    // Do not leak database errors or acknowledge an event that was not persisted.
+    return new Response("event persistence failed", { status: 500 });
+  }
+
   return new Response("ok");
 });

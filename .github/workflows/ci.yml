@@ -43,6 +43,11 @@ jobs:
       - run: node scripts/verify-supabase-release.mjs
       - name: Secret scan
         run: node scripts/scan-repository-secrets.mjs
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Test Resend webhook signature verification
+        run: deno test supabase/functions/resend-webhook/signature_test.ts
 
   database:
     name: Supabase migrations and security contracts
@@ -68,4 +73,5 @@ jobs:
         run: |
           supabase test db \
             supabase/tests/platform_access_security.test.sql \
-            supabase/tests/platform_core_contracts.test.sql
+            supabase/tests/platform_core_contracts.test.sql \
+            supabase/tests/resend_webhook_contract.test.sql
