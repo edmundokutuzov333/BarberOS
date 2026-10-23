@@ -2,9 +2,11 @@
 
 Estado verificado em 23 de Outubro de 2026: a produção continua sem certificação para receber migrações de main.
 
+Relatório actualizado da auditoria da Loja da Barbearia: [BARBEROS_SHOP_PHASE0_READINESS.md](BARBEROS_SHOP_PHASE0_READINESS.md). O gate da Fase 0 permanece bloqueado.
+
 ## Bloqueios verificados
 
-- O Supabase de produção regista 110 versões de migrations; o projecto BarberOS Remediation Staging regista 75; o repositório `main` contém 112 ficheiros SQL em `supabase/migrations`. Estes números não provam equivalência semântica e não devem ser reconciliados por contagem.
+- A consulta directa de 23 de Outubro de 2026 devolveu 110 versões de migrations na produção, 81 no projecto BarberOS Remediation Staging e 118 ficheiros SQL em `main` em `supabase/migrations`. Estes números não provam equivalência semântica e não devem ser reconciliados por contagem.
 - O histórico de produção termina em `20261021141221 theme_engine_v2`, mas não existe um ficheiro SQL com esse timestamp correspondente na árvore actual. O histórico do staging também termina numa versão diferente (`20261021132342 theme_engine_v2`). É necessário mapear cada versão remota para o SQL correspondente e rever o esquema real, sem `migration repair` em lote nem edição manual do histórico.
 - Por isso, executar supabase db push contra a produção antes de reconciliar o histórico pode tentar reaplicar migrações antigas. A validação --dry-run não é uma prova de equivalência semântica do esquema.
 - A RPC get_payment_runtime_for_token(uuid) devolve dados internos de runtime do provider e estava executável por anon e authenticated. A migração 20261019160000_payment_rpc_privilege_lockdown.sql revoga esses grants e conserva o acesso do service_role.

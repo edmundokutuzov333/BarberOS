@@ -15,6 +15,14 @@
 - Healthcheck Edge Function, contrato de deploy, scan de secrets e CI consolidado para lint, typecheck, testes, build e budget.
 - Monitorização agendada a cada 15 minutos de rotas públicas, headers de segurança e saúde do Supabase; as falhas geram uma execução GitHub Actions com erro. Notificação externa por SMS/WhatsApp continua por configurar.
 
+## Loja da Barbearia: resultado da Fase 0
+
+- Estado a 23 de Outubro de 2026: **NO-GO** para avançar à Fase 1 ou acoplar pedidos ao motor de marcações.
+- Auditoria não destrutiva encontrou divergência entre produção, staging e main: 110 versões de migrations em produção, 81 em staging e 118 ficheiros SQL em main; a produção não tem `booking_idempotency` nem `book_appointment_idempotent`, e a Edge Function `booking-create` publicada diverge do handler versionado.
+- A configuração Vercel consultada não lista `VITE_TURNSTILE_SITE_KEY` nem `VITE_BOOKING_TURNSTILE_REQUIRED`. A aceitação com base de dados dedicada e concorrência continua sem prova válida.
+- A flag proposta `barbershops.shop_enabled` é por tenant, tem de ser criada em migration posterior à reconciliação, e o valor por defeito será `false`. Não foi criado schema nem alterada produção nesta Fase 0.
+- Relatório completo, evidências e plano de rollback: [docs/BARBEROS_SHOP_PHASE0_READINESS.md](BARBEROS_SHOP_PHASE0_READINESS.md).
+
 ## Gates de preparação para produção ainda abertos
 
 1. Reconciliar a sequência de migrations da main com o histórico real da produção antes de qualquer db push. O baseline de 23 de Outubro de 2026 era 110 registos de produção, 75 de staging e 112 ficheiros SQL no repositório; a main passou a 118 ficheiros após seis migrations forward-only. O staging está agora em 81 registos e recebeu seis migrations aditivas sem reset nem remoção de dados: `20261023064854_resend_webhook_event_tracking`, `20261023065529_booking_rpc_idempotency_and_lockdown`, `20261023065622_booking_rate_limit_primitives`, `20261023065630_availability_week_batch_reconcile`, `20261023070321_token_rpc_lockdown_reconciliation` e `20261023070547_public_foreign_key_covering_indexes`. A migration de token foi aplicada depois de o `token-gateway` estar activo no staging; as RPCs de token deixam de estar directamente acessíveis a `anon` e `authenticated`. A migration de índices adicionou índices às foreign keys sem cobertura no schema presente do staging; a consulta de verificação devolveu zero foreign keys sem índice. A divergência histórica global continua aberta. Há quatro tabelas operacionais presentes apenas em produção (`support_tickets`, `platform_access_events`, `gmail_connections`, `gmail_oauth_states`) e a função de reconciliação `theme_engine_v2` não corresponde a um ficheiro de migration com o mesmo timestamp. Não executar reparação em lote nem aplicar migrations por suposição.

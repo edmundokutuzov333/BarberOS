@@ -31,6 +31,8 @@ This runbook governs the rollout of the booking hardening, token gateway, and em
 - Do not deploy the frontend until `/functions/v1/health` and `token-gateway` are live. Token management must fail closed; direct RPC fallbacks are intentionally removed from the current frontend.
 - Email-first must not be activated until Resend is verified; do not silently re-enable WhatsApp without an approved provider and policy.
 
+The 23 October 2026 Loja da Barbearia Phase 0 audit is recorded in [BARBEROS_SHOP_PHASE0_READINESS.md](BARBEROS_SHOP_PHASE0_READINESS.md); its gate is NO-GO and this release remains blocked.
+
 ## Current known blockers
 
 - The production SPA routing defect was fixed in `frontend/vercel.json`: direct requests to `/entrar`, `/barbearia/magoanine-c`, `/barbearia/magoanine-c/marcar`, and `/marcacao/:token` now return the application shell with the expected security headers. This verifies routing/headers only, not the client-side booking transaction.
@@ -40,7 +42,7 @@ This runbook governs the rollout of the booking hardening, token gateway, and em
 - Historical Phase 24 results from commit `88f95677562a0278a873f6c4ad15b0fb2e4c4c2f` are not current acceptance evidence. Current workflow logs show `BARBEROS_TEST_DATABASE_URL` and the dedicated HTTP concurrency environment are absent; those tests previously reported `SKIP`. The workflow has now been changed to fail when the dedicated environment is missing.
 - Production Edge Function inventory checked on 2026-10-23 includes `booking-create v1`, `health v1`, and `token-gateway v1`. `resend-webhook` is still absent; its code in Git is not proof of deployment. Gmail OAuth integration is also not present in the active function inventory.
 - The Vercel project did not list `VITE_TURNSTILE_SITE_KEY` or `VITE_BOOKING_TURNSTILE_REQUIRED` when inspected on 2026-10-23. The public booking UI now fails closed in production if Turnstile is absent, so bookings remain blocked until the real production site key is configured in Vercel and the matching private `TURNSTILE_SECRET_KEY` is verified in Supabase.
-- The `BarberOS Remediation Staging` Supabase project exists and is active, but it is not certified as aligned: production shows 110 migration versions, staging 75, while `main` contains 112 SQL migration files. The Phase 23/24/25 Actions also fail because `BARBEROS_TEST_DATABASE_URL` is blank. Provision that dedicated CI secret from a test database, never production.
+- The `BarberOS Remediation Staging` Supabase project exists and is active, but it is not certified as aligned: production shows 110 migration versions, staging 81, while `main` contains 118 SQL migration files. The Phase 23/24/25 Actions also fail because `BARBEROS_TEST_DATABASE_URL` is blank. Provision that dedicated CI secret from a test database, never production.
 
 - The Vercel deployment workflow requires a healthy, versioned Supabase health endpoint and a responding `token-gateway`. The production smoke now falls back to the stable public URL if the optional GitHub `BARBEROS_PUBLIC_URL` secret is absent. The CLI deployment credentials (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`) are currently absent in GitHub Actions, so the green deployment job can represent a deliberate skip while the Vercel Git integration deploys separately.
 - `.github/workflows/production-monitor.yml` checks public routes/security headers and Supabase health every 15 minutes. A failed run is visible in GitHub Actions; SMS/WhatsApp paging is not configured by this workflow.
