@@ -21,6 +21,8 @@ begin
  update public.shop_products set is_active=true where id=v_product;
  if not exists(select 1 from public.shop_products where id=v_product and is_active) then raise exception 'FAIL: valid product not published'; end if;
  if has_column_privilege('authenticated','public.shop_product_variants','stock_on_hand','UPDATE') then raise exception 'FAIL: direct stock update allowed'; end if;
+ if has_column_privilege('authenticated','public.shop_products','image_source_checked_at','UPDATE') then raise exception 'FAIL: browser can forge image verification timestamp'; end if;
+ if has_column_privilege('authenticated','public.shop_products','image_authorized_by','UPDATE') then raise exception 'FAIL: browser can forge image approver'; end if;
  if not has_column_privilege('authenticated','public.shop_products','name','UPDATE') then raise exception 'FAIL: catalogue edit privilege missing'; end if;
  if not has_table_privilege('authenticated','public.shop_catalog_audit_events','SELECT') then raise exception 'FAIL: audit read privilege missing'; end if;
 end; $catalog_phase2$;

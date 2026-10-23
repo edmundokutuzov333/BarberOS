@@ -31,9 +31,10 @@ A especificação PDF, páginas 14 e 20, define o catálogo de gestão: produtos
 - `20261023094656_shop_catalog_image_authorizer_fk_index`: índice da FK do utilizador que autorizou a imagem.
 - `20261023095613_shop_catalog_management_phase2`: permissões de actualização por coluna, sem escrita directa de stock.
 - `20261023095633_shop_catalog_publication_guard_phase2`: guarda de publicação e leitura de auditoria.
+- `20261023100515_shop_catalog_image_metadata_privilege_hardening`: mantém os timestamps de verificação e o actor da aprovação de imagem sob controlo do PostgreSQL.
 - `supabase/tests/shop_catalog_phase2.sql`: fixtures rollback-only. Verifica rejeição de publicação sem variante, rejeição com categoria inactiva, publicação válida, ausência de update directo ao stock e grants de edição/auditoria.
 
-A suite SQL passou directamente em staging. O CI remoto ainda tem de validar o commit final, incluindo typecheck, lint, build e execução do contrato num schema local limpo.
+A suite SQL passou directamente em staging, incluindo os testes que impedem a falsificação de `image_source_checked_at` e `image_authorized_by`. O CI remoto do commit final continua a validar typecheck, lint, build e execução dos contratos num schema local limpo.
 
 ## Limites e gate
 
