@@ -84,8 +84,15 @@ print(f"Phase 23 database suite: {len(FILES)}/{len(FILES)} contracts executed.")
 .
     """
     sql = path.read_text(encoding="utf-8")
-    with ClientCursor(conn) as cursor:
-        cursor.execute(sql)
+    try:
+        with ClientCursor(conn) as cursor:
+            cursor.execute(sql)
+    except Exception:
+        # A failed DO block can prevent the trailing ROLLBACK in a multi-statement
+        # script from executing. End that transaction before fixture cleanup, then
+        # re-raise the original acceptance failure.
+        conn.rollback()
+        raise
 
 
 with psycopg.connect(database_url, autocommit=True) as conn:

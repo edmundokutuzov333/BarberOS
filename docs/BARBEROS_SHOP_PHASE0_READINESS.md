@@ -231,3 +231,14 @@ O runner agora executa os ficheiros SQL completos através de `psycopg.ClientCur
 ### Actualização da suite Phase 23: contrato waitlist (23 de Outubro de 2026)
 
 Depois da correcção do executor SQL e da asserção CRM, a suite chegou a `waitlist_phase13.sql`. O teste contradizia o próprio contrato de segurança: confirmava que as RPCs de token só podem ser executadas por `service_role`, mas invocava `get_waitlist_offer` como `anon`, causando `permission denied`. O teste foi corrigido para chamar `get_waitlist_offer`, `claim_waitlist_offer` e `expire_waitlist_offer` com `service_role`; os joins públicos continuam testados como `anon`. A nova CI está pendente. A aplicação não foi alterada para abrir permissões.
+
+
+## Estado actualizado da Fase 4 e gates (23 de Outubro de 2026, após SHA d5c3c3b)
+
+A verificação [39975771201](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39975771201) passou no SHA `d5c3c3b27eae8b6ef37137b460062eec06e518e0`: migrations desde base vazia, pgTAP, contratos SQL das Fases 1–4, race de stock em duas sessões, typecheck, build e contratos de deployment. A performance pública mais recente passou no run [39974629196](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39974629196) no SHA `67d299b4b25b81cba0848b7c57e63e2819742ca6`, com LCP 2.172/2.264 ms, DCL 1.280/1.263 ms, CLS 0, RPC 415/440 ms e INP 80/104 ms. A mesma documentação é actualizada no novo candidato para disparar nova execução do gate.
+
+A suite Phase 23 no SHA `d5c3c3b` chegou à expiração da waitlist e falhou em `WAITLIST_EXPIRE_FAILED`: uma substituição posterior da função não devolvia o estado persistido `expired`. Foi acrescentada uma migration forward-only para corrigir o resultado mantendo acesso apenas por `service_role`, e o runner de aceitação faz agora rollback explícito antes da limpeza de fixtures quando um contrato falha. O novo workflow tem de confirmar a correcção.
+
+A comparação read-only encontrou 110 registos de migration em produção, 97 em staging e 134 ficheiros versionados no repositório. Produção não tem as tabelas/RPC da Loja nem `barbershops.shop_enabled`; `booking-create` permanece na versão 1, o gate global e as variáveis públicas Turnstile não constam da configuração Vercel consultada. A aceitação completa de browser mantém-se ignorada por falta de credenciais dedicadas. Não foram aplicadas migrations nem activadas flags de produção. Ver `docs/BARBEROS_SHOP_PRODUCTION_RECONCILIATION.md`.
+
+**Estado actual: Fase 4 transaccional aprovada em CI local/staging; lançamento em produção NO-GO até a reconciliação e os gates externos estarem concluídos.**
