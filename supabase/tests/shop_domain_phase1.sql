@@ -44,18 +44,20 @@ begin
  values(v_shop,v_barber,v_service,v_customer,v_start,v_start+interval '30 minutes',30,12000,'confirmed') returning id into v_appointment;
  insert into public.shop_product_categories(barbershop_id,name,is_active) values(v_shop,'Bebidas QA',true) returning id into v_category;
  insert into public.shop_products(barbershop_id,category_id,brand,name,product_kind,track_stock,is_active)
- values(v_shop,v_category,'QA','Água QA','consume_here',true,true) returning id into v_product;
+ values(v_shop,v_category,'QA','Água QA','consume_here',true,false) returning id into v_product;
  insert into public.shop_product_variants(barbershop_id,product_id,sku,label,unit_label,price_minor,is_active)
  values(v_shop,v_product,'QA-WATER','500 ml','unidade',1000,true) returning id into v_variant;
+ update public.shop_products set is_active=true where id=v_product;
 
  v_rejected:=false;
  begin insert into public.shop_products(barbershop_id,category_id,name) values(v_other_shop,v_category,'Produto cruzado');
  exception when foreign_key_violation then v_rejected:=true; end;
  if not v_rejected then raise exception 'FAIL: category cross-tenant reference was accepted'; end if;
  insert into public.shop_products(barbershop_id,name,track_stock,is_active)
- values(v_other_shop,'Produto Tenant B',true,true) returning id into v_other_product;
+ values(v_other_shop,'Produto Tenant B',true,false) returning id into v_other_product;
  insert into public.shop_product_variants(barbershop_id,product_id,label,price_minor,is_active)
  values(v_other_shop,v_other_product,'Unidade',1000,true) returning id into v_other_variant;
+ update public.shop_products set is_active=true where id=v_other_product;
 
  v_rejected:=false;
  begin insert into public.appointment_product_orders(barbershop_id,appointment_id) values(v_other_shop,v_appointment);
