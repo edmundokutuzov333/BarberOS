@@ -12,6 +12,7 @@
 - Fundamentos de CRM/privacy: consentimento, anonymização, exportação de dados e índices de retenção.
 - Fundamentos de escala: convites, portfólio, produtos, movimentos de stock, chaves API, webhooks, deliveries e push subscriptions.
 - Healthcheck Edge Function, contrato de deploy, scan de secrets e CI consolidado para lint, typecheck, testes, build e budget.
+- Monitorização agendada a cada 15 minutos de rotas públicas, headers de segurança e saúde do Supabase; as falhas geram uma execução GitHub Actions com erro. Notificação externa por SMS/WhatsApp continua por configurar.
 
 ## Gates de preparação para produção ainda abertos
 

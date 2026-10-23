@@ -143,9 +143,11 @@ jobs:
 
   smoke:
     name: Production smoke
-    needs: deploy
+    needs: [preflight, deploy]
     runs-on: ubuntu-latest
-    if: needs.deploy.outputs.deployed == 'true'
+    # Check the stable public site after a passing preflight even when optional
+    # Vercel CLI credentials are absent and Git integration deploys separately.
+    if: always() && needs.preflight.result == 'success'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -153,5 +155,5 @@ jobs:
           node-version: 22
       - name: Verify production
         env:
-          BARBEROS_PUBLIC_URL: ${{ secrets.BARBEROS_PUBLIC_URL }}
+          BARBEROS_PUBLIC_URL: ${{ secrets.BARBEROS_PUBLIC_URL || 'https://barber-os-orpin.vercel.app' }}
         run: node scripts/verify-production.mjs
