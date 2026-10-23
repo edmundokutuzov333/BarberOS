@@ -24,7 +24,14 @@ declare
   v_audit_after int;
   v_rule public.cancellation_rule;
   v_error text;
+  v_appointments_baseline int;
+  v_notifications_baseline int;
+  v_audit_baseline int;
 begin
+  select count(*) into v_appointments_baseline from public.appointments;
+  select count(*) into v_notifications_baseline from public.notifications;
+  select count(*) into v_audit_baseline from public.audit_logs;
+
   select a.manage_token,a.id,a.barbershop_id,a.barber_id,a.service_id,a.starts_at,sh.slug,sh.cancellation_rule
   into v_token,v_appt,v_shop,v_barber,v_service,v_old_start,v_slug,v_rule
   from public.appointments a
@@ -135,7 +142,9 @@ begin
     if found then raise exception 'INVALID_TOKEN_VIEW_ACCEPTED'; end if;
   end;
 
-  if (select count(*) from public.appointments)<>1 or (select count(*) from public.notifications)<>2 or (select count(*) from public.audit_logs)<>1 then
+  if (select count(*) from public.appointments)<>v_appointments_baseline
+     or (select count(*) from public.notifications)<>v_notifications_baseline
+     or (select count(*) from public.audit_logs)<>v_audit_baseline then
     raise exception 'TOKEN_TEST_FIXTURE_PERSISTED';
   end if;
 
