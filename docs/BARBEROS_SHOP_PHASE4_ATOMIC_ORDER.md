@@ -35,7 +35,7 @@ O teste transaccional passou em staging em 23 de Outubro de 2026 e as consultas 
 
 O staging já registava a migration `20261023124453_shop_order_atomic_phase4`, mas o ficheiro não existia em `main`. O artefacto foi reconstruído a partir das definições de funções verificadas no staging e reposto com o mesmo identificador. A versão versionada foi corrigida para terminar cada definição SQL com ponto e vírgula, sem reescrever o histórico Git. A migration cria/adiciona `request_hash`, instala o RPC combinado, a leitura por token e o trigger de ciclo de vida.
 
-**Não foi aplicada migration à produção.** A produção continua sem `barbershops.shop_enabled`, sem as tabelas de pedidos/reservas e sem `book_appointment_with_shop_order_idempotent`. O histórico de migrations tem versões equivalentes com timestamps diferentes; não é seguro marcar versões como aplicadas ou executar um `db push` amplo. Main terá 133 ficheiros SQL, staging 96 versões registadas e produção 110.
+**Não foi aplicada migration à produção.** A produção continua sem `barbershops.shop_enabled`, sem as tabelas de pedidos/reservas e sem `book_appointment_with_shop_order_idempotent`. O histórico de migrations tem versões equivalentes com timestamps diferentes; não é seguro marcar versões como aplicadas ou executar um `db push` amplo. Main terá 134 ficheiros SQL, staging 97 versões registadas e produção 110.
 
 ## Gates de lançamento ainda abertos
 
@@ -51,3 +51,8 @@ Até todos estes pontos passarem, a Fase 4 está implementada no código e o con
 ## Performance do percurso público
 
 O benchmark anterior identificou a descrição longa do hero como LCP (2,6–3,2 s) apesar de DCL próximo de 1,3 s. A descrição completa permanece disponível em “Sobre a barbearia”; o hero limita a prévia a uma linha para reduzir o candidato LCP. Esta alteração é uma hipótese de optimização a validar pelo gate Fast 3G; não é declarada aprovada até o workflow correr sobre o deployment actual.
+
+
+## Correcção da libertação de reservas (23 de Outubro de 2026)
+
+A suite CI da Fase 4 encontrou que o pedido era cancelado correctamente, mas as reservas permaneciam em estado `reserved`. Foi aplicada em staging a migration aditiva `20261023133806_20261023134000_shop_order_reservation_release_phase4`, que instala `private.shop_order_release_reservations_on_cancel` e um trigger `AFTER UPDATE OF status` sobre `appointment_product_orders`. A mudança para `cancelled` liberta as reservas ainda activas dentro da mesma transacção. A migration foi versionada em `main`; o CI completo ainda tem de repetir a suite a partir de uma base vazia.

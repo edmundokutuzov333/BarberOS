@@ -162,7 +162,7 @@ A verificação posterior confirmou que a Fase 1 (modelo de domínio) e a Fase 2
 ### Acções necessárias para mudar NO-GO para GO
 
 - Fornecer/configurar os valores de Turnstile nos ambientes Vercel/Supabase apropriados e verificar que o widget e o backend usam o mesmo par de chaves.
-- Configurar `BARBEROS_TEST_DATABASE_URL` como secret de ambiente GitHub protegido, com uma base de teste isolada e permissões mínimas.
+- Os workflows de aceitação SQL usam agora uma base Supabase local efémera por job, reconstruída a partir da cadeia de migrations. A aceitação HTTP/E2E ainda requer credenciais e endpoints de teste dedicados.
 - Configurar as credenciais autorizadas de deployment da Vercel no ambiente GitHub Actions ou confirmar o fluxo alternativo de publicação já autorizado.
 - Corrigir o orçamento LCP do percurso público e repetir o benchmark Fast 3G até cumprir o limite definido.
 - Reconciliar cada migration de produção com o ficheiro SQL de origem e produzir um relatório exact-match de schema/RPC/grants antes de qualquer migration em produção.
@@ -191,7 +191,7 @@ A migration `20261023124453_shop_order_atomic_phase4` estava registada no stagin
 
 A suite `shop_order_atomic_phase4.sql` foi executada em staging sem erro. Cria uma barbearia QA, horários, produto e stock dentro da transacção e termina com `ROLLBACK`; as consultas posteriores confirmaram zero barbearias `phase4-*`, zero produtos QA persistidos e zero barbearias activadas. O teste de concorrência com duas sessões foi adicionado ao CI na base local efémera; só será considerado aprovado depois de o workflow terminar.
 
-A produção continua sem `barbershops.shop_enabled`, sem tabelas de pedidos/reservas e sem `book_appointment_with_shop_order_idempotent`. O histórico contém versões equivalentes com timestamps diferentes; não é seguro marcar versões como aplicadas nem executar um `db push` amplo. Main terá 133 ficheiros SQL, staging 96 migrations registadas e produção 110. A Fase 0 permanece **NO-GO**. Não activar a Loja nem alterar a produção até um plano forward-only de reconciliação ser validado e executado, a aceitação dedicada estar configurada e o gate de performance passar.
+A produção continua sem `barbershops.shop_enabled`, sem tabelas de pedidos/reservas e sem `book_appointment_with_shop_order_idempotent`. O histórico contém versões equivalentes com timestamps diferentes; não é seguro marcar versões como aplicadas nem executar um `db push` amplo. Main terá 134 ficheiros SQL, staging 97 migrations registadas e produção 110. A Fase 0 permanece **NO-GO**. Não activar a Loja nem alterar a produção até um plano forward-only de reconciliação ser validado e executado, a aceitação dedicada estar configurada e o gate de performance passar.
 
 
 ### Optimização de LCP da página pública
@@ -203,4 +203,4 @@ O gate Fast 3G identificou como maior elemento de conteúdo a descrição longa 
 
 A revisão inicial `1f0d9ee513b213b24a56fb3a12845750c2d4b004` falhou no CI por erros de TypeScript e porque o SQL reconstruído não terminava as definições de funções com ponto e vírgula. A revisão correctiva mantém o percurso de marcação sem produtos compatível com a produção: o lookup usa apenas `response` e a RPC permanece `book_appointment_idempotent`. O fingerprint e o RPC combinado só são consultados quando há artigos. A chamada de produtos continua a falhar fechada em produção até o schema ser reconciliado.
 
-A configuração do secret `BARBEROS_TEST_DATABASE_URL` não pode ser restaurada pela integração GitHub disponível, que não expõe operações de escrita de secrets. Não foi colocado DSN em ficheiros nem usado o DSN de produção. Os gates de aceitação e performance da base dedicada continuam abertos até existir um ambiente de teste isolado autorizado.
+Os gates SQL de aceitação e performance foram alterados para uma base Supabase local efémera por job, isolada e reconstruída a partir das migrations; já não dependem de `BARBEROS_TEST_DATABASE_URL` como secret externo. A aceitação HTTP/E2E continua não certificada porque faltam credenciais/endpoints dedicados. O gate Fast 3G continua pendente de nova medição.

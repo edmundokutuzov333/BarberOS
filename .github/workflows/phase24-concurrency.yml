@@ -92,6 +92,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v2
+        with:
+          version: latest
+          github-token: ${{ github.token }}
+      - name: Start isolated local Supabase
+        run: supabase start --exclude studio,imgproxy,inbucket,logflare,vector
+      - name: Reset isolated database from versioned migrations
+        run: supabase db reset
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -100,12 +108,8 @@ jobs:
         run: pip install "psycopg[binary]==3.2.12"
       - name: Run read-only database concurrency contract
         env:
-          BARBEROS_TEST_DATABASE_URL: ${{ secrets.BARBEROS_TEST_DATABASE_URL }}
+          BARBEROS_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
         run: |
-          if [ -z "$BARBEROS_TEST_DATABASE_URL" ]; then
-            echo "::error::BARBEROS_TEST_DATABASE_URL is required; dedicated database acceptance cannot be skipped."
-            exit 1
-          fi
           python - <<'PY'
           import os
           import psycopg
@@ -118,13 +122,9 @@ jobs:
           PY
       - name: Run deterministic concurrent booking acceptance
         env:
-          BARBEROS_TEST_DATABASE_URL: ${{ secrets.BARBEROS_TEST_DATABASE_URL }}
+          BARBEROS_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
           BARBEROS_TEST_ALLOW_MUTATION: "1"
         run: |
-          if [ -z "$BARBEROS_TEST_DATABASE_URL" ]; then
-            echo "::error::Dedicated PostgreSQL environment is required for mutating concurrency acceptance."
-            exit 1
-          fi
           python scripts/test_booking_concurrency_phase24.py
 
   http-concurrency:

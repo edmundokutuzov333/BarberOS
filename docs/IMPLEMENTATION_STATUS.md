@@ -49,7 +49,7 @@
 - Implementado `frontend/src/features/public-shop/catalog.ts` com validação Zod da resposta e `frontend/src/features/public-shop/CatalogueStep.tsx` com categorias, pesquisa, cartões, variantes, quantidades, preferências, subtotal, sem resultados, catálogo vazio, indisponibilidade, erro e opção explícita para continuar sem produtos.
 - O `BookingWizard` integra o passo condicional e conserva o percurso normal de seis passos quando o catálogo não está activo. A Fase 4 acrescenta a transacção atómica do pedido; o gate global `VITE_SHOP_PUBLIC_CATALOG_ENABLED` continua desligado por defeito enquanto o schema de produção não estiver reconciliado.
 - Migration `20261023120503_shop_public_catalog_phase3` aplicada ao staging; `supabase/tests/shop_public_catalog_phase3.sql` executado directamente com sucesso e `ROLLBACK`. O contrato foi acrescentado ao CI após os contratos SQL das Fases 1 e 2. A flag por tenant não foi activada e não foram aplicadas migrations à produção. A integração Git da Vercel publicou automaticamente o SHA inicial desta fase; a correcção seguinte desliga a query da loja por build até o backend estar reconciliado.
-- O repositório passa a conter 133 ficheiros SQL de migration; staging tem 96 versões registadas e produção conserva 110. A divergência de histórico/schema continua aberta; estas contagens não demonstram equivalência.
+- O repositório passa a conter 134 ficheiros SQL de migration; staging tem 97 versões registadas e produção conserva 110. A divergência de histórico/schema continua aberta; estas contagens não demonstram equivalência.
 - Relatório: [BARBEROS_SHOP_PHASE3_PUBLIC_CATALOG.md](BARBEROS_SHOP_PHASE3_PUBLIC_CATALOG.md). **A experiência pública e a transacção da Fase 4 estão no código; o lançamento continua NO-GO até à certificação e ao fecho da Fase 0.**
 
 ### Fase 4: pedido transaccional ligado à marcação
@@ -59,7 +59,7 @@
 - O wizard envia variantes, quantidades, preferências e modo de consumo; limita a 20 variantes, suporta artigos “consumir aqui”/“levar consigo” e conserva a mesma chave para retry do mesmo payload, criando uma chave nova quando o payload muda.
 - O token gateway disponibiliza o resumo persistido do pedido na página de gestão da marcação. A reserva de stock é criada na transacção e libertada quando a marcação é cancelada; preço, stock, tenant, publicação e opções são revalidados no servidor.
 - `supabase/tests/shop_order_atomic_phase4.sql` cobre atomicidade, snapshot de preço, replay idempotente, alteração de fingerprint, tentativa de preço manipulado, falha de stock com rollback, cancelamento/libertação de reserva e privilégios. O CI inclui também um teste concorrente com duas sessões numa base local efémera.
-- **Não activar em produção ainda:** o schema de produção não contém as tabelas/RPC da Loja nem o histórico necessário; o gate global Vercel continua desligado. Main terá 133 ficheiros SQL, staging tem 96 migrations registadas e produção 110, contagens que não provam equivalência.
+- **Não activar em produção ainda:** o schema de produção não contém as tabelas/RPC da Loja nem o histórico necessário; o gate global Vercel continua desligado. Main terá 134 ficheiros SQL, staging tem 97 migrations registadas e produção 110, contagens que não provam equivalência.
 - Relatório: [BARBEROS_SHOP_PHASE4_ATOMIC_ORDER.md](BARBEROS_SHOP_PHASE4_ATOMIC_ORDER.md). A Fase 4 está implementada no código versionado; a certificação ponta a ponta e a activação comercial continuam NO-GO até ao fecho dos gates de ambiente.
 
 ### Estado final da Fase 0
@@ -78,3 +78,8 @@
 8. Validar as integrações M-Pesa/e-Mola em ambiente de teste controlado antes de transacções reais. Não criar nem simular pagamentos reais como prova de sucesso.
 
 A publicação do frontend não certifica estes gates. Até existirem provas de staging e dos providers, a produção deve ser tratada como operacionalmente não certificada para o primeiro cliente pagante.
+
+
+### Fase 4: libertação de reservas
+
+A validação em CI detectou que cancelar o pedido não libertava reservas. A migration aditiva `20261023133806_20261023134000_shop_order_reservation_release_phase4.sql` foi aplicada em staging e versionada em `main`. A suite completa será novamente executada sobre uma base efémera após a publicação deste commit.

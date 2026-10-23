@@ -153,6 +153,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v2
+        with:
+          version: latest
+          github-token: ${{ github.token }}
+      - name: Start isolated local Supabase
+        run: supabase start --exclude studio,imgproxy,inbucket,logflare,vector
+      - name: Reset isolated database from versioned migrations
+        run: supabase db reset
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -163,11 +171,11 @@ jobs:
         run: python scripts/test_database_safety_contract.py
       - name: Run database suite
         env:
-          BARBEROS_TEST_DATABASE_URL: ${{ secrets.BARBEROS_TEST_DATABASE_URL }}
+          BARBEROS_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
           BARBEROS_TEST_ALLOW_MUTATION: '1'
         run: python scripts/test_database_phase23.py
       - name: Booking concurrency
         env:
-          BARBEROS_TEST_DATABASE_URL: ${{ secrets.BARBEROS_TEST_DATABASE_URL }}
+          BARBEROS_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
           BARBEROS_TEST_ALLOW_MUTATION: '1'
         run: python scripts/test_booking_concurrency_phase23.py
