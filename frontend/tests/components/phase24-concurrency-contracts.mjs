@@ -46,6 +46,14 @@ const tests = [
     assert.match(source, /Boolean\(turnstileSiteKey && turnstileToken\)/);
     assert.match(source, /VITE_BOOKING_TURNSTILE_REQUIRED/);
   }],
+  ['every new booking uses the fingerprinted atomic SQL path, with legacy no-product replay narrowly bounded', () => {
+    const edge = read('../supabase/functions/booking-create/index.ts');
+    const calls = [...edge.matchAll(/admin\.rpc\("(book_appointment[^\"]*)"/g)].map((match) => match[1]);
+    assert.deepEqual(calls, ['book_appointment_with_shop_order_idempotent']);
+    assert.match(edge, /select\("response,request_hash"\)/);
+    assert.match(edge, /cached\.request_hash !== requestHash/);
+    assert.match(edge, /shopItems\.length > 0 \|\| cachedValue\?\.shop_order/);
+  }],
   ['booking uses atomic SQL idempotency and locks down provider credentials', () => {
     const edge = read('../supabase/functions/booking-create/index.ts');
     const migration = read('../supabase/migrations/20261019160000_payment_rpc_privilege_lockdown.sql');

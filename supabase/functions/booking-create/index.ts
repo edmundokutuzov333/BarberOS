@@ -159,38 +159,29 @@ Deno.serve(async (req) => {
     }));
     const requestHash = await sha256Hex(JSON.stringify(fingerprintShape(payload, slug, shopItems)));
 
-    // Preserve the deployed production schema for bookings without products.
-    // Read the new fingerprint column only when the shop-order transaction is requested.
-    let cached: { response: unknown; request_hash?: string | null } | null = null;
-    let cacheError: { message?: string } | null = null;
-    if (shopItems.length > 0) {
-      const result = await admin.from("booking_idempotency").select("response,request_hash").eq("key", key).maybeSingle();
-      cached = result.data as { response: unknown; request_hash?: string | null } | null;
-      cacheError = result.error;
-    } else {
-      const result = await admin.from("booking_idempotency").select("response").eq("key", key).maybeSingle();
-      cached = result.data as { response: unknown; request_hash?: string | null } | null;
-      cacheError = result.error;
-    }
-    if (cacheError) throw new Error("IDEMPOTENCY_STORE_UNAVAILABLE");
+    // Legacy no-product idempotency rows may have no request_hash. Only those
+    // old rows may be replayed without a fingerprint; all new requests are
+    // fingerprinted by the atomic SQL transaction below.
+    const result = await admin.from("booking_idempotency").select("response,request_hash").eq("key", key).maybeSingle();
+    const cached = result.data as { response: unknown; request_hash?: string | null } | null;
+    if (result.error) throw new Error("IDEMPOTENCY_STORE_UNAVAILABLE");
     if (cached) {
       if (cached.response === null) {
         return json({ ok: false, error: "IDEMPOTENCY_IN_PROGRESS", message: publicBookingMessage("IDEMPOTENCY_IN_PROGRESS") }, 409, { "retry-after": "2" });
       }
-      if (shopItems.length > 0) {
-        if (!cached.request_hash || cached.request_hash !== requestHash) {
+
+      if (cached.request_hash) {
+        if (cached.request_hash !== requestHash) {
           return json({ ok: false, error: "IDEMPOTENCY_KEY_REUSED", message: publicBookingMessage("IDEMPOTENCY_KEY_REUSED") }, 409);
         }
       } else {
         const cachedValue = cached.response && typeof cached.response === "object" && !Array.isArray(cached.response)
           ? cached.response as Record<string, unknown> : null;
-        if (cachedValue?.shop_order) {
+        if (shopItems.length > 0 || cachedValue?.shop_order) {
           return json({ ok: false, error: "IDEMPOTENCY_KEY_REUSED", message: publicBookingMessage("IDEMPOTENCY_KEY_REUSED") }, 409);
         }
-        const response = publicResponse(cached.response);
-        if (response) return json(response);
-        throw new Error("IDEMPOTENCY_STORE_UNAVAILABLE");
       }
+
       const response = publicResponse(cached.response);
       if (response) return json(response);
       throw new Error("IDEMPOTENCY_STORE_UNAVAILABLE");
@@ -218,39 +209,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (shopItems.length > 0) {
-      // Atomic SQL transaction for customers who selected shop products.
-      const { data, error } = await admin.rpc("book_appointment_with_shop_order_idempotent", {
-        p_idempotency_key: key, p_slug: slug, p_service_id: payload.p_service_id,
-        p_haircut_id: payload.p_haircut_id ?? null, p_barber_id: payload.p_barber_id ?? null,
-        p_start: payload.p_start, p_name: payload.p_name.trim(), p_phone: payload.p_phone.trim(),
-        p_email: payload.p_email?.trim() || null, p_shop_items: shopItems, p_request_hash: requestHash,
-      });
-      if (error) {
-        const code = extractDomainCode(error);
-        return json({ ok: false, error: code, message: publicBookingMessage(code) }, httpStatusForDomainCode(code));
-      }
-      const row = data?.[0];
-      if (!row?.manage_token) return json({ ok: false, error: "BOOKING_EMPTY_RESPONSE" }, 500);
-      const response = publicResponse({
-        manage_token: row.manage_token, deposit_cents: Number(row.deposit_cents ?? 0),
-        needs_payment: Boolean(row.needs_payment),
-        shop_order: Number(row.shop_order_item_count ?? 0) > 0 ? {
-          status: row.shop_order_status, item_count: Number(row.shop_order_item_count),
-          subtotal_minor: Number(row.shop_subtotal_minor),
-        } : null,
-      });
-      if (!response) return json({ ok: false, error: "BOOKING_EMPTY_RESPONSE" }, 500);
-      return json(response);
-    }
-
-    // Preserve the existing no-product booking path until the shop schema is
-    // reconciled in production. The current production table lacks request_hash.
-    const { data, error } = await admin.rpc("book_appointment_idempotent", {
+    const { data, error } = await admin.rpc("book_appointment_with_shop_order_idempotent", {
       p_idempotency_key: key, p_slug: slug, p_service_id: payload.p_service_id,
       p_haircut_id: payload.p_haircut_id ?? null, p_barber_id: payload.p_barber_id ?? null,
       p_start: payload.p_start, p_name: payload.p_name.trim(), p_phone: payload.p_phone.trim(),
-      p_email: payload.p_email?.trim() || null,
+      p_email: payload.p_email?.trim() || null, p_shop_items: shopItems, p_request_hash: requestHash,
     });
     if (error) {
       const code = extractDomainCode(error);
@@ -258,10 +221,18 @@ Deno.serve(async (req) => {
     }
     const row = data?.[0];
     if (!row?.manage_token) return json({ ok: false, error: "BOOKING_EMPTY_RESPONSE" }, 500);
-    return json({ ok: true, booking: {
-      manage_token: row.manage_token, deposit_cents: Number(row.deposit_cents ?? 0),
+    const response = publicResponse({
+      manage_token: row.manage_token,
+      deposit_cents: Number(row.deposit_cents ?? 0),
       needs_payment: Boolean(row.needs_payment),
-    } });
+      shop_order: Number(row.shop_order_item_count ?? 0) > 0 ? {
+        status: row.shop_order_status,
+        item_count: Number(row.shop_order_item_count),
+        subtotal_minor: Number(row.shop_subtotal_minor),
+      } : null,
+    });
+    if (!response) return json({ ok: false, error: "BOOKING_EMPTY_RESPONSE" }, 500);
+    return json(response);
   } catch (error) {
     const code = extractDomainCode(error);
     return json({ ok: false, error: code, message: publicBookingMessage(code) }, httpStatusForDomainCode(code));
