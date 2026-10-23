@@ -99,9 +99,18 @@ begin
   from public.appointments
   where id=v_manual_id;
 
+  -- Notifications are intentionally not readable by authenticated staff.
+  -- Drop the test role only for this assertion, then restore it for the collision test.
+  reset role;
   select count(*) into v_notifs
   from public.notifications
   where appointment_id=v_manual_id;
+  set local role authenticated;
+  perform set_config(
+    'request.jwt.claims',
+    jsonb_build_object('sub',v_owner::text,'role','authenticated')::text,
+    true
+  );
 
   if v_source <> 'manual' then raise exception 'MANUAL_SOURCE_INVALID'; end if;
   if v_created_by <> v_owner then raise exception 'MANUAL_CREATED_BY_INVALID'; end if;
