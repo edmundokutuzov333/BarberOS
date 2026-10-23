@@ -60,7 +60,8 @@ const tests = [
     assert.match(edge, /select\("response,request_hash"\)/);
     assert.match(edge, /cached\.request_hash !== requestHash/);
     assert.match(edge, /rpc\("book_appointment_with_shop_order_idempotent"/);
-    assert.match(edge, /if \(shopItems.length > 0\)/);
+    assert.doesNotMatch(edge, /if \(shopItems.length > 0\)/, 'all bookings must use the same atomic idempotency transaction');
+    assert.match(edge, /p_shop_items: shopItems, p_request_hash: requestHash/);
     assert.match(edge, /\.select\("response,request_hash"\)/);
     assert.match(tokenApi, /invokeTokenGateway<unknown>\('shop_order\.get'/);
     assert.match(gateway, /get_shop_order_by_manage_token/);
