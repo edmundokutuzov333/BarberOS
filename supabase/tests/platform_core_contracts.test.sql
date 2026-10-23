@@ -1,5 +1,5 @@
 begin;
-select plan(43);
+select plan(44);
 
 select ok(
   to_regclass('public.appointments') is not null,
@@ -278,6 +278,31 @@ select ok(
       and not has_function_privilege('service_role', p.oid, 'EXECUTE')
   ),
   'token-gateway service role retains access to token-management RPCs'
+);
+
+
+select is(
+  (
+    select count(*)::integer
+    from pg_constraint con
+    join pg_class c on c.oid = con.conrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    where con.contype = 'f'
+      and n.nspname = 'public'
+      and not exists (
+        select 1
+        from pg_index i
+        where i.indrelid = con.conrelid
+          and i.indisvalid
+          and (
+            select array_agg(k.attnum::smallint order by k.ord)
+            from unnest(i.indkey) with ordinality k(attnum, ord)
+            where k.ord <= cardinality(con.conkey)
+          ) = con.conkey
+      )
+  ),
+  0,
+  'every public foreign key has a covering leading-column index'
 );
 
 select * from finish();
