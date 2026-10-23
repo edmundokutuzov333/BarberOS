@@ -50,7 +50,9 @@ const tests = [
     const edge = read('../supabase/functions/booking-create/index.ts');
     const migration = read('../supabase/migrations/20261019160000_payment_rpc_privilege_lockdown.sql');
     const bookingMigration = read('../supabase/migrations/20261019110000_booking_gateway_hardening.sql');
-    assert.match(edge, /rpc\("book_appointment_idempotent"/);
+    assert.match(edge, /rpc\("book_appointment_with_shop_order_idempotent"/);
+    assert.match(edge, /p_request_hash: requestHash/);
+    assert.match(edge, /cached\.request_hash !== requestHash/);
     assert.match(migration, /on conflict \(key\) do nothing/i);
     assert.match(migration, /revoke all on function public\.get_payment_runtime_for_token\(uuid\)/i);
     assert.match(migration, /grant execute on function public\.book_appointment_idempotent/i);

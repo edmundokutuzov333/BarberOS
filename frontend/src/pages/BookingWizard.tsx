@@ -24,6 +24,15 @@ import { usePublicShopCatalog, type PublicShopProduct, type PublicShopVariant } 
 import { ShopCatalogueStep, type ShopCart } from '@/features/public-shop/CatalogueStep';
 
 const STEP_LABELS = ['Serviço', 'Corte', 'Barbeiro', 'Data', 'Hora', 'Dados'];
+
+type SelectedShopLine = {
+  product: PublicShopProduct;
+  variant: PublicShopVariant;
+  qty: number;
+  options: string[];
+  fulfilmentMode: 'consume_here' | 'takeaway';
+};
+
 const WEEKDAYS_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 type CustomerForm = {
@@ -291,7 +300,7 @@ export default function BookingWizard() {
   const barberParam = searchParams.get('barber') ?? 'any';
   const date = searchParams.get('date');
   const start = searchParams.get('start');
-  const shopLines = useMemo<Array<{ product: PublicShopProduct; variant: PublicShopVariant; qty: number; options: string[]; fulfilmentMode: 'consume_here' | 'takeaway' }>>(() => (shopCatalogQuery.data?.products ?? []).flatMap((product) => product.variants.flatMap((variant) => {
+  const shopLines: SelectedShopLine[] = useMemo(() => (shopCatalogQuery.data?.products ?? []).flatMap((product) => product.variants.flatMap((variant) => {
     const selected = shopCart[variant.id];
     return selected?.qty > 0 ? [{ product, variant, qty: selected.qty, options: selected.options, fulfilmentMode: selected.fulfilmentMode }] : [];
   })), [shopCatalogQuery.data?.products, shopCart]);
