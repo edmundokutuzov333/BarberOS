@@ -6,6 +6,7 @@ create table if not exists private.phase4_concurrency_fixture (
   shop_id uuid not null,
   slug text not null,
   service_id uuid not null,
+  barber_id uuid not null,
   product_id uuid not null,
   variant_id uuid not null,
   slot_a timestamptz not null,
@@ -23,6 +24,8 @@ declare
   v_service uuid;
   v_day date;
   v_slots timestamptz[];
+  v_slot_a timestamptz;
+  v_slot_b timestamptz;
   v_category uuid;
   v_product uuid;
   v_variant uuid;
@@ -51,7 +54,7 @@ begin
 
   select d.day into v_day
   from public.get_available_days(
-    v_slug, v_service, null,
+    v_slug, v_service, v_barber,
     (now() at time zone 'Africa/Maputo')::date + 2,
     (now() at time zone 'Africa/Maputo')::date + 10
   ) d
@@ -59,14 +62,21 @@ begin
   order by d.day limit 1;
   if v_day is null then raise exception 'PHASE4_RACE_NO_AVAILABLE_DAY'; end if;
 
-  select array_agg(q.slot_start order by q.slot_start) into v_slots
-  from (
-    select slot_start
-    from public.get_available_slots(v_slug, v_service, null, v_day)
-    order by slot_start
-    limit 2
-  ) q;
-  if coalesce(array_length(v_slots, 1), 0) < 2 then raise exception 'PHASE4_RACE_NEEDS_TWO_SLOTS'; end if;
+  select q.slot_start into v_slot_a
+  from public.get_available_slots(v_slug, v_service, v_barber, v_day) q
+  order by q.slot_start
+  limit 1;
+  if v_slot_a is null then raise exception 'PHASE4_RACE_NEEDS_FIRST_SLOT'; end if;
+
+  -- The service lasts 30 minutes while the calendar interval is 15 minutes.
+  -- Select a non-overlapping second slot so the race tests stock, not scheduling.
+  select q.slot_start into v_slot_b
+  from public.get_available_slots(v_slug, v_service, v_barber, v_day) q
+  where q.slot_start >= v_slot_a + interval '30 minutes'
+  order by q.slot_start
+  limit 1;
+  if v_slot_b is null then raise exception 'PHASE4_RACE_NEEDS_NON_OVERLAPPING_SLOT'; end if;
+  v_slots := array[v_slot_a, v_slot_b];
 
   insert into public.shop_products(barbershop_id, name, product_kind, track_stock, is_active)
   values (v_shop, 'Produto Race QA', 'consume_here', true, false) returning id into v_product;
@@ -78,9 +88,9 @@ begin
   perform public.record_shop_inventory_movement(v_shop, v_variant, 1, 'opening_balance', 'CI concurrency fixture');
 
   insert into private.phase4_concurrency_fixture(
-    singleton, shop_id, slug, service_id, product_id, variant_id, slot_a, slot_b, key_a, key_b
+    singleton, shop_id, slug, service_id, barber_id, product_id, variant_id, slot_a, slot_b, key_a, key_b
   ) values (
-    true, v_shop, v_slug, v_service, v_product, v_variant, v_slots[1], v_slots[2], gen_random_uuid(), gen_random_uuid()
+    true, v_shop, v_slug, v_service, v_barber, v_product, v_variant, v_slots[1], v_slots[2], gen_random_uuid(), gen_random_uuid()
   );
 end;
 $phase4_concurrency_setup$;
