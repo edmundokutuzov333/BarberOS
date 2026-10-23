@@ -52,4 +52,4 @@ frontend/tests/e2e/phase24-http-concurrency.spec.mjs testa a fronteira HTTP num 
 
 A aceitação mutante não é executada contra a produção. O CI usa BARBEROS_TEST_DATABASE_URL para o PostgreSQL dedicado e BARBEROS_E2E_CONCURRENCY_* para o endpoint HTTP dedicado.
 
-Sem essas variáveis, os testes não inventam uma aprovação. O job fica marcado como SKIP e a FASE 24 permanece aberta até a prova real ser executada.
+Sem `BARBEROS_TEST_DATABASE_URL`, o runner de base de dados termina com erro explícito. A URL é validada antes da ligação: se contiver a referência do projecto Supabase de produção, o teste aborta antes de executar consultas. A aceitação HTTP também exige os segredos do ambiente dedicado. Ausência de configuração é falha do gate, nunca aprovação; a FASE 24 permanece aberta até a prova real ser executada.
