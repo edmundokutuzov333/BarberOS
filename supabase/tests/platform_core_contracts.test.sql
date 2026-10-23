@@ -1,5 +1,5 @@
 begin;
-select plan(34);
+select plan(41);
 
 select ok(
   to_regclass('public.appointments') is not null,
@@ -198,6 +198,43 @@ select ok(
 select ok(
   to_regprocedure('public.get_public_barbershop(text)') is not null,
   'public barbershop RPC exists'
+);
+
+
+select ok(
+  to_regprocedure('public.rate_limit_consume(text,integer,integer)') is not null,
+  'server-side rate limit RPC exists'
+);
+
+select ok(
+  not has_function_privilege('anon','public.rate_limit_consume(text,integer,integer)','EXECUTE'),
+  'anonymous callers cannot execute the rate limit RPC'
+);
+
+select ok(
+  not has_function_privilege('authenticated','public.rate_limit_consume(text,integer,integer)','EXECUTE'),
+  'authenticated callers cannot execute the rate limit RPC'
+);
+
+select ok(
+  to_regclass('private.rate_limits') is not null
+    and not has_table_privilege('anon','private.rate_limits','SELECT'),
+  'rate limit buckets remain in the private schema and are not readable by anon'
+);
+
+select ok(
+  to_regprocedure('public.get_available_slots_week(text,uuid,uuid,date)') is not null,
+  'weekly availability RPC exists'
+);
+
+select ok(
+  has_function_privilege('anon','public.get_available_slots_week(text,uuid,uuid,date)','EXECUTE'),
+  'anonymous clients can read weekly availability through the intended RPC'
+);
+
+select ok(
+  has_function_privilege('authenticated','public.get_available_slots_week(text,uuid,uuid,date)','EXECUTE'),
+  'authenticated clients can read weekly availability through the intended RPC'
 );
 
 select * from finish();
