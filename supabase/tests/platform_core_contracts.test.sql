@@ -245,7 +245,7 @@ select ok(
     where rp.routine_schema = 'public'
       and rp.grantee in ('PUBLIC', 'anon', 'authenticated')
       and (
-        rp.routine_name like '%\\_by\\_token' escape '\\'
+        right(rp.routine_name, 9) = '_by_token'
         or rp.routine_name in (
           'get_payment_runtime_for_token',
           'init_payment_from_token',
@@ -266,7 +266,7 @@ select ok(
     join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
       and (
-        p.proname like '%\\_by\\_token' escape '\\'
+        right(p.proname, 9) = '_by_token'
         or p.proname in (
           'get_payment_runtime_for_token',
           'init_payment_from_token',
