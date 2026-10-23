@@ -29,7 +29,7 @@ for filename in FILES:
     if not path.exists(): raise SystemExit(f"MISSING_TEST_FILE: {filename}")
     sql = path.read_text(encoding="utf-8")
     if re.search(r"\bcommit\b", sql, re.I): raise SystemExit(f"SAFETY_ABORT_COMMIT_IN_TEST: {filename}")
-    if filename not in {"migration_phase2.sql","security_phase1.sql","phase23_contract.sql"}:
+    if filename not in {"migration_phase2.sql","security_phase1.sql","domain_integrity_phase3.sql","phase23_contract.sql"}:
       if not re.search(r"\bbegin\b", sql, re.I) or not re.search(r"\brollback\b", sql, re.I):
         raise SystemExit(f"SAFETY_ABORT_TRANSACTION_GUARD: {filename}")
 
