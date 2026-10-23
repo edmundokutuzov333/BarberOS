@@ -84,7 +84,7 @@ print(f"Phase 23 database suite: {len(FILES)}/{len(FILES)} contracts executed.")
 .
     """
     sql = path.read_text(encoding="utf-8")
-    with conn.cursor(cursor_factory=ClientCursor) as cursor:
+    with ClientCursor(conn) as cursor:
         cursor.execute(sql)
 
 

@@ -64,7 +64,7 @@
 
 ### Estado final da Fase 0
 
-- **NO-GO para produção.** Permanecem por resolver as diferenças do histórico/schema de migrations, o desfasamento da Edge Function `booking-create`, a configuração Turnstile e a aceitação Phase 23 (runner Psycopg corrigido, nova execução pendente). A Vercel publicou o SHA actual e o último gate Fast 3G passou no SHA `92fd645cbfaaabdf1ea8cc89c9facee1cd5d6b4f` com LCP 2.032/2.088 ms; a confirmação no SHA actual ainda está pendente. Os bloqueios e acções exactas estão em [BARBEROS_SHOP_PHASE0_READINESS.md](BARBEROS_SHOP_PHASE0_READINESS.md). Não declarar a Fase 0 concluída enquanto esses gates não tiverem evidência.
+- **NO-GO para produção.** Permanecem por resolver as diferenças do histórico/schema de migrations, o desfasamento da Edge Function `booking-create`, a configuração Turnstile e a aceitação Phase 23 (runner Psycopg corrigido para `ClientCursor(conn)`, nova execução pendente). A Vercel publicou o SHA actual e o último gate Fast 3G passou no SHA `92fd645cbfaaabdf1ea8cc89c9facee1cd5d6b4f` com LCP 2.032/2.088 ms; a confirmação no SHA actual ainda está pendente. Os bloqueios e acções exactas estão em [BARBEROS_SHOP_PHASE0_READINESS.md](BARBEROS_SHOP_PHASE0_READINESS.md). Não declarar a Fase 0 concluída enquanto esses gates não tiverem evidência.
 
 ## Gates de preparação para produção ainda abertos
 

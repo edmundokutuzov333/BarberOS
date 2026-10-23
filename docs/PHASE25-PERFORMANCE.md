@@ -74,14 +74,14 @@ Nenhuma medição de performance mutante é executada contra a produção. A pá
 
 ## Última medição confirmada (23 de Outubro de 2026)
 
-O workflow [39970944495](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39970944495), no commit `92fd645cbfaaabdf1ea8cc89c9facee1cd5d6b4f`, concluiu com sucesso nos três jobs (budget de assets, Fast 3G e contrato SQL). O benchmark Fast 3G registou:
+O workflow [39974021402](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39974021402), no commit `7dcf9f52d6a505861a9eed01cfb980daa5f481c4`, concluiu com sucesso nos três jobs (budget de assets, Fast 3G e contrato SQL). O benchmark Fast 3G registou:
 
 | Métrica | Chromium 1 | Retry Chromium |
 |---|---:|---:|
-| LCP | 2.032 ms | 2.088 ms |
-| DOMContentLoaded | 1.249 ms | 1.256 ms |
+| LCP | 2.144 ms | 2.172 ms |
+| DOMContentLoaded | 1.256 ms | 1.289 ms |
 | CLS | 0 | 0 |
-| Roundtrip RPC público | 527 ms | 310 ms |
-| INP de laboratório | 40 ms | 48 ms |
+| Roundtrip RPC público | 416 ms | 372 ms |
+| INP de laboratório | 40 ms | 64 ms |
 
-O LCP foi o título `Oryon Barber Studio`. Estes resultados passam os limites definidos. O frontend não mudou entre o commit medido e o SHA `1279226d9f18c498b21211159cfdf94d472cfd6e`; a revisão actual volta a executar o workflow para associar evidência directamente ao SHA actual. Esta medição pública é read-only e não representa certificação do pedido transaccional da Loja.
+O LCP foi o título `Oryon Barber Studio`. Estes resultados passam os limites definidos. A revisão posterior altera apenas o executor de aceitação e documentação; o frontend permanece inalterado. Esta medição pública é read-only e não representa certificação do pedido transaccional da Loja.
