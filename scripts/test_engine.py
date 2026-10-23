@@ -7,10 +7,9 @@ import threading
 from datetime import date, timedelta
 
 import psycopg
+from database_safety import require_isolated_test_database
 
-database_url = os.getenv("BARBEROS_TEST_DATABASE_URL")
-if not database_url:
-    raise SystemExit("BARBEROS_TEST_DATABASE_URL não definido.")
+database_url = require_isolated_test_database(os.getenv("BARBEROS_TEST_DATABASE_URL"))
 
 if os.getenv("BARBEROS_TEST_ALLOW_MUTATION") != "1":
     raise SystemExit(
