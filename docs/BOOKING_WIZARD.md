@@ -62,7 +62,7 @@ O valor final continua a ser calculado e validado pelo PostgreSQL. O wizard apen
 
 O payload público nunca expõe IDs de tenant, customer IDs, appointment IDs ou manage tokens.
 
-Os IDs de serviço, corte e barbeiro são referências públicas opacas necessárias para as chamadas de disponibilidade e booking. A autorização e pertença ao tenant são sempre revalidadas no backend.
+Os IDs de serviço, corte, barbeiro e artigos publicados são referências opacas limitadas aos registos públicos necessários às chamadas. A autorização e pertença ao tenant são sempre revalidadas no backend. A autorização e pertença ao tenant são sempre revalidadas no backend.
 
 ## Acessibilidade e CX
 
@@ -83,3 +83,10 @@ O wizard inclui:
 Depois de `book_appointment()` devolver o `manage_token`, o cliente é encaminhado para `/marcacao/:token`, usando a superfície de gestão entregue na Fase 6.
 
 A entrega real por WhatsApp/email continua dependente do Notifications Dispatcher, previsto nas fases seguintes.
+
+
+## Fase 3: catálogo público
+
+O wizard consulta `get_public_shop_catalog(p_slug)` e acrescenta o passo opcional Loja somente quando a resposta do backend indica que a flag do tenant está activa. Com a flag desligada, o percurso actual de seis passos é preservado. O catálogo expõe apenas categorias/produtos/variantes activos, preço e disponibilidade booleana; stock físico, reservas, dados de cliente, marcações e metadados privados de imagem não são devolvidos.
+
+A selecção permanece no estado da página e **não** é guardada como pedido nesta fase. Para evitar uma falsa confirmação, uma marcação não pode ser submetida enquanto existirem artigos seleccionados. A acção explícita «Continuar sem produtos» limpa a pré-selecção e permite continuar a marcação normal. A flag deve permanecer desligada até à Fase 4 integrar a transacção segura de marcação+pedido.

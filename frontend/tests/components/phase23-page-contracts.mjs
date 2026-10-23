@@ -19,6 +19,26 @@ const tests = [
     assert.match(source, /booking-summary/);
     assert.match(source, /searchParams\.get\('service'\)/);
   }],
+  ['Optional public shop catalogue is tenant-gated and never pretends to submit orders before Phase 4', () => {
+    const booking = read('src/pages/BookingWizard.tsx');
+    const catalog = read('src/features/public-shop/catalog.ts');
+    const step = read('src/features/public-shop/CatalogueStep.tsx');
+    assert.match(booking, /usePublicShopCatalog\(slug\)/);
+    assert.match(booking, /const customerStep = shopStepAvailable \? 7 : 6/);
+    assert.match(booking, /const showShopStep = shopStepAvailable && effectiveStep === 6/);
+    assert.match(booking, /shopItemCount === 0/);
+    assert.match(catalog, /supabase\.rpc\('get_public_shop_catalog'/);
+    assert.match(catalog, /PUBLIC_SHOP_CATALOG_INVALID_RESPONSE/);
+    assert.match(step, /public-shop-search/);
+    assert.match(step, /Indisponível neste momento/);
+    assert.match(step, /Continuar sem produtos/);
+    assert.match(step, /Subtotal dos produtos/);
+    assert.match(booking, /A selecção de artigos ainda não pode ser registada como pedido nesta fase/);
+    const submitStart = booking.indexOf('const result = await bookMutation.mutateAsync');
+    const submitEnd = booking.indexOf('rememberLocalBooking(', submitStart);
+    assert.ok(submitStart >= 0 && submitEnd > submitStart, 'The existing booking submission boundary must remain intact');
+    assert.doesNotMatch(booking.slice(submitStart, submitEnd), /shopCart|price_minor|shopLines/);
+  }],
   ['Public booking allows optional email without overstating automatic delivery', () => {
     const source = read('src/pages/BookingWizard.tsx');
     assert.match(source, /if \(email && !validEmail\(email\)\)/);

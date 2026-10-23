@@ -4,7 +4,7 @@
 
 ## Âmbito
 
-A especificação PDF, páginas 14 e 20, define o catálogo de gestão: produtos, categorias, variantes, imagens com origem/autorização, preços, publicação, stock e histórico. A interface não integra ainda o passo público do wizard nem a criação de pedidos, que pertencem às Fases 3 e 4.
+A especificação PDF, páginas 14 e 20, define o catálogo de gestão: produtos, categorias, variantes, imagens com origem/autorização, preços, publicação, stock e histórico. A experiência pública do catálogo foi acrescentada na Fase 3; a criação consistente de pedidos continua na Fase 4.
 
 ## Interface entregue
 
@@ -23,7 +23,7 @@ A especificação PDF, páginas 14 e 20, define o catálogo de gestão: produtos
 - A ficha da imagem exige texto alternativo e nota de origem/autorização; o trigger regista quem confirmou e quando.
 - O PostgreSQL rejeita publicar produto sem uma variante activa ou com categoria inactiva.
 - A migration de privilégios permite apenas actualizar colunas comerciais; não permite alterar directamente `stock_on_hand`, identidade do tenant ou identificadores de variante/produto. O saldo só muda pelo ledger transaccional.
-- A flag `barbershops.shop_enabled` continua falsa. O catálogo público e o wizard não foram ligados.
+- A flag `barbershops.shop_enabled` continua falsa em todos os tenants verificados. O catálogo público e o passo do wizard estão ligados condicionalmente, mas nenhum tenant foi activado.
 
 ## Migrations e testes
 
@@ -42,6 +42,6 @@ A suite SQL passou directamente em staging, incluindo os testes que impedem a fa
 
 ## Limites e gate
 
-A Fase 2 não significa que a Loja da Barbearia esteja pronta para clientes. Não foram implementados o wizard público (Fase 3), a transacção marcação+pedido e a reserva concorrente de stock (Fase 4), a fila operacional completa (Fase 5) ou o lançamento piloto.
+A Fase 2 não significa que a Loja da Barbearia esteja pronta para clientes. A UI pública da Fase 3 está em main, mas a selecção não é persistida como pedido e a submissão com artigos está bloqueada até à transacção marcação+pedido e à reserva concorrente de stock da Fase 4. A fila operacional completa (Fase 5) e o lançamento piloto também estão pendentes.
 
 A Fase 0 permanece **NO-GO** porque o schema e as migrations de produção não estão reconciliados com o código de `main`, a Edge Function `booking-create` diverge, a configuração Turnstile não está comprovada, falta `BARBEROS_TEST_DATABASE_URL` no CI e as credenciais do deployment Vercel não estão configuradas no workflow. Não aplicar migrations da loja à produção nem activar qualquer tenant.

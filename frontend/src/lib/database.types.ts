@@ -2418,6 +2418,7 @@ export type Database = {
         }[]
       }
       get_public_barbershop: { Args: { p_slug: string }; Returns: Json }
+      get_public_shop_catalog: { Args: { p_slug: string }; Returns: Json }
       get_public_payment_methods: {
         Args: { p_slug: string }
         Returns: {

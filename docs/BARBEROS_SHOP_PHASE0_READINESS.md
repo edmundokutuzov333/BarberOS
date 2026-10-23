@@ -169,3 +169,10 @@ A verificação posterior confirmou que a Fase 1 (modelo de domínio) e a Fase 2
 - Testar o fluxo real de marcação no ambiente publicado, incluindo Turnstile, idempotência, rate limit, notificações e retries, e registar evidência do commit efectivamente servido.
 
 O código da Fase 2 não remove nenhum destes bloqueios. Não foi feita alteração em produção nem foi declarada uma aceitação E2E inexistente.
+
+
+## Actualização posterior: Fase 3 (23 de Outubro de 2026)
+
+A Fase 3 acrescentou a leitura pública segura do catálogo e o passo condicional do wizard. A migration `20261023120503_shop_public_catalog_phase3` foi aplicada ao projecto `BarberOS Remediation Staging`; o contrato transaccional `shop_public_catalog_phase3.sql` foi executado com sucesso e terminou em `ROLLBACK`. A flag de loja continua desligada e não foram aplicadas migrations ou alterados dados na produção.
+
+O inventário actual é de 132 ficheiros SQL em `main`, 95 migrations registadas no staging e 110 na produção. O novo contrato público não reconcilia o histórico nem o schema do motor de marcações entre ambientes. A Fase 0 mantém-se **NO-GO** e `shop_enabled` não pode ser activada antes da integração transaccional da Fase 4, validação ponta a ponta e resolução dos bloqueios acima.

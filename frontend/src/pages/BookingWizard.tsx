@@ -20,6 +20,8 @@ import {
   type PublicHaircut,
   type PublicService,
 } from '@/features/public-shop/api';
+import { usePublicShopCatalog, type PublicShopProduct, type PublicShopVariant } from '@/features/public-shop/catalog';
+import { ShopCatalogueStep, type ShopCart } from '@/features/public-shop/CatalogueStep';
 
 const STEP_LABELS = ['Serviço', 'Corte', 'Barbeiro', 'Data', 'Hora', 'Dados'];
 const WEEKDAYS_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -89,7 +91,7 @@ function updateSearchParams(
   setSearchParams(next, { replace: true });
 }
 
-function StepHeader({ currentStep, shopName, shopSlug }: { currentStep: number; shopName: string; shopSlug: string }) {
+function StepHeader({ currentStep, shopName, shopSlug, stepLabels }: { currentStep: number; shopName: string; shopSlug: string; stepLabels: string[] }) {
   return (
     <div>
       <div className="flex items-center justify-between gap-4">
@@ -100,8 +102,8 @@ function StepHeader({ currentStep, shopName, shopSlug }: { currentStep: number; 
         <span className="t-label text-ink-mid">{currentStep} de {STEP_LABELS.length}</span>
       </div>
       <nav aria-label="Progresso da marcação" className="mt-5">
-        <ol className="grid grid-cols-6 gap-1.5">
-          {STEP_LABELS.map((label, index) => {
+        <ol className={'grid gap-1.5 ' + (stepLabels.length === 7 ? 'grid-cols-7' : 'grid-cols-6')}>
+          {stepLabels.map((label, index) => {
             const step = index + 1;
             const active = step === currentStep;
             const done = step < currentStep;
@@ -199,6 +201,9 @@ function Summary({
   timezone,
   depositCents,
   depositConfigValid,
+  shopFeatureActive,
+  shopLines,
+  shopSubtotal,
 }: {
   shopName: string;
   service: PublicService | undefined;
@@ -209,6 +214,9 @@ function Summary({
   timezone: string;
   depositCents: number;
   depositConfigValid: boolean;
+  shopFeatureActive: boolean;
+  shopLines: { product: PublicShopProduct; variant: PublicShopVariant; qty: number; options: string[] }[];
+  shopSubtotal: number;
 }) {
   return (
     <Panel title="Resumo" testId="booking-summary">
@@ -228,6 +236,21 @@ function Summary({
             <span className="t-label text-ink-mid">{service.duration_min} min</span>
           </div>
         )}
+        {shopFeatureActive && shopLines.length > 0 && (
+          <div className="border-t border-white/10 pt-4 space-y-3" data-testid="booking-shop-summary">
+            <p className="t-label text-ink-mid">Artigos seleccionados</p>
+            <ul className="space-y-2">
+              {shopLines.map((line) => (
+                <li key={line.variant.id} className="text-sm">
+                  <div className="flex justify-between gap-3"><span className="text-ink-mid">{line.qty} × {line.product.name} · {line.variant.label}</span><span className="text-ink-hi tabular-nums">{formatMT(line.qty * line.variant.price_minor)}</span></div>
+                  {line.options.length > 0 && <p className="t-label text-ink-mid mt-1">Preferências: {line.options.join(', ')}</p>}
+                </li>
+              ))}
+            </ul>
+            <div className="flex items-center justify-between border-t border-white/10 pt-3 gap-3"><span className="t-label text-ink-mid">Subtotal dos produtos</span><span className="t-card text-ink-hi tabular-nums">{formatMT(shopSubtotal)}</span></div>
+            <p className="t-label text-ink-mid">Separado do preço do serviço. A selecção ainda não é um pedido confirmado.</p>
+          </div>
+        )}
       </div>
     </Panel>
   );
@@ -238,6 +261,7 @@ export default function BookingWizard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const query = usePublicBarbershop(slug);
+  const shopCatalogQuery = usePublicShopCatalog(slug);
   const data = query.data;
 
   // Tenant colours are scoped to this route and restored on exit.
@@ -249,17 +273,28 @@ export default function BookingWizard() {
   const [bookingAttemptKey, setBookingAttemptKey] = useState(() => crypto.randomUUID());
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const [shopCart, setShopCart] = useState<ShopCart>({});
+  useEffect(() => { setShopCart({}); setBookingError(null); }, [slug]);
   const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() ?? '';
   const turnstileRequired = import.meta.env.VITE_BOOKING_TURNSTILE_REQUIRED === 'true' || import.meta.env.PROD;
   const headingRef = useRef<HTMLHeadingElement>(null);
 
+  const shopStepAvailable = shopCatalogQuery.data?.enabled === true;
+  const customerStep = shopStepAvailable ? 7 : 6;
+  const stepLabels = shopStepAvailable ? [...STEP_LABELS.slice(0, 5), 'Loja', 'Dados'] : STEP_LABELS;
   const rawStep = Number(searchParams.get('step') ?? '1');
-  const currentStep = Number.isFinite(rawStep) ? Math.min(6, Math.max(1, Math.round(rawStep))) : 1;
+  const currentStep = Number.isFinite(rawStep) ? Math.min(customerStep, Math.max(1, Math.round(rawStep))) : 1;
   const serviceId = searchParams.get('service');
   const haircutId = searchParams.get('haircut');
   const barberParam = searchParams.get('barber') ?? 'any';
   const date = searchParams.get('date');
   const start = searchParams.get('start');
+  const shopLines = useMemo(() => (shopCatalogQuery.data?.products ?? []).flatMap((product) => product.variants.flatMap((variant) => {
+    const selected = shopCart[variant.id];
+    return selected?.qty > 0 ? [{ product, variant, qty: selected.qty, options: selected.options }] : [];
+  })), [shopCatalogQuery.data?.products, shopCart]);
+  const shopItemCount = shopLines.reduce((total, line) => total + line.qty, 0);
+  const shopSubtotal = shopLines.reduce((total, line) => total + line.qty * line.variant.price_minor, 0);
 
   const service = data?.services.find((item) => item.id === serviceId);
   const haircut = data?.haircuts.find((item) => item.id === haircutId);
@@ -345,12 +380,13 @@ export default function BookingWizard() {
         <div className="w-full max-w-lg"><ErrorState message={humanError(query.error ?? new Error('BARBERSHOP_NOT_FOUND'))} onRetry={() => query.refetch()} /></div></div>;
   }
 
-  const effectiveStep = !selectableService ? 1 : Math.min(currentStep, start ? 6 : date ? 5 : 4);
+  const effectiveStep = !selectableService ? 1 : Math.min(currentStep, start ? customerStep : date ? 5 : 4);
   const depositCents = service ? getDepositCents(service, data.shop) : 0;
   const depositConfigValid = !service || depositCents <= service.price_cents;
   const canBook = Boolean(
-    selectableService && start && (barberParam === 'any' || barber) && depositConfigValid &&
-    ((!turnstileRequired && !turnstileSiteKey) || Boolean(turnstileSiteKey && turnstileToken)),
+    !shopCatalogQuery.isLoading && selectableService && start && (barberParam === 'any' || barber) && depositConfigValid &&
+    ((!turnstileRequired && !turnstileSiteKey) || Boolean(turnstileSiteKey && turnstileToken)) &&
+    (!shopStepAvailable || shopItemCount === 0),
   );
 
   const setStep = (step: number) => updateSearchParams(searchParams, setSearchParams, { step: String(step) });
@@ -374,6 +410,33 @@ export default function BookingWizard() {
   const chooseStart = (value: string) => updateSearchParams(searchParams, setSearchParams, {
     start: value, step: '6',
   });
+
+  const changeShopQuantity = (product: PublicShopProduct, variant: PublicShopVariant, delta: number) => {
+    setShopCart((current) => {
+      const previous = current[variant.id] ?? { qty: 0, options: [] };
+      const qty = Math.max(0, Math.min(100, previous.qty + delta));
+      const next = { ...current };
+      if (qty === 0) delete next[variant.id];
+      else next[variant.id] = { qty, options: previous.options.filter((option) => product.order_options.includes(option)) };
+      return next;
+    });
+    setBookingError(null);
+  };
+
+  const changeShopOption = (variantId: string, option: string, checked: boolean) => {
+    setShopCart((current) => {
+      const previous = current[variantId];
+      if (!previous || previous.qty === 0) return current;
+      const options = checked ? [...new Set([...previous.options, option])] : previous.options.filter((item) => item !== option);
+      return { ...current, [variantId]: { ...previous, options: options.slice(0, 10) } };
+    });
+  };
+
+  const continueWithoutProducts = () => {
+    setShopCart({});
+    setBookingError(null);
+    setStep(customerStep);
+  };
 
   const goBack = () => {
     const previous = effectiveStep - 1;
@@ -403,10 +466,18 @@ export default function BookingWizard() {
       setStep(6);
       return;
     }
-    if (effectiveStep === 6) void submitBooking();
+    if (shopStepAvailable && effectiveStep === 6) {
+      setStep(7);
+      return;
+    }
+    if (effectiveStep === customerStep) void submitBooking();
   };
 
   const submitBooking = async () => {
+    if (shopStepAvailable && shopItemCount > 0) {
+      setBookingError('Os artigos seleccionados ainda não podem ser anexados à marcação. Volte ao passo Loja e retire os artigos, ou escolha “Continuar sem produtos”, antes de confirmar.');
+      return;
+    }
     if ((turnstileRequired || turnstileSiteKey) && !turnstileSiteKey) {
       setBookingError('A marcação está temporariamente indisponível porque a verificação de segurança não está configurada.');
       return;
@@ -477,13 +548,14 @@ export default function BookingWizard() {
   const showBarberStep = effectiveStep === 3;
   const showDateStep = effectiveStep === 4;
   const showTimeStep = effectiveStep === 5;
-  const showCustomerStep = effectiveStep === 6;
+  const showShopStep = shopStepAvailable && effectiveStep === 6;
+  const showCustomerStep = effectiveStep === customerStep;
 
   return (
     <div className="barber-shell min-h-screen">
       
       <header className="max-w-6xl mx-auto px-5 sm:px-8 py-5">
-        <StepHeader currentStep={effectiveStep} shopName={data.shop.name} shopSlug={data.shop.slug} />
+        <StepHeader currentStep={effectiveStep} shopName={data.shop.name} shopSlug={data.shop.slug} stepLabels={stepLabels} />
       </header>
 
       <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-28 lg:pb-16">
@@ -653,6 +725,19 @@ export default function BookingWizard() {
               </Panel>
             )}
 
+            {showShopStep && shopCatalogQuery.data && (
+              <ShopCatalogueStep
+                catalog={shopCatalogQuery.data}
+                cart={shopCart}
+                loading={shopCatalogQuery.isLoading}
+                error={shopCatalogQuery.isError ? shopCatalogQuery.error : undefined}
+                onRetry={() => { void shopCatalogQuery.refetch(); }}
+                onQuantityChange={changeShopQuantity}
+                onOptionChange={changeShopOption}
+                onContinueWithoutProducts={continueWithoutProducts}
+              />
+            )}
+
             {showCustomerStep && service && start && (
               <Panel title="Os seus dados" testId="booking-step-customer">
                 <form
@@ -718,6 +803,12 @@ export default function BookingWizard() {
                       </p>
                     </div>
                   ) : null}
+                  {shopStepAvailable && shopItemCount > 0 && (
+                    <div role="alert" className="rounded-2xl border border-amber-400/25 bg-amber-400/5 p-4" data-testid="booking-shop-not-submittable">
+                      <p className="t-body text-ink-mid">A selecção de artigos ainda não pode ser registada como pedido nesta fase. Para evitar uma falsa confirmação, a marcação só pode ser submetida sem artigos até a integração segura de pedidos ser concluída.</p>
+                      <Button type="button" variant="secondary" size="sm" onClick={() => setStep(6)} className="mt-3">Voltar à Loja para rever artigos</Button>
+                    </div>
+                  )}
                   {bookingError && <div aria-live="assertive"><ErrorState message={bookingError} /></div>}
                   <Button
                     type="submit"
@@ -739,7 +830,7 @@ export default function BookingWizard() {
               className="sr-only"
               aria-live="polite"
             >
-              Passo {effectiveStep}: {STEP_LABELS[effectiveStep - 1]}
+              Passo {effectiveStep}: {stepLabels[effectiveStep - 1]}
             </div>
           </section>
 
@@ -754,6 +845,9 @@ export default function BookingWizard() {
               timezone={data.shop.timezone}
               depositCents={depositCents}
               depositConfigValid={depositConfigValid}
+              shopFeatureActive={shopStepAvailable}
+              shopLines={shopLines}
+              shopSubtotal={shopSubtotal}
             />
           </aside>
         </div>
@@ -766,7 +860,7 @@ export default function BookingWizard() {
             Voltar
           </Button>
           <div className="flex items-center gap-2">
-            {currentStep === 6 && data.shop.whatsapp && (
+            {effectiveStep === customerStep && data.shop.whatsapp && (
               <a
                 href={buildWhatsAppLink(data.shop.whatsapp, 'Olá, preciso de ajuda para fazer uma marcação na ' + data.shop.name + '.')}
                 target="_blank"
@@ -786,13 +880,13 @@ export default function BookingWizard() {
                 (effectiveStep === 3 && !eligibleBarbers.length) ||
                 (effectiveStep === 4 && !date) ||
                 (effectiveStep === 5 && !start) ||
-                (effectiveStep === 6 && !canBook)
+                (effectiveStep === customerStep && !canBook)
               }
-              loading={effectiveStep === 6 && bookMutation.isPending}
+              loading={effectiveStep === customerStep && bookMutation.isPending}
               data-testid="booking-next"
             >
-              {effectiveStep === 6 ? 'Confirmar' : 'Continuar'}
-              {effectiveStep < 6 && <ArrowRight size={16} />}
+              {effectiveStep === customerStep ? 'Confirmar' : 'Continuar'}
+              {effectiveStep < customerStep && <ArrowRight size={16} />}
             </Button>
           </div>
         </div>

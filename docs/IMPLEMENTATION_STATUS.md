@@ -43,6 +43,15 @@
 - As permissões SQL da Fase 2 permitem actualizar apenas as colunas comerciais necessárias. A escrita directa de `stock_on_hand` permanece proibida; as alterações passam pelo ledger. `image_source_checked_at`, `image_authorized_by` e `image_authorized_at` são campos geridos pelo PostgreSQL. As migrations da Fase 2 e os testes `supabase/tests/shop_catalog_phase2.sql` e `supabase/tests/shop_catalog_rules_phase2.sql` foram aplicados/executados em staging.
 - Relatório técnico: [BARBEROS_SHOP_PHASE2_CATALOG.md](BARBEROS_SHOP_PHASE2_CATALOG.md).
 
+### Fase 3: catálogo público opcional
+
+- Adicionada a RPC pública `get_public_shop_catalog(p_slug)`, com DTO por tenant, flag de rollout, catálogo activo, variantes/preços e disponibilidade booleana calculada no servidor sem expor saldo ou reservas.
+- Implementado `frontend/src/features/public-shop/catalog.ts` com validação Zod da resposta e `frontend/src/features/public-shop/CatalogueStep.tsx` com categorias, pesquisa, cartões, variantes, quantidades, preferências, subtotal, sem resultados, catálogo vazio, indisponibilidade, erro e opção explícita para continuar sem produtos.
+- O `BookingWizard` integra o passo condicional e conserva o percurso normal de seis passos quando o catálogo não está activo. A selecção permanece local e é bloqueada na submissão enquanto a transacção de pedidos da Fase 4 não existir; não é escrita em notas nem apresentada como encomenda.
+- Migration `20261023120503_shop_public_catalog_phase3` aplicada ao staging; `supabase/tests/shop_public_catalog_phase3.sql` executado directamente com sucesso e `ROLLBACK`. O contrato foi acrescentado ao CI após os contratos SQL das Fases 1 e 2. A flag não foi activada e a produção não foi alterada.
+- O repositório passa a conter 132 ficheiros SQL de migration; staging tem 95 versões registadas e produção conserva 110. A divergência de histórico/schema continua aberta; estas contagens não demonstram equivalência.
+- Relatório: [BARBEROS_SHOP_PHASE3_PUBLIC_CATALOG.md](BARBEROS_SHOP_PHASE3_PUBLIC_CATALOG.md). **A experiência pública está implementada, mas pedidos reais com produtos e lançamento continuam NO-GO até à Fase 4 e ao fecho da Fase 0.**
+
 ### Estado final da Fase 0
 
 - **NO-GO para produção.** Permanecem por resolver as diferenças do histórico/schema de migrations, o desfasamento da Edge Function `booking-create`, a configuração Turnstile, o secret `BARBEROS_TEST_DATABASE_URL`, as credenciais de deployment da Vercel e o gate LCP de 2.500 ms (últimas medições 2.856 ms e 3.120 ms). Os bloqueios e acções exactas estão em [BARBEROS_SHOP_PHASE0_READINESS.md](BARBEROS_SHOP_PHASE0_READINESS.md). Não declarar a Fase 0 concluída enquanto esses gates não tiverem evidência.

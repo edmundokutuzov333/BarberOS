@@ -35,3 +35,6 @@ Execução validada em `BarberOS Remediation Staging` em 23 de Outubro de 2026. 
 ### Regras de catálogo e duplicação da Fase 2
 
 `shop_catalog_rules_phase2.sql` verifica o limite/forma das preferências de pedido e a RPC de duplicação. As cópias começam despublicadas, com variantes inactivas, sem SKU e com stock zero; não podem duplicar produto de outro tenant. O contrato é transaccional e termina com `ROLLBACK`.
+
+
+`shop_public_catalog_phase3.sql` valida a RPC pública da Loja: flag desligada sem fuga de dados, isolamento por slug/tenant, categorias e produtos publicados, variantes activas, disponibilidade após reservas, produtos sem controlo de stock e ausência de campos privados na resposta. Todos os fixtures terminam em `ROLLBACK`; executar apenas em staging/teste após as migrations da Fase 3.
