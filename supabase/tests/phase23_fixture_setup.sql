@@ -73,18 +73,18 @@ begin
   select appointment_id into v_appointment
   from public.book_appointment(
     v_slug, v_service, v_haircut, v_barber, v_slot_a,
-    'Cliente Acceptance Confirmed', '84 000 0011', 'phase23-confirmed@example.invalid'
-  );
-
-  select appointment_id into v_appointment
-  from public.book_appointment(
-    v_slug, v_service, v_haircut, v_barber, v_slot_b,
     'Cliente Acceptance Completed', '84 000 0012', 'phase23-completed@example.invalid'
   );
 
   update public.appointments
   set status = 'completed'
   where id = v_appointment and barbershop_id = v_shop;
+
+  select appointment_id into v_appointment
+  from public.book_appointment(
+    v_slug, v_service, v_haircut, v_barber, v_slot_b,
+    'Cliente Acceptance Confirmed', '84 000 0011', 'phase23-confirmed@example.invalid'
+  );
 
   if not exists (
     select 1 from public.appointments
