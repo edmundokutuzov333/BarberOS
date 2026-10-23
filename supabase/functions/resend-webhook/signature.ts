@@ -41,9 +41,11 @@ export async function verifyResendSignature(
   if (!keyBytes?.length) return false;
 
   try {
+    const keyMaterial = new ArrayBuffer(keyBytes.byteLength);
+    new Uint8Array(keyMaterial).set(keyBytes);
     const key = await crypto.subtle.importKey(
       "raw",
-      keyBytes,
+      keyMaterial,
       { name: "HMAC", hash: "SHA-256" },
       false,
       ["sign"],
