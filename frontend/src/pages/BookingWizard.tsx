@@ -224,7 +224,7 @@ function Summary({
   depositCents: number;
   depositConfigValid: boolean;
   shopFeatureActive: boolean;
-  shopLines: { product: PublicShopProduct; variant: PublicShopVariant; qty: number; options: string[] }[];
+  shopLines: { product: PublicShopProduct; variant: PublicShopVariant; qty: number; options: string[]; fulfilmentMode: 'consume_here' | 'takeaway' }[];
   shopSubtotal: number;
 }) {
   return (
