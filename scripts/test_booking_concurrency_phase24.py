@@ -63,7 +63,8 @@ def cleanup(shop_id):
 
 
 def book_a(result, transaction_open, release_commit, slug, service_id, barber_id, slot):
-    phone = "+25884" + uuid.uuid4().hex[:7]
+    digits = f"{uuid.uuid4().int % 10_000_000:07d}"
+    phone = f"84 {digits[:3]} {digits[3:]}"
     conn = psycopg.connect(DB, autocommit=False, prepare_threshold=None)
     try:
         with conn.cursor() as cur:
@@ -88,7 +89,8 @@ def book_a(result, transaction_open, release_commit, slug, service_id, barber_id
 
 
 def book_b(result, started, slug, service_id, barber_id, slot):
-    phone = "+25885" + uuid.uuid4().hex[:7]
+    digits = f"{uuid.uuid4().int % 10_000_000:07d}"
+    phone = f"85 {digits[:3]} {digits[3:]}"
     conn = psycopg.connect(DB, autocommit=False, prepare_threshold=None)
     try:
         started.set()
@@ -122,7 +124,7 @@ try:
     ta = threading.Thread(target=book_a, args=(a, a_open, release_a, slug, service_id, barber_id, slot))
     ta.start()
     if not a_open.wait(10):
-        raise RuntimeError("PHASE24_A_DID_NOT_REACH_BOOKING_COMMIT_POINT")
+        raise RuntimeError(f"PHASE24_A_DID_NOT_REACH_BOOKING_COMMIT_POINT:{a.error or 'no SQL error captured'}")
 
     tb = threading.Thread(target=book_b, args=(b, b_started, slug, service_id, barber_id, slot))
     tb.start()
