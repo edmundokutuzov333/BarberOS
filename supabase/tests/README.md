@@ -30,3 +30,8 @@ Execução validada em `BarberOS Remediation Staging` em 23 de Outubro de 2026. 
 ### Fase 2 da Loja da Barbearia
 
 `shop_catalog_phase2.sql` verifica que o PostgreSQL rejeita publicação sem variante activa ou com categoria inactiva, e que os privilégios não permitem escrita directa do saldo. Os fixtures correm dentro de transacção e terminam com `ROLLBACK`. Executar apenas em staging/teste com as migrations da Fase 2 aplicadas.
+
+
+### Regras de catálogo e duplicação da Fase 2
+
+`shop_catalog_rules_phase2.sql` verifica o limite/forma das preferências de pedido e a RPC de duplicação. As cópias começam despublicadas, com variantes inactivas, sem SKU e com stock zero; não podem duplicar produto de outro tenant. O contrato é transaccional e termina com `ROLLBACK`.

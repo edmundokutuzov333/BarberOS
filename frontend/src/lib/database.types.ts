@@ -400,6 +400,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean
           name: string
+          order_options: Json
           product_kind: Database["public"]["Enums"]["shop_product_kind"]
           sort_order: number
           track_stock: boolean
@@ -423,6 +424,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           name: string
+          order_options?: Json
           product_kind?: Database["public"]["Enums"]["shop_product_kind"]
           sort_order?: number
           track_stock?: boolean
@@ -446,6 +448,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           name?: string
+          order_options?: Json
           product_kind?: Database["public"]["Enums"]["shop_product_kind"]
           sort_order?: number
           track_stock?: boolean
@@ -1700,6 +1703,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      duplicate_shop_product: {
+        Args: { p_barbershop_id: string; p_product_id: string }
+        Returns: string
+      }
       record_shop_inventory_movement: {
         Args: {
           p_barbershop_id: string

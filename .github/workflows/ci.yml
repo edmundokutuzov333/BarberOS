@@ -76,6 +76,10 @@ jobs:
             supabase/tests/platform_core_contracts.test.sql \
             supabase/tests/resend_webhook_contract.test.sql
       - name: Run transactional shop domain contracts
+        shell: bash
         run: |
-          supabase db query --local --file supabase/tests/shop_domain_phase1.sql
-          supabase db query --local --file supabase/tests/shop_catalog_phase2.sql
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/shop_domain_phase1.sql
+          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/shop_catalog_phase2.sql
+          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/shop_catalog_rules_phase2.sql
