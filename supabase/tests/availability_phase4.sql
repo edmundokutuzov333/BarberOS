@@ -103,7 +103,7 @@ begin
     from public.get_available_slots(v_slug,v_service,v_barber,v_day);
     if v_slots <> 0 then raise exception 'SHOP_CLOSED_OVERRIDE_FAILED'; end if;
 
-    select count(*),coalesce(bool_and(is_open),false)
+    select coalesce(sum(slots_count),0)::int,coalesce(bool_and(is_open),false)
       into v_slots,v_open
     from public.get_available_days(v_slug,v_service,v_barber,v_day,v_day);
     if v_slots<>0 or v_open then raise exception 'DAY_METADATA_CLOSED_OVERRIDE_FAILED'; end if;
