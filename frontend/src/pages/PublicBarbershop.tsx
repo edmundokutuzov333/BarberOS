@@ -225,9 +225,13 @@ export default function PublicBarbershop() {
 
         {shop.description && (
           <section className="mt-6" data-testid="public-shop-description">
-            <Panel title="Sobre a barbearia">
-              <p className="t-body text-ink-mid whitespace-pre-line">{shop.description}</p>
-            </Panel>
+            <details className="rounded-2xl border border-white/10 bg-white/[.02] p-4">
+              <summary className="min-h-10 cursor-pointer list-none t-card text-ink-hi focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft">
+                Sobre a barbearia
+                <span aria-hidden="true" className="float-right text-ink-mid">+</span>
+              </summary>
+              <p className="t-body text-ink-mid whitespace-pre-line mt-3">{shop.description}</p>
+            </details>
           </section>
         )}
 

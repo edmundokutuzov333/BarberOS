@@ -204,3 +204,8 @@ O gate Fast 3G identificou como maior elemento de conteúdo a descrição longa 
 A revisão inicial `1f0d9ee513b213b24a56fb3a12845750c2d4b004` falhou no CI por erros de TypeScript e porque o SQL reconstruído não terminava as definições de funções com ponto e vírgula. A revisão correctiva mantém o percurso de marcação sem produtos compatível com a produção: o lookup usa apenas `response` e a RPC permanece `book_appointment_idempotent`. O fingerprint e o RPC combinado só são consultados quando há artigos. A chamada de produtos continua a falhar fechada em produção até o schema ser reconciliado.
 
 Os gates SQL de aceitação e performance usam uma base Supabase local efémera por job, isolada e reconstruída a partir das migrations; já não dependem de `BARBEROS_TEST_DATABASE_URL` como secret externo. O teste HTTP de concorrência foi ligado ao tenant QA do projecto staging, resolve dinamicamente um slot livre e cancela a marcação criada no bloco de limpeza. O ciclo completo de browser autenticado continua dependente de credenciais próprias. O gate Fast 3G continua pendente de nova medição.
+
+
+### Correcção final do candidato LCP (23 de Outubro de 2026)
+
+A medição Fast 3G no deployment público confirmou que o maior elemento era a descrição completa dentro de `Sobre a barbearia` (2.560–2.940 ms). A descrição completa mantém-se disponível, mas passa para um `details/summary` fechado por defeito, evitando que um parágrafo longo seja pintado no primeiro viewport. A próxima medição do workflow é a evidência necessária para declarar o gate LCP aprovado; até lá o gate permanece aberto.
