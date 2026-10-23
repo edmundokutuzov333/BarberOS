@@ -16,6 +16,7 @@ A Fase 1 do documento de especificação (PDF, páginas 17 a 18 e 20 a 22) pede 
 | `20261023090731` | `shop_domain_model_phase1` | Feature flag, tabelas, índices, FKs compostas, RLS, movimentos, reservas e transições base. |
 | `20261023091111` | `shop_catalog_write_privileges_hardening` | Restringe colunas de inserção e remove eliminação directa do catálogo para utilizadores autenticados. O saldo inicial só pode entrar pelo ledger. |
 | `20261023091126` | `shop_order_transition_invariants` | Impede que a encomenda avance para pronta/entregue antes de as linhas satisfazerem os respectivos estados. |
+| `20261023091911` | `shop_foreign_key_covering_indexes` | Acrescenta índices de cobertura para as 22 chaves estrangeiras introduzidas no domínio da loja; o contrato global volta a exigir zero FKs públicas sem índice. |
 
 A produção (`alseiinjzwjdiwtvkdzy`) não foi alterada e não recebeu nenhuma destas migrations.
 
@@ -45,6 +46,8 @@ O schema existente já contém as tabelas genéricas `public.products` e `public
 ## Prova executada
 
 Foi executado directamente no staging o ficheiro `supabase/tests/shop_domain_phase1.sql`. O teste terminou sem erro. O resultado SQL foi um conjunto vazio de linhas, esperado para um bloco `DO` que lança excepção em qualquer falha. A execução cria dados de QA dentro de `BEGIN` e termina com `ROLLBACK`.
+
+A cadeia completa de migrations também foi aplicada com sucesso num Supabase local vazio pelo CI. O primeiro contrato pgTAP detectou 22 FKs sem índice de cobertura, todas introduzidas pelo novo domínio. A migration `shop_foreign_key_covering_indexes` foi aplicada em staging; a consulta exacta do contrato devolveu agora `0` FKs públicas sem índice. A reexecução automatizada de pgTAP ocorre no CI do commit correctivo.
 
 O teste exercitou:
 - flag desligada por defeito e isolamento de tenant;
