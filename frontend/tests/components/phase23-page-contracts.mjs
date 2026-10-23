@@ -28,6 +28,7 @@ const tests = [
     assert.match(booking, /const showShopStep = shopStepAvailable && effectiveStep === 6/);
     assert.match(booking, /shopItemCount === 0/);
     assert.match(catalog, /supabase\.rpc\('get_public_shop_catalog'/);
+    assert.match(catalog, /VITE_SHOP_PUBLIC_CATALOG_ENABLED === 'true'/);
     assert.match(catalog, /PUBLIC_SHOP_CATALOG_INVALID_RESPONSE/);
     assert.match(step, /public-shop-search/);
     assert.match(step, /Indisponível neste momento/);

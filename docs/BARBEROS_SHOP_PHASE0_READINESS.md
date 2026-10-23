@@ -176,3 +176,10 @@ O código da Fase 2 não remove nenhum destes bloqueios. Não foi feita alteraç
 A Fase 3 acrescentou a leitura pública segura do catálogo e o passo condicional do wizard. A migration `20261023120503_shop_public_catalog_phase3` foi aplicada ao projecto `BarberOS Remediation Staging`; o contrato transaccional `shop_public_catalog_phase3.sql` foi executado com sucesso e terminou em `ROLLBACK`. A flag de loja continua desligada e não foram aplicadas migrations ou alterados dados na produção.
 
 O inventário actual é de 132 ficheiros SQL em `main`, 95 migrations registadas no staging e 110 na produção. O novo contrato público não reconcilia o histórico nem o schema do motor de marcações entre ambientes. A Fase 0 mantém-se **NO-GO** e `shop_enabled` não pode ser activada antes da integração transaccional da Fase 4, validação ponta a ponta e resolução dos bloqueios acima.
+
+
+### Deployment automático da Fase 3 e contenção (23 de Outubro de 2026)
+
+A integração Git da Vercel publicou automaticamente o commit `15fc1447b15e9609b7c31eaf4ff588e2de516012` em produção; o deployment `dpl_EdzHcFxmA3JNdN9dvXUxPi89o7tZ` ficou `READY` e associado a `main`. A acção de deployment explícito do GitHub Actions foi ignorada por falta de credenciais, mas não impediu a publicação automática. O percurso `/barbearia/oryon/marcar` respondeu HTTP 200. A consulta SQL read-only à produção confirmou `get_public_shop_catalog(text)=NULL`, `book_appointment_idempotent(...)=NULL` para a assinatura consultada e ausência da coluna `barbershops.shop_enabled`. Nenhuma migration foi aplicada à produção.
+
+Para evitar qualquer chamada a uma RPC inexistente, o commit correctivo adiciona o gate global `VITE_SHOP_PUBLIC_CATALOG_ENABLED`, desligado por defeito. O passo da Loja requer simultaneamente esse gate no build e a flag por tenant no servidor. A Fase 0 continua **NO-GO**; o deployment READY e o HTTP 200 não são certificação funcional ponta a ponta.

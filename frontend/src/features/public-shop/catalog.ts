@@ -59,7 +59,9 @@ export function usePublicShopCatalog(slug?: string) {
   return useQuery({
     queryKey: ['public-shop-catalog', slug],
     queryFn: () => getPublicShopCatalog(slug),
-    enabled: Boolean(slug),
+    // Global rollout gate prevents calls to a not-yet-migrated production database.
+    // Tenant-level barbershops.shop_enabled remains the second, server-authoritative gate.
+    enabled: Boolean(slug) && import.meta.env.VITE_SHOP_PUBLIC_CATALOG_ENABLED === 'true',
     staleTime: 15_000,
     gcTime: 60_000,
     retry: false,

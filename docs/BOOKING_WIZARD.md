@@ -87,6 +87,6 @@ A entrega real por WhatsApp/email continua dependente do Notifications Dispatche
 
 ## Fase 3: catálogo público
 
-O wizard consulta `get_public_shop_catalog(p_slug)` e acrescenta o passo opcional Loja somente quando a resposta do backend indica que a flag do tenant está activa. Com a flag desligada, o percurso actual de seis passos é preservado. O catálogo expõe apenas categorias/produtos/variantes activos, preço e disponibilidade booleana; stock físico, reservas, dados de cliente, marcações e metadados privados de imagem não são devolvidos.
+O wizard consulta `get_public_shop_catalog(p_slug)` apenas quando `VITE_SHOP_PUBLIC_CATALOG_ENABLED=true` no build e acrescenta o passo opcional Loja somente quando a resposta do backend indica que a flag do tenant está activa. O gate global fica desligado por defeito; `shop_enabled` é a segunda barreira por tenant. Com a flag desligada, o percurso actual de seis passos é preservado. O catálogo expõe apenas categorias/produtos/variantes activos, preço e disponibilidade booleana; stock físico, reservas, dados de cliente, marcações e metadados privados de imagem não são devolvidos.
 
 A selecção permanece no estado da página e **não** é guardada como pedido nesta fase. Para evitar uma falsa confirmação, uma marcação não pode ser submetida enquanto existirem artigos seleccionados. A acção explícita «Continuar sem produtos» limpa a pré-selecção e permite continuar a marcação normal. A flag deve permanecer desligada até à Fase 4 integrar a transacção segura de marcação+pedido.

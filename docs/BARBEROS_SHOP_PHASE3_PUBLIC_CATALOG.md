@@ -6,7 +6,7 @@
 
 A especificação PDF v1.0, páginas 8, 20, 22 e 24, pede um passo opcional depois de serviço, corte, barbeiro, data e hora. A página apresenta produtos publicados pela própria barbearia, categorias, pesquisa, variantes e preços em MT, disponibilidade, quantidades, preferências configuradas e subtotal dos produtos separado do serviço. Tem estados de carregamento, erro, catálogo vazio, pesquisa sem resultados e artigos esgotados. «Continuar sem produtos» está sempre explícito e remove qualquer pré-selecção local.
 
-O passo só entra no percurso quando a RPC pública devolve `enabled=true`. Quando a flag do tenant está desligada, a RPC devolve apenas `enabled=false` e listas vazias; o wizard conserva os seis passos de marcação existentes.
+A activação exige duas barreiras: `VITE_SHOP_PUBLIC_CATALOG_ENABLED=true` no build e `barbershops.shop_enabled=true` na barbearia. A primeira fica desligada por defeito e evita chamadas RPC em produção enquanto o schema não estiver reconciliado; a segunda é a fonte de verdade do tenant no servidor. Quando o gate global está desligado, a query nem é executada e o wizard conserva os seis passos. Com a query activa, um tenant desligado recebe `enabled=false` e listas vazias.
 
 ## Backend público e protecção de dados
 
@@ -32,7 +32,8 @@ O contrato é incluído em `.github/workflows/ci.yml` depois das migrations e do
 
 ## Segurança e release
 
-- Nenhuma barbearia foi activada; a flag continua falsa.
+- Nenhuma barbearia foi activada; a flag por tenant continua falsa. O gate global `VITE_SHOP_PUBLIC_CATALOG_ENABLED` deve continuar ausente/falso em produção até à Fase 4.
 - A migration e o contrato SQL foram executados no projecto Supabase **staging** `asikuyxaapcmayptimxi`, nunca em produção.
+- A integração Git da Vercel publicou automaticamente o commit inicial da Fase 3. A consulta de produção confirmou que ainda não existe `get_public_shop_catalog` nem `barbershops.shop_enabled`; por isso foi acrescentado o gate global por defeito desligado numa correcção subsequente para remover a chamada a RPC inexistente. O percurso público `/barbearia/oryon/marcar` respondeu HTTP 200, o que não substitui uma certificação browser de ponta a ponta.
 - Não foram alterados `booking-create`, as transacções existentes de marcação, as reservas de stock nem dados de produção.
 - A Fase 0 continua NO-GO devido ao histórico/schema do motor de marcações, à configuração Turnstile, à suite de aceitação dedicada, ao deployment Vercel não autenticado no workflow e ao gate de performance documentado em [BARBEROS_SHOP_PHASE0_READINESS.md](BARBEROS_SHOP_PHASE0_READINESS.md).
