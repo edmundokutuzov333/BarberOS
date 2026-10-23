@@ -3,7 +3,7 @@
 
 begin;
 
-do $
+do $$
 declare
   v_owner uuid;
   v_shop uuid;
