@@ -35,7 +35,7 @@ A especificação PDF, páginas 14 e 20, define o catálogo de gestão: produtos
 - `supabase/tests/shop_catalog_phase2.sql`: fixtures rollback-only. Verifica rejeição de publicação sem variante, rejeição com categoria inactiva, publicação válida, ausência de update directo ao stock e grants de edição/auditoria.
 - `supabase/tests/shop_catalog_rules_phase2.sql`: valida preferências JSON, limite de 10 opções, duplicação transaccional, isolamento de tenant, variantes inactivas sem SKU e stock inicial zero.
 
-A suite SQL passou directamente em staging, incluindo os testes que impedem a falsificação de `image_source_checked_at` e `image_authorized_by`. O CI remoto do commit final continua a validar typecheck, lint, build e execução dos contratos num schema local limpo.
+A suite SQL passou directamente em staging, incluindo os testes que impedem a falsificação de `image_source_checked_at` e `image_authorized_by`. No commit `67c595a5a5a3591b065b15d72893db75a6ea0b67`, o workflow de verificação `39937302849` concluiu com sucesso: migrations aplicadas a partir de uma base vazia, 61 contratos pgTAP e os três contratos SQL transaccionais; o frontend CI `39937303002` também passou lint, typecheck, unit/component tests, build, acessibilidade e orçamento de assets. Os gates separados da Fase 23 e da Fase 25 continuam bloqueados por `BARBEROS_TEST_DATABASE_URL` vazio; o benchmark público Fast 3G também excedeu o LCP de 2.500 ms (medições de 2.856 ms e 3.120 ms).
 
 ## Limites e gate
 

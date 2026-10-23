@@ -156,13 +156,15 @@ A verificação posterior confirmou que a Fase 1 (modelo de domínio) e a Fase 2
 2. A produção não tem `public.booking_idempotency` nem `book_appointment_idempotent`, exigidos pelo handler versionado. A função `booking-create` publicada continua a divergir do código. A sua substituição depende de uma migration/reconciliação segura e de aceitação do fluxo completo.
 3. A configuração Turnstile necessária para a marcação pública não foi comprovada no deployment consultado. Não há chave pública/secrets verificados disponíveis nesta sessão para configurar o provider.
 4. O workflow de aceitação de base de dados não dispõe de `BARBEROS_TEST_DATABASE_URL`; os testes de concorrência/aceitação HTTP não podem ser considerados aprovados.
-5. O workflow de deployment Vercel reportou credenciais de deploy ausentes no GitHub Actions. O smoke das rotas públicas não prova que o commit mais recente tenha sido publicado.
+5. O workflow de deployment Vercel reportou credenciais de deploy ausentes no GitHub Actions. O smoke das rotas públicas passou no site já publicado, mas o passo de deployment foi ignorado; não prova que o commit mais recente tenha sido publicado.
+6. O gate Phase 25 de desempenho público continua vermelho: LCP medido a 2.856 ms e 3.120 ms, acima do limite de 2.500 ms em Fast 3G. Uma execução anterior, no commit `58feaa770f011cef42a6847ac72eaa85cf0b0cc3`, também falhou (2.836 ms), pelo que é um problema pré-existente que ainda requer correcção e nova medição.
 
 ### Acções necessárias para mudar NO-GO para GO
 
 - Fornecer/configurar os valores de Turnstile nos ambientes Vercel/Supabase apropriados e verificar que o widget e o backend usam o mesmo par de chaves.
 - Configurar `BARBEROS_TEST_DATABASE_URL` como secret de ambiente GitHub protegido, com uma base de teste isolada e permissões mínimas.
 - Configurar as credenciais autorizadas de deployment da Vercel no ambiente GitHub Actions ou confirmar o fluxo alternativo de publicação já autorizado.
+- Corrigir o orçamento LCP do percurso público e repetir o benchmark Fast 3G até cumprir o limite definido.
 - Reconciliar cada migration de produção com o ficheiro SQL de origem e produzir um relatório exact-match de schema/RPC/grants antes de qualquer migration em produção.
 - Testar o fluxo real de marcação no ambiente publicado, incluindo Turnstile, idempotência, rate limit, notificações e retries, e registar evidência do commit efectivamente servido.
 

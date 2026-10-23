@@ -45,7 +45,7 @@
 
 ### Estado final da Fase 0
 
-- **NO-GO para produção.** Permanecem por resolver as diferenças do histórico/schema de migrations, o desfasamento da Edge Function `booking-create`, a configuração Turnstile, o secret `BARBEROS_TEST_DATABASE_URL` e as credenciais de deployment da Vercel. Os bloqueios e acções exactas estão em [BARBEROS_SHOP_PHASE0_READINESS.md](BARBEROS_SHOP_PHASE0_READINESS.md). Não declarar a Fase 0 concluída enquanto esses gates não tiverem evidência.
+- **NO-GO para produção.** Permanecem por resolver as diferenças do histórico/schema de migrations, o desfasamento da Edge Function `booking-create`, a configuração Turnstile, o secret `BARBEROS_TEST_DATABASE_URL`, as credenciais de deployment da Vercel e o gate LCP de 2.500 ms (últimas medições 2.856 ms e 3.120 ms). Os bloqueios e acções exactas estão em [BARBEROS_SHOP_PHASE0_READINESS.md](BARBEROS_SHOP_PHASE0_READINESS.md). Não declarar a Fase 0 concluída enquanto esses gates não tiverem evidência.
 
 ## Gates de preparação para produção ainda abertos
 
