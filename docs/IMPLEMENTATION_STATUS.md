@@ -91,3 +91,8 @@ A validação em CI detectou que cancelar o pedido não libertava reservas. A mi
 - A suite Phase 23 falhou por erro de execução Psycopg num bloco SQL `DO $$`; a configuração do workflow já usa Supabase local efémero, não um secret externo em falta. O runner foi corrigido com `ClientCursor` e aguarda CI de confirmação.
 - A medição Fast 3G mais recente passou no commit `92fd645cbfaaabdf1ea8cc89c9facee1cd5d6b4f`: LCP 2.032/2.088 ms; DCL 1.249/1.256 ms; CLS 0; INP 40/48 ms. O frontend permaneceu inalterado nos commits de fixtures SQL seguintes; a aprovação no SHA actual será confirmada na nova execução.
 - A Vercel publicou o SHA actual e o smoke passou. Produção não contém o schema/RPC da Loja e não tem configuração Turnstile comprovada. A feature flag global e as flags por tenant permanecem desligadas; lançamento **NO-GO**.
+
+
+### Correcção do contrato CRM na suite de aceitação
+
+A suite Phase 23 já ultrapassa o parser SQL após a alteração para `ClientCursor(conn)`. A última falha foi em `customer_crm_phase12.sql`: a chamada para outro tenant foi correctamente bloqueada pelo guard de membership com `SHOP_OPERATOR_REQUIRED`, mas o teste esperava apenas `CUSTOMER_NOT_FOUND`. O contrato agora aceita ambas as recusas seguras. A nova execução do workflow é necessária antes de declarar a aceitação Phase 23 aprovada.

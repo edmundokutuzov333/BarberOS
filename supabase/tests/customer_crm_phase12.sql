@@ -369,7 +369,12 @@ begin
       raise exception 'CRM_CROSS_TENANT_READ_NOT_BLOCKED';
     end if;
 
-    if position('CUSTOMER_NOT_FOUND' in coalesce(v_error,'')) = 0 then
+    -- Either the tenant membership guard or the customer ownership guard may
+    -- reject this cross-tenant lookup. Both are valid denials; the test must not
+    -- require the deeper CUSTOMER_NOT_FOUND branch when the caller has no role
+    -- in the target shop.
+    if position('CUSTOMER_NOT_FOUND' in coalesce(v_error,'')) = 0
+       and position('SHOP_OPERATOR_REQUIRED' in coalesce(v_error,'')) = 0 then
       raise exception 'CRM_CROSS_TENANT_ERROR_CONTRACT_FAILED: %',v_error;
     end if;
   end if;
