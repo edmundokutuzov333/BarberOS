@@ -81,7 +81,7 @@ test.describe('BarberOS Phase 24 booking concurrency', () => {
     } catch (error) {
       testFailure = error;
     } finally {
-      if (manageToken && gatewayEndpoint) {
+      if (manageToken && gatewayEndpoint && process.env.BARBEROS_E2E_CONCURRENCY_SKIP_CLEANUP !== '1') {
         const cleanup = await request.post(gatewayEndpoint, {
           headers,
           data: {

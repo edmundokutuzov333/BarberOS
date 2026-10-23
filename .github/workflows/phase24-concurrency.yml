@@ -167,6 +167,7 @@ jobs:
           echo "VITE_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
           echo "VITE_SUPABASE_PUBLISHABLE_KEY=$ANON_KEY" >> "$GITHUB_ENV"
           echo "BARBEROS_E2E_CONCURRENCY_URL=$API_URL/functions/v1/booking-create" >> "$GITHUB_ENV"
+          echo "BARBEROS_E2E_CONCURRENCY_SKIP_CLEANUP=1" >> "$GITHUB_ENV"
           DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep -E 'supabase_db_' | head -n 1)"
           test -n "$DB_CONTAINER"
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/phase24_http_concurrency_setup.sql
@@ -181,7 +182,7 @@ jobs:
           } >> "$GITHUB_ENV"
       - name: Serve local Edge Functions with CI-only Turnstile bypass
         run: |
-          supabase functions serve --env-file "$RUNNER_TEMP/phase24-functions.env" --no-verify-jwt > "$RUNNER_TEMP/phase24-functions.log" 2>&1 &
+          supabase functions serve booking-create --env-file "$RUNNER_TEMP/phase24-functions.env" --no-verify-jwt > "$RUNNER_TEMP/phase24-functions.log" 2>&1 &
           echo $! > "$RUNNER_TEMP/phase24-functions.pid"
           for attempt in $(seq 1 45); do
             status="$(curl --silent --output /dev/null --write-out '%{http_code}' -X OPTIONS "$BARBEROS_E2E_CONCURRENCY_URL" || true)"
