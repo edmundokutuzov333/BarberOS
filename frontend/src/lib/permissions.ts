@@ -18,6 +18,7 @@ const ACCESS_RULES: AccessRule[] = [
   { prefix: '/app/cortes', roles: MANAGEMENT_ROLES },
   { prefix: '/app/barbeiros', roles: MANAGEMENT_ROLES },
   { prefix: '/app/horarios', roles: MANAGEMENT_ROLES },
+  { prefix: '/app/loja', roles: MANAGEMENT_ROLES },
   { prefix: '/app/lista-espera', roles: MANAGEMENT_ROLES },
   { prefix: '/app/notificacoes', roles: MANAGEMENT_ROLES },
   { prefix: '/app/comunicacoes', roles: MANAGEMENT_ROLES },

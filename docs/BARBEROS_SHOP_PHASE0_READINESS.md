@@ -4,7 +4,7 @@
 **Repositório:** [edmundokutuzov333/BarberOS](https://github.com/edmundokutuzov333/BarberOS)  
 **Branch auditada:** `main`  
 **Commit de referência da auditoria:** [`afa2788c2a2884cfa4e331218c1468578712f4a0`](https://github.com/edmundokutuzov333/BarberOS/commit/afa2788c2a2884cfa4e331218c1468578712f4a0)  
-**Resultado do gate:** **NO-GO. A Fase 0 foi executada como auditoria não destrutiva, mas as condições de saída não estão satisfeitas. Não iniciar a Fase 1 nem acoplar pedidos ao motor de marcações.**
+**Estado actualizado após a implementação das Fases 1 e 2 em staging:** **NO-GO para produção.** O catálogo de gestão pode ser preparado em staging atrás da flag desligada, mas não ligar o fluxo público nem associar pedidos à criação de marcações até a reconciliação de produção e a aceitação real serem comprovadas.
 
 ## 1. Resumo executivo
 
@@ -14,13 +14,13 @@ A Fase 0 exigia reconciliar os bloqueios do motor de marcações, comparar produ
 
 A consulta directa aos ambientes encontrou diferenças materiais entre o código, o staging e a produção. A produção não contém a tabela e a RPC de idempotência usadas pela implementação actual de `main`; a função `booking-create` publicada não contém os controlos presentes no código versionado nem no handler de staging. A chave pública do Turnstile e a variável que o torna obrigatório não aparecem na lista de variáveis de ambiente visíveis da Vercel. A suite de aceitação com base de dados dedicada continua sem execução válida.
 
-**Decisão:** manter a Loja da Barbearia indisponível. Não aplicar migrations da loja, não alterar o schema de produção, não publicar uma nova Edge Function de marcações e não activar o rollout enquanto os bloqueios abaixo não forem resolvidos e comprovados.
+**Decisão:** manter a Loja da Barbearia indisponível ao público. As migrations das Fases 1 e 2 foram aplicadas apenas no staging e estão versionadas em `main`. Não alterar o schema de produção, não publicar uma nova Edge Function de marcações e não activar o rollout enquanto os bloqueios abaixo não forem resolvidos e comprovados.
 
 ## 2. Âmbito e limites da execução
 
 Foram efectuadas leituras do repositório e consultas de leitura aos ambientes Supabase e Vercel. Foram consultados o estado de `main`, a documentação de release, as migrations, o schema público, os privilégios de RPC, o inventário das Edge Functions, os nomes das variáveis de ambiente visíveis e os resultados recentes de CI.
 
-Nesta Fase 0 não foram feitas alterações de schema, dados, grants ou secrets na produção. Não foram executadas migrations remotas, não houve reset de bases de dados, não foi publicada nenhuma Edge Function e não foi criada uma marcação fictícia. Os testes que exigem credenciais e uma base de dados dedicada não foram contornados.
+Na Fase 0 não foram feitas alterações de schema, dados, grants ou secrets na produção. Não houve reset de bases de dados, não foi publicada nenhuma Edge Function de marcações e não foi criada uma marcação fictícia. As migrations da loja foram aplicadas apenas no staging, como trabalho posterior das Fases 1 e 2. Os testes que exigem credenciais e uma base de dados dedicada não foram contornados.
 
 Os secrets de runtime do Supabase não puderam ser inspeccionados directamente através das ferramentas de consulta disponíveis nesta sessão. A presença de um nome de variável na Vercel não prova a presença desse segredo no runtime das Edge Functions.
 
@@ -145,3 +145,25 @@ Antes da Fase 1, a flag ainda não existe; portanto, não se deve publicar códi
 | Plano de rollback documentado | Concluído como procedimento; não executado por não ter ocorrido release. |
 
 **Resultado final: Fase 0 auditada e documentada, gate de saída BLOQUEADO.** A próxima actividade é fechar P0.1 a P0.4 e reunir evidências. Não iniciar a implementação funcional da Loja da Barbearia antes disso.
+
+
+## 7. Reavaliação do gate após as Fases 1 e 2
+
+A verificação posterior confirmou que a Fase 1 (modelo de domínio) e a Fase 2 (catálogo de gestão) estão versionadas em `main` e aplicadas apenas no staging. No momento desta actualização, `main` continha 123 migrations SQL antes deste commit; com as quatro migrations da Fase 2 agora versionadas, o total passa a 127. O staging regista 90 migrations e a produção 110. Estas contagens continuam a não provar equivalência semântica. O catálogo usa dados reais do tenant autenticado, grants de escrita limitados por coluna, RLS, upload para o bucket público existente `shop-photos`, validação de publicação no PostgreSQL, movimentos de stock pelo ledger e histórico de auditoria. A flag permanece desligada; o catálogo não fica público.
+
+**A Fase 0 não pode ser marcada como concluída.** Permanecem bloqueios que não podem ser resolvidos em segurança apenas por commits de código:
+1. A produção tem 110 migrations registadas, o staging 81 antes das migrations da loja e o repositório tem 118 ficheiros de migrations no baseline auditado. É necessária reconciliação individual dos timestamps e do schema; não é seguro executar `db push` ou `migration repair` em lote.
+2. A produção não tem `public.booking_idempotency` nem `book_appointment_idempotent`, exigidos pelo handler versionado. A função `booking-create` publicada continua a divergir do código. A sua substituição depende de uma migration/reconciliação segura e de aceitação do fluxo completo.
+3. A configuração Turnstile necessária para a marcação pública não foi comprovada no deployment consultado. Não há chave pública/secrets verificados disponíveis nesta sessão para configurar o provider.
+4. O workflow de aceitação de base de dados não dispõe de `BARBEROS_TEST_DATABASE_URL`; os testes de concorrência/aceitação HTTP não podem ser considerados aprovados.
+5. O workflow de deployment Vercel reportou credenciais de deploy ausentes no GitHub Actions. O smoke das rotas públicas não prova que o commit mais recente tenha sido publicado.
+
+### Acções necessárias para mudar NO-GO para GO
+
+- Fornecer/configurar os valores de Turnstile nos ambientes Vercel/Supabase apropriados e verificar que o widget e o backend usam o mesmo par de chaves.
+- Configurar `BARBEROS_TEST_DATABASE_URL` como secret de ambiente GitHub protegido, com uma base de teste isolada e permissões mínimas.
+- Configurar as credenciais autorizadas de deployment da Vercel no ambiente GitHub Actions ou confirmar o fluxo alternativo de publicação já autorizado.
+- Reconciliar cada migration de produção com o ficheiro SQL de origem e produzir um relatório exact-match de schema/RPC/grants antes de qualquer migration em produção.
+- Testar o fluxo real de marcação no ambiente publicado, incluindo Turnstile, idempotência, rate limit, notificações e retries, e registar evidência do commit efectivamente servido.
+
+O código da Fase 2 não remove nenhum destes bloqueios. Não foi feita alteração em produção nem foi declarada uma aceitação E2E inexistente.

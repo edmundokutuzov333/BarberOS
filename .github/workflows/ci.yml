@@ -75,3 +75,7 @@ jobs:
             supabase/tests/platform_access_security.test.sql \
             supabase/tests/platform_core_contracts.test.sql \
             supabase/tests/resend_webhook_contract.test.sql
+      - name: Run transactional shop domain contracts
+        run: |
+          supabase db query --local --file supabase/tests/shop_domain_phase1.sql
+          supabase db query --local --file supabase/tests/shop_catalog_phase2.sql

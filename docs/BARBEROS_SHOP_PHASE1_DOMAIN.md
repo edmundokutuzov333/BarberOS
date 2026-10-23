@@ -68,4 +68,4 @@ Os testes não certificam concorrência HTTP do booking, notificações externas
 
 ## Estado de release
 
-**NO-GO para a produção.** Esta entrega prepara o domínio de dados; não resolve o desfasamento de migrations da Fase 0, não confirma os secrets de runtime, não publica um novo `booking-create` e não integra a criação transaccional do pedido no fluxo de marcação. Manter a flag desligada. A Fase 2 não deve expor gestão do catálogo nem qualquer pedido até os gates correspondentes serem aprovados.
+**NO-GO para a produção.** Esta entrega prepara o domínio de dados; não resolve o desfasamento de migrations da Fase 0, não confirma os secrets de runtime, não publica um novo `booking-create` e não integra a criação transaccional do pedido no fluxo de marcação. Manter a flag desligada. A gestão do catálogo da Fase 2 está agora implementada em staging atrás da flag desligada; a experiência pública e a criação de pedidos continuam bloqueadas até os gates da Fase 0 e das Fases 3/4 serem aprovados.

@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      shop_catalog_audit_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after_state: Json
+          barbershop_id: string
+          before_state: Json | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after_state: Json
+          barbershop_id: string
+          before_state?: Json | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after_state?: Json
+          barbershop_id?: string
+          before_state?: Json | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_catalog_audit_events_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_product_order_items: {
         Row: {
           barbershop_id: string
@@ -348,7 +392,10 @@ export type Database = {
           description: string | null
           id: string
           image_alt: string | null
+          image_authorized_at: string | null
+          image_authorized_by: string | null
           image_source_checked_at: string | null
+          image_source_note: string | null
           image_source_url: string | null
           image_url: string | null
           is_active: boolean
@@ -368,7 +415,10 @@ export type Database = {
           description?: string | null
           id?: string
           image_alt?: string | null
+          image_authorized_at?: string | null
+          image_authorized_by?: string | null
           image_source_checked_at?: string | null
+          image_source_note?: string | null
           image_source_url?: string | null
           image_url?: string | null
           is_active?: boolean
@@ -388,7 +438,10 @@ export type Database = {
           description?: string | null
           id?: string
           image_alt?: string | null
+          image_authorized_at?: string | null
+          image_authorized_by?: string | null
           image_source_checked_at?: string | null
+          image_source_note?: string | null
           image_source_url?: string | null
           image_url?: string | null
           is_active?: boolean

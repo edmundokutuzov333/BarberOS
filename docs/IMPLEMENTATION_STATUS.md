@@ -15,12 +15,12 @@
 - Healthcheck Edge Function, contrato de deploy, scan de secrets e CI consolidado para lint, typecheck, testes, build e budget.
 - Monitorização agendada a cada 15 minutos de rotas públicas, headers de segurança e saúde do Supabase; as falhas geram uma execução GitHub Actions com erro. Notificação externa por SMS/WhatsApp continua por configurar.
 
-## Loja da Barbearia: fases 0 e 1
+## Loja da Barbearia: fases 0, 1 e 2
 
 ### Fase 0: resultado da auditoria
 
 - A auditoria de 23 de Outubro de 2026 continua a classificar o lançamento integrado com marcações como **NO-GO**: o histórico de migrations e os schemas divergem, a função publicada em produção não corresponde ao handler versionado e a aceitação HTTP com secrets/runtime dedicados não foi certificada.
-- O trabalho de Fase 1 autorizado nesta sessão limitou-se ao modelo de domínio e ao staging. Não altera o motor de marcações, não cria pedidos automaticamente e não muda a base de dados de produção.
+- As Fases 1 e 2 foram implementadas em `main` e aplicadas apenas no staging. Não alteram o motor de marcações, não criam pedidos automaticamente e não mudam a base de dados de produção.
 - A feature flag `barbershops.shop_enabled` existe agora **apenas no staging**, com `NOT NULL DEFAULT false`. Nenhuma barbearia ficou activada.
 
 ### Fase 1: modelo de domínio
@@ -32,8 +32,20 @@
 - O contrato de índices de FKs detectou inicialmente 22 referências sem cobertura; a migration correctiva cria os índices em falta e a mesma verificação executada em staging devolve agora zero referências descobertas. O trigger `shop_feature_flag_guard` também bloqueia tentativas de definir `shop_enabled` por `anon`/`authenticated`, apesar dos grants antigos da tabela.
 - `frontend/src/lib/database.types.ts` foi actualizado com os sete modelos, os três enums, a RPC e a flag. Os tipos foram gerados a partir do schema de staging e integrados no ficheiro existente sem eliminar os contratos de tabelas que só existem noutros ambientes.
 - A suite `supabase/tests/shop_domain_phase1.sql` foi executada em staging e passou. Os fixtures correm dentro de transacção e são revertidos; verificam tenant, snapshots/total, stock, reservas, transições e privilégios.
-- O código de UI, catálogo de gestão, wizard público e acoplamento transaccional de pedidos continuam fora desta fase. Não activar a loja nem aplicar estas migrations à produção até o gate de Fase 0 ser resolvido e aprovado.
+- O wizard público e o acoplamento transaccional de pedidos continuam fora do âmbito implementado. Não activar a loja nem aplicar estas migrations à produção até o gate de Fase 0 ser resolvido e aprovado.
 - Relatório técnico: [BARBEROS_SHOP_PHASE1_DOMAIN.md](BARBEROS_SHOP_PHASE1_DOMAIN.md).
+
+### Fase 2: catálogo de gestão
+
+- Implementada a rota `/app/loja/produtos`, a entrada de navegação `Loja` e o controlo de acesso a owner/manager. O catálogo usa queries Supabase reais e filtra todas as operações por `barbershop_id`.
+- O gestor pode criar/editar produtos, gerir categorias, variantes, preços, estado de publicação, metadados e upload de imagem, pré-visualizar a ficha, ajustar stock através da RPC `record_shop_inventory_movement` e consultar movimentos e auditoria.
+- A publicação é validada no PostgreSQL: não é permitido publicar produto sem variante activa nem com categoria inactiva. A imagem exige texto alternativo e origem/autorização. A feature flag desligada continua a impedir exposição pública.
+- As permissões SQL da Fase 2 permitem actualização apenas das colunas comerciais necessárias. A escrita directa de `stock_on_hand` permanece proibida; as alterações passam pelo ledger. A migration `shop_catalog_publication_guard_phase2` e o teste `supabase/tests/shop_catalog_phase2.sql` foram aplicados/executados em staging.
+- Relatório técnico: [BARBEROS_SHOP_PHASE2_CATALOG.md](BARBEROS_SHOP_PHASE2_CATALOG.md).
+
+### Estado final da Fase 0
+
+- **NO-GO para produção.** Permanecem por resolver as diferenças do histórico/schema de migrations, o desfasamento da Edge Function `booking-create`, a configuração Turnstile, o secret `BARBEROS_TEST_DATABASE_URL` e as credenciais de deployment da Vercel. Os bloqueios e acções exactas estão em [BARBEROS_SHOP_PHASE0_READINESS.md](BARBEROS_SHOP_PHASE0_READINESS.md). Não declarar a Fase 0 concluída enquanto esses gates não tiverem evidência.
 
 ## Gates de preparação para produção ainda abertos
 

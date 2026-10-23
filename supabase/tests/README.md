@@ -25,3 +25,8 @@ This file is read-only and validates the current migration/schema contract.
 `shop_domain_phase1.sql` é um contrato de domínio transaccional para executar apenas num ambiente de teste/staging que já tenha aplicado as migrations da Fase 1. Verifica o controlo server-side da feature flag, isolamento entre tenants, snapshots comerciais, invariantes de stock e reservas, transições de estados, privilégios de escrita e o contrato de índices de chaves estrangeiras. Abre uma transacção e termina com `ROLLBACK`, por isso os fixtures não devem persistir.
 
 Execução validada em `BarberOS Remediation Staging` em 23 de Outubro de 2026. Não executar este contrato na produção como substituto de um plano de aceitação.
+
+
+### Fase 2 da Loja da Barbearia
+
+`shop_catalog_phase2.sql` verifica que o PostgreSQL rejeita publicação sem variante activa ou com categoria inactiva, e que os privilégios não permitem escrita directa do saldo. Os fixtures correm dentro de transacção e terminam com `ROLLBACK`. Executar apenas em staging/teste com as migrations da Fase 2 aplicadas.
