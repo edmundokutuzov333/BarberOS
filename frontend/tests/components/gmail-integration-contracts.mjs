@@ -48,7 +48,8 @@ const tests = [
     assert.match(migration, /force row level security/i);
     assert.match(migration, /revoke all on table public\.gmail_connections from public, anon, authenticated/i);
     assert.match(migration, /revoke all on table public\.gmail_oauth_states from public, anon, authenticated/i);
-    assert.match(migration, /grant all on public\.gmail_connections to service_role/i);
+    assert.match(migration, /grant\s+all\s+on\s+(?:table\s+)?public\.gmail_connections\s+to\s+service_role/i);
+    assert.match(migration, /grant\s+all\s+on\s+(?:table\s+)?public\.gmail_oauth_states\s+to\s+service_role/i);
   }],
   ["Gmail can list and read conversations and supports reply headers", () => {
     assert.match(edge, /threads\?/);

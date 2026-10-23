@@ -64,8 +64,12 @@ if (!config.includes('[functions.gmail-integration]')) throw new Error('GMAIL_FU
 const gmailMigration = names.find((name) => name.endsWith('_gmail_workspace_integration.sql'));
 if (!gmailMigration) throw new Error('GMAIL_STORAGE_MIGRATION_MISSING');
 const gmailSchema = fs.readFileSync(path.join(migrationDir, gmailMigration), 'utf8');
-for (const required of ['public.gmail_connections', 'public.gmail_oauth_states', 'force row level security', 'revoke all on table public.gmail_connections', 'grant all on public.gmail_connections to service_role']) {
+for (const required of ['public.gmail_connections', 'public.gmail_oauth_states', 'force row level security', 'revoke all on table public.gmail_connections', 'revoke all on table public.gmail_oauth_states']) {
   if (!gmailSchema.toLowerCase().includes(required.toLowerCase())) throw new Error('GMAIL_STORAGE_CONTRACT_MISSING:' + required);
+}
+for (const table of ['gmail_connections', 'gmail_oauth_states']) {
+  const serviceRoleGrant = new RegExp('grant\\s+all\\s+on\\s+(?:table\\s+)?public\\.' + table + '\\s+to\\s+service_role', 'i');
+  if (!serviceRoleGrant.test(gmailSchema)) throw new Error('GMAIL_STORAGE_SERVICE_ROLE_GRANT_MISSING:' + table);
 }
 const gmailSource = fs.readFileSync(path.join(functionDir, 'gmail-integration', 'index.ts'), 'utf8');
 for (const required of ['GMAIL_TOKEN_ENCRYPTION_KEY', 'gmail_oauth_states', 'gmail_connections', 'gmail.readonly', 'gmail.send', 'shopAccess']) {
