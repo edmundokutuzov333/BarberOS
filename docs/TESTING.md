@@ -47,7 +47,7 @@ A FASE 24 adiciona uma fronteira HTTP pública `booking-create` para preservar o
 
 A suite `scripts/test_booking_concurrency_phase24.py` exige um PostgreSQL dedicado e controla a ordem das transacções para provar A = sucesso, B = `SLOT_TAKEN` e uma única appointment activa no slot. `frontend/tests/e2e/phase24-http-concurrency.spec.mjs` verifica os estados HTTP 200/409 contra um ambiente dedicado e recusa explicitamente a produção.
 
-Sem ambiente dedicado, estes testes fazem `SKIP` e a aceitação final da FASE 24 permanece aberta.
+Sem ambiente dedicado, os runners PostgreSQL abortam com erro explícito, e não com código de sucesso. Antes de qualquer ligação, os runners recusam uma URL que contenha a referência do projecto Supabase de produção. O E2E HTTP pode ser marcado como skipped pelo Playwright fora do workflow protegido, mas o workflow de CI verifica as variáveis obrigatórias e falha quando faltam. A aceitação final da FASE 24 permanece aberta até existir evidência real.
 ## FASE 25: performance
 
 A FASE 25 adiciona budgets de assets, code splitting por rota e benchmark público em Fast 3G.
