@@ -133,11 +133,12 @@ jobs:
     needs:
       - frontend
     env:
-      BARBEROS_E2E_CONCURRENCY_URL: ${{ secrets.BARBEROS_E2E_CONCURRENCY_URL }}
-      BARBEROS_E2E_CONCURRENCY_SLUG: ${{ secrets.BARBEROS_E2E_CONCURRENCY_SLUG }}
-      BARBEROS_E2E_CONCURRENCY_SERVICE_ID: ${{ secrets.BARBEROS_E2E_CONCURRENCY_SERVICE_ID }}
-      BARBEROS_E2E_CONCURRENCY_BARBER_ID: ${{ secrets.BARBEROS_E2E_CONCURRENCY_BARBER_ID }}
-      BARBEROS_E2E_CONCURRENCY_START: ${{ secrets.BARBEROS_E2E_CONCURRENCY_START }}
+      BARBEROS_E2E_CONCURRENCY_URL: https://asikuyxaapcmayptimxi.supabase.co/functions/v1/booking-create
+      BARBEROS_E2E_CONCURRENCY_SLUG: theme-v2-qa
+      BARBEROS_E2E_CONCURRENCY_SERVICE_ID: 158a79dc-2405-40f7-8c19-fe54b15ee145
+      BARBEROS_E2E_CONCURRENCY_BARBER_ID: d6b53c2f-2d49-430b-82fe-8f39ded89dfb
+      VITE_SUPABASE_URL: https://asikuyxaapcmayptimxi.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_rjwoRrbWYYaEzLjOPy64pg_vtG9NGxZ
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -151,13 +152,32 @@ jobs:
       - name: Install Chromium
         working-directory: frontend
         run: npx playwright install --with-deps chromium
-      - name: Run HTTP concurrency acceptance in dedicated environment
+      - name: Resolve a free staging slot
         working-directory: frontend
         run: |
-          for name in BARBEROS_E2E_CONCURRENCY_URL BARBEROS_E2E_CONCURRENCY_SLUG BARBEROS_E2E_CONCURRENCY_SERVICE_ID BARBEROS_E2E_CONCURRENCY_BARBER_ID BARBEROS_E2E_CONCURRENCY_START; do
-            if [ -z "${!name}" ]; then
-              echo "::error::${name} is required; HTTP concurrency acceptance cannot be skipped."
-              exit 1
-            fi
-          done
-          npx playwright test tests/e2e/phase24-http-concurrency.spec.mjs --config=playwright.config.mjs
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const base = process.env.VITE_SUPABASE_URL;
+          const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+          const slug = process.env.BARBEROS_E2E_CONCURRENCY_SLUG;
+          const serviceId = process.env.BARBEROS_E2E_CONCURRENCY_SERVICE_ID;
+          const barberId = process.env.BARBEROS_E2E_CONCURRENCY_BARBER_ID;
+          let chosen = null;
+          for (let offset = 2; offset <= 21 && !chosen; offset += 1) {
+            const day = new Date(Date.now() + offset * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+            const response = await fetch(base + '/rest/v1/rpc/get_available_slots', {
+              method: 'POST',
+              headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ p_slug: slug, p_service_id: serviceId, p_barber_id: barberId, p_date: day }),
+            });
+            if (!response.ok) throw new Error('STAGING_AVAILABILITY_RPC_FAILED:' + response.status + ':' + await response.text());
+            const rows = await response.json();
+            chosen = Array.isArray(rows) ? rows.find((row) => Date.parse(row.slot_start) > Date.now() + 30 * 60 * 1000) : null;
+          }
+          if (!chosen) throw new Error('STAGING_CONCURRENCY_SLOT_UNAVAILABLE');
+          fs.appendFileSync(process.env.GITHUB_ENV, 'BARBEROS_E2E_CONCURRENCY_START=' + chosen.slot_start + '\n');
+          console.log('Resolved staging slot:', chosen.slot_start);
+          NODE
+      - name: Run HTTP concurrency acceptance against staging
+        working-directory: frontend
+        run: npx playwright test tests/e2e/phase24-http-concurrency.spec.mjs --config=playwright.config.mjs
