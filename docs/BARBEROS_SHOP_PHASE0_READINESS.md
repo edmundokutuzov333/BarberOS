@@ -246,6 +246,6 @@ A comparação read-only encontrou 110 registos de migration em produção, 97 e
 
 ### Suite de aceitação: isolamento da fila de notificações (23 de Outubro de 2026)
 
-O run [39978300565](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39978300565) confirmou que a waitlist e a limpeza passam, mas a aceitação de notificações continuou a falhar depois de a fixture deixar de usar uma marcação arbitrária. A fixture passa agora a definir explicitamente `queued`, zero tentativas e `next_attempt_at` vencido, e a falha inclui o estado persistido para diagnósticos precisos. A próxima execução tem de confirmar a causa e o resultado.
+O run [39979277001](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39979277001) confirmou que a waitlist e a limpeza passam, mas a fixture sem marcação associada terminou em `skipped`. A notificação `appointment_confirmed` passa agora a usar uma marcação `confirmed` da barbearia de teste dedicada, com tenant correspondente. Status, tentativas e horário de retry continuam explícitos e a falha apresenta o estado persistido.
 
 A execução de performance em [39978300578](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39978300578), no SHA `a32fa410f82fabb9badbf33df3195e69978537ec`, passou: LCP 2.232/2.380 ms, DCL 1.276/1.274 ms, CLS 0, RPC 739/728 ms e INP 56/104 ms. O novo commit actualiza a documentação para executar novamente o gate no SHA candidato.

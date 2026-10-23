@@ -74,16 +74,16 @@ Nenhuma medição de performance mutante é executada contra a produção. A pá
 
 ## Última medição confirmada (23 de Outubro de 2026)
 
-O workflow [39978300578](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39978300578), no commit `a32fa410f82fabb9badbf33df3195e69978537ec`, concluiu com sucesso nos três jobs: budget de assets, Fast 3G e contrato SQL de performance. O benchmark registou:
+O workflow [39979277275](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39979277275), no commit `cbee4f40d2a7b2a23680d8611e4239a9ad4d5809`, concluiu com sucesso nos três jobs: contrato SQL de performance, budget de assets e Fast 3G público. O benchmark registou:
 
 | Métrica | Chromium 1 | Retry Chromium |
 |---|---:|---:|
-| LCP | 2.232 ms | 2.380 ms |
-| DOMContentLoaded | 1.276 ms | 1.274 ms |
+| LCP | 2.228 ms | 2.212 ms |
+| DOMContentLoaded | 1.269 ms | 1.295 ms |
 | CLS | 0 | 0 |
-| Roundtrip RPC público | 739 ms | 728 ms |
-| INP de laboratório | 56 ms | 104 ms |
+| Roundtrip RPC público | 642 ms | 610 ms |
+| INP de laboratório | 104 ms | 56 ms |
 
 O maior elemento LCP foi o título `Oryon Barber Studio`. Todos os valores cumprem os limites: LCP ≤ 2.500 ms, CLS ≤ 0,10, DOMContentLoaded ≤ 1.800 ms, RPC observado ≤ 1.200 ms e INP de laboratório ≤ 200 ms.
 
-Esta aprovação é evidência do SHA `a32fa410`. Como o candidato avança com uma melhoria na fixture de aceitação de notificações, a documentação é actualizada novamente para desencadear uma execução sobre o SHA exacto seguinte. O benchmark público é read-only e não substitui os testes do pedido transaccional da Loja nem certifica que produção já tem o schema de pedidos.
+Esta aprovação é evidência do SHA `cbee4f4`. A fixture de notificações é actualizada para usar uma marcação confirmada da barbearia dedicada; a próxima revisão de performance será desencadeada no novo SHA. O benchmark público é read-only e não substitui os testes do pedido transaccional da Loja nem certifica o schema de produção.
