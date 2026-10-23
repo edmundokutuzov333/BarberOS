@@ -21,7 +21,7 @@ type Props = {
 
 export function ShopCatalogueStep({
   catalog, cart, loading = false, error, onRetry,
-  onQuantityChange, onOptionChange, onContinueWithoutProducts,
+  onQuantityChange, onOptionChange, onFulfilmentModeChange, onContinueWithoutProducts,
 }: Props) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');

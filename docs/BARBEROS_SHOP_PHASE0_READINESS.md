@@ -192,3 +192,8 @@ A migration `20261023124453_shop_order_atomic_phase4` estava registada no stagin
 A suite `shop_order_atomic_phase4.sql` foi executada em staging sem erro. Cria uma barbearia QA, horários, produto e stock dentro da transacção e termina com `ROLLBACK`; as consultas posteriores confirmaram zero barbearias `phase4-*`, zero produtos QA persistidos e zero barbearias activadas. O teste de concorrência com duas sessões foi adicionado ao CI na base local efémera; só será considerado aprovado depois de o workflow terminar.
 
 A produção continua sem `barbershops.shop_enabled`, sem tabelas de pedidos/reservas e sem `book_appointment_with_shop_order_idempotent`. O histórico contém versões equivalentes com timestamps diferentes; não é seguro marcar versões como aplicadas nem executar um `db push` amplo. Main terá 133 ficheiros SQL, staging 96 migrations registadas e produção 110. A Fase 0 permanece **NO-GO**. Não activar a Loja nem alterar a produção até um plano forward-only de reconciliação ser validado e executado, a aceitação dedicada estar configurada e o gate de performance passar.
+
+
+### Optimização de LCP da página pública
+
+O gate Fast 3G identificou como maior elemento de conteúdo a descrição longa da barbearia no hero, com LCP entre 2,6 s e 3,2 s, enquanto DCL ficou perto de 1,3 s. A descrição completa foi preservada numa secção “Sobre a barbearia” e o hero passou a mostrar uma linha de resumo, reduzindo a área do candidato LCP sem remover conteúdo. A aprovação só será declarada após o workflow de performance medir o deployment desta revisão.

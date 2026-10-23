@@ -65,6 +65,12 @@ const tests = [
     assert.match(manage, /data-testid="appointment-shop-order"/);
     assert.match(manage, /Subtotal dos produtos/);
   }],
+  ['Public shop keeps the full description while reducing the hero LCP candidate', () => {
+    const source = read('src/pages/PublicBarbershop.tsx');
+    assert.match(source, /max-w-xl line-clamp-1/);
+    assert.match(source, /data-testid="public-shop-description"/);
+    assert.match(source, /Sobre a barbearia/);
+  }],
   ['Public booking allows optional email without overstating automatic delivery', () => {
     const source = read('src/pages/BookingWizard.tsx');
     assert.match(source, /if \(email && !validEmail\(email\)\)/);

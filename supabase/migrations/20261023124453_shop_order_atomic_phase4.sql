@@ -347,7 +347,7 @@ begin
   select v_booking.appointment_id, v_booking.manage_token, coalesce(v_booking.deposit_cents, 0),
          coalesce(v_booking.needs_payment, false), v_order_status, v_item_count, v_subtotal;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION private.shop_appointment_order_lifecycle()
@@ -388,7 +388,7 @@ begin
   end if;
   return new;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.get_shop_order_by_manage_token(p_token uuid)
@@ -424,7 +424,7 @@ AS $function$
     on i.order_id = o.id and i.barbershop_id = o.barbershop_id
   where a.manage_token = p_token
   group by o.id;
-$function$
+$function$;
 
 
 drop trigger if exists appointments_shop_order_lifecycle on public.appointments;

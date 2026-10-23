@@ -46,3 +46,8 @@ O staging já registava a migration `20261023124453_shop_order_atomic_phase4`, m
 5. Deploy das Edge Functions e do schema de Fase 4 em produção, seguido de testes reais com a flag global e a flag do tenant desligadas primeiro e activação controlada apenas após os gates.
 
 Até todos estes pontos passarem, a Fase 4 pode ser considerada implementada e testável em staging, mas a Loja não está autorizada a receber pedidos de clientes em produção.
+
+
+## Performance do percurso público
+
+O benchmark anterior identificou a descrição longa do hero como LCP (2,6–3,2 s) apesar de DCL próximo de 1,3 s. A descrição completa permanece disponível em “Sobre a barbearia”; o hero limita a prévia a uma linha para reduzir o candidato LCP. Esta alteração é uma hipótese de optimização a validar pelo gate Fast 3G; não é declarada aprovada até o workflow correr sobre o deployment actual.

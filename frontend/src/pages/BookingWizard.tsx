@@ -291,7 +291,7 @@ export default function BookingWizard() {
   const barberParam = searchParams.get('barber') ?? 'any';
   const date = searchParams.get('date');
   const start = searchParams.get('start');
-  const shopLines = useMemo(() => (shopCatalogQuery.data?.products ?? []).flatMap((product) => product.variants.flatMap((variant) => {
+  const shopLines = useMemo<Array<{ product: PublicShopProduct; variant: PublicShopVariant; qty: number; options: string[]; fulfilmentMode: 'consume_here' | 'takeaway' }>>(() => (shopCatalogQuery.data?.products ?? []).flatMap((product) => product.variants.flatMap((variant) => {
     const selected = shopCart[variant.id];
     return selected?.qty > 0 ? [{ product, variant, qty: selected.qty, options: selected.options, fulfilmentMode: selected.fulfilmentMode }] : [];
   })), [shopCatalogQuery.data?.products, shopCart]);

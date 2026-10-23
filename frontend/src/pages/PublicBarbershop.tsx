@@ -213,7 +213,7 @@ export default function PublicBarbershop() {
                 <PhotoWithFallback src={shop.logo_url} fallbackSources={['/brand-assets/barberos-default.svg']} alt="Logótipo da barbearia" className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl object-contain border border-white/15 bg-black/40 p-2" width="96" height="96" />
                 <div className="min-w-0">
                   <h1 className="text-3xl sm:text-5xl font-medium tracking-[-0.02em] text-white">{shop.name}</h1>
-                  {shop.description && <p className="t-body text-white/75 mt-2 max-w-2xl">{shop.description}</p>}
+                  {shop.description && <p className="t-body text-white/75 mt-2 max-w-xl line-clamp-1" title={shop.description}>{shop.description}</p>}
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4">
                     {reviews.rating_count > 0 && <span className="inline-flex items-center gap-1.5 t-label text-white"><Star size={14} fill="currentColor" /> {reviews.rating_avg.toFixed(1)} · {reviews.rating_count} {reviews.rating_count === 1 ? 'avaliação' : 'avaliações'}</span>}
                   </div>
@@ -222,6 +222,14 @@ export default function PublicBarbershop() {
             </div>
           </div>
         </section>
+
+        {shop.description && (
+          <section className="mt-6" data-testid="public-shop-description">
+            <Panel title="Sobre a barbearia">
+              <p className="t-body text-ink-mid whitespace-pre-line">{shop.description}</p>
+            </Panel>
+          </section>
+        )}
 
         <section className="mt-6 grid lg:grid-cols-[1.5fr_.5fr] gap-6 items-start">
           <div className="space-y-6">

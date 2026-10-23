@@ -77,7 +77,7 @@ for (const required of ['GMAIL_TOKEN_ENCRYPTION_KEY', 'gmail_oauth_states', 'gma
 }
 
 const bookingSource = fs.readFileSync(path.join(functionDir, 'booking-create', 'index.ts'), 'utf8');
-if (!bookingSource.includes('book_appointment_idempotent')) throw new Error('BOOKING_EDGE_RPC_CONTRACT_MISSING');
+if (!bookingSource.includes('book_appointment_with_shop_order_idempotent')) throw new Error('BOOKING_EDGE_ATOMIC_ORDER_RPC_CONTRACT_MISSING');
 const wizardPath = path.join(root, 'frontend', 'src', 'pages', 'BookingWizard.tsx');
 const wizard = fs.readFileSync(wizardPath, 'utf8');
 if (!wizard.includes('Boolean(turnstileSiteKey && turnstileToken)')
