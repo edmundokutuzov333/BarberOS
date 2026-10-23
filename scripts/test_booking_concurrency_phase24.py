@@ -12,11 +12,9 @@ import uuid
 from dataclasses import dataclass
 
 import psycopg
+from database_safety import require_isolated_test_database
 
-DB = os.getenv("BARBEROS_TEST_DATABASE_URL")
-if not DB:
-    print("SKIP: BARBEROS_TEST_DATABASE_URL não definido.")
-    raise SystemExit(0)
+DB = require_isolated_test_database(os.getenv("BARBEROS_TEST_DATABASE_URL"))
 
 if os.getenv("BARBEROS_TEST_ALLOW_MUTATION") != "1":
     raise SystemExit("REFUSED: BARBEROS_TEST_ALLOW_MUTATION=1 é obrigatório.")
