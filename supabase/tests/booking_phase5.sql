@@ -28,10 +28,15 @@ declare
   v_visits_before int;
   v_no_show_before int;
   v_review_before int;
+  v_expected_channel_count int;
 begin
   select count(*)::int into v_appt_baseline from public.appointments;
   select count(*)::int into v_notif_baseline from public.notifications;
   select count(*)::int into v_audit_baseline from public.audit_logs;
+  select (case when private.channel_enabled('whatsapp') then 1 else 0 end)
+       + (case when private.channel_enabled('email') then 1 else 0 end)
+    into v_expected_channel_count;
+  if v_expected_channel_count < 1 then raise exception 'BOOKING_TEST_REQUIRES_ENABLED_NOTIFICATION_CHANNEL'; end if;
 
   select sh.id,sh.slug,s.id,b.id
   into v_shop,v_slug,v_service,v_barber
@@ -95,7 +100,7 @@ begin
 
     select count(*) into v_notif_count
     from public.notifications where appointment_id=v_appt;
-    if v_notif_count < 2 then
+    if v_notif_count < v_expected_channel_count then
       raise exception 'BOOKING_NOTIFICATIONS_NOT_QUEUED';
     end if;
 
@@ -103,7 +108,7 @@ begin
     from public.notifications
     where appointment_id=v_appt
       and template_key='appointment_confirmed';
-    if v_confirmed_count <> 2 then
+    if v_confirmed_count <> v_expected_channel_count then
       raise exception 'BOOKING_CONFIRMATION_TEMPLATES_FAILED';
     end if;
 
@@ -188,7 +193,7 @@ begin
     from public.notifications
     where appointment_id=v_appt
       and template_key='appointment_pending';
-    if v_pending_count <> 2 then
+    if v_pending_count <> v_expected_channel_count then
       raise exception 'BOOKING_PENDING_TEMPLATES_FAILED';
     end if;
 
