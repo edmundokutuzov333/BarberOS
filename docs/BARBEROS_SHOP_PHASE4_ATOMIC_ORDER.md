@@ -1,6 +1,6 @@
 # BarberOS | Fase 4: pedido de produtos atómico com a marcação
 
-**Estado de código:** publicado em `main`; a revisão inicial falhou em typecheck e no parsing SQL e está a ser corrigida por commit normal. Teste transaccional executado em staging.  
+**Estado de código:** publicado em `main`; typecheck, build, contratos SQL e corrida de stock em duas sessões passaram na verificação do commit `1279226d9f18c498b21211159cfdf94d472cfd6e`. O teste transaccional também foi executado em staging e terminou com `ROLLBACK`. 
 **Estado de lançamento:** **NO-GO**. Não activar `VITE_SHOP_PUBLIC_CATALOG_ENABLED` nem `barbershops.shop_enabled` em produção enquanto o schema/histórico, Turnstile, aceitação dedicada e gate de performance não estiverem reconciliados e aprovados.
 
 ## Contrato funcional
@@ -29,7 +29,7 @@ O token gateway expõe a leitura `shop_order.get` com o token de gestão já ass
 - `shop_order_concurrency_setup_phase4.sql` mais os dois ficheiros `call_*` e `assert_*`: executados pelo CI contra a base Supabase local efémera. Duas sessões tentam reservar uma unidade em horários distintos; exactamente uma deve confirmar e a outra falhar com `SHOP_STOCK_UNAVAILABLE`.
 - Os contratos de frontend verificam o payload do wizard, o fingerprint, a ausência de preço enviado, a chamada RPC combinada e a leitura do pedido por token.
 
-O teste transaccional passou em staging em 23 de Outubro de 2026 e as consultas posteriores confirmaram que não ficaram fixtures persistidas nem barbearias activadas. O teste concorrente só conta como aprovado quando o workflow de CI desta revisão concluir.
+O teste transaccional passou em staging em 23 de Outubro de 2026 e as consultas posteriores confirmaram zero pedidos, linhas, reservas ou barbearias activadas após o `ROLLBACK`. O CI de `main` run [39973135133](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39973135133) concluiu com sucesso: migrations desde uma base vazia, contratos pgTAP, os contratos SQL das Fases 1–4 e a corrida concorrente de duas sessões passaram. A suite separada de aceitação da Fase 23 continua a falhar no runner Python ao executar um bloco `DO $` com cursor multi-statement; o runner está a ser corrigido para usar o protocolo SQL simples, sem dividir blocos PL/pgSQL.
 
 ## Migration e ambientes
 
@@ -40,12 +40,12 @@ O staging já registava a migration `20261023124453_shop_order_atomic_phase4`, m
 ## Gates de lançamento ainda abertos
 
 1. Plano forward-only para reconciliar o schema e o histórico de migrations da produção, validado em staging e aplicado sem reescrever o histórico.
-2. Configuração dedicada de aceitação `BARBEROS_TEST_DATABASE_URL` e credenciais E2E necessárias. Não foram inventadas nem contornadas credenciais.
+2. Corrigir e repetir a suite de aceitação Phase 23: o workflow já provisiona uma base Supabase local efémera e define `BARBEROS_TEST_DATABASE_URL`; a falha actual é o executor Psycopg a dividir um script SQL multi-statement, não a ausência do DSN. O ciclo completo de browser autenticado continua dependente de credenciais próprias.
 3. Gate Fast 3G: LCP continua acima de 2500 ms no benchmark público anterior.
-4. Configuração de Turnstile confirmada no deployment de produção.
+4. Configuração de Turnstile confirmada no deployment de produção. As variáveis públicas não aparecem na enumeração Vercel consultada e o wizard de produção falha fechado sem elas.
 5. Deploy das Edge Functions e do schema de Fase 4 em produção, seguido de testes reais com a flag global e a flag do tenant desligadas primeiro e activação controlada apenas após os gates.
 
-Até todos estes pontos passarem, a Fase 4 está implementada no código e o contrato transaccional já foi executado em staging, mas a compilação frontend, o replay compatível com o schema de produção e o teste concorrente ainda precisam de aprovação na revisão actual. A Loja não está autorizada a receber pedidos de clientes em produção.
+Até todos estes pontos passarem, a Fase 4 está implementada e verificada em staging/CI, mas não é segura para produção: o schema e a função `booking-create` publicados ainda não correspondem ao contrato versionado, Turnstile não foi comprovado e a aceitação Phase 23 ainda tem de ser repetida após a correcção do runner. A Loja não está autorizada a receber pedidos de clientes em produção.
 
 
 ## Performance do percurso público

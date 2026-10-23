@@ -12,7 +12,7 @@ A especificação da Loja da Barbearia define uma pré-encomenda opcional, ligad
 
 A Fase 0 exigia reconciliar os bloqueios do motor de marcações, comparar produção com staging, verificar migrations, RLS, secrets e a Edge Function `booking-create`, definir a flag da loja desligada por defeito e preparar um plano de reversão.
 
-A consulta directa aos ambientes encontrou diferenças materiais entre o código, o staging e a produção. A produção não contém a tabela e a RPC de idempotência usadas pela implementação actual de `main`; a função `booking-create` publicada não contém os controlos presentes no código versionado nem no handler de staging. A chave pública do Turnstile e a variável que o torna obrigatório não aparecem na lista de variáveis de ambiente visíveis da Vercel. A suite de aceitação com base de dados dedicada continua sem execução válida.
+A consulta directa aos ambientes encontrou diferenças materiais entre o código, o staging e a produção. A produção não contém a tabela e a RPC de idempotência usadas pela implementação actual de `main`; a função `booking-create` publicada não contém os controlos presentes no código versionado nem no handler de staging. A chave pública do Turnstile e a variável que o torna obrigatório não aparecem na lista de variáveis de ambiente visíveis da Vercel. A suite de aceitação utiliza uma base Supabase local efémera no runner GitHub; a última execução falhou por um defeito no executor Psycopg que divide scripts multi-statement contendo blocos PL/pgSQL `DO $`, não por falta de URL configurada.
 
 **Decisão:** manter a Loja da Barbearia indisponível ao público. As migrations das Fases 1 e 2 foram aplicadas apenas no staging e estão versionadas em `main`. Não alterar o schema de produção, não publicar uma nova Edge Function de marcações e não activar o rollout enquanto os bloqueios abaixo não forem resolvidos e comprovados.
 
@@ -51,7 +51,7 @@ Não usar as contagens para fazer uma reparação automática. É necessário ma
 | Execução | Resultado observado | Interpretação |
 |---|---|---|
 | GitHub Actions, verificação do commit de referência, run [39916557989](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39916557989) | Concluída com sucesso. Os jobs de migrations e contratos de segurança, contratos de release, scan de secrets, lint, typecheck, testes, build e budget passaram. | Boa evidência de validação do código e da cadeia local de migrations. Não prova paridade com a produção nem booking real. |
-| Suite da Fase 23, run [39916089898](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39916089898) | O job de aceitação da base de dados falhou. O job de concorrência foi ignorado. O E2E de browser básico passou, mas o ciclo completo foi ignorado por falta do ambiente dedicado. | Não aprovado para aceitação real. O motivo documentado é a ausência de `BARBEROS_TEST_DATABASE_URL` e de inputs para concorrência HTTP. |
+| Suite da Fase 23, run [39973135223](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39973135223) | A suite de base de dados falhou em `manual_booking_phase11.sql` com `psycopg.errors.SyntaxError: syntax error at or near "$"`; a variável `BARBEROS_TEST_DATABASE_URL` está configurada para a base Supabase local efémera. O browser smoke passou; o ciclo autenticado completo não foi executado por falta dos secrets E2E dedicados. | Aceitação global ainda não aprovada; o runner Python foi corrigido para usar `ClientCursor`/protocolo simples e precisa de nova execução. |
 | Contrato SQL de Phase 24 no staging | O contrato SQL foi reportado como aprovado após as correções aditivas. | Não substitui testes concorrentes em duas sessões nem o teste HTTP end-to-end. |
 | Booking real, repetição da mesma chave, slot ocupado, expiração de token e notificação assinada | Não executados nesta sessão. | Não certificado. |
 
@@ -96,7 +96,7 @@ Regras obrigatórias da flag:
 
 ### P0.2. Restaurar capacidade de aceitação em CI
 
-- Configurar `BARBEROS_TEST_DATABASE_URL` com uma base de teste dedicada e removível, nunca com a URL de produção.
+- Manter `BARBEROS_TEST_DATABASE_URL` apontado para a base Supabase local efémera do job (ou uma base dedicada comprovadamente isolada); nunca usar a URL de produção. A suite actual falhou devido ao protocolo de execução SQL, que foi corrigido em `scripts/test_database_phase23.py` e aguarda nova CI.
 - Provisionar os inputs de concorrência HTTP em segredo protegido.
 - Reexecutar a suite de base de dados, os testes de duas sessões concorrentes e os E2E completos. Nenhuma etapa necessária pode ficar silenciosamente ignorada.
 
@@ -155,8 +155,8 @@ A verificação posterior confirmou que a Fase 1 (modelo de domínio) e a Fase 2
 1. A produção tem 110 migrations registadas, o staging 81 antes das migrations da loja e o repositório tem 118 ficheiros de migrations no baseline auditado. É necessária reconciliação individual dos timestamps e do schema; não é seguro executar `db push` ou `migration repair` em lote.
 2. A produção não tem `public.booking_idempotency` nem `book_appointment_idempotent`, exigidos pelo handler versionado. A função `booking-create` publicada continua a divergir do código. A sua substituição depende de uma migration/reconciliação segura e de aceitação do fluxo completo.
 3. A configuração Turnstile necessária para a marcação pública não foi comprovada no deployment consultado. Não há chave pública/secrets verificados disponíveis nesta sessão para configurar o provider.
-4. O workflow de aceitação de base de dados não dispõe de `BARBEROS_TEST_DATABASE_URL`; os testes de concorrência/aceitação HTTP não podem ser considerados aprovados.
-5. O workflow de deployment Vercel reportou credenciais de deploy ausentes no GitHub Actions. O smoke das rotas públicas passou no site já publicado, mas o passo de deployment foi ignorado; não prova que o commit mais recente tenha sido publicado.
+4. O workflow define `BARBEROS_TEST_DATABASE_URL` para Supabase local efémero, mas a suite Phase 23 falhou devido ao executor Psycopg ao processar scripts com `DO $`. A correcção para `ClientCursor` foi preparada; a aprovação depende da nova CI. O ciclo completo de browser autenticado continua ignorado sem secrets E2E dedicados.
+5. A integração GitHub–Vercel publicou o commit `1279226d9f18c498b21211159cfdf94d472cfd6e` e o workflow de produção [39973135125](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39973135125) passou preflight, deployment e smoke. Isto confirma publicação e smoke, não o funcionamento do pedido integrado, porque a produção ainda não tem o schema/RPC da Loja.
 6. O gate Phase 25 de desempenho público continua vermelho: LCP medido a 2.856 ms e 3.120 ms, acima do limite de 2.500 ms em Fast 3G. Uma execução anterior, no commit `58feaa770f011cef42a6847ac72eaa85cf0b0cc3`, também falhou (2.836 ms), pelo que é um problema pré-existente que ainda requer correcção e nova medição.
 
 ### Acções necessárias para mudar NO-GO para GO
@@ -212,3 +212,12 @@ A medição Fast 3G no deployment público confirmou que o maior elemento era a 
 
 
 A segunda medição identificou o título da barbearia como candidato LCP (2.732 ms no primeiro Chromium, 2.388 ms no retry; mobile Chrome 2.456 ms). Para reduzir o atraso de carregamento do módulo de rota, `App.tsx` passa a pré-carregar `PublicBarbershop` imediatamente quando a URL já é `/barbearia/:slug`, em paralelo com o bootstrap. A próxima execução Fast 3G deve confirmar se a melhoria é estável; o gate anterior passou apenas com retry e ainda não é considerado robusto.
+
+
+### Actualização de execução da Fase 4 (23 de Outubro de 2026, SHA `1279226d9f18c498b21211159cfdf94d472cfd6e`)
+
+A verificação principal [39973135133](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39973135133) concluiu com sucesso. A migration chain desde uma base vazia, pgTAP, contratos SQL das Fases 1–4 e corrida concorrente de duas sessões passaram. O teste atómico da Fase 4 também passou em staging e deixou zero pedidos, linhas, reservas ou tenants activados após `ROLLBACK`. A suite Phase 23 independente ainda falha no executor Python ao processar scripts multi-statement com `DO $$`; a configuração já usa uma base efémera local, e a correcção para `psycopg.ClientCursor` foi versionada nesta revisão para nova validação.
+
+O gate Fast 3G passou no commit `92fd645cbfaaabdf1ea8cc89c9facee1cd5d6b4f` com LCP 2.032/2.088 ms e DCL 1.249/1.256 ms. A comparação Git confirma que, desde esse commit até ao SHA actual, só mudaram cinco ficheiros de fixtures SQL; o frontend não mudou. Ainda assim, a aprovação final será associada ao SHA actual após a nova execução de CI.
+
+A Vercel publicou o SHA actual com sucesso e o smoke passou. Produção continua sem as tabelas e RPC da Loja, sem a coluna `shop_enabled` e sem a configuração Turnstile comprovada; a feature flag global permanece desligada e nenhuma migration foi aplicada à produção. O estado de lançamento permanece **NO-GO**.

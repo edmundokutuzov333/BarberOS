@@ -70,3 +70,18 @@ A FASE 25 só pode ser considerada fechada quando:
 6. a migração de índices está aplicada e registada no Supabase.
 
 Nenhuma medição de performance mutante é executada contra a produção. A página pública pode usar o RPC de produção em modo read-only para benchmark de rede e Web Vitals.
+
+
+## Última medição confirmada (23 de Outubro de 2026)
+
+O workflow [39970944495](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39970944495), no commit `92fd645cbfaaabdf1ea8cc89c9facee1cd5d6b4f`, concluiu com sucesso nos três jobs (budget de assets, Fast 3G e contrato SQL). O benchmark Fast 3G registou:
+
+| Métrica | Chromium 1 | Retry Chromium |
+|---|---:|---:|
+| LCP | 2.032 ms | 2.088 ms |
+| DOMContentLoaded | 1.249 ms | 1.256 ms |
+| CLS | 0 | 0 |
+| Roundtrip RPC público | 527 ms | 310 ms |
+| INP de laboratório | 40 ms | 48 ms |
+
+O LCP foi o título `Oryon Barber Studio`. Estes resultados passam os limites definidos. O frontend não mudou entre o commit medido e o SHA `1279226d9f18c498b21211159cfdf94d472cfd6e`; a revisão actual volta a executar o workflow para associar evidência directamente ao SHA actual. Esta medição pública é read-only e não representa certificação do pedido transaccional da Loja.

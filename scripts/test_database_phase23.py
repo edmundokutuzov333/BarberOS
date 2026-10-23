@@ -5,6 +5,7 @@ import os
 import re
 from pathlib import Path
 import psycopg
+from psycopg import ClientCursor
 from database_safety import require_isolated_test_database
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -73,22 +74,36 @@ for filename in FILES:
     else:
         raise SystemExit(f"SAFETY_ABORT_TRANSACTION_GUARD: {filename}")
 
-with psycopg.connect(database_url, autocommit=True, prepare_threshold=None) as conn:
+def execute_sql_script(conn: psycopg.Connection, path: Path) -> None:
+    """Execute a complete SQL file, including PL/pgSQL DO blocks and multiple statements.
+
+    ClientCursor uses the simple query protocol. psycopg's regular cursor parses
+    semicolons in a multi-statement SQL file as separate commands, which can
+    split a dollar-quoted DO block and produce a syntax error at '
+print(f"Phase 23 database suite: {len(FILES)}/{len(FILES)} contracts executed.")
+.
+    """
+    sql = path.read_text(encoding="utf-8")
+    with conn.cursor(cursor_factory=ClientCursor) as cursor:
+        cursor.execute(sql)
+
+
+with psycopg.connect(database_url, autocommit=True) as conn:
     fixture_created = False
     try:
         print("SETUP phase23_fixture_setup.sql")
-        conn.execute((TESTS / "phase23_fixture_setup.sql").read_text(encoding="utf-8"))
+        execute_sql_script(conn, TESTS / "phase23_fixture_setup.sql")
         fixture_created = True
         print("PASS phase23_fixture_setup.sql")
 
         for filename in FILES:
             print(f"RUN {filename}")
-            conn.execute((TESTS / filename).read_text(encoding="utf-8"))
+            execute_sql_script(conn, TESTS / filename)
             print(f"PASS {filename}")
     finally:
         if fixture_created:
             print("CLEANUP phase23_fixture_cleanup.sql")
-            conn.execute((TESTS / "phase23_fixture_cleanup.sql").read_text(encoding="utf-8"))
+            execute_sql_script(conn, TESTS / "phase23_fixture_cleanup.sql")
             print("PASS phase23_fixture_cleanup.sql")
 
 print(f"Phase 23 database suite: {len(FILES)}/{len(FILES)} contracts executed.")
