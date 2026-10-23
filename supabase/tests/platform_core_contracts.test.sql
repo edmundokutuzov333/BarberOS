@@ -1,5 +1,5 @@
 begin;
-select plan(41);
+select plan(43);
 
 select ok(
   to_regclass('public.appointments') is not null,
@@ -235,6 +235,49 @@ select ok(
 select ok(
   has_function_privilege('authenticated','public.get_available_slots_week(text,uuid,uuid,date)','EXECUTE'),
   'authenticated clients can read weekly availability through the intended RPC'
+);
+
+
+select ok(
+  not exists (
+    select 1
+    from information_schema.routine_privileges rp
+    where rp.routine_schema = 'public'
+      and rp.grantee in ('PUBLIC', 'anon', 'authenticated')
+      and (
+        rp.routine_name like '%\\_by\\_token' escape '\\'
+        or rp.routine_name in (
+          'get_payment_runtime_for_token',
+          'init_payment_from_token',
+          'get_waitlist_offer',
+          'claim_waitlist_offer',
+          'expire_waitlist_offer'
+        )
+      )
+      and rp.privilege_type = 'EXECUTE'
+  ),
+  'token-management RPCs are not directly executable by public browser roles'
+);
+
+select ok(
+  not exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and (
+        p.proname like '%\\_by\\_token' escape '\\'
+        or p.proname in (
+          'get_payment_runtime_for_token',
+          'init_payment_from_token',
+          'get_waitlist_offer',
+          'claim_waitlist_offer',
+          'expire_waitlist_offer'
+        )
+      )
+      and not has_function_privilege('service_role', p.oid, 'EXECUTE')
+  ),
+  'token-gateway service role retains access to token-management RPCs'
 );
 
 select * from finish();
