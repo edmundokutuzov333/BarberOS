@@ -11,6 +11,8 @@ on:
       - "supabase/config.toml"
       - ".github/workflows/ci.yml"
       - ".github/workflows/deploy-vercel.yml"
+      - "scripts/database_safety.py"
+      - "scripts/test_database_safety_contract.py"
       - "scripts/test_database_phase23.py"
       - "scripts/test_booking_concurrency_phase23.py"
       - "frontend/tests/e2e/phase23-full-lifecycle.spec.mjs"
@@ -26,7 +28,14 @@ on:
       - "frontend/**"
       - "tests/**"
       - "supabase/tests/**"
+      - "supabase/functions/**"
+      - "supabase/migrations/**"
+      - "supabase/config.toml"
+      - ".github/workflows/deploy-vercel.yml"
+      - "scripts/database_safety.py"
+      - "scripts/test_database_safety_contract.py"
       - "scripts/test_database_phase23.py"
+      - "scripts/test_booking_concurrency_phase23.py"
       - "docs/TESTING.md"
       - ".github/workflows/phase23-tests.yml"
       - "package.json"
@@ -150,6 +159,8 @@ jobs:
           python-version: "3.12"
       - name: Install psycopg
         run: pip install "psycopg[binary]==3.2.12"
+      - name: Verify test database safety guard
+        run: python scripts/test_database_safety_contract.py
       - name: Run database suite
         env:
           BARBEROS_TEST_DATABASE_URL: ${{ secrets.BARBEROS_TEST_DATABASE_URL }}
