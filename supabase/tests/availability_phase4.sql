@@ -16,6 +16,7 @@ declare
   v_customer uuid;
   v_appt uuid;
   v_original_interval int;
+  v_tz text;
 begin
   select sh.id, sh.slug, s.id, b.id, m.user_id, s.duration_min
     into v_shop,v_slug,v_service,v_barber,v_user,v_duration
@@ -30,6 +31,8 @@ begin
   limit 1;
 
   if v_shop is null then raise exception 'NO_AVAILABILITY_FIXTURE'; end if;
+
+  select timezone into v_tz from public.barbershops where id = v_shop;
 
   perform set_config(
     'request.jwt.claims',
@@ -50,6 +53,12 @@ begin
       and wh.weekday=extract(dow from d)::int
       and not wh.is_closed
       and wh.closes_at > wh.opens_at
+  )
+  and not exists (
+    select 1
+    from public.schedule_overrides so
+    where so.barbershop_id = v_shop
+      and so.override_date = d::date
   );
 
   if v_day is null then raise exception 'NO_OPEN_TEST_DAY'; end if;
