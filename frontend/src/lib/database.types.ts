@@ -2880,51 +2880,6 @@ export type Database = {
         | "cancelled"
         | "failed"
       shop_product_kind: "consume_here" | "takeaway" | "both"
-      shop_status: "trial" | "active" | "suspended" | "cancelled"
-      waitlist_status:
-        | "waiting"
-        | "offered"
-        | "converted"
-        | "expired"
-        | "cancelled"
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-      shop_order_status:
-        | "received"
-        | "needs_confirmation"
-        | "accepted"
-        | "preparing"
-        | "ready"
-        | "partially_delivered"
-        | "delivered"
-        | "cancelled"
-        | "failed"
-      shop_product_kind: "consume_here" | "takeaway" | "both"
-      shop_status: "trial" | "active" | "suspended" | "cancelled"
-      waitlist_status:
-        | "waiting"
-        | "offered"
-        | "converted"
-        | "expired"
-        | "cancelled"
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-      shop_product_kind: "consume_here" | "takeaway" | "both"
-      shop_status: "trial" | "active" | "suspended" | "cancelled"
-      waitlist_status:
-        | "waiting"
-        | "offered"
-        | "converted"
-        | "expired"
-        | "cancelled"
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
       app_role: "owner" | "manager" | "barber"
       appointment_status:
         | "pending"
