@@ -96,3 +96,6 @@ A validação em CI detectou que cancelar o pedido não libertava reservas. A mi
 ### Correcção do contrato CRM na suite de aceitação
 
 A suite Phase 23 já ultrapassa o parser SQL após a alteração para `ClientCursor(conn)`. A última falha foi em `customer_crm_phase12.sql`: a chamada para outro tenant foi correctamente bloqueada pelo guard de membership com `SHOP_OPERATOR_REQUIRED`, mas o teste esperava apenas `CUSTOMER_NOT_FOUND`. O contrato agora aceita ambas as recusas seguras. A nova execução do workflow é necessária antes de declarar a aceitação Phase 23 aprovada.
+
+
+A suite Phase 23 ultrapassou o erro do executor e o contrato CRM após as correcções. O teste seguinte revelou que `waitlist_phase13.sql` invocava como `anon` RPCs que o próprio contrato correctamente restringe a `service_role`. Corrigimos o teste para reflectir o caminho real do token gateway, sem ampliar privilégios. A aceitação global depende da nova execução CI.

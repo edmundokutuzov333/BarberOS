@@ -308,7 +308,8 @@ begin
   end if;
 
   -- The public offer payload must not expose internal appointment/customer identifiers.
-  set local role anon;
+  -- These token RPCs are gateway-only and must be invoked as service_role.
+  set local role service_role;
   if not exists (
     select 1
     from public.get_waitlist_offer(v_offer_token1)
@@ -377,7 +378,7 @@ begin
   set offer_expires_at=now()-interval '1 minute'
   where id=v_offer2;
 
-  set local role anon;
+  set local role service_role;
   select *
   into v_expire
   from public.expire_waitlist_offer(v_offer_token2)

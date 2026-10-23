@@ -226,3 +226,8 @@ A Vercel publicou o SHA actual com sucesso e o smoke passou. Produção continua
 ### Actualização de aceitação Phase 23 após correcção do executor (23 de Outubro de 2026)
 
 O runner agora executa os ficheiros SQL completos através de `psycopg.ClientCursor(conn)`, sem dividir blocos PL/pgSQL. A execução [39974628959](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39974628959) ultrapassou esse problema e falhou em `customer_crm_phase12.sql`: o teste exigia `CUSTOMER_NOT_FOUND` para uma consulta cross-tenant, mas a função negou correctamente a chamada antes com `SHOP_OPERATOR_REQUIRED`, porque o utilizador não é membro do tenant alvo. O teste foi ajustado para aceitar ambos os erros de negação; aguarda nova CI. Nenhum dado de produção foi usado: a suite corre numa base Supabase local efémera.
+
+
+### Actualização da suite Phase 23: contrato waitlist (23 de Outubro de 2026)
+
+Depois da correcção do executor SQL e da asserção CRM, a suite chegou a `waitlist_phase13.sql`. O teste contradizia o próprio contrato de segurança: confirmava que as RPCs de token só podem ser executadas por `service_role`, mas invocava `get_waitlist_offer` como `anon`, causando `permission denied`. O teste foi corrigido para chamar `get_waitlist_offer`, `claim_waitlist_offer` e `expire_waitlist_offer` com `service_role`; os joins públicos continuam testados como `anon`. A nova CI está pendente. A aplicação não foi alterada para abrir permissões.

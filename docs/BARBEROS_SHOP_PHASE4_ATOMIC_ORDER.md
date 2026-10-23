@@ -56,3 +56,8 @@ O benchmark anterior identificou a descrição longa do hero como LCP (2,6–3,2
 ## Correcção da libertação de reservas (23 de Outubro de 2026)
 
 A suite CI da Fase 4 encontrou que o pedido era cancelado correctamente, mas as reservas permaneciam em estado `reserved`. Foi aplicada em staging a migration aditiva `20261023133806_20261023134000_shop_order_reservation_release_phase4`, que instala `private.shop_order_release_reservations_on_cancel` e um trigger `AFTER UPDATE OF status` sobre `appointment_product_orders`. A mudança para `cancelled` liberta as reservas ainda activas dentro da mesma transacção. A migration foi versionada em `main`; o CI completo ainda tem de repetir a suite a partir de uma base vazia.
+
+
+### Actualização da aceitação Phase 23 (23 de Outubro de 2026)
+
+A suite já executa todos os scripts multi-statement e o contrato CRM passa após aceitar as duas recusas seguras de acesso cross-tenant. A execução [39975221744](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39975221744) revelou um segundo defeito preexistente no teste de waitlist: o próprio teste verificava que `get_waitlist_offer`, `claim_waitlist_offer` e `expire_waitlist_offer` são gateway-only, mas depois chamava essas funções com o papel `anon`. O teste foi corrigido para usar `service_role` nessas chamadas, tal como o token gateway de produção. A nova CI deve confirmar o resultado completo.
