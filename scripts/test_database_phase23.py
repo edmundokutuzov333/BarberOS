@@ -24,13 +24,53 @@ database_url = require_isolated_test_database(os.getenv("BARBEROS_TEST_DATABASE_
 if os.getenv("BARBEROS_TEST_ALLOW_MUTATION") != "1":
     raise SystemExit("REFUSED: BARBEROS_TEST_ALLOW_MUTATION=1 é obrigatório para esta suite.")
 
+# Contracts in this list perform read-only schema/data checks or assert that
+# unauthorised mutations are rejected. They must never write persistent state.
+READ_ONLY_FILES = {
+    "migration_phase2.sql",
+    "security_phase1.sql",
+    "domain_integrity_phase3.sql",
+    "agenda_phase9.sql",
+    "public_barbershop_phase7.sql",
+    "realtime_phase10.sql",
+    "phase23_contract.sql",
+}
+
+# These contracts exercise mutating RPCs only inside a PL/pgSQL exception
+# subtransaction and deliberately raise/catch a rollback sentinel.
+ROLLBACK_BLOCK_FILES = {
+    "availability_phase4.sql",
+    "booking_phase5.sql",
+    "appointment_token_phase6.sql",
+    "booking_wizard_phase8.sql",
+}
+
+def strip_sql_comments(sql: str) -> str:
+    sql = re.sub(r"/\*[\s\S]*?\*/", "", sql)
+    return re.sub(r"--[^\n]*", "", sql)
+
 for filename in FILES:
     path = TESTS / filename
     if not path.exists(): raise SystemExit(f"MISSING_TEST_FILE: {filename}")
     sql = path.read_text(encoding="utf-8")
-    if re.search(r"\bcommit\b", sql, re.I): raise SystemExit(f"SAFETY_ABORT_COMMIT_IN_TEST: {filename}")
-    if filename not in {"migration_phase2.sql","security_phase1.sql","domain_integrity_phase3.sql","public_barbershop_phase7.sql","phase23_contract.sql"}:
-      if not re.search(r"\bbegin\b", sql, re.I) or not re.search(r"\brollback\b", sql, re.I):
+    uncommented = strip_sql_comments(sql)
+
+    # Only SQL-level transaction commands count; PL/pgSQL BEGIN/EXCEPTION
+    # blocks are not outer transactions.
+    if re.search(r"^\s*commit\s*;", uncommented, re.I | re.M):
+        raise SystemExit(f"SAFETY_ABORT_COMMIT_IN_TEST: {filename}")
+
+    has_outer_begin = bool(re.search(r"^\s*begin\s*;", uncommented, re.I | re.M))
+    has_outer_rollback = bool(re.search(r"^\s*rollback\s*;", uncommented, re.I | re.M))
+    if has_outer_begin:
+        if not has_outer_rollback:
+            raise SystemExit(f"SAFETY_ABORT_TRANSACTION_GUARD: {filename}")
+    elif filename in READ_ONLY_FILES:
+        pass
+    elif filename in ROLLBACK_BLOCK_FILES:
+        if not re.search(r"ROLLBACK_[A-Z0-9_]+", sql) or not re.search(r"\bexception\b", uncommented, re.I):
+            raise SystemExit(f"SAFETY_ABORT_ROLLBACK_BLOCK_GUARD: {filename}")
+    else:
         raise SystemExit(f"SAFETY_ABORT_TRANSACTION_GUARD: {filename}")
 
 with psycopg.connect(database_url, autocommit=True, prepare_threshold=None) as conn:

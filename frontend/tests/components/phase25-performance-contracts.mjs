@@ -15,7 +15,8 @@ const tests = [
   }],
   ['route surface is lazy-loaded so public entry does not ship internal pages', () => {
     const source = read('src/App.tsx');
-    assert.match(source, /lazy\(\(\) => import\('\.\/pages\/PublicBarbershop'\)/);
+    assert.match(source, /const loadPublicBarbershop = \(\) => import\('\.\/pages\/PublicBarbershop'\);/);
+    assert.match(source, /const PublicBarbershop = lazy\(loadPublicBarbershop\);/);
     assert.match(source, /lazy\(\(\) => import\('\.\/pages\/BookingWizard'\)/);
     assert.match(source, /lazy\(\(\) => import\('\.\/pages\/admin\/AdminDashboard'\)/);
     assert.match(source, /Suspense/);

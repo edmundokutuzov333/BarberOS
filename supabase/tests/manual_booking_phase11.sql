@@ -1,7 +1,9 @@
 -- BarberOS Phase 11: manual booking acceptance suite.
 -- All booking fixtures are created inside an explicit transaction and rolled back.
 
-do $$
+begin;
+
+do $
 declare
   v_owner uuid;
   v_shop uuid;
@@ -132,6 +134,9 @@ begin
     v_source,v_created_by,(v_note is not null),v_notifs;
 end
 $$;
+
+rollback;
+
 
 select
   has_function_privilege('authenticated','public.book_appointment_manual(uuid,uuid,uuid,uuid,timestamptz,text,text,text,text)','EXECUTE') as auth_manual_execute,
