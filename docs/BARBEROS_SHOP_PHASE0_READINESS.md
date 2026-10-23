@@ -28,7 +28,7 @@ Os secrets de runtime do Supabase não puderam ser inspeccionados directamente a
 
 | Área | Evidência observada | Estado |
 |---|---|---|
-| GitHub | `main` apontava para o commit de referência acima no início da auditoria. O commit foi comparado com `main` e a comparação devolveu estado idêntico. | Confirmado no início; será actualizado após o commit deste relatório. |
+| GitHub | `main` apontava para o commit de referência acima no início da auditoria. A comparação confirmou que esse commit era idêntico à referência de `main` no momento da leitura. | Confirmado para a referência inicial. |
 | Migrations | `main` contém 118 ficheiros SQL. A produção regista 110 versões; o staging regista 81. As contagens não demonstram equivalência semântica. | Bloqueado. |
 | Schema | `public.booking_idempotency` e a RPC `book_appointment_idempotent` existem no staging, mas não existem na produção. | Bloqueio crítico. |
 | Handler de marcações | A Edge Function `booking-create` da produção não contém a validação Turnstile, os primitivos de rate limit nem o caminho idempotente encontrados no código de `main` e no handler de staging. | Bloqueio crítico. |
