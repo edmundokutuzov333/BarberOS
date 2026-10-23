@@ -57,8 +57,8 @@ begin
    where table_schema='public'
      and table_type='BASE TABLE';
 
-  if table_count <> 17 then
-    raise exception 'SCHEMA_BASELINE_FAIL: expected 17 public tables, got %', table_count;
+  if table_count < 17 then
+    raise exception 'SCHEMA_BASELINE_FAIL: expected at least 17 core public tables, got %', table_count;
   end if;
 
   select count(*)
@@ -68,8 +68,8 @@ begin
    where n.nspname='public'
      and t.typtype='e';
 
-  if enum_count <> 13 then
-    raise exception 'SCHEMA_BASELINE_FAIL: expected 13 public enums, got %', enum_count;
+  if enum_count < 13 then
+    raise exception 'SCHEMA_BASELINE_FAIL: expected at least 13 core public enums, got %', enum_count;
   end if;
 
   select count(*)

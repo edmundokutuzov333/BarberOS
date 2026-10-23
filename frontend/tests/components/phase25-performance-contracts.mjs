@@ -30,6 +30,13 @@ const tests = [
     assert.ok(main.includes('else if (publicBookingMatch)'));
     assert.ok(!main.includes("pathname.startsWith('/barbearia/')"));
   }],
+  ['public shop defers below-fold card rendering until after the hero paint', () => {
+    const source = read('src/pages/PublicBarbershop.tsx');
+    assert.match(source, /const \[belowFoldReady, setBelowFoldReady\] = useState\(false\)/);
+    assert.match(source, /window\.requestAnimationFrame\(\(\) =>/);
+    assert.match(source, /data-testid="public-shop-deferred-loading"/);
+    assert.match(source, /belowFoldReady \?/);
+  }],
   ['public images use browser loading primitives deliberately', () => {
     const source = read('src/pages/PublicBarbershop.tsx');
     assert.match(source, /fetchPriority="high" decoding="async"/);
