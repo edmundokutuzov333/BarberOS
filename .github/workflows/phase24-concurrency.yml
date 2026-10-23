@@ -9,6 +9,10 @@ on:
       - "frontend/tests/unit/phase24-concurrency.mjs"
       - "frontend/tests/components/phase24-concurrency-contracts.mjs"
       - "frontend/tests/e2e/phase24-http-concurrency.spec.mjs"
+      - "frontend/playwright.http.config.mjs"
+      - "supabase/tests/shop_order_concurrency_setup_phase4.sql"
+      - "supabase/tests/shop_order_concurrency_call_a_phase4.sql"
+      - "supabase/tests/shop_order_concurrency_call_b_phase4.sql"
       - "supabase/functions/booking-create/**"
       - "supabase/tests/phase24_concurrency_contract.sql"
       - "scripts/test_booking_concurrency_phase24.py"
@@ -28,6 +32,10 @@ on:
       - "frontend/tests/unit/phase24-concurrency.mjs"
       - "frontend/tests/components/phase24-concurrency-contracts.mjs"
       - "frontend/tests/e2e/phase24-http-concurrency.spec.mjs"
+      - "frontend/playwright.http.config.mjs"
+      - "supabase/tests/shop_order_concurrency_setup_phase4.sql"
+      - "supabase/tests/shop_order_concurrency_call_a_phase4.sql"
+      - "supabase/tests/shop_order_concurrency_call_b_phase4.sql"
       - "supabase/functions/booking-create/**"
       - "supabase/tests/phase24_concurrency_contract.sql"
       - "scripts/test_booking_concurrency_phase24.py"
@@ -42,8 +50,8 @@ jobs:
     name: Phase 24 frontend concurrency contracts
     runs-on: ubuntu-latest
     env:
-      VITE_SUPABASE_URL: https://alseiinjzwjdiwtvkdzy.supabase.co
-      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Cjn-g6cWrIUSYVI5oeK2ZA_Ipk0B5ID
+      VITE_SUPABASE_URL: https://asikuyxaapcmayptimxi.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_rjwoRrbWYYaEzLjOPy64pg_vtG9NGxZ
     defaults:
       run:
         working-directory: frontend
@@ -180,4 +188,4 @@ jobs:
           NODE
       - name: Run HTTP concurrency acceptance against staging
         working-directory: frontend
-        run: npx playwright test tests/e2e/phase24-http-concurrency.spec.mjs --config=playwright.config.mjs
+        run: npx playwright test tests/e2e/phase24-http-concurrency.spec.mjs --config=playwright.http.config.mjs
