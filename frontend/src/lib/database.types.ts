@@ -14,6 +14,477 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_product_order_items: {
+        Row: {
+          barbershop_id: string
+          created_at: string
+          id: string
+          line_total_snapshot: number
+          options: Json
+          order_id: string
+          product_id: string
+          product_name_snapshot: string
+          qty: number
+          status: Database["public"]["Enums"]["shop_order_item_status"]
+          unit_price_snapshot: number
+          updated_at: string
+          variant_id: string
+          variant_snapshot: string
+        }
+        Insert: {
+          barbershop_id: string
+          created_at?: string
+          id?: string
+          line_total_snapshot: number
+          options?: Json
+          order_id: string
+          product_id: string
+          product_name_snapshot: string
+          qty: number
+          status?: Database["public"]["Enums"]["shop_order_item_status"]
+          unit_price_snapshot: number
+          updated_at?: string
+          variant_id: string
+          variant_snapshot: string
+        }
+        Update: {
+          barbershop_id?: string
+          created_at?: string
+          id?: string
+          line_total_snapshot?: number
+          options?: Json
+          order_id?: string
+          product_id?: string
+          product_name_snapshot?: string
+          qty?: number
+          status?: Database["public"]["Enums"]["shop_order_item_status"]
+          unit_price_snapshot?: number
+          updated_at?: string
+          variant_id?: string
+          variant_snapshot?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_product_order_ite_variant_id_product_id_barber_fkey"
+            columns: ["variant_id", "product_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_product_variants"
+            referencedColumns: ["id", "product_id", "barbershop_id"]
+          },
+          {
+            foreignKeyName: "appointment_product_order_items_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_product_order_items_order_id_barbershop_id_fkey"
+            columns: ["order_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_product_orders"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+          {
+            foreignKeyName: "appointment_product_order_items_product_id_barbershop_id_fkey"
+            columns: ["product_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_products"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+        ]
+      }
+      appointment_product_orders: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          appointment_id: string
+          barbershop_id: string
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          created_by: string | null
+          customer_note: string | null
+          delivered_at: string | null
+          delivered_by: string | null
+          id: string
+          ready_at: string | null
+          ready_by: string | null
+          requested_for: string
+          status: Database["public"]["Enums"]["shop_order_status"]
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          appointment_id: string
+          barbershop_id: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_note?: string | null
+          delivered_at?: string | null
+          delivered_by?: string | null
+          id?: string
+          ready_at?: string | null
+          ready_by?: string | null
+          requested_for?: string
+          status?: Database["public"]["Enums"]["shop_order_status"]
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          appointment_id?: string
+          barbershop_id?: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_note?: string | null
+          delivered_at?: string | null
+          delivered_by?: string | null
+          id?: string
+          ready_at?: string | null
+          ready_by?: string | null
+          requested_for?: string
+          status?: Database["public"]["Enums"]["shop_order_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_product_orders_appointment_id_barbershop_id_fkey"
+            columns: ["appointment_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+          {
+            foreignKeyName: "appointment_product_orders_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_movements: {
+        Row: {
+          actor_id: string | null
+          barbershop_id: string
+          created_at: string
+          delta_qty: number
+          id: string
+          note: string | null
+          order_line_id: string | null
+          reason: string
+          variant_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          barbershop_id: string
+          created_at?: string
+          delta_qty: number
+          id?: string
+          note?: string | null
+          order_line_id?: string | null
+          reason: string
+          variant_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          barbershop_id?: string
+          created_at?: string
+          delta_qty?: number
+          id?: string
+          note?: string | null
+          order_line_id?: string | null
+          reason?: string
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_order_line_id_barbershop_id_fkey"
+            columns: ["order_line_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_product_order_items"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_variant_id_barbershop_id_fkey"
+            columns: ["variant_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_product_variants"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+        ]
+      }
+      inventory_reservations: {
+        Row: {
+          barbershop_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          order_id: string
+          qty: number
+          released_at: string | null
+          status: string
+          updated_at: string
+          variant_id: string
+        }
+        Insert: {
+          barbershop_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          order_id: string
+          qty: number
+          released_at?: string | null
+          status?: string
+          updated_at?: string
+          variant_id: string
+        }
+        Update: {
+          barbershop_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          order_id?: string
+          qty?: number
+          released_at?: string | null
+          status?: string
+          updated_at?: string
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_reservations_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_reservations_order_id_barbershop_id_fkey"
+            columns: ["order_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_product_orders"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+          {
+            foreignKeyName: "inventory_reservations_variant_id_barbershop_id_fkey"
+            columns: ["variant_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_product_variants"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+        ]
+      }
+      shop_product_categories: {
+        Row: {
+          barbershop_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          barbershop_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          barbershop_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_product_categories_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_products: {
+        Row: {
+          barbershop_id: string
+          brand: string | null
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          image_alt: string | null
+          image_source_checked_at: string | null
+          image_source_url: string | null
+          image_url: string | null
+          is_active: boolean
+          name: string
+          product_kind: Database["public"]["Enums"]["shop_product_kind"]
+          sort_order: number
+          track_stock: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          barbershop_id: string
+          brand?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_alt?: string | null
+          image_source_checked_at?: string | null
+          image_source_url?: string | null
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          product_kind?: Database["public"]["Enums"]["shop_product_kind"]
+          sort_order?: number
+          track_stock?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          barbershop_id?: string
+          brand?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_alt?: string | null
+          image_source_checked_at?: string | null
+          image_source_url?: string | null
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          product_kind?: Database["public"]["Enums"]["shop_product_kind"]
+          sort_order?: number
+          track_stock?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_products_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_products_category_id_barbershop_id_fkey"
+            columns: ["category_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_product_categories"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+        ]
+      }
+      shop_product_variants: {
+        Row: {
+          attributes: Json
+          barbershop_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          label: string
+          low_stock_threshold: number
+          price_minor: number
+          product_id: string
+          sku: string | null
+          stock_on_hand: number
+          unit_label: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          attributes?: Json
+          barbershop_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          low_stock_threshold?: number
+          price_minor: number
+          product_id: string
+          sku?: string | null
+          stock_on_hand?: number
+          unit_label?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          attributes?: Json
+          barbershop_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          low_stock_threshold?: number
+          price_minor?: number
+          product_id?: string
+          sku?: string | null
+          stock_on_hand?: number
+          unit_label?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_product_variants_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_product_variants_product_id_barbershop_id_fkey"
+            columns: ["product_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_products"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           barber_id: string
@@ -314,6 +785,7 @@ export type Database = {
           phone: string | null
           plan_id: string | null
           slot_interval_min: number
+          shop_enabled: boolean
           slug: string
           status: Database["public"]["Enums"]["shop_status"]
           theme_key: string
@@ -343,6 +815,7 @@ export type Database = {
           phone?: string | null
           plan_id?: string | null
           slot_interval_min?: number
+          shop_enabled?: boolean
           slug: string
           status?: Database["public"]["Enums"]["shop_status"]
           theme_key?: string
@@ -372,6 +845,7 @@ export type Database = {
           phone?: string | null
           plan_id?: string | null
           slot_interval_min?: number
+          shop_enabled?: boolean
           slug?: string
           status?: Database["public"]["Enums"]["shop_status"]
           theme_key?: string
@@ -1173,6 +1647,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      record_shop_inventory_movement: {
+        Args: {
+          p_barbershop_id: string
+          p_delta_qty: number
+          p_note?: string
+          p_reason: string
+          p_variant_id: string
+        }
+        Returns: string
+      }
       add_member_by_email: {
         Args: {
           p_email: string
@@ -2375,6 +2859,72 @@ export type Database = {
       }
     }
     Enums: {
+      shop_order_item_status:
+        | "requested"
+        | "accepted"
+        | "unavailable"
+        | "preparing"
+        | "ready"
+        | "partially_delivered"
+        | "delivered"
+        | "cancelled"
+        | "failed"
+      shop_order_status:
+        | "received"
+        | "needs_confirmation"
+        | "accepted"
+        | "preparing"
+        | "ready"
+        | "partially_delivered"
+        | "delivered"
+        | "cancelled"
+        | "failed"
+      shop_product_kind: "consume_here" | "takeaway" | "both"
+      shop_status: "trial" | "active" | "suspended" | "cancelled"
+      waitlist_status:
+        | "waiting"
+        | "offered"
+        | "converted"
+        | "expired"
+        | "cancelled"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+      shop_order_status:
+        | "received"
+        | "needs_confirmation"
+        | "accepted"
+        | "preparing"
+        | "ready"
+        | "partially_delivered"
+        | "delivered"
+        | "cancelled"
+        | "failed"
+      shop_product_kind: "consume_here" | "takeaway" | "both"
+      shop_status: "trial" | "active" | "suspended" | "cancelled"
+      waitlist_status:
+        | "waiting"
+        | "offered"
+        | "converted"
+        | "expired"
+        | "cancelled"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+      shop_product_kind: "consume_here" | "takeaway" | "both"
+      shop_status: "trial" | "active" | "suspended" | "cancelled"
+      waitlist_status:
+        | "waiting"
+        | "offered"
+        | "converted"
+        | "expired"
+        | "cancelled"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
       app_role: "owner" | "manager" | "barber"
       appointment_status:
         | "pending"
