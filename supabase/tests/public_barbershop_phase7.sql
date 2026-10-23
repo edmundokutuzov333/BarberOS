@@ -11,7 +11,7 @@ declare
   v_reviews jsonb;
   v_bad jsonb;
 begin
-  select public.get_public_barbershop('oryon') into v_payload;
+  select public.get_public_barbershop('phase23-acceptance-fixture') into v_payload;
   if v_payload is null then raise exception 'PUBLIC_SHOP_EMPTY'; end if;
   if not (v_payload ? 'shop' and v_payload ? 'services' and v_payload ? 'haircuts' and v_payload ? 'barbers' and v_payload ? 'working_hours' and v_payload ? 'reviews') then
     raise exception 'PUBLIC_SHOP_INCOMPLETE';
@@ -20,19 +20,19 @@ begin
     raise exception 'PUBLIC_SHOP_LEAKS_PRIVATE_FIELDS';
   end if;
   v_shop:=v_payload->'shop';
-  if (v_shop->>'slug')<>'oryon' or (v_shop->>'status') not in ('active','trial') then raise exception 'PUBLIC_SHOP_TENANT_FAILED'; end if;
-  if jsonb_array_length(v_payload->'services') <> 2 then raise exception 'PUBLIC_SHOP_SERVICE_COUNT_FAILED'; end if;
+  if (v_shop->>'slug')<>'phase23-acceptance-fixture' or (v_shop->>'status') not in ('active','trial') then raise exception 'PUBLIC_SHOP_TENANT_FAILED'; end if;
+  if jsonb_array_length(v_payload->'services') <> 1 then raise exception 'PUBLIC_SHOP_SERVICE_COUNT_FAILED'; end if;
   if jsonb_array_length(v_payload->'barbers') <> 1 then raise exception 'PUBLIC_SHOP_BARBER_COUNT_FAILED'; end if;
-  if jsonb_array_length(v_payload->'haircuts') <> 22 then raise exception 'PUBLIC_SHOP_HAIRCUT_COUNT_FAILED'; end if;
+  if jsonb_array_length(v_payload->'haircuts') <> 1 then raise exception 'PUBLIC_SHOP_HAIRCUT_COUNT_FAILED'; end if;
   if jsonb_array_length(v_payload->'working_hours') <> 7 then raise exception 'PUBLIC_SHOP_HOURS_COUNT_FAILED'; end if;
   if jsonb_array_length(v_payload->'reviews'->'items') <> 0 then raise exception 'PUBLIC_SHOP_REVIEW_COUNT_UNEXPECTED'; end if;
 
-  select public.get_public_barbershop('magoanine-c') into v_payload;
+  select public.get_public_barbershop('phase23-isolation-fixture') into v_payload;
   if v_payload is null then raise exception 'SECOND_PUBLIC_SHOP_EMPTY'; end if;
-  if (v_payload->'shop'->>'slug')<>'magoanine-c' then raise exception 'SECOND_TENANT_FAILED'; end if;
+  if (v_payload->'shop'->>'slug')<>'phase23-isolation-fixture' then raise exception 'SECOND_TENANT_FAILED'; end if;
   if jsonb_array_length(v_payload->'services')<>0 then raise exception 'SECOND_SHOP_SERVICE_LEAK'; end if;
   if jsonb_array_length(v_payload->'barbers')<>0 then raise exception 'SECOND_SHOP_BARBER_LEAK'; end if;
-  if v_payload::text like '%oryon%' then raise exception 'CROSS_TENANT_DATA_LEAK'; end if;
+  if v_payload::text like '%phase23-acceptance-fixture%' then raise exception 'CROSS_TENANT_DATA_LEAK'; end if;
 
   begin
     perform public.get_public_barbershop('does-not-exist');

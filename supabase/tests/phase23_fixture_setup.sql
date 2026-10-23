@@ -29,6 +29,13 @@ begin
     v_slug, 'BarberOS Phase 23 Acceptance Fixture', 'active', 'Africa/Maputo', 30, 30, 15
   ) returning id into v_shop;
 
+  insert into public.barbershops (
+    slug, name, status, timezone, min_lead_time_min, max_advance_days, slot_interval_min
+  ) values (
+    'phase23-isolation-fixture', 'BarberOS Phase 23 Isolation Fixture', 'active',
+    'Africa/Maputo', 30, 30, 15
+  );
+
   insert into public.barbershop_members (barbershop_id, user_id, role)
   values (v_shop, v_user, 'owner');
 

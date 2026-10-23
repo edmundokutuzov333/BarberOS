@@ -8,6 +8,9 @@ declare
   v_appointments uuid[];
   r record;
 begin
+  delete from public.barbershops
+  where slug = 'phase23-isolation-fixture';
+
   select id into v_shop
   from public.barbershops
   where slug = 'phase23-acceptance-fixture';
