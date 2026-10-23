@@ -32,6 +32,9 @@ A especificação PDF, páginas 14 e 20, define o catálogo de gestão: produtos
 - `20261023095613_shop_catalog_management_phase2`: permissões de actualização por coluna, sem escrita directa de stock.
 - `20261023095633_shop_catalog_publication_guard_phase2`: guarda de publicação e leitura de auditoria.
 - `20261023100515_shop_catalog_image_metadata_privilege_hardening`: mantém os timestamps de verificação e o actor da aprovação de imagem sob controlo do PostgreSQL.
+- `20261023100819_shop_catalog_product_rules_and_duplicate`: adiciona preferências permitidas validadas no PostgreSQL e a RPC de duplicação.
+- `20261023100829_shop_catalog_duplicate_service_role_contract`: restringe a duplicação ao membership owner/manager ou runtime `service_role`.
+- `20261023101554_shop_order_options_validator_execute_grant`: autoriza o validador da constraint para o papel autenticado que edita o catálogo.
 - `supabase/tests/shop_catalog_phase2.sql`: fixtures rollback-only. Verifica rejeição de publicação sem variante, rejeição com categoria inactiva, publicação válida, ausência de update directo ao stock e grants de edição/auditoria.
 - `supabase/tests/shop_catalog_rules_phase2.sql`: valida preferências JSON, limite de 10 opções, duplicação transaccional, isolamento de tenant, variantes inactivas sem SKU e stock inicial zero.
 

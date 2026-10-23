@@ -32,6 +32,7 @@ begin
  exception when raise_exception then if position('SHOP_PRODUCT_NOT_FOUND' in sqlerrm)>0 then v_rejected:=true; else raise; end if; end;
  if not v_rejected then raise exception 'FAIL: cross-tenant duplicate accepted'; end if;
  if (select stock_on_hand from public.shop_product_variants where id=v_variant)<>4 then raise exception 'FAIL: source stock changed during duplication'; end if;
+ if not has_function_privilege('authenticated','private.shop_order_options_valid(jsonb)','EXECUTE') then raise exception 'FAIL: catalogue editor cannot execute order options validator'; end if;
 end;
 $catalog_rules_phase2$;
 rollback;
