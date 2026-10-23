@@ -58,6 +58,12 @@ begin
   select v_shop, v_barber, day_no, time '00:00', time '23:59', false
   from generate_series(0, 6) as day_no;
 
+  -- The public shop DTO exposes shop-level hours; barber-specific hours above
+  -- remain the source used by the availability RPC.
+  insert into public.working_hours (barbershop_id, barber_id, weekday, opens_at, closes_at, is_closed)
+  select v_shop, null, day_no, time '00:00', time '23:59', false
+  from generate_series(0, 6) as day_no;
+
   select slot_start into v_slot_a
   from public.get_available_slots(v_slug, v_service, v_barber, v_day)
   order by slot_start
