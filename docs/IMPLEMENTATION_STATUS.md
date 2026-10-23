@@ -7,6 +7,7 @@
 - Email-first: fila de notificações, retries classificados, webhook Resend e preferência de canais persistida.
 - Disponibilidade semanal via RPC batch com cache/refetch no cliente.
 - O formulário público aceita telefone sem exigir email; se não houver email, o cliente é instruído a guardar o link de gestão apresentado no fim. A entrega automática continua dependente dos providers e segredos activos.
+- Em builds de produção, a marcação exige a chave pública e o token Turnstile. Se a chave não estiver configurada, a UI bloqueia a submissão e explica a indisponibilidade, em vez de deixar o cliente avançar para uma chamada que o backend irá rejeitar.
 - PWA instalável, service worker, manifest, i18n (pt-MZ, pt-PT, pt-BR, en, es) e páginas de privacidade/termos.
 - Fundamentos de CRM/privacy: consentimento, anonymização, exportação de dados e índices de retenção.
 - Fundamentos de escala: convites, portfólio, produtos, movimentos de stock, chaves API, webhooks, deliveries e push subscriptions.

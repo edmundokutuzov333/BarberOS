@@ -250,7 +250,7 @@ export default function BookingWizard() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() ?? '';
-  const turnstileRequired = import.meta.env.VITE_BOOKING_TURNSTILE_REQUIRED === 'true';
+  const turnstileRequired = import.meta.env.VITE_BOOKING_TURNSTILE_REQUIRED === 'true' || import.meta.env.PROD;
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   const rawStep = Number(searchParams.get('step') ?? '1');
