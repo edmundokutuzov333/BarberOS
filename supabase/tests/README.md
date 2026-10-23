@@ -22,6 +22,6 @@ This file is read-only and validates the current migration/schema contract.
 
 ### Fase 1 da Loja da Barbearia
 
-`shop_domain_phase1.sql` é um contrato de domínio transaccional para executar apenas num ambiente de teste/staging que já tenha aplicado as migrations da Fase 1. Verifica isolamento entre tenants, snapshots comerciais, invariantes de stock e reservas, transições de estados e privilégios de escrita. Abre uma transacção e termina com `ROLLBACK`, por isso os fixtures não devem persistir.
+`shop_domain_phase1.sql` é um contrato de domínio transaccional para executar apenas num ambiente de teste/staging que já tenha aplicado as migrations da Fase 1. Verifica o controlo server-side da feature flag, isolamento entre tenants, snapshots comerciais, invariantes de stock e reservas, transições de estados, privilégios de escrita e o contrato de índices de chaves estrangeiras. Abre uma transacção e termina com `ROLLBACK`, por isso os fixtures não devem persistir.
 
 Execução validada em `BarberOS Remediation Staging` em 23 de Outubro de 2026. Não executar este contrato na produção como substituto de um plano de aceitação.

@@ -25,11 +25,11 @@
 
 ### Fase 1: modelo de domínio
 
-- Aplicadas em staging quatro migrations forward-only: `shop_domain_model_phase1`, `shop_catalog_write_privileges_hardening`, `shop_order_transition_invariants` e `shop_foreign_key_covering_indexes`.
+- Aplicadas em staging cinco migrations forward-only: `shop_domain_model_phase1`, `shop_catalog_write_privileges_hardening`, `shop_order_transition_invariants`, `shop_foreign_key_covering_indexes` e `shop_feature_flag_server_guard`.
 - Criadas as tabelas `shop_product_categories`, `shop_products`, `shop_product_variants`, `appointment_product_orders`, `appointment_product_order_items`, `inventory_movements` e `inventory_reservations`, com índices, constraints compostas de tenant, RLS e estados de domínio.
 - O ledger actualiza stock atomicamente. A RPC `record_shop_inventory_movement` valida tenant, motivo, direcção e saldo; stock negativo, sobre-reserva e consumo de stock reservado são rejeitados. Os clientes autenticados não podem inserir/apagar directamente as entidades comerciais nem alterar/inserir directamente o saldo.
 - A máquina de estados bloqueia transições inválidas; um pedido não passa a pronto enquanto as linhas não estiverem prontas, nem a entregue enquanto todas as linhas não estiverem entregues.
-- O contrato de índices de FKs detectou inicialmente 22 referências sem cobertura; a migration correctiva cria os índices em falta e a mesma verificação executada em staging devolve agora zero referências descobertas.
+- O contrato de índices de FKs detectou inicialmente 22 referências sem cobertura; a migration correctiva cria os índices em falta e a mesma verificação executada em staging devolve agora zero referências descobertas. O trigger `shop_feature_flag_guard` também bloqueia tentativas de definir `shop_enabled` por `anon`/`authenticated`, apesar dos grants antigos da tabela.
 - `frontend/src/lib/database.types.ts` foi actualizado com os sete modelos, os três enums, a RPC e a flag. Os tipos foram gerados a partir do schema de staging e integrados no ficheiro existente sem eliminar os contratos de tabelas que só existem noutros ambientes.
 - A suite `supabase/tests/shop_domain_phase1.sql` foi executada em staging e passou. Os fixtures correm dentro de transacção e são revertidos; verificam tenant, snapshots/total, stock, reservas, transições e privilégios.
 - O código de UI, catálogo de gestão, wizard público e acoplamento transaccional de pedidos continuam fora desta fase. Não activar a loja nem aplicar estas migrations à produção até o gate de Fase 0 ser resolvido e aprovado.

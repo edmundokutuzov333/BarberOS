@@ -17,6 +17,7 @@ A Fase 1 do documento de especificação (PDF, páginas 17 a 18 e 20 a 22) pede 
 | `20261023091111` | `shop_catalog_write_privileges_hardening` | Restringe colunas de inserção e remove eliminação directa do catálogo para utilizadores autenticados. O saldo inicial só pode entrar pelo ledger. |
 | `20261023091126` | `shop_order_transition_invariants` | Impede que a encomenda avance para pronta/entregue antes de as linhas satisfazerem os respectivos estados. |
 | `20261023091911` | `shop_foreign_key_covering_indexes` | Acrescenta índices de cobertura para as 22 chaves estrangeiras introduzidas no domínio da loja; o contrato global volta a exigir zero FKs públicas sem índice. |
+| `20261023092152` | `shop_feature_flag_server_guard` | Impede que tokens `anon`/ `authenticated` activem ou desactivem a flag, mesmo com grants antigos de escrita na tabela `barbershops`; só `service_role` pode alterar a flag. |
 
 A produção (`alseiinjzwjdiwtvkdzy`) não foi alterada e não recebeu nenhuma destas migrations.
 
@@ -36,7 +37,7 @@ O schema existente já contém as tabelas genéricas `public.products` e `public
 
 ## Invariantes e segurança
 
-- `barbershops.shop_enabled` é `boolean NOT NULL DEFAULT false`. Produtos e categorias também começam inactivos. A leitura pública do catálogo exige uma barbearia pública, flag activa e registos activos. Nenhum tenant foi activado.
+- `barbershops.shop_enabled` é `boolean NOT NULL DEFAULT false`. Produtos e categorias também começam inactivos. A leitura pública do catálogo exige uma barbearia pública, flag activa e registos activos. Nenhum tenant foi activado. Um trigger de servidor rejeita INSERT com `shop_enabled=true` e qualquer UPDATE dessa coluna por papéis de browser.
 - FKs compostas impedem que categorias, produtos, variantes, marcações, pedidos, linhas, movimentos ou reservas sejam cruzados entre barbearias. A encomenda só pode referenciar uma marcação do mesmo tenant.
 - Cada linha conserva snapshots comerciais. O total tem de ser exactamente `unit_price_snapshot * qty`; preço e quantidade não podem ser negativos/zero.
 - `record_shop_inventory_movement` é `SECURITY DEFINER`, com `search_path` vazio, execução negada a `anon` e permitida apenas a utilizadores autenticados (com verificação de papel/tenant) e `service_role`. O trigger actualiza stock na mesma transacção do movimento, rejeita stock negativo e não permite consumir unidades reservadas.

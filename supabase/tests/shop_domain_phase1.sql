@@ -12,6 +12,27 @@ begin
  values('phase1-'||left(replace(gen_random_uuid()::text,'-',''),12),'Shop Phase 1 QA','active')
  returning id,shop_enabled into v_shop,v_flag;
  if v_flag is distinct from false then raise exception 'FAIL: shop_enabled default must be false'; end if;
+
+ -- Legacy table-wide grants must not let browser roles flip the rollout flag.
+ perform set_config('request.jwt.claim.role','authenticated',true);
+ v_rejected:=false;
+ begin
+  update public.barbershops set shop_enabled=true where id=v_shop;
+ exception when raise_exception then
+  if position('SHOP_FEATURE_FLAG_SERVER_MANAGED' in sqlerrm)>0 then v_rejected:=true; else raise; end if;
+ end;
+ if not v_rejected then raise exception 'FAIL: authenticated role changed shop_enabled'; end if;
+
+ perform set_config('request.jwt.claim.role','anon',true);
+ v_rejected:=false;
+ begin
+  insert into public.barbershops(slug,name,status,shop_enabled)
+  values('phase1-forbidden-'||left(replace(gen_random_uuid()::text,'-',''),12),'Forbidden QA Shop','active',true);
+ exception when raise_exception then
+  if position('SHOP_FEATURE_FLAG_SERVER_MANAGED' in sqlerrm)>0 then v_rejected:=true; else raise; end if;
+ end;
+ if not v_rejected then raise exception 'FAIL: anon role inserted shop_enabled=true'; end if;
+ perform set_config('request.jwt.claim.role','service_role',true);
  insert into public.barbershops(slug,name,status)
  values('phase1-'||left(replace(gen_random_uuid()::text,'-',''),12),'Shop Phase 1 Other Tenant','active')
  returning id into v_other_shop;
