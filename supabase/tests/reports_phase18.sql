@@ -36,15 +36,22 @@ begin
   from public.barbershops s
   where s.id=v_shop;
 
+  -- Use an appointment that can transition to completed during this
+  -- rollback-only contract. A previously completed oldest appointment would
+  -- not increment the completed/revenue aggregates a second time.
   select a.*
     into v_appt
   from public.appointments a
   where a.barbershop_id=v_shop
-  order by a.starts_at,a.id
+    and a.status in ('pending','confirmed','in_progress')
+  order by
+    case a.status when 'confirmed' then 0 when 'in_progress' then 1 else 2 end,
+    a.starts_at,
+    a.id
   limit 1;
 
   if v_appt.id is null then
-    raise exception 'FAIL: appointment fixture unavailable';
+    raise exception 'FAIL: eligible appointment fixture unavailable';
   end if;
 
   v_day := (v_appt.starts_at at time zone v_tz)::date;
