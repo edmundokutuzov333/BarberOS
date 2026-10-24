@@ -30,14 +30,23 @@ begin
     now(), '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now()
   );
 
-  select s.id,s.status,s.plan_id
-    into v_shop,v_status,v_plan
+  select s.id,s.status
+    into v_shop,v_status
   from public.barbershops s
   where s.slug='phase23-acceptance-fixture'
-    and s.plan_id is not null
+  limit 1;
+
+  select p.id into v_plan
+  from public.plans p
+  where p.is_active
+  order by p.price_cents,p.code
   limit 1;
 
   if v_shop is null or v_plan is null then raise exception 'ADMIN_FIXTURE_SHOP_OR_PLAN_MISSING'; end if;
+  -- The shared fixture intentionally does not own a plan. Assign an active
+  -- plan inside this test transaction so the admin contract does not rely on
+  -- demo-barbershop seed rows. The outer ROLLBACK restores the original value.
+  update public.barbershops set plan_id=v_plan where id=v_shop;
 
   perform set_config('request.jwt.claim.sub',v_admin::text,true);
   select public.admin_get_overview() into v_json;
