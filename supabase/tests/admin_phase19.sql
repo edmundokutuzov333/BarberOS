@@ -2,12 +2,42 @@
 begin;
 do $$
 declare
-  v_admin uuid; v_nonadmin uuid; v_shop uuid; v_plan uuid; v_status public.shop_status; v_ticket uuid; v_err text; v_plan_row record; v_json jsonb;
+  v_admin uuid;
+  v_nonadmin uuid := gen_random_uuid();
+  v_shop uuid;
+  v_plan uuid;
+  v_status public.shop_status;
+  v_ticket uuid;
+  v_err text;
+  v_plan_row record;
+  v_json jsonb;
 begin
-  select id into v_admin from public.profiles where is_platform_admin limit 1;
-  select id into v_nonadmin from public.profiles where not is_platform_admin limit 1;
-  select s.id,s.status,s.plan_id into v_shop,v_status,v_plan from public.barbershops s order by s.created_at limit 1;
-  if v_admin is null or v_shop is null or v_plan is null then raise exception 'ADMIN_FIXTURE_UNAVAILABLE'; end if;
+  -- Phase 23 acceptance setup creates this user and shop on the ephemeral
+  -- database. Promote only that disposable fixture user for this transaction.
+  select id into v_admin
+  from public.profiles
+  where id=(select u.id from auth.users u where u.email='phase23-owner@example.invalid')
+  limit 1;
+  if v_admin is null then raise exception 'ADMIN_FIXTURE_OWNER_MISSING'; end if;
+
+  update public.profiles set is_platform_admin=true where id=v_admin;
+
+  insert into auth.users (
+    id, aud, role, email, encrypted_password, email_confirmed_at,
+    raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+  ) values (
+    v_nonadmin, 'authenticated', 'authenticated', 'phase19-nonadmin@example.invalid', '',
+    now(), '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now()
+  );
+
+  select s.id,s.status,s.plan_id
+    into v_shop,v_status,v_plan
+  from public.barbershops s
+  where s.slug='phase23-acceptance-fixture'
+    and s.plan_id is not null
+  limit 1;
+
+  if v_shop is null or v_plan is null then raise exception 'ADMIN_FIXTURE_SHOP_OR_PLAN_MISSING'; end if;
 
   perform set_config('request.jwt.claim.sub',v_admin::text,true);
   select public.admin_get_overview() into v_json;
