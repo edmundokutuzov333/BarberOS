@@ -54,16 +54,19 @@ declare
   v_actual_next_attempt_at timestamptz;
   v_actual_error text;
   v_recipient text;
+  v_email text := 'phase14-claim@example.invalid';
   v_channel_guard_notification uuid;
   v_sent public.notif_status;
   v_attempts integer;
 begin
-  -- This contract runs inside a transaction and always rolls back. Verify the
-  -- platform channel guard first, then temporarily enable WhatsApp so the
-  -- atomic claim/retry assertions test the queue engine rather than the
-  -- deliberately disabled default provider channel.
+  -- This contract runs inside a transaction and always rolls back. Keep the
+  -- platform's default WhatsApp channel disabled and explicitly enable email
+  -- so queue/retry assertions are independent of provider rollout settings.
   update public.platform_settings
-  set value=jsonb_set(coalesce(value,'{}'::jsonb),'{whatsapp}','false'::jsonb,true)
+  set value=jsonb_set(
+    jsonb_set(coalesce(value,'{}'::jsonb),'{whatsapp}','false'::jsonb,true),
+    '{email}','true'::jsonb,true
+  )
   where key='notifications';
   if not found then raise exception 'FAIL: notifications platform settings fixture missing'; end if;
 
@@ -101,11 +104,6 @@ begin
   end if;
   delete from public.notifications where id=v_channel_guard_notification;
 
-  update public.platform_settings
-  set value=jsonb_set(coalesce(value,'{}'::jsonb),'{whatsapp}','true'::jsonb,true)
-  where key='notifications';
-  if not found then raise exception 'FAIL: could not enable WhatsApp inside rollback fixture'; end if;
-
   select m.user_id
   into v_actor
   from public.barbershop_members m
@@ -126,7 +124,7 @@ begin
     scheduled_for,status,attempts,next_attempt_at,payload
   )
   values(
-    v_shop,v_appt,'whatsapp','appointment_confirmed',v_recipient,
+    v_shop,v_appt,'email','appointment_confirmed',v_email,
     now()-interval '1 second','queued',0,now()-interval '1 second','{"fixture":true}'::jsonb
   )
   returning id into v_notification;
@@ -152,7 +150,7 @@ begin
   end if;
 
   select * into v_failure
-  from public.mark_notification_failure(v_notification,'provider_timeout',true,'https://wa.me/258841234567?text=retry');
+  from public.mark_notification_failure(v_notification,'provider_timeout',true,null);
 
   if v_failure.status is distinct from 'queued'
      or v_failure.attempts <> 1
@@ -176,7 +174,7 @@ begin
     raise exception 'FAIL: second claim/backoff invalid';
   end if;
 
-  v_sent := public.mark_notification_sent(v_notification,'provider-message-1','{"delivered_channel":"whatsapp"}'::jsonb);
+  v_sent := public.mark_notification_sent(v_notification,'provider-message-1','{"delivered_channel":"email"}'::jsonb);
 
   if v_sent is distinct from 'sent' then
     raise exception 'FAIL: sent transition invalid';
@@ -187,7 +185,7 @@ begin
     where id=v_notification
       and status='sent'
       and provider_message_id='provider-message-1'
-      and (payload->>'delivered_channel')='whatsapp'
+      and (payload->>'delivered_channel')='email'
   ) then
     raise exception 'FAIL: sent metadata not persisted';
   end if;
@@ -198,7 +196,7 @@ begin
     barbershop_id,channel,template_key,recipient,scheduled_for,status,attempts,last_attempt_at
   )
   values(
-    v_shop,'whatsapp','appointment_confirmed',v_recipient,now(),
+    v_shop,'email','appointment_confirmed',v_email,now(),
     'processing',1,now()-interval '20 minutes'
   )
   returning id into v_notification;
@@ -233,7 +231,7 @@ begin
     barbershop_id,channel,template_key,recipient,scheduled_for,status,attempts
   )
   values(
-    v_shop,'whatsapp','appointment_confirmed',v_recipient,now(),'failed',5
+    v_shop,'email','appointment_confirmed',v_email,now(),'failed',5
   )
   returning id into v_notification;
 
