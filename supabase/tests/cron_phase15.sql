@@ -146,11 +146,29 @@ begin
   where b.slug='phase23-acceptance-fixture'
     and b.status in ('trial','active');
 
+  if v_shop is null then
+    raise exception 'FAIL: dedicated cron fixture shop is missing';
+  end if;
+
   select s.id into v_service
   from public.services s
   where s.barbershop_id=v_shop and s.is_active
   order by s.sort_order,s.id
   limit 1;
+
+  -- Earlier contracts may legally mutate fixture-level relations and roll back
+  -- different subtransactions. Make the scheduler contract self-contained by
+  -- provisioning only the service/barber relation it needs inside this file's
+  -- outer rollback transaction.
+  if v_service is null then
+    insert into public.services(barbershop_id,name,price_cents,duration_min,is_active,sort_order)
+    values (
+      v_shop,
+      'Cron Waitlist Fixture ' || left(replace(gen_random_uuid()::text,'-',''),8),
+      12000,30,true,999
+    )
+    returning id into v_service;
+  end if;
 
   select b.id into v_barber
   from public.barbers b
@@ -159,8 +177,22 @@ begin
   order by b.sort_order,b.id
   limit 1;
 
-  if v_shop is null or v_service is null or v_barber is null then
-    raise exception 'FAIL: no real waitlist fixture relations';
+  if v_barber is null then
+    insert into public.barbers(barbershop_id,display_name,is_active,sort_order)
+    values (
+      v_shop,
+      'Cron Waitlist Fixture ' || left(replace(gen_random_uuid()::text,'-',''),8),
+      true,999
+    )
+    returning id into v_barber;
+  end if;
+
+  if not exists(
+    select 1 from public.barber_services
+    where barber_id=v_barber and service_id=v_service
+  ) then
+    insert into public.barber_services(barber_id,service_id)
+    values(v_barber,v_service);
   end if;
 
   v_token := gen_random_uuid();
