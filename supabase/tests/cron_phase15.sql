@@ -74,14 +74,14 @@ declare
 begin
   select id into v_shop
   from public.barbershops
-  where status in ('trial','active')
-  order by created_at
-  limit 1;
+  where slug='phase23-acceptance-fixture'
+    and status in ('trial','active');
 
   select a.*
   into v_appt
   from public.appointments a
-  where a.starts_at > now()
+  where a.barbershop_id=v_shop
+    and a.starts_at > now()
   order by a.created_at desc
   limit 1;
 
@@ -143,9 +143,8 @@ declare
 begin
   select b.id into v_shop
   from public.barbershops b
-  where b.status in ('trial','active')
-  order by b.created_at,b.id
-  limit 1;
+  where b.slug='phase23-acceptance-fixture'
+    and b.status in ('trial','active');
 
   select s.id into v_service
   from public.services s
@@ -215,7 +214,9 @@ begin
   select a.*
   into v_appt
   from public.appointments a
-  where a.starts_at > now()
+  join public.barbershops sh on sh.id=a.barbershop_id
+  where sh.slug='phase23-acceptance-fixture'
+    and a.starts_at > now()
   order by a.created_at desc
   limit 1;
 
