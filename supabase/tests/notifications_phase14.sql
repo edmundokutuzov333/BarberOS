@@ -52,20 +52,59 @@ declare
   v_actual_attempts integer;
   v_actual_scheduled_for timestamptz;
   v_actual_next_attempt_at timestamptz;
+  v_actual_error text;
+  v_recipient text;
+  v_channel_guard_notification uuid;
   v_sent public.notif_status;
   v_attempts integer;
 begin
+  -- This contract runs inside a transaction and always rolls back. Verify the
+  -- platform channel guard first, then temporarily enable WhatsApp so the
+  -- atomic claim/retry assertions test the queue engine rather than the
+  -- deliberately disabled default provider channel.
+  update public.platform_settings
+  set value=jsonb_set(coalesce(value,'{}'::jsonb),'{whatsapp}','false'::jsonb,true)
+  where key='notifications';
+  if not found then raise exception 'FAIL: notifications platform settings fixture missing'; end if;
+
   select id into v_shop
   from public.barbershops
   where slug='phase23-acceptance-fixture';
   if v_shop is null then raise exception 'FAIL: dedicated barbershop fixture missing'; end if;
 
-  select id into v_appt
-  from public.appointments
-  where barbershop_id=v_shop and status='confirmed'
-  order by created_at desc
+  select a.id, c.phone
+  into v_appt, v_recipient
+  from public.appointments a
+  join public.customers c
+    on c.id=a.customer_id and c.barbershop_id=a.barbershop_id
+  where a.barbershop_id=v_shop and a.status='confirmed'
+  order by a.created_at desc
   limit 1;
   if v_appt is null then raise exception 'FAIL: confirmed appointment fixture missing'; end if;
+  if v_recipient is null or btrim(v_recipient)='' then raise exception 'FAIL: confirmed appointment customer phone fixture missing'; end if;
+
+  insert into public.notifications(
+    barbershop_id,appointment_id,channel,template_key,recipient,
+    scheduled_for,status,attempts,next_attempt_at,payload
+  )
+  values(
+    v_shop,v_appt,'whatsapp','appointment_confirmed',v_recipient,
+    now()-interval '1 second','queued',0,now()-interval '1 second','{"fixture":"channel-guard"}'::jsonb
+  )
+  returning id into v_channel_guard_notification;
+
+  select n.status,n.error into v_actual_status,v_actual_error
+  from public.notifications n where n.id=v_channel_guard_notification;
+  if v_actual_status is distinct from 'skipped' or v_actual_error is distinct from 'CHANNEL_DISABLED' then
+    raise exception 'FAIL: disabled WhatsApp channel was not safely skipped (status=%, error=%)',
+      coalesce(v_actual_status::text,'<missing>'), coalesce(v_actual_error,'<missing>');
+  end if;
+  delete from public.notifications where id=v_channel_guard_notification;
+
+  update public.platform_settings
+  set value=jsonb_set(coalesce(value,'{}'::jsonb),'{whatsapp}','true'::jsonb,true)
+  where key='notifications';
+  if not found then raise exception 'FAIL: could not enable WhatsApp inside rollback fixture'; end if;
 
   select m.user_id
   into v_actor
@@ -87,7 +126,7 @@ begin
     scheduled_for,status,attempts,next_attempt_at,payload
   )
   values(
-    v_shop,v_appt,'whatsapp','appointment_confirmed','+258841234567',
+    v_shop,v_appt,'whatsapp','appointment_confirmed',v_recipient,
     now()-interval '1 second','queued',0,now()-interval '1 second','{"fixture":true}'::jsonb
   )
   returning id into v_notification;
@@ -159,7 +198,7 @@ begin
     barbershop_id,channel,template_key,recipient,scheduled_for,status,attempts,last_attempt_at
   )
   values(
-    v_shop,'whatsapp','appointment_confirmed','+258841234567',now(),
+    v_shop,'whatsapp','appointment_confirmed',v_recipient,now(),
     'processing',1,now()-interval '20 minutes'
   )
   returning id into v_notification;
@@ -194,7 +233,7 @@ begin
     barbershop_id,channel,template_key,recipient,scheduled_for,status,attempts
   )
   values(
-    v_shop,'whatsapp','appointment_confirmed','+258841234567',now(),'failed',5
+    v_shop,'whatsapp','appointment_confirmed',v_recipient,now(),'failed',5
   )
   returning id into v_notification;
 
