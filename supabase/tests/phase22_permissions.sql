@@ -68,7 +68,25 @@ begin
   end if;
 
   select p.id into v_admin from public.profiles p where p.is_platform_admin limit 1;
-  if v_admin is null then raise exception 'PHASE22_PLATFORM_ADMIN_UNAVAILABLE'; end if;
+  if v_admin is null then
+    -- The migration-only acceptance database has no seeded platform admin.
+    -- Create and promote a disposable test user inside this transaction.
+    insert into auth.users (
+      id, aud, role, email, encrypted_password, email_confirmed_at,
+      raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+    ) values (
+      gen_random_uuid(), 'authenticated', 'authenticated',
+      'phase22-admin-' || left(replace(gen_random_uuid()::text,'-',''),12) || '@example.invalid',
+      '', now(), '{"provider":"email","providers":["email"]}'::jsonb,
+      '{}'::jsonb, now(), now()
+    )
+    returning id into v_admin;
+
+    update public.profiles set is_platform_admin=true where id=v_admin;
+    if not exists (select 1 from public.profiles p where p.id=v_admin and p.is_platform_admin) then
+      raise exception 'PHASE22_PLATFORM_ADMIN_PROFILE_UNAVAILABLE';
+    end if;
+  end if;
 
   select s.slug into v_slug from public.barbershops s where s.id=v_shop;
 
