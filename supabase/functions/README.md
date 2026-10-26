@@ -35,7 +35,7 @@ O Google Cloud deve ter Gmail API activada e o URI de callback autorizado exacta
 
 ### Google Calendar do cliente
 
-`google-calendar` insere o evento directamente no calendário principal da conta Google do cliente, após autorização OAuth. Usa o âmbito mínimo `https://www.googleapis.com/auth/calendar.events.owned`, valida o token de gestão e o estado activo da marcação, aplica limites de pedidos, protege o estado OAuth com AES-GCM e usa IDs determinísticos para não duplicar eventos. Os tokens de acesso não são persistidos; a autorização do Google é necessária e pode ser recusada sem afectar a marcação.
+`google-calendar` insere o evento directamente no calendário principal da conta Google do cliente, após autorização OAuth. Usa o âmbito `https://www.googleapis.com/auth/calendar.events.owned`, que permite tecnicamente ver, criar, alterar e apagar eventos nos calendários que o utilizador possui. O código usa-o apenas para criar ou actualizar o evento determinístico da marcação e não consulta outros eventos. Valida o token de gestão e o estado activo da marcação, aplica limites de pedidos, protege o estado OAuth com AES-GCM e não persiste tokens de acesso. A autorização do Google é necessária e pode ser recusada sem afectar a marcação.
 
 Configurar no Supabase Secrets, apenas no servidor: `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET` e `GOOGLE_CALENDAR_STATE_SECRET` (mínimo 32 caracteres). `GOOGLE_CALENDAR_APP_URL` é opcional e por defeito usa a URL de produção BarberOS. Nunca usar o prefixo `VITE_` nestes segredos.
 
