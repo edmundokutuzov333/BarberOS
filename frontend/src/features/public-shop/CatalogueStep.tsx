@@ -7,6 +7,18 @@ import type { PublicShopCatalog, PublicShopProduct, PublicShopVariant } from '@/
 
 export type ShopCart = Record<string, { qty: number; options: string[]; fulfilmentMode: 'consume_here' | 'takeaway' }>;
 
+
+function ProductImage({ src, alt }: { src: string | null; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  const frame = "grid h-20 w-20 shrink-0 place-items-center rounded-xl bg-white/5 text-ink-mid sm:h-24 sm:w-24";
+  if (!src || failed) {
+    return <div role="img" aria-label={`Fotografia indisponível: ${alt}`} className={frame}><Package size={24} /></div>;
+  }
+  return <img src={src} alt={alt} loading="lazy" decoding="async"
+    onError={() => setFailed(true)}
+    className="h-20 w-20 shrink-0 rounded-xl object-cover bg-white/5 sm:h-24 sm:w-24" />;
+}
+
 type Props = {
   catalog: PublicShopCatalog;
   cart: ShopCart;
@@ -95,11 +107,7 @@ export function ShopCatalogueStep({
             {filteredProducts.map((product) => (
               <article key={product.id} className="min-w-0 rounded-2xl border border-white/10 bg-white/[.025] p-3 sm:p-4" data-testid={'public-shop-product-' + product.id}>
                 <div className="flex gap-3">
-                  {product.image_url ? (
-                    <img src={product.image_url} alt={product.image_alt || product.name} loading="lazy" className="h-20 w-20 shrink-0 rounded-xl object-cover bg-white/5 sm:h-24 sm:w-24" />
-                  ) : (
-                    <div aria-hidden="true" className="grid h-20 w-20 shrink-0 place-items-center rounded-xl bg-white/5 text-ink-mid sm:h-24 sm:w-24"><Package size={24} /></div>
-                  )}
+                  <ProductImage src={product.image_url} alt={product.image_alt || product.name} />
                   <div className="min-w-0 flex-1">
                     {product.brand && <p className="t-label text-ink-mid">{product.brand}</p>}
                     <h3 className="font-medium text-ink-hi break-words">{product.name}</h3>
