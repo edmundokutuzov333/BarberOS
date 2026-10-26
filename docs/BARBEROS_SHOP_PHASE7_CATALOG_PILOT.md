@@ -24,13 +24,15 @@ A Fase 6 também foi corrigida: reconhecer alertas usa a RPC `mark_shop_notifica
 6. Formar recepção e barbeiro para receber, aceitar, preparar, pronto, parcial, entregue, cancelado, falta de stock, no-show e incidentes. Não enviar PII para analytics.
 7. Só considerar GO após aceite operacional escrito, ausência de falhas críticas, CI verde, schema/migrations reconciliados, deployment correcto, anti-bot confirmado e rollback testado.
 
-## Evidência dos ambientes em 26 de Outubro de 2026
+## Evidência dos ambientes, actualizada em 26 de Outubro de 2026
 
-- **Produção** `alseiinjzwjdiwtvkdzy`: não contém `shop_products`, `appointment_product_orders`, `shop_notification_events` nem a coluna `barbershops.shop_enabled`. Não é possível validar nem activar a Loja.
-- **Staging** `asikuyxaapcmayptimxi`: contém o domínio das Fases 1 a 5 e a coluna `shop_enabled`; zero barbearias têm a flag ligada. A tabela de notificações da Fase 6 ainda não estava aplicada na consulta.
-- O histórico remoto de migrations de staging apresenta versões cujo timestamp não coincide com os ficheiros versionados actuais. As migrations remotas das Fases 6/7 ficaram por aplicar até à reconciliação individual. Não foi executado `db push`, reparação em lote, nem alteração de produção.
-- Nenhuma marca, preço, SKU, fotografia ou stock foi inventado ou inserido como catálogo real.
-- Não foi seleccionada uma barbearia real nem foi possível formar pessoal remotamente. São dependências operacionais que não podem ser dadas como concluídas por uma migration.
+- **Staging** `asikuyxaapcmayptimxi`: as migrations da Fase 6 e da Fase 7 foram aplicadas pela ferramenta Supabase. O histórico remoto regista `shop_communications_reporting_phase6` como versão `20261026085339` e `shop_catalog_reference_pilot_phase7` como versão `20261026085350`. A tabela de eventos, campos de verificação e RPCs estão presentes. O domínio das Fases 1 a 5 já existia.
+- A barbearia existente no staging mantém `shop_enabled=false`. Depois dos testes, o staging contém zero produtos e zero pedidos. Os testes de domínio/catálogo/pedidos usaram fixtures isoladas dentro de transacções e fizeram rollback.
+- Foram executados no staging os contratos SQL `shop_domain_phase1.sql`, `shop_catalog_phase2.sql`, `shop_catalog_rules_phase2.sql`, `shop_public_catalog_phase3.sql`, `shop_order_atomic_phase4.sql`, `shop_order_operations_phase5.sql`, `shop_catalog_phase7.sql` e o contrato de integração da Fase 6. Nenhum erro SQL foi devolvido; as condições de aprovação são verificadas por excepções no interior dos testes.
+- A reconciliação global do histórico **não está concluída**: versões remotas antigas não coincidem em vários casos com os prefixos de tempo dos ficheiros no repositório; as duas migrations aplicadas nesta execução receberam versões remotas geradas pela ferramenta que não coincidem com os prefixos `20261026150000` e `20261026160000`. Não executar `db push` nem tentar reparar o histórico em lote até existir um mapa aprovado de migrações/esquema.
+- **Produção** `alseiinjzwjdiwtvkdzy`: permanece inalterada e não contém `shop_products`, `appointment_product_orders`, `shop_notification_events` nem `barbershops.shop_enabled`. A Loja continua desligada e não está disponível para clientes.
+- Não foram persistidos preços, SKUs, fotografias, stock, pedidos ou pagamentos fictícios. Os registos de QA foram revertidos; os testes de stock e entrega usam fixtures que não contam como vendas reais.
+- A aceitação humana ainda não ocorreu: nenhum staff foi treinado e não houve um dia operacional presencial. As barbearias são tenants fictícios de teste, mas isso não permite afirmar que imagens, SKUs, preços ou direitos físicos de produtos foram verificados no mundo real. O piloto permanece **NO-GO** até a equipa concluir esse ensaio e registar aceitação.
 
 ## Critério de saída
 
