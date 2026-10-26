@@ -107,9 +107,9 @@ def wait_until_blocked(conn, app_name, timeout=10):
                 """select exists(
                      select 1 from pg_stat_activity
                      where application_name=%s and state='active' and wait_event_type='Lock'
-                       and query ilike '%book_appointment%'
+                       and query ilike %s
                    )""",
-                (app_name,),
+                (app_name, "%book_appointment%"),
             )
             if cur.fetchone()[0]:
                 return True
