@@ -21,6 +21,8 @@ A Fase 6 também foi corrigida: reconhecer alertas usa a RPC `mark_shop_notifica
 3. Criar o produto e a variante no painel Loja; usar movimentos de stock para registar o saldo inicial. Não presumir disponibilidade do catálogo de referência.
 4. Um responsável confirma a verificação física no painel do piloto. Uma descrição genérica é permitida quando o SKU não está confirmado; não atribuir a imagem de outra embalagem.
 5. Executar em staging o fluxo com conta autorizada: marcação sem produtos, com um produto e com vários, indisponibilidade, erro/retry e fila de preparação. Reconciliar pedido, quantidade entregue, movimento de stock e pagamento registado.
+
+A simulação transaccional automatizada `supabase/tests/shop_phase7_pilot_day.sql` cobre, numa única transacção revertida, verificação de catálogo, atribuição, aceitação, preparação, estado pronto, entrega idempotente, consumo de reserva, movimento de stock, alertas e relatório diário. Confirma também que a entrega não é classificada como receita paga. Esta prova técnica não substitui a execução com operadores humanos.
 6. Formar recepção e barbeiro para receber, aceitar, preparar, pronto, parcial, entregue, cancelado, falta de stock, no-show e incidentes. Não enviar PII para analytics.
 7. Só considerar GO após aceite operacional escrito, ausência de falhas críticas, CI verde, schema/migrations reconciliados, deployment correcto, anti-bot confirmado e rollback testado.
 
