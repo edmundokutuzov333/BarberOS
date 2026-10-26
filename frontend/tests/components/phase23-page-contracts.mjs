@@ -331,6 +331,28 @@ tests.push(
   }],
 );
 
+
+tests.push(
+  ['Phase 8 incident support is tenant-gated, audited and records only staff-confirmed revenue', () => {
+    const migration = read('../supabase/migrations/20261026210000_shop_operation_incidents_phase8.sql');
+    const page = read('src/pages/app/LojaRelatorios.tsx');
+    const env = read('../frontend/.env.example');
+    assert.match(migration, /SHOP_INCIDENT_FORBIDDEN/);
+    assert.match(migration, /SHOP_INCIDENT_ORDER_TENANT_MISMATCH/);
+    assert.match(migration, /SHOP_INCIDENT_RESOLUTION_NOTE_REQUIRED/);
+    assert.match(migration, /shop_operation_incident_events/);
+    assert.ok(migration.includes('revoke all on public.shop_operation_incidents,public.shop_operation_incident_events from public,anon,authenticated'));
+    assert.match(page, /VITE_SHOP_OPERATIONS_INCIDENTS_ENABLED/);
+    assert.match(page, /list_shop_operation_incidents/);
+    assert.match(page, /create_shop_operation_incident/);
+    assert.match(page, /update_shop_operation_incident/);
+    assert.match(page, /payment_records_count/);
+    assert.match(page, /Entrega não significa pagamento/);
+    assert.match(page, /Não inclua nome, telefone, tokens de gestão/);
+    assert.match(env, /VITE_SHOP_OPERATIONS_INCIDENTS_ENABLED=false/);
+  }],
+);
+
 let failed = 0;
 for (const [name, run] of tests) {
   try {

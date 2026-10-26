@@ -1697,6 +1697,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }      },
+      shop_operation_incidents: {
+        Row: {
+          assigned_to: string | null; barbershop_id: string; created_at: string; details: string; id: string;
+          incident_type: string; opened_by: string | null; order_id: string | null; resolution_note: string | null;
+          resolved_at: string | null; resolved_by: string | null; severity: string; status: string; summary: string; updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null; barbershop_id: string; created_at?: string; details: string; id?: string;
+          incident_type: string; opened_by?: string | null; order_id?: string | null; resolution_note?: string | null;
+          resolved_at?: string | null; resolved_by?: string | null; severity: string; status?: string; summary: string; updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null; barbershop_id?: string; created_at?: string; details?: string; id?: string;
+          incident_type?: string; opened_by?: string | null; order_id?: string | null; resolution_note?: string | null;
+          resolved_at?: string | null; resolved_by?: string | null; severity?: string; status?: string; summary?: string; updated_at?: string
+        }
+        Relationships: [
+          { foreignKeyName: "shop_operation_incidents_barbershop_id_fkey"; columns: ["barbershop_id"]; isOneToOne: false; referencedRelation: "barbershops"; referencedColumns: ["id"] },
+          { foreignKeyName: "shop_operation_incidents_order_tenant_fkey"; columns: ["order_id", "barbershop_id"]; isOneToOne: false; referencedRelation: "appointment_product_orders"; referencedColumns: ["id", "barbershop_id"] }
+        ]
+      },
+      shop_operation_incident_events: {
+        Row: {
+          actor_id: string | null; barbershop_id: string; created_at: string; event_type: string; id: string;
+          incident_id: string; next_state: Json; previous_state: Json | null
+        }
+        Insert: {
+          actor_id?: string | null; barbershop_id: string; created_at?: string; event_type: string; id?: string;
+          incident_id: string; next_state?: Json; previous_state?: Json | null
+        }
+        Update: {
+          actor_id?: string | null; barbershop_id?: string; created_at?: string; event_type?: string; id?: string;
+          incident_id?: string; next_state?: Json; previous_state?: Json | null
+        }
+        Relationships: [
+          { foreignKeyName: "shop_operation_incident_events_barbershop_id_fkey"; columns: ["barbershop_id"]; isOneToOne: false; referencedRelation: "barbershops"; referencedColumns: ["id"] },
+          { foreignKeyName: "shop_operation_incident_events_tenant_fkey"; columns: ["incident_id", "barbershop_id"]; isOneToOne: false; referencedRelation: "shop_operation_incidents"; referencedColumns: ["id", "barbershop_id"] }
+        ]
       }
     }
     Views: {
@@ -1713,6 +1752,18 @@ export type Database = {
       }
       update_shop_order_operation: {
         Args: { p_barbershop_id: string; p_order_id: string; p_action: string; p_note?: string | null; p_assigned_to?: string | null }
+        Returns: Json
+      }
+      create_shop_operation_incident: {
+        Args: { p_barbershop_id: string; p_order_id: string | null; p_incident_type: string; p_severity: string; p_summary: string; p_details: string }
+        Returns: Json
+      }
+      update_shop_operation_incident: {
+        Args: { p_barbershop_id: string; p_incident_id: string; p_status: string; p_assigned_to?: string | null; p_resolution_note?: string | null }
+        Returns: Json
+      }
+      list_shop_operation_incidents: {
+        Args: { p_barbershop_id: string; p_status?: string | null; p_limit?: number }
         Returns: Json
       }
       get_shop_order_queue: {
