@@ -159,3 +159,8 @@ A Fase 8 acrescenta no repositório uma migration forward-only para o registo de
 A migration `20261026210000_shop_operation_incidents_phase8.sql` foi ensaiada em staging dentro da mesma transacção do teste de ciclo de vida; a chamada concluiu sem erro e foi seguida de `ROLLBACK`. Uma consulta posterior confirmou que as tabelas `shop_operation_incidents` e `shop_operation_incident_events` não ficaram instaladas e que não foram deixados produtos, pedidos, pagamentos, movimentos, alertas ou tenants activos. **A migration ainda não foi aplicada de forma persistente em staging nem em produção.**
 
 O lançamento continua **NO-GO** enquanto a correspondência completa entre histórico de migrations e esquema não estiver aprovada, os gates de release não passarem num ambiente dedicado e a aceitação humana do piloto não estiver documentada. Não foram alteradas flags de tenant nem dados de produção.
+
+
+### Índices das chaves estrangeiras de incidentes
+
+A validação estrutural de CI encontrou três percursos de chave estrangeira sem índice com as mesmas colunas iniciais na ordem do FK: pedido/tenant do incidente, incidente/tenant do evento e autor do evento. Foi criada a migration adicional `20261026220000_shop_incident_foreign_key_indexes_phase8.sql`. A migration e o teste de ciclo de vida foram reexecutados juntos numa transacção de staging com `ROLLBACK`; não se aplicou nenhuma alteração persistente aos ambientes remotos.

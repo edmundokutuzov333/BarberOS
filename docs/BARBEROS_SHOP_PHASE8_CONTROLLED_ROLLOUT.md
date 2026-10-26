@@ -67,3 +67,8 @@ Não incluir dados pessoais desnecessários em resumo, detalhes, logs ou analyti
 ## Estado de segurança do rollout
 
 Na entrega desta fase não foram activadas flags por tenant. A migração está versionada e foi executada apenas numa transacção de staging com rollback para testar o contrato. A base persistente continua sem as tabelas de incidente desta fase; a aplicação pública não foi alterada para servir a Loja a clientes.
+
+
+## Índices e integridade referencial
+
+A migration adicional `20261026220000_shop_incident_foreign_key_indexes_phase8.sql` cobre explicitamente as colunas iniciais das chaves estrangeiras do pedido, da linha de auditoria e do actor. A gate de CI que verifica índices para todas as FKs públicas continua a ser obrigatória antes de qualquer rollout.
