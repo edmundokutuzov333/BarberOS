@@ -20,7 +20,7 @@ A CI mais recente, no run [40284632753](https://github.com/edmundokutuzov333/Bar
 - `20261026130000_shop_order_item_restore_phase5.sql`
 - `20261026130000_shop_order_operations_integrity_phase5.sql`
 
-O Supabase recusou gravar a segunda entrada em `schema_migrations` com uma violação da chave única. A migration de integridade foi renomeada para `20261026130100_shop_order_operations_integrity_phase5.sql`, ficando ordenada depois da primeira e antes da migration `20261026140000_shop_order_item_restore_active_phase5.sql`. A execução de CI para a nova revisão ainda tem de confirmar esta correcção.
+O Supabase recusou gravar a segunda entrada em `schema_migrations` com uma violação da chave única. A migration de integridade foi renomeada para `20261026130100_shop_order_operations_integrity_phase5.sql`, ficando ordenada depois da primeira e antes da migration `20261026140000_shop_order_item_restore_active_phase5.sql`. A sequência completa de migrations desde uma base vazia passou no [run 40285662879](https://github.com/edmundokutuzov333/BarberOS/actions/runs/40285662879). A suite de aceitação SQL e Browser E2E passou no [run 40285662899](https://github.com/edmundokutuzov333/BarberOS/actions/runs/40285662899), o gate de performance no [run 40285662878](https://github.com/edmundokutuzov333/BarberOS/actions/runs/40285662878), o contrato de deployment no [run 40285662863](https://github.com/edmundokutuzov333/BarberOS/actions/runs/40285662863) e o frontend CI no [run 40285662829](https://github.com/edmundokutuzov333/BarberOS/actions/runs/40285662829).
 
 ## Estado dos ambientes
 
@@ -39,4 +39,4 @@ O schema de staging contém os objectos da Fase 5, mas o histórico remoto consu
 
 Antes do lançamento é necessário: mapear individualmente as versões remotas de produção e staging para o SQL versionado; comparar tabelas, colunas, constraints, índices, triggers, funções, grants e RLS; preservar os objectos exclusivos da produção; simular a sequência forward-only num clone isolado; confirmar os secrets de runtime e a configuração Turnstile por um workflow protegido; e executar a aceitação HTTP/E2E com credenciais dedicadas sem usar dados de produção. A Vercel ter publicado um artefacto não certifica estes percursos.
 
-**Decisão:** a correcção de ordem das migrations e o reforço dos contratos ficam versionados na branch desta revisão. A Fase 5 só poderá ser declarada concluída depois de a CI na nova revisão passar e dos gates de reconciliação e aceitação de produção serem comprovados.
+**Decisão:** a correcção de ordem das migrations e o reforço dos contratos ficam versionados na branch desta revisão. Os gates CI deste PR passaram. A Fase 5 só poderá ser activada em produção depois da reconciliação explícita dos históricos/schema, da verificação de runtime/Turnstile e da aceitação HTTP/E2E de produção.
