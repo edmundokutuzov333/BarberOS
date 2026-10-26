@@ -48,6 +48,28 @@ const tests = [
     assert.match(edge, /consume\(/);
     assert.match(edge, /idempotency_key/);
   }],
+  ['booking runtime tolerates missing optional config without weakening CORS or rate limiting', () => {
+    const guard = read('../supabase/functions/_shared/guard.ts');
+    const edge = read('../supabase/functions/booking-create/index.ts');
+    const tokenGateway = read('../supabase/functions/token-gateway/index.ts');
+    assert.match(guard, /https:\/\/barber-os-orpin\.vercel\.app/);
+    assert.match(guard, /allowedOrigins\.has\(origin\)/);
+    assert.doesNotMatch(guard, /Access-Control-Allow-Origin[^\n]*\*/);
+    assert.match(guard, /export function rateLimitSalt\(\)/);
+    assert.match(guard, /Deno\.env\.get\("SUPABASE_SERVICE_ROLE_KEY"\)/);
+    assert.match(edge, /const salt = rateLimitSalt\(\)/);
+    assert.match(tokenGateway, /const salt = rateLimitSalt\(\)/);
+    assert.match(edge, /console\.error\("booking-create failed", \{ stage, code \}\)/);
+  }],
+  ['booking UI maps server error codes before generic SDK messages', () => {
+    const api = read('src/features/booking/api.ts');
+    const utils = read('src/lib/utils.ts');
+    assert.match(api, /BOOKING_NETWORK_UNAVAILABLE/);
+    assert.match(api, /typeof body\.message === "string"/);
+    assert.match(utils, /if \(code && ERRORS\[code\]\) return ERRORS\[code\]/);
+    assert.match(utils, /BOOKING_CREATE_FAILED:/);
+    assert.match(utils, /RATE_LIMIT_UNAVAILABLE:/);
+  }],
   ['every new booking uses the fingerprinted atomic SQL path, with legacy no-product replay narrowly bounded', () => {
     const edge = read('../supabase/functions/booking-create/index.ts');
     const calls = [...edge.matchAll(/admin\.rpc\("(book_appointment[^\"]*)"/g)].map((match) => match[1]);
