@@ -182,6 +182,18 @@ begin
   if (select status from public.inventory_reservations where order_id=v_order_c and variant_id=v_variant)<>'released' then
     raise exception 'FAIL: unavailable item did not release reservation';
   end if;
+  perform public.update_shop_order_operation(v_shop,v_order_c,'accept',null,null);
+  v_result := public.restore_shop_order_item_operation(v_shop,v_order_c,v_item,'Disponibilidade confirmada pela equipa');
+  if v_result->>'status'<>'accepted' or (select status from public.appointment_product_order_items where id=v_item)<>'accepted' then
+    raise exception 'FAIL: unavailable item could not be restored after confirmation';
+  end if;
+  if (select sum(qty) from public.inventory_reservations where order_id=v_order_c and variant_id=v_variant and status='reserved')<>1 then
+    raise exception 'FAIL: restoring item did not recreate its stock reservation';
+  end if;
+  perform public.update_shop_order_operation(v_shop,v_order_c,'cancel','Cliente cancelou após confirmação',null);
+  if (select status from public.inventory_reservations where order_id=v_order_c and variant_id=v_variant and status='reserved') is not null then
+    raise exception 'FAIL: cancellation after item restoration did not release its reservation';
+  end if;
 
   -- Cancelled and failed parent orders both release their reservations.
   v_slot := v_slot+interval '1 hour';
