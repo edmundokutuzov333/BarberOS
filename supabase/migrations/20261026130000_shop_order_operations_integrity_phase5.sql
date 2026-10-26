@@ -36,7 +36,7 @@ begin
   end if;
   return new;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.update_shop_order_item_operation(p_barbershop_id uuid, p_order_id uuid, p_item_id uuid, p_action text, p_delivered_qty integer DEFAULT NULL::integer, p_note text DEFAULT NULL::text, p_operation_key uuid DEFAULT NULL::uuid)
@@ -206,7 +206,7 @@ begin
   end if;
   return jsonb_build_object('ok',true,'order_id',p_order_id,'item_id',p_item_id,'status',v_target::text);
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.restore_shop_order_item_operation(p_barbershop_id uuid, p_order_id uuid, p_item_id uuid, p_note text DEFAULT NULL::text)
@@ -262,7 +262,7 @@ begin
   );
   return jsonb_build_object('ok',true,'order_id',p_order_id,'item_id',p_item_id,'status','accepted','idempotent',false);
 end;
-$function$
+$function$;
 
 
 revoke all on function public.update_shop_order_item_operation(uuid,uuid,uuid,text,integer,text,uuid) from public, anon;
