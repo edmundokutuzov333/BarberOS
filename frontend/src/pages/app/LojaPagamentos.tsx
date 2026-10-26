@@ -66,7 +66,7 @@ export default function LojaPagamentos(){
       <label className="flex flex-col gap-1 text-sm text-ink-mid">Referência<input className="field" maxLength={160} value={references[order.id]??''} onChange={e=>setReferences(s=>({...s,[order.id]:e.target.value}))} placeholder="N.º recibo/transacção"/></label>
       <label className="flex flex-col gap-1 text-sm text-ink-mid">Evidência / nota<input className="field" minLength={12} maxLength={500} value={notes[order.id]??''} onChange={e=>setNotes(s=>({...s,[order.id]:e.target.value}))} placeholder="Descreva a confirmação" required/></label>
      </div>
-     <div className="flex justify-end"><Button submit loading={record.isPending} disabled={record.isPending}><Banknote size={16}/> Registar recebimento</Button></div>
+     <div className="flex justify-end"><Button type="submit" loading={record.isPending} disabled={record.isPending}><Banknote size={16}/> Registar recebimento</Button></div>
     </form>:<p className="mt-4 text-sm text-ink-mid">O valor entregue está totalmente liquidado segundo os registos da barbearia.</p>}
    </Panel>)}</div>}
  </Page>;
