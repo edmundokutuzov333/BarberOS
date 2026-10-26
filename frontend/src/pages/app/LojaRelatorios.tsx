@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Page } from '@/components/layout/Page';
 import { Panel, EmptyState, ErrorState, Skeleton } from '@/components/ui/States';
 import { Button } from '@/components/ui/Button';
+import { Field } from '@/components/ui/Field';
 import { supabase } from '@/lib/supabase';
 import { useShop } from '@/lib/shop';
 import { formatMT, humanError } from '@/lib/utils';
