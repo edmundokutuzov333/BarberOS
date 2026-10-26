@@ -95,8 +95,11 @@ payments-webhook
 payments-reconcile
 booking-create
 gmail-integration
+google-calendar
 
 Gmail requires the server-side secrets in `docs/GMAIL_INTEGRATION.md`, the tenant-scoped storage migration, OAuth consent configuration, and a release through the Supabase workflow. The Edge Function is not active until that release is complete.
+
+Google Calendar requires the OAuth client and state-encryption secrets described in `docs/GOOGLE_CALENDAR_INTEGRATION.md`, the Calendar API enabled in Google Cloud, and the exact Supabase Edge Function redirect URI registered. The function creates an event only after the customer authorises OAuth. Do not announce automatic calendar insertion as production-ready until a real Google QA account completes the end-to-end test.
 
 All Edge Function sources are versioned under supabase/functions/. Future function changes must enter through Git and the Supabase release workflow.
 
