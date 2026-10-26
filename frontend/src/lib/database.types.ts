@@ -1697,7 +1697,7 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }      },
+      },
       shop_operation_incidents: {
         Row: {
           assigned_to: string | null; barbershop_id: string; created_at: string; details: string; id: string;
