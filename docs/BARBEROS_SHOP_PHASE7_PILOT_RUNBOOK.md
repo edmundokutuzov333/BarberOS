@@ -58,6 +58,15 @@ Executar em staging, sobre a base da aplicação e com feature flag pública des
 
 **Registo obrigatório:** barbearia/tenant de QA, data/hora local, formandos, formador, evidência das tarefas, incidentes encontrados, acções correctivas e aceite do responsável. Não preencher assinaturas nem nomes automaticamente.
 
+## Fase 8: suporte, incidentes e reversão
+
+1. O módulo de incidentes usa `VITE_SHOP_OPERATIONS_INCIDENTS_ENABLED`, desligado por defeito. Activar o módulo de suporte só depois de a migration da Fase 8 estar instalada e validada nesse ambiente. A flag pública da Loja e `shop_enabled` continuam independentes e desligadas até aprovação.
+2. Registar reclamações, falhas de stock, pedidos, pagamentos, notificações e privacidade sem incluir nomes, telefones, links de gestão, tokens ou credenciais. Associar o ID do pedido apenas quando necessário.
+3. Classificar gravidade, atribuir um responsável, registar causa e passos de reprodução e documentar a resolução. Uma ocorrência crítica suspende a expansão até a causa e a correcção serem verificadas.
+4. No fecho diário, reconciliar pedidos aceites, quantidades efectivamente entregues, movimentos e reservas de stock e pagamentos confirmados pela equipa. A referência digitada por um operador não equivale a reconciliação automática do provider.
+5. **Reversão:** desligar primeiro a flag pública global no build e a flag por tenant por mecanismo administrativo autorizado. Não apagar incidentes, pedidos, marcações ou ledger. Manter o acesso ao suporte histórico, se autorizado, e registar a causa da reversão. A reversão de UI não reverte movimentos de stock nem pagamentos.
+6. Fazer avaliação pós-lançamento por barbearia com adopção voluntária, cumprimento, indisponibilidade, tempo até pronto, receita paga confirmada, reclamações, incidentes críticos, retrabalho e divergências de stock. Guardar decisão de continuar, pausar ou reverter e o responsável.
+
 ## Go / No-Go
 
 GO técnico apenas com migrations alinhadas ao esquema, contrato SQL verde, build/CI verde, rate limit, allowlist de origens e runtime comprovados, rollback testado e nenhuma regressão crítica.

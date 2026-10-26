@@ -150,3 +150,12 @@ A execução SQL automatizada não constitui formação nem prova de um dia de o
 ### Defeito identificado pela simulação E2E integrada
 
 A primeira execução da simulação integrada no staging revelou que as transições de entrega parcial não geravam alerta interno: o contrato de notificações contemplava pedido recebido, aceite, pronto e entregue, mas não `partially_delivered`. Foi acrescentada em `supabase/migrations/20261026200000_shop_partial_delivery_notification.sql` uma correcção forward-only para aceitar `order_partially_delivered` e produzir um alerta com a quantidade restante em destaque. O teste E2E exige explicitamente esse evento. A migration permanece apenas no repositório até à validação no CI e à reconciliação segura do histórico do ambiente; não foi aplicada a staging nem produção durante esta alteração.
+
+
+## Fase 8: suporte e rollout controlado, 26 de Outubro de 2026
+
+A Fase 8 acrescenta no repositório uma migration forward-only para o registo de incidentes/reclamações, atribuição, resolução com nota obrigatória e histórico de auditoria, juntamente com contratos SQL transaccionais e um painel protegido por `VITE_SHOP_OPERATIONS_INCIDENTS_ENABLED=false`. O relatório de comunicações passa a apresentar a receita registada a partir de pagamentos confirmados pela equipa e o número de registos, sempre com a ressalva de que não existe reconciliação automática dos providers.
+
+A migration `20261026210000_shop_operation_incidents_phase8.sql` foi ensaiada em staging dentro da mesma transacção do teste de ciclo de vida; a chamada concluiu sem erro e foi seguida de `ROLLBACK`. Uma consulta posterior confirmou que as tabelas `shop_operation_incidents` e `shop_operation_incident_events` não ficaram instaladas e que não foram deixados produtos, pedidos, pagamentos, movimentos, alertas ou tenants activos. **A migration ainda não foi aplicada de forma persistente em staging nem em produção.**
+
+O lançamento continua **NO-GO** enquanto a correspondência completa entre histórico de migrations e esquema não estiver aprovada, os gates de release não passarem num ambiente dedicado e a aceitação humana do piloto não estiver documentada. Não foram alteradas flags de tenant nem dados de produção.
