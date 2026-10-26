@@ -48,6 +48,11 @@ const ERRORS: Record<string, string> = {
   HAIRCUT_NOT_FOUND: 'Esse corte já não está disponível.',
   INVALID_DEPOSIT_CONFIGURATION: 'O sinal configurado para este serviço é inválido.',
   BOOKING_EMPTY_RESPONSE: 'A marcação não foi criada. Tenta de novo.',
+  BOOKING_CREATE_FAILED: 'O serviço de marcações encontrou um erro temporário. Tenta novamente dentro de instantes.',
+  BOOKING_REQUEST_INVALID: 'Os dados da marcação já não são válidos. Revê a data, a hora e o telefone e tenta novamente.',
+  BOOKING_NETWORK_UNAVAILABLE: 'Não foi possível contactar o serviço de marcações. Verifica a ligação e tenta de novo.',
+  RATE_LIMIT_UNAVAILABLE: 'O serviço de marcações está temporariamente indisponível. Tenta novamente dentro de instantes.',
+  SUPABASE_ENV_UNAVAILABLE: 'O serviço de marcações está temporariamente indisponível. Tenta novamente dentro de instantes.',
   RATE_LIMITED: 'Foram feitas demasiadas tentativas. Aguarda alguns minutos e tenta de novo.',
   IDEMPOTENCY_IN_PROGRESS: 'Esta tentativa ainda está a ser processada. Aguarda um momento antes de tentar de novo.',
   IDEMPOTENCY_STORE_UNAVAILABLE: 'Não foi possível confirmar o estado da marcação. Não repitas a tentativa com uma chave nova; contacta o suporte se o erro persistir.',
@@ -141,6 +146,11 @@ const ERRORS: Record<string, string> = {
 };
 
 export function humanError(e: unknown): string {
+  const code = e && typeof e === 'object' && 'code' in e
+    ? String((e as { code?: unknown }).code ?? '')
+    : '';
+  if (code && ERRORS[code]) return ERRORS[code];
+
   const msg = typeof e === 'string' ? e : ((e as { message?: string })?.message ?? '');
   for (const k of Object.keys(ERRORS)) if (msg.includes(k)) return ERRORS[k];
   return 'Algo falhou. Tenta de novo.';
