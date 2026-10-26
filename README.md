@@ -575,6 +575,7 @@ As Edge Functions encontram-se em `supabase/functions`. Os nomes e as implementa
 | `barber-assets` | Servir referências fotográficas allowlisted sem aceitar URLs arbitrários como proxy aberto |
 | `health` | Health check técnico com verificação de acesso à base de dados |
 | `gmail-integration` | OAuth Google, caixa de entrada Gmail e envio seguro por tenant |
+| `google-calendar` | OAuth do cliente para inserir ou actualizar marcações directamente no Google Calendar |
 
 ### Código partilhado
 
