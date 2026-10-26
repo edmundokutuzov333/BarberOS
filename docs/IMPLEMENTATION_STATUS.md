@@ -116,3 +116,12 @@ A suite Phase 23 ultrapassou o erro do executor e o contrato CRM após as correc
 - A página `/app/loja/pedidos` já inclui o selector real de responsável. Foi acrescentado um contrato de frontend para fixar a consulta de membros, o envio da atribuição e o bloqueio por tenant; o SQL também testa a rejeição de utilizadores que não pertencem à barbearia.
 - A CI detectou duas migrations com o timestamp `20261026130000`. A migration de integridade foi renomeada para `20261026130100_shop_order_operations_integrity_phase5.sql`. A sequência completa desde uma base vazia passou no [run 40285662879](https://github.com/edmundokutuzov333/BarberOS/actions/runs/40285662879); a suite de aceitação SQL e Browser E2E passou no [run 40285662899](https://github.com/edmundokutuzov333/BarberOS/actions/runs/40285662899). A produção continua NO-GO até à reconciliação dos ambientes e aceitação HTTP/E2E de produção.
 - A certificação da Fase 5 ainda não equivale a autorização de produção. As tabelas operacionais não existem em produção e o histórico remoto de staging não está alinhado com as migrations versionadas. Mantém-se NO-GO até reconciliação, verificação de runtime/Turnstile e aceitação HTTP/E2E. Ver [BARBEROS_SHOP_PHASE5_CERTIFICATION.md](BARBEROS_SHOP_PHASE5_CERTIFICATION.md).
+
+
+## Fase 6: comunicações e relatórios da Loja (26 de Outubro de 2026)
+
+- Migration forward-only `20261026150000_shop_communications_reporting_phase6.sql`: adiciona inbox de alertas internos com RLS, trigger transaccional para novo pedido e transições relevantes, RPC de relatório com tenant check, período limitado e datas interpretadas em `Africa/Maputo`.
+- A interface `/app/loja/relatorios` apresenta alertas internos, estados de pedido, cumprimento por quantidades, stock baixo e cancelamentos; o gestor pode marcar alertas como lidos. A rota fica protegida pela regra de gestão da Loja e pela flag por tenant.
+- Não são enviadas notificações externas. Email/WhatsApp só devem ser activados após configuração e teste do provider real; a tabela distingue canal e estado de entrega para não declarar sucesso sem confirmação.
+- Receita paga é apresentada como indisponível enquanto não existir ligação verificada entre pagamentos reais e linhas de venda da Loja. Pedido ou entrega não são contados como receita.
+- A migration ainda precisa de validação em base efémera/staging e não deve ser aplicada a produção até reconciliação do histórico e schema, conforme o gate da Fase 0.

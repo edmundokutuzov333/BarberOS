@@ -252,6 +252,28 @@ const tests = [
   }],
 ];
 
+
+tests.push(
+  ['Phase 6 reporting and internal alerts are tenant protected and never infer paid revenue', () => {
+    const migration = read('../supabase/migrations/20261026150000_shop_communications_reporting_phase6.sql');
+    const page = read('src/pages/app/LojaRelatorios.tsx');
+    assert.match(migration, /SHOP_REPORT_FORBIDDEN/);
+    assert.match(migration, /SHOP_NOTIFICATIONS_FORBIDDEN/);
+    assert.match(migration, /paid_revenue_minor',null/);
+    assert.match(migration, /Africa\\/Maputo/);
+    assert.match(migration, /delivery_status='failed'/);
+    assert.match(page, /Entrega não significa pagamento/);
+    assert.match(page, /shop-notification-inbox/);
+  }],
+  ['Phase 6 notifications only create verified internal events and do not assume external providers', () => {
+    const migration = read('../supabase/migrations/20261026150000_shop_communications_reporting_phase6.sql');
+    assert.match(migration, /'internal','visible'/);
+    assert.match(migration, /shop_order_notification_after_insert/);
+    assert.match(migration, /shop_order_notification_after_status_update/);
+    assert.match(migration, /SHOP_REPORT_INVALID_RANGE/);
+  }],
+);
+
 let failed = 0;
 for (const [name, run] of tests) {
   try {

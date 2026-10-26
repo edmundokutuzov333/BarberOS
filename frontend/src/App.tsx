@@ -39,6 +39,7 @@ const BarbeirosPage = lazy(() => import('./pages/app/ConfigPages').then((m) => (
 const HorariosPage = lazy(() => import('./pages/app/ConfigPages').then((m) => ({ default: m.HorariosPage })));
 const LojaProdutos = lazy(() => import('./pages/app/LojaProdutos'));
 const LojaPedidos = lazy(() => import('./pages/app/LojaPedidos'));
+const LojaRelatorios = lazy(() => import('./pages/app/LojaRelatorios'));
 const AgendaPage = lazy(() => import('./pages/app/Agenda'));
 const Marcacoes = lazy(() => import('./pages/app/Marcacoes'));
 const Clientes = lazy(() => import('./pages/app/Clientes'));
@@ -140,6 +141,7 @@ export default function App() {
               <Route path="horarios" element={<HorariosPage />} />
               <Route path="loja/produtos" element={<LojaProdutos />} />
               <Route path="loja/pedidos" element={<LojaPedidos />} />
+              <Route path="loja/relatorios" element={<LojaRelatorios />} />
               <Route path="definicoes" element={<Navigate to="/app/definicoes/perfil" replace />} />
               <Route path="definicoes/:tab" element={<Definicoes />} />
               <Route path="*" element={<NotYet />} />
