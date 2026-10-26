@@ -12,7 +12,7 @@ A especificação da Loja da Barbearia define uma pré-encomenda opcional, ligad
 
 A Fase 0 exigia reconciliar os bloqueios do motor de marcações, comparar produção com staging, verificar migrations, RLS, secrets e a Edge Function `booking-create`, definir a flag da loja desligada por defeito e preparar um plano de reversão.
 
-A consulta directa aos ambientes encontrou diferenças materiais entre o código, o staging e a produção. A produção não contém a tabela e a RPC de idempotência usadas pela implementação actual de `main`; a função `booking-create` publicada não contém os controlos presentes no código versionado nem no handler de staging. A chave pública do Turnstile e a variável que o torna obrigatório não aparecem na lista de variáveis de ambiente visíveis da Vercel. A suite de aceitação utiliza uma base Supabase local efémera no runner GitHub; a execução já ultrapassou o executor SQL com `ClientCursor(conn)` e chegou aos contratos CRM. Falhou porque o teste exigia `CUSTOMER_NOT_FOUND` mesmo quando o guard de autorização negava correctamente a chamada com `SHOP_OPERATOR_REQUIRED`; o contrato foi ajustado para aceitar ambos.
+A consulta directa aos ambientes encontrou diferenças materiais entre o código, o staging e a produção. A produção não contém a tabela e a RPC de idempotência usadas pela implementação actual de `main`; a função `booking-create` publicada não contém os controlos presentes no código versionado nem no handler de staging. A implementação actual não depende de CAPTCHA nem de variáveis de ambiente de CAPTCHA. A suite de aceitação utiliza uma base Supabase local efémera no runner GitHub; a execução já ultrapassou o executor SQL com `ClientCursor(conn)` e chegou aos contratos CRM. Falhou porque o teste exigia `CUSTOMER_NOT_FOUND` mesmo quando o guard de autorização negava correctamente a chamada com `SHOP_OPERATOR_REQUIRED`; o contrato foi ajustado para aceitar ambos.
 
 **Decisão:** manter a Loja da Barbearia indisponível ao público. As migrations das Fases 1 e 2 foram aplicadas apenas no staging e estão versionadas em `main`. Não alterar o schema de produção, não publicar uma nova Edge Function de marcações e não activar o rollout enquanto os bloqueios abaixo não forem resolvidos e comprovados.
 
@@ -31,9 +31,9 @@ Os secrets de runtime do Supabase não puderam ser inspeccionados directamente a
 | GitHub | `main` apontava para o commit de referência acima no início da auditoria. A comparação confirmou que esse commit era idêntico à referência de `main` no momento da leitura. | Confirmado para a referência inicial. |
 | Migrations | Baseline da auditoria inicial: 118 ficheiros SQL em `main`, 110 versões na produção e 81 no staging. Snapshot após a Fase 3, em 23 de Outubro: 132 ficheiros SQL em `main`, 110 versões na produção e 95 no staging. As contagens não demonstram equivalência semântica. | Bloqueado. |
 | Schema | `public.booking_idempotency` e a RPC `book_appointment_idempotent` existem no staging, mas não existem na produção. | Bloqueio crítico. |
-| Handler de marcações | A Edge Function `booking-create` da produção não contém a validação Turnstile, os primitivos de rate limit nem o caminho idempotente encontrados no código de `main` e no handler de staging. | Bloqueio crítico. |
+| Handler de marcações | A Edge Function `booking-create` da produção não contém os primitivos de rate limit nem o caminho idempotente encontrados no código de `main` e no handler de staging. | Bloqueio crítico. |
 | Privilégios de marcação | A RPC antiga `book_appointment` não pode ser executada por `anon` nem `authenticated` na produção; o papel `service_role` mantém acesso. A RPC idempotente usada pelo código actual não existe na produção. | Contenção parcial confirmada, integração não certificada. |
-| Turnstile na Vercel | A listagem actual de variáveis visíveis não inclui `VITE_TURNSTILE_SITE_KEY` nem `VITE_BOOKING_TURNSTILE_REQUIRED`. O wizard versionado bloqueia a submissão em produção quando a chave pública não está configurada. | Bloqueio crítico para a marcação pública. |
+| CAPTCHA na Vercel | A implementação actual não utiliza CAPTCHA nem exige chaves externas. | Não é bloqueio para a marcação pública. |
 | Edge Functions | Produção: `booking-create v1`, `health v1` e `token-gateway v1` activas; `resend-webhook` ausente. Staging: `booking-create v1`, `health v1`, `token-gateway v1` e `resend-webhook v1` activas. | Divergência entre ambientes. |
 | Tabelas públicas | Baseline inicial: 24 tabelas na produção e 22 no staging. Última leitura após as migrations aditivas: 24 tabelas na produção e 30 no staging. Só na produção: `support_tickets`, `platform_access_events`, `gmail_connections`, `gmail_oauth_states`. Só no staging: `appointment_product_order_items`, `appointment_product_orders`, `booking_idempotency`, `inventory_movements`, `inventory_reservations`, `resend_email_events`, `shop_catalog_audit_events`, `shop_product_categories`, `shop_product_variants`, `shop_products`. | Reconciliar antes de qualquer release de schema. |
 | RLS | RLS está activada em todas as tabelas públicas devolvidas pela listagem. O advisor assinala tabelas sem políticas e funções SECURITY DEFINER acessíveis por alguns papéis; cada caso precisa de revisão pelo contrato e pelo corpo da função. | Revisão selectiva necessária. |
@@ -63,9 +63,9 @@ Um teste ignorado não conta como aprovado. O build verde não certifica a integ
 |---|---|---|---|
 | Crítico | Histórico e schema de produção não reconciliados com `main` e staging. | Uma migration pode falhar, reaplicar alterações ou deixar funções e schema incompatíveis. | Reconciliação individual das versões e revisão do esquema antes de qualquer release. |
 | Crítico | `booking-create` publicada não corresponde ao handler actual. | Controlos de abuso e idempotência diferem entre ambientes; a criação de marcações não está certificada. | Validar o handler versionado em staging com schema compatível antes de planear rollout. |
-| Crítico | Turnstile público não aparece na configuração Vercel consultada. | A UI versionada falha fechada e bloqueia a submissão pública quando a chave está ausente. | Configurar chave pública e modo obrigatório no ambiente certo; configurar e verificar a chave privada no Supabase. |
+| Informativo | CAPTCHA não faz parte da implementação actual. | A ausência de chaves CAPTCHA não bloqueia a submissão. | Validar CORS, rate limit, idempotência e regras de domínio no servidor. |
 | Crítico | A suite de aceitação de base de dados/concorrência não tem ambiente dedicado utilizável. | Não há prova recente de concorrência e de ciclo de vida real. | Provisionar uma base de teste isolada e credenciais de CI, sem usar produção. |
-| Alto | Segredos de runtime do Supabase não verificáveis pelas ferramentas disponíveis nesta sessão. | Turnstile, limites de pedidos e Resend podem não estar operacionais. | Verificar apenas nomes e estado através do workflow protegido, sem imprimir valores. |
+| Alto | Segredos de runtime do Supabase não verificáveis pelas ferramentas disponíveis nesta sessão. | Os limites de pedidos e o Resend podem não estar operacionais. CAPTCHA não é necessário. | Verificar apenas nomes e estado através do workflow protegido, sem imprimir valores. |
 | Alto | `resend-webhook` está no staging, mas não no inventário de produção. | Eventos de entrega, bounce e complaint não estão certificados em produção. | Testar um webhook assinado real no staging e incluir a publicação na sequência aprovada. |
 | Alto | 19 foreign keys sem índice de cobertura foram reportadas na produção; no schema verificado do staging o resultado foi zero após a migration de índices. | Consultas e operações podem ter custos maiores; a correcção de produção depende da reconciliação de migrations. | Validar o plano e aplicar a correcção por migration aprovada, só após os gates de schema. |
 | Médio | Advisors reportam funções SECURITY DEFINER executáveis por `anon` ou `authenticated`, tabelas RLS sem políticas e uma extensão no schema `public`. | Podem ser decisões legítimas ou superfícies a endurecer; o aviso, isoladamente, não prova exploração. | Rever cada função/política com o contrato e testes, sem revogar grants em massa. |
@@ -102,7 +102,7 @@ Regras obrigatórias da flag:
 
 ### P0.3. Verificar configurações de segurança
 
-- Configurar e testar Turnstile em staging com a chave pública correcta, `VITE_BOOKING_TURNSTILE_REQUIRED=true` e `TURNSTILE_SECRET_KEY` no runtime Supabase. Não activar bypass em produção.
+- Validar em staging o rate limit, a allowlist de origens, a idempotência e os fluxos de marcação sem CAPTCHA.
 - Verificar os nomes necessários no runtime Supabase: `RATE_LIMIT_SALT`, `ALLOWED_ORIGINS`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET` e `NOTIFICATION_EMAIL_FROM`. Nunca colocar valores no Git, nos logs ou neste relatório.
 - Verificar domínio remetente e assinatura real do webhook Resend no staging.
 
@@ -137,7 +137,7 @@ Antes da Fase 1, a flag ainda não existe; portanto, não se deve publicar códi
 | Relatório de prontidão produzido e riscos classificados | Concluído neste commit de documentação. |
 | Produção e staging identificados e comparados | Concluído; divergências materiais encontradas. |
 | Histórico de migrations reconciliado | Não concluído. |
-| Configuração Turnstile de produção comprovada | Não concluído; as variáveis necessárias não aparecem na listagem consultada. |
+| CAPTCHA externo | Removido do fluxo em 2026-10-26; não são necessárias chaves. |
 | Secrets de runtime comprovados sem expor valores | Não concluído nesta sessão. |
 | Suite de aceitação com DB dedicada e concorrência aprovada | Não concluído; execução recente falhou e concorrência foi ignorada. |
 | Motor publicado certificado end-to-end | Não concluído. |
@@ -154,19 +154,19 @@ A verificação posterior confirmou que a Fase 1 (modelo de domínio) e a Fase 2
 **A Fase 0 não pode ser marcada como concluída.** Permanecem bloqueios que não podem ser resolvidos em segurança apenas por commits de código:
 1. A produção tem 110 migrations registadas, o staging 81 antes das migrations da loja e o repositório tem 118 ficheiros de migrations no baseline auditado. É necessária reconciliação individual dos timestamps e do schema; não é seguro executar `db push` ou `migration repair` em lote.
 2. A produção não tem `public.booking_idempotency` nem `book_appointment_idempotent`, exigidos pelo handler versionado. A função `booking-create` publicada continua a divergir do código. A sua substituição depende de uma migration/reconciliação segura e de aceitação do fluxo completo.
-3. A configuração Turnstile necessária para a marcação pública não foi comprovada no deployment consultado. Não há chave pública/secrets verificados disponíveis nesta sessão para configurar o provider.
+3. A implementação actual removeu CAPTCHA da marcação pública e não depende de chaves externas. Não há chave pública/secrets verificados disponíveis nesta sessão para configurar o provider.
 4. O workflow define `BARBEROS_TEST_DATABASE_URL` para Supabase local efémero, mas a suite Phase 23 falhou devido ao executor Psycopg ao processar scripts com `DO $`. A execução chegou aos contratos CRM após corrigir o executor; a aprovação depende da nova CI que valida a asserção cross-tenant ajustada. O ciclo completo de browser autenticado continua ignorado sem secrets E2E dedicados.
 5. A integração GitHub–Vercel publicou o commit `1279226d9f18c498b21211159cfdf94d472cfd6e` e o workflow de produção [39973135125](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39973135125) passou preflight, deployment e smoke. Isto confirma publicação e smoke, não o funcionamento do pedido integrado, porque a produção ainda não tem o schema/RPC da Loja.
 6. O gate Phase 25 de desempenho público continua vermelho: LCP medido a 2.856 ms e 3.120 ms, acima do limite de 2.500 ms em Fast 3G. Uma execução anterior, no commit `58feaa770f011cef42a6847ac72eaa85cf0b0cc3`, também falhou (2.836 ms), pelo que é um problema pré-existente que ainda requer correcção e nova medição.
 
 ### Acções necessárias para mudar NO-GO para GO
 
-- Fornecer/configurar os valores de Turnstile nos ambientes Vercel/Supabase apropriados e verificar que o widget e o backend usam o mesmo par de chaves.
+- Não são necessários valores nem widget CAPTCHA; confirmar CORS, rate limit e idempotência no frontend e backend.
 - Os workflows de aceitação SQL usam agora uma base Supabase local efémera por job, reconstruída a partir da cadeia de migrations. A aceitação HTTP/E2E ainda requer credenciais e endpoints de teste dedicados.
 - Configurar as credenciais autorizadas de deployment da Vercel no ambiente GitHub Actions ou confirmar o fluxo alternativo de publicação já autorizado.
 - Corrigir o orçamento LCP do percurso público e repetir o benchmark Fast 3G até cumprir o limite definido.
 - Reconciliar cada migration de produção com o ficheiro SQL de origem e produzir um relatório exact-match de schema/RPC/grants antes de qualquer migration em produção.
-- Testar o fluxo real de marcação no ambiente publicado, incluindo Turnstile, idempotência, rate limit, notificações e retries, e registar evidência do commit efectivamente servido.
+- Testar o fluxo real de marcação no ambiente publicado, incluindo idempotência e rate limit, notificações e retries, e registar evidência do commit efectivamente servido.
 
 O código da Fase 2 não remove nenhum destes bloqueios. Não foi feita alteração em produção nem foi declarada uma aceitação E2E inexistente.
 
@@ -220,7 +220,7 @@ A verificação principal [39973135133](https://github.com/edmundokutuzov333/Bar
 
 O gate Fast 3G passou no SHA `7dcf9f52d6a505861a9eed01cfb980daa5f481c4`, run [39974021402](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39974021402): LCP 2.144/2.172 ms, DCL 1.256/1.289 ms, CLS 0, RPC 416/372 ms e INP 40/64 ms. A revisão actual altera apenas o executor de aceitação e documentação; o frontend não mudou.
 
-A Vercel publicou o SHA actual com sucesso e o smoke passou. Produção continua sem as tabelas e RPC da Loja, sem a coluna `shop_enabled` e sem a configuração Turnstile comprovada; a feature flag global permanece desligada e nenhuma migration foi aplicada à produção. O estado de lançamento permanece **NO-GO**.
+A Vercel publicou o SHA actual com sucesso e o smoke passou. Produção continua sem as tabelas e RPC da Loja, sem a coluna `shop_enabled` e sem configuração de CAPTCHA comprovada; a feature flag global permanece desligada e nenhuma migration foi aplicada à produção. O estado de lançamento permanece **NO-GO**.
 
 
 ### Actualização de aceitação Phase 23 após correcção do executor (23 de Outubro de 2026)
@@ -239,7 +239,7 @@ A verificação [39975771201](https://github.com/edmundokutuzov333/BarberOS/acti
 
 A suite Phase 23 no SHA `d5c3c3b` chegou à expiração da waitlist e falhou em `WAITLIST_EXPIRE_FAILED`: uma substituição posterior da função não devolvia o estado persistido `expired`. Foi acrescentada uma migration forward-only para corrigir o resultado mantendo acesso apenas por `service_role`, e o runner de aceitação faz agora rollback explícito antes da limpeza de fixtures quando um contrato falha. O novo workflow tem de confirmar a correcção.
 
-A comparação read-only encontrou 110 registos de migration em produção, 97 em staging e 135 ficheiros versionados no repositório. Produção não tem as tabelas/RPC da Loja nem `barbershops.shop_enabled`; `booking-create` permanece na versão 1, o gate global e as variáveis públicas Turnstile não constam da configuração Vercel consultada. A aceitação completa de browser mantém-se ignorada por falta de credenciais dedicadas. Não foram aplicadas migrations nem activadas flags de produção. Ver `docs/BARBEROS_SHOP_PRODUCTION_RECONCILIATION.md`.
+A comparação read-only encontrou 110 registos de migration em produção, 97 em staging e 135 ficheiros versionados no repositório. Produção não tem as tabelas/RPC da Loja nem `barbershops.shop_enabled`; `booking-create` permanece na versão 1, o gate global não consta da configuração Vercel consultada; a marcação não depende de CAPTCHA. A aceitação completa de browser mantém-se ignorada por falta de credenciais dedicadas. Não foram aplicadas migrations nem activadas flags de produção. Ver `docs/BARBEROS_SHOP_PRODUCTION_RECONCILIATION.md`.
 
 **Estado actual: Fase 4 transaccional aprovada em CI local/staging; lançamento em produção NO-GO até a reconciliação e os gates externos estarem concluídos.**
 
@@ -259,4 +259,4 @@ A execução do contrato SQL da Fase 5 no staging terminou sem erro SQL e deixou
 
 A CI em [40284632753](https://github.com/edmundokutuzov333/BarberOS/actions/runs/40284632753) revelou duas migrations com a mesma versão `20261026130000`. A correcção candidata renomeia a migration de integridade para `20261026130100_shop_order_operations_integrity_phase5.sql` e acrescenta testes para rejeitar responsáveis externos ao tenant e transições após entrega terminal. A execução seguinte confirmou a correcção. Os contratos de migrations e segurança passaram no [run 40285662879](https://github.com/edmundokutuzov333/BarberOS/actions/runs/40285662879), a suite de base de dados e Browser E2E passou no [run 40285662899](https://github.com/edmundokutuzov333/BarberOS/actions/runs/40285662899), o gate de performance passou no [run 40285662878](https://github.com/edmundokutuzov333/BarberOS/actions/runs/40285662878), o contrato de deployment passou no [run 40285662863](https://github.com/edmundokutuzov333/BarberOS/actions/runs/40285662863) e o frontend CI passou no [run 40285662829](https://github.com/edmundokutuzov333/BarberOS/actions/runs/40285662829). A produção permanece NO-GO por causa da divergência schema/histórico.
 
-O estado de produção mantém-se **NO-GO**. Não aplicar migrations nem alterar o histórico remoto até mapear cada versão para o SQL correspondente, simular o release num clone isolado, validar a configuração de runtime/Turnstile e executar os testes HTTP/E2E dedicados. Relatório de certificação: [BARBEROS_SHOP_PHASE5_CERTIFICATION.md](BARBEROS_SHOP_PHASE5_CERTIFICATION.md).
+O estado de produção mantém-se **NO-GO**. Não aplicar migrations nem alterar o histórico remoto até mapear cada versão para o SQL correspondente, simular o release num clone isolado, validar a configuração de runtime dos providers necessários e executar os testes HTTP/E2E dedicados. Relatório de certificação: [BARBEROS_SHOP_PHASE5_CERTIFICATION.md](BARBEROS_SHOP_PHASE5_CERTIFICATION.md).

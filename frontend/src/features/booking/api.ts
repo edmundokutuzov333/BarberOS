@@ -18,7 +18,6 @@ export type ShopOrderSummary = {
 export type BookAppointmentInput =
   Database['public']['Functions']['book_appointment']['Args'] & {
     idempotency_key?: string;
-    turnstile_token?: string;
     p_shop_items?: ShopOrderItemInput[];
   };
 
@@ -77,7 +76,6 @@ async function readFunctionError(error: unknown): Promise<{ code: string; status
     'HAIRCUT_NOT_FOUND',
     'BARBER_NOT_FOUND',
     'INVALID_DEPOSIT_CONFIGURATION',
-    'BOT_CHECK_FAILED',
     'RATE_LIMITED',
     'IDEMPOTENCY_IN_PROGRESS',
     'IDEMPOTENCY_STORE_UNAVAILABLE',

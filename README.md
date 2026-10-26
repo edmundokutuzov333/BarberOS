@@ -100,7 +100,7 @@ A cadeia de migrations inclui ainda fundações para convites de membros, portf�
 
 ### Integrações condicionadas pelo ambiente
 
-O código contém integrações para envio de email, WhatsApp, pagamentos M-Pesa/e-Mola, Cloudflare Turnstile, reconciliação de pagamentos, assets fotográficos e tarefas agendadas. A disponibilidade real depende de secrets, configuração do provider, migrations aplicadas, Edge Functions publicadas e testes de aceitação no ambiente certo. A integração Gmail está versionada no frontend, Edge Function e migration, mas só funciona após configurar as credenciais OAuth do Google e os segredos de runtime descritos em `docs/GMAIL_INTEGRATION.md`. O repositório, isoladamente, não garante que cada integração esteja activa em produção.
+O código contém integrações para envio de email, WhatsApp, pagamentos M-Pesa/e-Mola, reconciliação de pagamentos, assets fotográficos e tarefas agendadas. A disponibilidade real depende de secrets, configuração do provider, migrations aplicadas, Edge Functions publicadas e testes de aceitação no ambiente certo. A marcação pública não usa CAPTCHA nem exige chaves de CAPTCHA; a validação server-side, o rate limiting, a allowlist de origens, a idempotência e as regras PostgreSQL continuam activos. A integração Gmail está versionada no frontend, Edge Function e migration, mas só funciona após configurar as credenciais OAuth do Google e os segredos de runtime descritos em `docs/GMAIL_INTEGRATION.md`. O repositório, isoladamente, não garante que cada integração esteja activa em produção.
 
 ---
 
@@ -578,7 +578,7 @@ As Edge Functions encontram-se em `supabase/functions`. Os nomes e as implementa
 
 ### Código partilhado
 
-- `supabase/functions/_shared/guard.ts`: cliente administrativo, CORS, rate limit, hash e validação Turnstile.
+- `supabase/functions/_shared/guard.ts`: cliente administrativo, CORS, rate limit, IP do pedido e hashing.
 - `supabase/functions/_shared/payment-providers.ts`: adapters partilhados de provider de pagamento.
 - Cada função define o seu método HTTP, validação do pedido, modo de autenticação, formato de erro e headers de cache. Não copiar uma configuração CORS ou de autenticação de outra função sem avaliar a fronteira actual.
 
@@ -780,8 +780,6 @@ Os exemplos estão em `.env.example` e `frontend/.env.example`. São templates, 
 | `VITE_SUPABASE_URL` | Sim | URL do projecto Supabase utilizado pelo browser |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Sim | Publishable key destinada ao cliente público |
 | `VITE_BARBEROS_ROOT_DOMAIN` | Opcional | Domínio base para URLs por subdomínio de barbearia |
-| `VITE_TURNSTILE_SITE_KEY` | Conforme configuração de booking | Chave pública do widget Turnstile |
-| `VITE_BOOKING_TURNSTILE_REQUIRED` | Gate de release | Define o requisito de Turnstile na jornada pública quando configurado no deployment |
 
 Uma variável com prefixo `VITE_` fica disponível ao browser no build. **Nunca colocar service role, passwords, API keys privadas, tokens de provider ou segredos de webhook nesse namespace.** A publishable key não substitui RLS nem a autorização do servidor.
 
@@ -795,7 +793,6 @@ Os nomes concretos dependem da função e do provider. A configuração de refer
 | `SUPABASE_SERVICE_ROLE_KEY` ou secret equivalente configurado para o runtime | Operações privilegiadas executadas por Edge Functions |
 | `ALLOWED_ORIGINS` | Allowlist de origins admitidas pelos endpoints que a utilizam |
 | `RATE_LIMIT_SALT` | Salt privado para os buckets/identificadores do rate limit |
-| `TURNSTILE_SECRET_KEY` | Verificação server-side do token anti-bot |
 | `RESEND_API_KEY` | Envio de email via Resend |
 | `RESEND_WEBHOOK_SECRET` | Verificação do webhook do provider de email |
 | `NOTIFICATION_EMAIL_FROM` | Remetente de email validado no domínio |
@@ -949,7 +946,7 @@ Conforme o workflow usado, o ambiente pode exigir:
 - `VERCEL_PROJECT_ID`
 - `BARBEROS_PUBLIC_URL`
 
-Os controlos de release Supabase incluem ainda variáveis como `BARBEROS_PRODUCTION_MIGRATION_HISTORY_RECONCILED`, `BARBEROS_TURNSTILE_CONFIGURED`, `BARBEROS_RESEND_CONFIGURED` e `BARBEROS_STAGING_VERIFIED`. Consultar o workflow actual antes de preparar o ambiente.
+Os controlos de release Supabase incluem ainda variáveis como `BARBEROS_PRODUCTION_MIGRATION_HISTORY_RECONCILED`, `BARBEROS_RESEND_CONFIGURED` e `BARBEROS_STAGING_VERIFIED`. Consultar o workflow actual antes de preparar o ambiente.
 
 ### Rollback
 
@@ -1006,7 +1003,7 @@ No snapshot de revisão de 20 de Outubro de 2026:
 
 1. A produção de Supabase tinha gates de reconciliação do histórico de migrations documentados. Não executar `supabase db push` contra produção até confirmar a correspondência de versões e o estado do schema.
 2. O source tree inclui o gateway endurecido de booking, enquanto a certificação do runtime exige confirmar que a versão correspondente da Edge Function e as migrations foram realmente publicadas.
-3. Turnstile, rate limit, allowlist de origins, Resend e pagamentos precisam de secrets/configuração e testes no ambiente certo.
+3. Rate limit, allowlist de origins, Resend e pagamentos precisam de secrets/configuração e testes no ambiente certo.
 4. A acceptance suite SQL completa e os testes de concorrência HTTP requerem credenciais de staging dedicadas. A ausência dessas credenciais não deve ser tratada como aprovação.
 5. O benchmark Fast 3G continuava a ultrapassar o budget de LCP no snapshot, mesmo depois de estabilização do CLS. A Phase 25 não deve ser declarada concluída apenas porque o asset budget passou.
 6. O schema inclui domínios de plataforma em fase de fundação que não estão necessariamente representados por ecrãs completos na navegação.
@@ -1105,7 +1102,7 @@ Os documentos de fase e auditoria são snapshots. Quando entra uma mudança post
 | Perfil público sem catálogo | Confirmar estado público da barbearia, RPC `get_public_barbershop`, serviços activos e associação barbeiro/serviço |
 | Não aparecem slots | Confirmar timezone, horários, overrides, serviço activo, associação do barbeiro, lead time, janela máxima e ocupação real |
 | Booking retorna conflito | Tratar `SLOT_TAKEN`/`SLOT_UNAVAILABLE` como conflito de domínio, limpar a selecção e recarregar disponibilidade |
-| Booking falha depois de enviar o formulário | Verificar a versão publicada da Edge Function, migration idempotente, secrets de rate limit/Turnstile e logs redigidos |
+| Booking falha depois de enviar o formulário | Verificar a versão publicada da Edge Function, migration idempotente, secrets de rate limit e logs redigidos |
 | Sinal não confirma a marcação | Inspeccionar o estado persistido de payment/appointment, referência do provider, webhook, reconciliação e hold |
 | Notificações ficam queued/failed | Confirmar scheduler, secret de cron, provider, domínio remetente, templates e estado de retry |
 | Uma migration não pode ser aplicada | Comparar o histórico remoto/local; não reparar versões às cegas nem executar reset remoto |

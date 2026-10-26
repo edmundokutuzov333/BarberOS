@@ -100,4 +100,4 @@ O PostgreSQL revalida tenant, publicação, variante, preço corrente, opções,
 
 A reserva não reduz imediatamente `stock_on_hand`; o saldo disponível é stock físico menos reservas activas. Cancelar a marcação cancela o pedido associado quando este ainda não foi entregue e liberta as reservas. O resumo persistido é obtido por `shop_order.get` no token gateway, protegido pelo token de gestão existente. O pedido não representa pagamento; o pagamento dos produtos permanece fora do escopo desta fase.
 
-A feature flag global deve permanecer desligada até ao schema de produção e o historial de migrations serem reconciliados, Turnstile estar configurado, a suite de aceitação dedicada estar disponível e o gate de performance passar.
+A feature flag global deve permanecer desligada até ao schema de produção e o historial de migrations serem reconciliados, a suite de aceitação dedicada estar disponível e o gate de performance passar. O fluxo público não utiliza CAPTCHA; continuam obrigatórios rate limit, allowlist de origens, idempotência e validações no servidor.

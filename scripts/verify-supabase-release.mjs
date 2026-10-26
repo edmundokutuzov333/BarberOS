@@ -80,12 +80,11 @@ const bookingSource = fs.readFileSync(path.join(functionDir, 'booking-create', '
 if (!bookingSource.includes('book_appointment_with_shop_order_idempotent')) throw new Error('BOOKING_EDGE_ATOMIC_ORDER_RPC_CONTRACT_MISSING');
 const wizardPath = path.join(root, 'frontend', 'src', 'pages', 'BookingWizard.tsx');
 const wizard = fs.readFileSync(wizardPath, 'utf8');
-if (!wizard.includes('Boolean(turnstileSiteKey && turnstileToken)')
-  || !wizard.includes("VITE_BOOKING_TURNSTILE_REQUIRED === 'true'")) {
-  throw new Error('BOOKING_TURNSTILE_ROLLOUT_GUARD_MISSING');
+if (/turnstile|captcha|cloudflare/i.test(wizard) || /turnstile|captcha|cloudflare/i.test(bookingSource)) {
+  throw new Error('BOOKING_CAPTCHA_DEPENDENCY_PRESENT');
 }
-if (!wizard.includes('turnstile_token: turnstileToken ?? undefined')) {
-  throw new Error('BOOKING_TURNSTILE_TOKEN_NOT_SENT');
+if (!bookingSource.includes('consume(') || !bookingSource.includes('idempotency_key')) {
+  throw new Error('BOOKING_RATE_LIMIT_OR_IDEMPOTENCY_GUARD_MISSING');
 }
 
 console.log(JSON.stringify({
@@ -93,6 +92,6 @@ console.log(JSON.stringify({
   latest: names.at(-1),
   project_ref: 'alseiinjzwjdiwtvkdzy',
   required_edge_functions: ['booking-create', 'token-gateway', 'health', 'resend-webhook', 'gmail-integration'],
-  booking_security_contract: 'fail-closed Turnstile + idempotency + token gateway',
+  booking_security_contract: 'rate limiting + CORS allowlist + idempotency + token gateway; no CAPTCHA',
 }, null, 2));
 console.log('PASS | Supabase release contract');

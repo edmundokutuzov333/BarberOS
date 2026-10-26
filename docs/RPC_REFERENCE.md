@@ -4,7 +4,7 @@ As definições vigentes são as últimas `create or replace function` na cadeia
 
 | RPC | Fronteira | Regra |
 |---|---|---|
-| `book_appointment` | Edge `booking-create` | Apenas `service_role`; reserva pública com rate limit, Turnstile e idempotência |
+| `book_appointment` | Edge `booking-create` | Apenas `service_role`; reserva pública com rate limit e idempotência |
 | `book_appointment_manual` | Painel autenticado | Operador tenant-scoped; barbeiro apenas no próprio perfil |
 | `get_public_barbershop` | Browser público | Apenas dados publicados do tenant |
 | `get_available_days` / `get_available_slots` | Browser público | Leitura de disponibilidade calculada no PostgreSQL |

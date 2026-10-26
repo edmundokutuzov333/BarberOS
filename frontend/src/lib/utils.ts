@@ -48,7 +48,6 @@ const ERRORS: Record<string, string> = {
   HAIRCUT_NOT_FOUND: 'Esse corte já não está disponível.',
   INVALID_DEPOSIT_CONFIGURATION: 'O sinal configurado para este serviço é inválido.',
   BOOKING_EMPTY_RESPONSE: 'A marcação não foi criada. Tenta de novo.',
-  BOT_CHECK_FAILED: 'A verificação de segurança expirou ou não foi aceite. Verifica novamente.',
   RATE_LIMITED: 'Foram feitas demasiadas tentativas. Aguarda alguns minutos e tenta de novo.',
   IDEMPOTENCY_IN_PROGRESS: 'Esta tentativa ainda está a ser processada. Aguarda um momento antes de tentar de novo.',
   IDEMPOTENCY_STORE_UNAVAILABLE: 'Não foi possível confirmar o estado da marcação. Não repitas a tentativa com uma chave nova; contacta o suporte se o erro persistir.',

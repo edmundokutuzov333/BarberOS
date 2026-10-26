@@ -60,7 +60,7 @@ Preencher após uma pessoa executar cada tarefa na interface, não apenas por ex
 
 ## Go / No-Go
 
-GO técnico apenas com migrations alinhadas ao esquema, contrato SQL verde, build/CI verde, configuração Turnstile e runtime comprovados, rollback testado e nenhuma regressão crítica.
+GO técnico apenas com migrations alinhadas ao esquema, contrato SQL verde, build/CI verde, rate limit, allowlist de origens e runtime comprovados, rollback testado e nenhuma regressão crítica.
 
 GO operacional apenas depois de proprietários/gestores, recepção e barbeiros realizarem o ensaio na interface e assinarem a aceitação. Um teste automatizado é evidência técnica e não prova formação humana.
 

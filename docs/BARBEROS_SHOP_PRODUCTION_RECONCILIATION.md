@@ -19,7 +19,7 @@ O staging contém `shop_product_categories`, `shop_products`, `shop_product_vari
 
 Os históricos não são intercambiáveis. Algumas versões registadas na produção têm timestamps diferentes dos prefixos dos ficheiros SQL actuais; o staging também regista um conjunto base com versões remapeadas. Há ainda objectos presentes na produção e ausentes no staging, incluindo `support_tickets`, `platform_access_events`, `gmail_connections`, `gmail_oauth_states` e `_theme_key_backup_20261020`. Estes dados e objectos devem ser preservados.
 
-Na Vercel, o projecto `barber-os` não lista `VITE_SHOP_PUBLIC_CATALOG_ENABLED`, `VITE_TURNSTILE_SITE_KEY` nem `VITE_BOOKING_TURNSTILE_REQUIRED`. Sem a variável global da Loja, o wizard conserva o percurso actual e não consulta a RPC pública da Loja. A versão de `booking-create` em produção não corresponde ao código actual, que exige o novo contrato da base de dados e a validação de Turnstile. Não se expuseram valores de segredos.
+Na Vercel, o projecto `barber-os` não lista `VITE_SHOP_PUBLIC_CATALOG_ENABLED`. Sem a variável global da Loja, o wizard conserva o percurso actual e não consulta a RPC pública da Loja. A integração CAPTCHA foi removida do código em `main` a 2026-10-26, pelo que não são esperadas chaves CAPTCHA. A Edge Function `booking-create` em produção ainda tem de ser alinhada depois da reconciliação do schema. Não se expuseram valores de segredos.
 
 ## O que não foi executado
 
@@ -31,7 +31,7 @@ Não foram aplicadas migrations à produção, nem executado `supabase db push`,
 2. Produzir um mapa explícito `versão/name remoto → migration SQL equivalente`, evidenciado por comparação de statements e objectos finais. Quando não houver equivalência demonstrada, manter o caso aberto. Não marcar uma migration como aplicada apenas para fazer o CLI avançar.
 3. Restaurar uma cópia isolada do schema de produção em staging dedicado e simular o release e rollback. Preservar os objectos adicionais da produção. Validar o token gateway antes das revogações de EXECUTE, conforme o workflow existente.
 4. Aplicar migrations aditivas da Loja só depois de os pré-requisitos e o mapa de versões terem sido aprovados; verificar o schema novamente e executar contratos das Fases 1 a 4, incluindo a corrida de duas sessões e cancelamento/libertação de reservas.
-5. Confirmar os segredos obrigatórios do workflow protegido, Turnstile nos domínios correctos e os quatro segredos de aceitação browser dedicada. Fazer deploy da Edge Function actualizada só depois do schema. Validar health check e percursos enquanto ambas as flags da Loja continuam desligadas.
+5. Confirmar os segredos obrigatórios do workflow protegido e os quatro segredos de aceitação browser dedicada. Não são necessários segredos CAPTCHA. Fazer deploy da Edge Function actualizada só depois do schema. Validar health check e percursos enquanto ambas as flags da Loja continuam desligadas.
 6. Só depois de uma barbearia piloto validar SKU, imagem autorizada, preços, variantes e stock, activar primeiro a flag do tenant e depois o gate global. Confirmar o fluxo publicado antes de alargar o rollout.
 
 ## Estado

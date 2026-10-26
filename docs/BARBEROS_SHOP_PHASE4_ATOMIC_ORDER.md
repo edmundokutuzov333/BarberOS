@@ -1,7 +1,7 @@
 # BarberOS | Fase 4: pedido de produtos atómico com a marcação
 
 **Estado de código:** o workflow [39975771201](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39975771201) confirmou no SHA `d5c3c3b27eae8b6ef37137b460062eec06e518e0` a migration chain desde uma base vazia, pgTAP, contratos SQL das Fases 1–4 e corrida de stock em duas sessões, além dos gates frontend e deployment. A suite Phase 23 está a ser reparada separadamente.  
-**Estado de lançamento:** **NO-GO**. Não activar `VITE_SHOP_PUBLIC_CATALOG_ENABLED` nem `barbershops.shop_enabled` em produção antes da reconciliação segura do schema/histórico, configuração Turnstile, aceitação dedicada e verificação dos gates no SHA candidato.
+**Estado de lançamento:** **NO-GO**. Não activar `VITE_SHOP_PUBLIC_CATALOG_ENABLED` nem `barbershops.shop_enabled` em produção antes da reconciliação segura do schema/histórico, aceitação dedicada e verificação dos gates no SHA candidato.
 
 ## Contrato funcional
 
@@ -44,9 +44,9 @@ O staging já registava a migration `20261023124453_shop_order_atomic_phase4`, m
 1. **Reconciliação de produção:** o Supabase de produção tem 110 registos de migrations e o staging 97; o repositório contém 135 ficheiros SQL versionados. As versões mais recentes da Loja existem no staging, mas não em produção. Não é seguro executar `supabase db push` nem carimbar migrations como aplicadas sem comparar as definições efectivas e preservar as tabelas próprias da produção.
 2. **Aceitação:** a suite SQL da Fase 4 passou. A suite de aceitação Phase 23 está a ser repetida depois da correcção da RPC de expiração da waitlist. O E2E de ciclo completo no browser continua **ignorado**, porque não estão configurados os quatro segredos próprios `BARBEROS_E2E_FULL`, `BARBEROS_E2E_EMAIL`, `BARBEROS_E2E_PASSWORD` e `BARBEROS_E2E_FULL_RESET_URL`; o smoke E2E passou e o teste ignorado não conta como aprovação.
 3. **Performance:** o workflow [39974629196](https://github.com/edmundokutuzov333/BarberOS/actions/runs/39974629196) passou os três jobs no SHA `67d299b4b25b81cba0848b7c57e63e2819742ca6`: LCP 2.172/2.264 ms, DOMContentLoaded 1.280/1.263 ms, CLS 0, RPC 415/440 ms e INP 80/104 ms. Esta documentação é alterada no mesmo commit candidato para provocar uma nova execução; a aprovação para lançamento exige que o gate também passe no SHA candidato exacto.
-4. **Turnstile e segredos de runtime:** a enumeração das variáveis Vercel não encontrou `VITE_TURNSTILE_SITE_KEY` nem `VITE_BOOKING_TURNSTILE_REQUIRED`. Os segredos de produção não foram expostos nem se consideram confirmados sem a verificação protegida do workflow Supabase.
+4. **Segredos de runtime:** os segredos de produção não foram expostos nem se consideram confirmados sem a verificação protegida do workflow Supabase. O fluxo de marcação não exige chaves CAPTCHA.
 5. **Catálogo comercial real:** não foi confirmada uma configuração de produtos, variantes, preços, fotografias autorizadas e stock para uma barbearia piloto. Não publicar produtos fictícios nem activar um tenant sem validação do operador.
-6. **Publicação backend:** a Edge Function `booking-create` em produção continua na versão 1, enquanto o staging usa a versão 5 com Turnstile, rate limit, fingerprint e pedido de loja atómico. O contrato de produção tem de ser actualizado depois da reconciliação, nunca antes.
+6. **Publicação backend:** a Edge Function `booking-create` em produção continua na versão 1, enquanto o staging usa a versão 5 com rate limit, fingerprint e pedido de loja atómico. O contrato de produção tem de ser actualizado depois da reconciliação, nunca antes.
 
 A Loja permanece desligada em produção. Esta decisão é necessária porque o schema público actual não contém `barbershops.shop_enabled`, as tabelas de pedido/reservas nem o RPC `book_appointment_with_shop_order_idempotent`. Activar o passo no frontend antes dessas dependências provocaria chamadas a funções inexistentes. O relatório `docs/BARBEROS_SHOP_PRODUCTION_RECONCILIATION.md` regista a evidência e um plano de reconciliação forward-only.
 

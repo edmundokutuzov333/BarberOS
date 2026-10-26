@@ -4,7 +4,7 @@ import {
   httpStatusForDomainCode,
   publicBookingMessage,
 } from "./contract.ts";
-import { adminClient, clientIp, consume, corsHeaders, sha256Hex, verifyTurnstile } from "../_shared/guard.ts";
+import { adminClient, clientIp, consume, corsHeaders, sha256Hex } from "../_shared/guard.ts";
 
 function isUuid(value: unknown): value is string {
   return typeof value === "string"
@@ -29,7 +29,6 @@ type BookingPayload = {
   p_email: string | null;
   p_shop_items?: ShopOrderItemInput[];
   idempotency_key: string;
-  turnstile_token?: string;
 };
 
 function isShopOrderItems(value: unknown): value is ShopOrderItemInput[] {
@@ -74,10 +73,7 @@ function isValidPayload(value: unknown): value is BookingPayload {
       typeof body.p_email === "string" && body.p_email.length <= 254
     ))
     && isUuid(body.idempotency_key)
-    && isShopOrderItems(body.p_shop_items)
-    && (typeof body.turnstile_token === "undefined" || (
-      typeof body.turnstile_token === "string" && body.turnstile_token.length <= 4096
-    ));
+    && isShopOrderItems(body.p_shop_items);
 }
 
 function publicResponse(value: unknown): Record<string, unknown> | null {
@@ -145,10 +141,6 @@ Deno.serve(async (req) => {
   const payload = body as BookingPayload;
   try {
     const ip = clientIp(req);
-    if (!(await verifyTurnstile(payload.turnstile_token, ip))) {
-      return json({ ok: false, error: "BOT_CHECK_FAILED", message: publicBookingMessage("BOT_CHECK_FAILED") }, 403);
-    }
-
     const admin = adminClient();
     const key = payload.idempotency_key;
     const slug = payload.p_slug.trim().toLowerCase();

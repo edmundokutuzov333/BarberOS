@@ -96,11 +96,13 @@ const tests = [
     assert.doesNotMatch(source.slice(fieldStart, fieldEnd), /\brequired\b/);
     assert.match(source, /guarde o link de gestão apresentado no ecrã/i);
   }],
-  ['Production booking fails closed when Turnstile is not configured', () => {
+  ['Public booking is available without external CAPTCHA configuration', () => {
     const source = read('src/pages/BookingWizard.tsx');
-    assert.match(source, /VITE_BOOKING_TURNSTILE_REQUIRED === 'true' \|\| import\.meta\.env\.PROD/);
-    assert.match(source, /A verificação de segurança não está configurada\. As marcações estão temporariamente bloqueadas\./);
-    assert.match(source, /\(\(!turnstileRequired && !turnstileSiteKey\) \|\| Boolean\(turnstileSiteKey && turnstileToken\)\)/);
+    const edge = read('../supabase/functions/booking-create/index.ts');
+    assert.doesNotMatch(source, /turnstile|captcha|cloudflare/i);
+    assert.doesNotMatch(edge, /turnstile|captcha|cloudflare/i);
+    assert.match(edge, /consume\(/);
+    assert.match(edge, /idempotency_key/);
   }],
   ['Appointments page is wired to the real agenda contract', () => {
     const source = read('src/pages/app/Marcacoes.tsx');

@@ -27,16 +27,3 @@ export async function consume(admin: SupabaseClient, bucket: string, limit: numb
   const row = Array.isArray(data) ? data[0] : data;
   return { allowed: row?.allowed === true, retryAfter: Number(row?.retry_after_seconds ?? windowSeconds) };
 }
-export async function verifyTurnstile(token: unknown, ip: string): Promise<boolean> {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim() ?? "";
-  const isProductionProject = supabaseUrl.includes("alseiinjzwjdiwtvkdzy.supabase.co");
-  // A convenience bypass is never accepted by the production project, even if its secret is misconfigured.
-  if (Deno.env.get("TURNSTILE_BYPASS") === "true") return !isProductionProject;
-  const secret = Deno.env.get("TURNSTILE_SECRET_KEY")?.trim();
-  if (!secret || typeof token !== "string" || token.length < 10) return false;
-  const form = new URLSearchParams({ secret, response: token });
-  if (ip !== "unknown") form.set("remoteip", ip);
-  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body: form });
-  const result = await response.json().catch(() => ({}));
-  return result?.success === true;
-}

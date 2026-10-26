@@ -38,13 +38,15 @@ const tests = [
     assert.match(source, /needs_payment/);
     assert.doesNotMatch(source, /appointment_id.*manage_token/);
   }],
-  ['booking wizard sends Turnstile token when a site key is configured', () => {
-    const source = read('src/pages/BookingWizard.tsx');
-    assert.match(source, /VITE_TURNSTILE_SITE_KEY/);
-    assert.match(source, /turnstile_token:\s*turnstileToken/);
-    assert.match(source, /turnstileRequired/);
-    assert.match(source, /Boolean\(turnstileSiteKey && turnstileToken\)/);
-    assert.match(source, /VITE_BOOKING_TURNSTILE_REQUIRED/);
+  ['public booking has no CAPTCHA dependency and retains server-side protections', () => {
+    const wizard = read('src/pages/BookingWizard.tsx');
+    const api = read('src/features/booking/api.ts');
+    const edge = read('../supabase/functions/booking-create/index.ts');
+    assert.doesNotMatch(wizard, /turnstile|captcha|cloudflare/i);
+    assert.doesNotMatch(api, /turnstile_token/i);
+    assert.doesNotMatch(edge, /verifyTurnstile|turnstile_token/i);
+    assert.match(edge, /consume\(/);
+    assert.match(edge, /idempotency_key/);
   }],
   ['every new booking uses the fingerprinted atomic SQL path, with legacy no-product replay narrowly bounded', () => {
     const edge = read('../supabase/functions/booking-create/index.ts');

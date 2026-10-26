@@ -160,7 +160,6 @@ jobs:
           source "$RUNNER_TEMP/supabase.env"
           set +a
           cat > "$RUNNER_TEMP/phase24-functions.env" <<'ENV'
-          TURNSTILE_BYPASS=true
           RATE_LIMIT_SALT=phase24-local-ci-only-rate-limit-salt
           ALLOWED_ORIGINS=http://127.0.0.1:54321
           ENV
@@ -180,7 +179,7 @@ jobs:
             echo "BARBEROS_E2E_CONCURRENCY_BARBER_ID=$BARBER_ID"
             echo "BARBEROS_E2E_CONCURRENCY_START=$SLOT_START"
           } >> "$GITHUB_ENV"
-      - name: Serve local Edge Functions with CI-only Turnstile bypass
+      - name: Serve local Edge Functions for concurrency tests
         run: |
           supabase functions serve booking-create --env-file "$RUNNER_TEMP/phase24-functions.env" --no-verify-jwt > "$RUNNER_TEMP/phase24-functions.log" 2>&1 &
           echo $! > "$RUNNER_TEMP/phase24-functions.pid"

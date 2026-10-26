@@ -6,7 +6,6 @@ import { useScopedTheme } from '@/themes';
 import { BARBER_FALLBACK_PHOTOS, SERVICE_FALLBACK_PHOTOS, PhotoWithFallback } from '@/components/PhotoWithFallback';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { Field } from '@/components/ui/Field';
-import { TurnstileWidget } from '@/components/security/TurnstileWidget';
 import { buildWhatsAppLink } from '@/lib/calendar';
 import { formatMT, humanError } from '@/lib/utils';
 import { useAvailableDays, useAvailableSlots } from '@/features/availability/api';
@@ -282,12 +281,8 @@ export default function BookingWizard() {
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingAttemptKey, setBookingAttemptKey] = useState(() => crypto.randomUUID());
   const bookingAttemptFingerprint = useRef<string | null>(null);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [shopCart, setShopCart] = useState<ShopCart>({});
   useEffect(() => { setShopCart({}); setBookingError(null); setBookingAttemptKey(crypto.randomUUID()); bookingAttemptFingerprint.current = null; }, [slug]);
-  const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() ?? '';
-  const turnstileRequired = import.meta.env.VITE_BOOKING_TURNSTILE_REQUIRED === 'true' || import.meta.env.PROD;
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   const shopStepAvailable = shopCatalogQuery.data?.enabled === true;
@@ -396,7 +391,6 @@ export default function BookingWizard() {
   const depositConfigValid = !service || depositCents <= service.price_cents;
   const canBook = Boolean(
     !shopCatalogQuery.isLoading && selectableService && start && (barberParam === 'any' || barber) && depositConfigValid &&
-    ((!turnstileRequired && !turnstileSiteKey) || Boolean(turnstileSiteKey && turnstileToken)) &&
     shopLines.length <= 20,
   );
 
@@ -509,14 +503,6 @@ export default function BookingWizard() {
   };
 
   const submitBooking = async () => {
-    if ((turnstileRequired || turnstileSiteKey) && !turnstileSiteKey) {
-      setBookingError('A marcação está temporariamente indisponível porque a verificação de segurança não está configurada.');
-      return;
-    }
-    if (turnstileSiteKey && !turnstileToken) {
-      setBookingError('Conclua a verificação de segurança antes de confirmar a marcação.');
-      return;
-    }
     if (!canBook || !slug || !selectableService || !start) return;
 
     const nextErrors: Record<string, string> = {};
@@ -567,7 +553,6 @@ export default function BookingWizard() {
         p_email: email || null,
         p_shop_items: shopItems,
         idempotency_key: requestKey,
-        ...(turnstileSiteKey ? { turnstile_token: turnstileToken ?? undefined } : {}),
       });
       rememberLocalBooking({ token: result.manage_token, shopSlug: slug, startsAt: start, serviceName: selectableService.name });
       navigate(`/marcacao/${result.manage_token}`, { replace: true });
@@ -584,9 +569,7 @@ export default function BookingWizard() {
       }
       const message = errorCode.includes('SLOT_TAKEN') || errorCode.includes('SLOT_UNAVAILABLE')
         ? 'Este horário acabou de ser ocupado. Escolha outro horário.'
-        : errorCode === 'BOT_CHECK_FAILED'
-          ? 'A verificação de segurança expirou ou não foi aceite. Verifique novamente.'
-          : errorCode === 'RATE_LIMITED'
+        : errorCode === 'RATE_LIMITED'
             ? 'Foram feitas demasiadas tentativas. Aguarde alguns minutos e tente novamente.'
             : errorCode === 'IDEMPOTENCY_IN_PROGRESS'
               ? 'Esta tentativa ainda está a ser processada. Aguarde um momento antes de tentar novamente.'
@@ -598,10 +581,6 @@ export default function BookingWizard() {
                     ? 'A selecção mudou desde a última tentativa. Confirme novamente para continuar com os dados actuais.'
                     : humanError(error);
       setBookingError(message);
-      if (turnstileSiteKey) {
-        setTurnstileToken(null);
-        setTurnstileResetKey((value) => value + 1);
-      }
       if (errorCode.includes('SLOT_TAKEN') || errorCode.includes('SLOT_UNAVAILABLE')) {
         updateSearchParams(searchParams, setSearchParams, { step: '5', start: null });
         await slotsQuery.refetch();
@@ -854,28 +833,6 @@ export default function BookingWizard() {
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                     <p className="t-body text-ink-mid">Não precisa de criar conta. O email é opcional. Guarde o link de gestão apresentado no ecrã após confirmar; as notificações por email dependem da configuração da barbearia.</p>
                   </div>
-                  {turnstileSiteKey ? (
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
-                      <p className="t-label text-ink-mid">Confirme que é uma pessoa antes de finalizar.</p>
-                      <TurnstileWidget
-                        key={turnstileResetKey}
-                        siteKey={turnstileSiteKey}
-                        onTokenChange={setTurnstileToken}
-                      />
-                    </div>
-                  ) : turnstileRequired ? (
-                    <div role="alert" className="rounded-2xl border border-st-noshow/30 bg-st-noshow/10 p-4">
-                      <p className="t-label text-st-noshow">
-                        A verificação de segurança não está configurada. As marcações estão temporariamente bloqueadas.
-                      </p>
-                    </div>
-                  ) : null}
-                  {shopStepAvailable && shopItemCount > 0 && (
-                    <div role="status" className="rounded-2xl border border-white/10 bg-white/5 p-4" data-testid="booking-shop-order-summary">
-                      <p className="t-body text-ink-mid">Os artigos serão registados como pedido associado à marcação. O pagamento não é efectuado nesta etapa; a equipa confirma a disponibilidade e a preparação.</p>
-                      <Button type="button" variant="secondary" size="sm" onClick={() => setStep(6)} className="mt-3">Voltar à Loja para rever artigos</Button>
-                    </div>
-                  )}
                   {bookingError && <div aria-live="assertive"><ErrorState message={bookingError} /></div>}
                   <Button
                     type="submit"

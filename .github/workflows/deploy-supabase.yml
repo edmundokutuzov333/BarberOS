@@ -1,7 +1,7 @@
 name: BarberOS Supabase Production
 
 # Never apply database migrations to production automatically on pushes to main.
-# Release remains blocked until the history and Turnstile gates are explicitly verified.
+# Release remains blocked until migration history and isolated staging gates are explicitly verified.
 on:
   workflow_dispatch:
     inputs:
@@ -30,7 +30,6 @@ jobs:
         env:
           CONFIRMATION: ${{ inputs.confirm_production_release }}
           HISTORY_RECONCILED: ${{ vars.BARBEROS_PRODUCTION_MIGRATION_HISTORY_RECONCILED }}
-          TURNSTILE_CONFIGURED: ${{ vars.BARBEROS_TURNSTILE_CONFIGURED }}
           RESEND_CONFIGURED: ${{ vars.BARBEROS_RESEND_CONFIGURED }}
           STAGING_VERIFIED: ${{ vars.BARBEROS_STAGING_VERIFIED }}
         run: |
@@ -40,10 +39,6 @@ jobs:
           fi
           if [ "$HISTORY_RECONCILED" != "true" ]; then
             echo "::error::Production release blocked: set BARBEROS_PRODUCTION_MIGRATION_HISTORY_RECONCILED=true only after migration history is reconciled and staging has passed."
-            exit 1
-          fi
-          if [ "$TURNSTILE_CONFIGURED" != "true" ]; then
-            echo "::error::Production release blocked: configure VITE_TURNSTILE_SITE_KEY and VITE_BOOKING_TURNSTILE_REQUIRED=true in Vercel, TURNSTILE_SECRET_KEY in Supabase, and verify the allowed production origins."
             exit 1
           fi
           if [ "$RESEND_CONFIGURED" != "true" ]; then
@@ -85,7 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           supabase secrets list --project-ref "$SUPABASE_PROJECT_REF" > "$RUNNER_TEMP/barberos-supabase-secrets.txt"
-          for name in TURNSTILE_SECRET_KEY RATE_LIMIT_SALT ALLOWED_ORIGINS RESEND_API_KEY RESEND_WEBHOOK_SECRET NOTIFICATION_EMAIL_FROM; do
+          for name in RATE_LIMIT_SALT ALLOWED_ORIGINS RESEND_API_KEY RESEND_WEBHOOK_SECRET NOTIFICATION_EMAIL_FROM; do
             if ! grep -q "$name" "$RUNNER_TEMP/barberos-supabase-secrets.txt"; then
               echo "::error::Required Supabase runtime secret is missing: $name"
               exit 1
@@ -160,6 +155,6 @@ jobs:
             echo "## BarberOS Supabase production release"
             echo
             echo "Project: $SUPABASE_PROJECT_REF"
-            echo "The explicit confirmation, history, and Turnstile gates were satisfied."
+            echo "The explicit confirmation, migration-history, and staging gates were satisfied."
             echo "Migrations and Edge Functions were released from main."
           } >> "$GITHUB_STEP_SUMMARY"

@@ -23,7 +23,7 @@
   <rect x="55" y="415" width="175" height="43" rx="9" fill="#1a1710" stroke="#dfc27b" stroke-opacity=".18"/><text x="70" y="441" fill="#dfc27b" font-size="12">Email · Resend</text>
   <rect x="245" y="415" width="175" height="43" rx="9" fill="#1a1710" stroke="#dfc27b" stroke-opacity=".18"/><text x="260" y="441" fill="#dfc27b" font-size="12">WhatsApp</text>
   <rect x="435" y="415" width="175" height="43" rx="9" fill="#1a1710" stroke="#dfc27b" stroke-opacity=".18"/><text x="450" y="441" fill="#dfc27b" font-size="12">M-Pesa · e-Mola</text>
-  <rect x="625" y="415" width="215" height="43" rx="9" fill="#1a1710" stroke="#dfc27b" stroke-opacity=".18"/><text x="640" y="441" fill="#dfc27b" font-size="12">Anti-bot · Turnstile</text>
+  <rect x="625" y="415" width="215" height="43" rx="9" fill="#1a1710" stroke="#dfc27b" stroke-opacity=".18"/><text x="640" y="441" fill="#dfc27b" font-size="12">Rate limit · CORS</text>
  </g>
  <path d="M735 167V184H450V344" fill="none" stroke="#b9964f" stroke-opacity=".65" stroke-width="1.5" stroke-dasharray="4 5" marker-end="url(#arrow)"/>
  <rect x="905" y="352" width="278" height="130" rx="15" fill="#14130f" stroke="#dfc27b" stroke-opacity=".26"/><text x="925" y="378" fill="#f7f4ec" font-weight="700" font-size="13">Regra fundamental</text><text x="925" y="402" fill="#aca698" font-size="11">UI não substitui autorização</text><text x="925" y="420" fill="#aca698" font-size="11">do servidor nem invariantes</text><text x="925" y="438" fill="#aca698" font-size="11">transaccionais da base de dados.</text><path d="M925 454H1160" stroke="#dfc27b" stroke-opacity=".28"/>

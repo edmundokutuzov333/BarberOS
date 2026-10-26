@@ -35,12 +35,6 @@ Deno.test("conflict message is customer-recoverable", () => {
   }
 });
 
-Deno.test("bot check is forbidden", () => {
-  if (httpStatusForDomainCode("BOT_CHECK_FAILED") !== 403) {
-    throw new Error("BOT_CHECK_FAILED must map to HTTP 403");
-  }
-});
-
 Deno.test("rate limit is throttled", () => {
   if (httpStatusForDomainCode("RATE_LIMITED") !== 429) {
     throw new Error("RATE_LIMITED must map to HTTP 429");
