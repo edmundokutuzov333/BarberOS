@@ -18,6 +18,7 @@ alter table public.shop_order_operation_events enable row level security;
 revoke all on public.shop_order_operation_events from public, anon, authenticated;
 grant select on public.shop_order_operation_events to authenticated;
 grant all on public.shop_order_operation_events to service_role;
+drop policy if exists shop_order_operation_events_manager_read on public.shop_order_operation_events;
 create policy shop_order_operation_events_manager_read on public.shop_order_operation_events
 for select using (
   public.is_member(barbershop_id, array['owner','manager']::public.app_role[])
