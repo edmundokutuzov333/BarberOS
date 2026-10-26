@@ -41,6 +41,7 @@ A secret pode ser gerada localmente com `openssl rand -hex 32`. Configurar os va
 - O estado OAuth é cifrado com AES-GCM, expira em 10 minutos e não contém credenciais Google.
 - O rate limiting usa a função interna `rate_limit_consume`; a origem do frontend continua limitada à allowlist de produção.
 - Os access tokens são usados em memória apenas para inserir/actualizar o evento e não são persistidos.
+- O âmbito OAuth `calendar.events.owned` permite tecnicamente ver, criar, alterar e apagar eventos dos calendários que o cliente possui. O código do BarberOS usa a autorização apenas para criar ou actualizar o evento determinístico desta marcação e não chama endpoints de leitura dos restantes eventos.
 - O ID de evento é determinístico por marcação para evitar duplicados em repetições do callback.
 - Os eventos usam visibilidade privada e lembretes predefinidos da conta Google.
 
