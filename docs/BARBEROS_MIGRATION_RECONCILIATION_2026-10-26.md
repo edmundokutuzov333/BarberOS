@@ -101,3 +101,47 @@ Continuam a existir diferenças de nomes/registos para migrations antigas de dom
 A suite completa `supabase/tests/waitlist_phase13.sql` foi executada em produção com rollback. Em staging, foi executada a mesma suite dentro de uma transacção com tenant, owner, serviço, barbeiro e horário de QA temporários, porque o staging não tinha uma barbearia elegível para servir de fixture; o teste passou e todos os dados temporários foram revertidos.
 
 O contrato `supabase/tests/resend_webhook_contract.test.sql` usa pgTAP e não pode ser executado directamente nos projectos remotos consultados porque a extensão/função `plan(integer)` não está instalada nesses ambientes. Para não confundir essa limitação do runner com uma falha do ledger, foi executado em ambos um contrato SQL alternativo, dentro de transacção revertida: confirma RLS, bloqueio de acesso anon/authenticated, privilégio service_role e deduplicação idempotente de `provider_event_id`. Esse contrato passou em staging e produção. O teste pgTAP foi adicionado à suite de CI isolada em `scripts/test_database_phase23.py`.
+
+
+## Auditoria de histórico e schema em directo, 26 de Outubro de 2026
+
+Esta secção regista uma leitura independente efectuada depois do snapshot anterior. As operações foram exclusivamente de leitura: **não foram aplicadas migrations, não foram alteradas tabelas de histórico e não foram alterados dados de produção**.
+
+### Estado dos dados da Loja
+
+| Verificação | Produção | Staging |
+|---|---:|---:|
+| Barbearias | 4 | 1 |
+| \`shop_enabled = true\` | 0 | 0 |
+| Produtos | 0 | 0 |
+| Pedidos | 0 | 0 |
+| Pagamentos | 0 | 0 |
+| Reservas de stock | 0 | 0 |
+| Movimentos de stock | 0 | 0 |
+| Alertas internos da Loja | 0 | 0 |
+
+O schema operacional da Loja existe nos dois ambientes, mas isto não certifica a equivalência integral entre os esquemas de toda a plataforma.
+
+### Divergência estrutural entre ambientes
+
+| Objectos em \`public\` e \`private\` | Produção | Staging |
+|---|---:|---:|
+| Tabelas físicas | 38 | 34 |
+| Funções/procedures | 346 | 316 |
+| Triggers | 72 | 51 |
+| Policies RLS | 52 | 55 |
+| Constraints | 242 | 224 |
+
+Produção contém quatro tabelas que não estavam presentes no staging na consulta: \`gmail_connections\`, \`gmail_oauth_states\`, \`platform_access_events\` e \`support_tickets\`. Também foram observadas diferenças de colunas, funções, triggers e privilégios. Exemplos de colunas só presentes em produção incluem \`appointments.manage_token_expires_at\`, \`profiles.password_change_required\` e \`services.photo_url\`. Estas diferenças não devem ser tratadas como aliases de timestamp; exigem avaliação funcional individual antes de declarar os dois ambientes equivalentes.
+
+### Correspondência dos registos de migrations
+
+O snapshot de leitura foi guardado em \`docs/barberos-migration-history-snapshot-2026-10-26.json\`. Contém 144 registos de histórico de produção, 114 de staging e a lista dos 145 ficheiros de migration existentes na branch \`main\` no momento da captura. O script \`scripts/audit-supabase-migration-history.mjs\` associa nomes lógicos aos ficheiros de origem, identifica aliases e deixa explícitas as entradas sem correspondência comprovada.
+
+Há entradas históricas remotas sem ficheiro de origem correspondente na branch actual, incluindo migrations de permissões Phase 22, uma reconciliação de pagamentos, o hardening do gateway de tokens e o tema da plataforma. Staging inclui ainda registos de reconciliação de schema sem artefacto SQL correspondente em \`main\`. Não se inventou SQL retroactivo para estas entradas. A ausência de um nome correspondente não prova, por si só, que o objecto não exista; a consulta ao schema confirma, contudo, que a equivalência total entre o histórico e os objectos instalados continua por demonstrar.
+
+**Decisão de lançamento:** NO-GO para produção. A acção de deploy Supabase em \`.github/workflows/deploy-supabase.yml\` executa agora o auditor em modo estrito antes do preview/aplicação e falha se existirem entradas históricas não resolvidas. O modo normal da CI publica o relatório sem alterar ambientes, permitindo continuar a validar o código. Para levantar o bloqueio, cada entrada deve ter a migration original recuperada ou uma resolução aprovada com evidência, seguida de comparação de definições SQL, constraints, índices, triggers, RLS, grants e teste da sequência forward-only num clone isolado.
+
+### Operação e formação humana
+
+A execução SQL automatizada não constitui formação nem prova de um dia de operação. O runbook continua por preencher porque não existe evidência de formandos, formador, tarefas executadas na interface, incidentes e aceitação assinada. A Loja deve permanecer desligada até à execução presencial/remota com operadores e aprovação documentada.

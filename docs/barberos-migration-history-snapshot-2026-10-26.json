@@ -1,0 +1,1208 @@
+{
+  "captured_on": "2026-10-26",
+  "repository": "edmundokutuzov333/BarberOS",
+  "source_commit": "9cf4384b21f5c79dc8bd52866c4d6f4290470cd4",
+  "source_branch": "main",
+  "purpose": "Read-only audit snapshot. Historical names and versions are metadata; neither this file nor the audit script changes a remote migration history or database schema.",
+  "source_files": [
+    "20260918132000_initial_schema.sql",
+    "20260918132200_rls.sql",
+    "20260918132400_engine.sql",
+    "20260918132513_security_hardening.sql",
+    "20260918134600_domain_integrity.sql",
+    "20260918134657_domain_integrity_contract.sql",
+    "20260918135712_atomic_barber_save.sql",
+    "20260918140253_availability_engine_2.sql",
+    "20260918140609_availability_security.sql",
+    "20260918141607_booking_engine_2_0.sql",
+    "20260918141851_20260918162700_booking_engine_2_0_phone_normalization.sql",
+    "20260918141926_20260918163000_booking_engine_2_0_returning_fix.sql",
+    "20260918142515_booking_engine_2_0_indexes.sql",
+    "20260918143050_appointment_token_view.sql",
+    "20260918143124_appointment_token_cancel.sql",
+    "20260918143139_appointment_token_reschedule.sql",
+    "20260918143239_appointment_token_view_customer_name.sql",
+    "20260918143317_appointment_token_cancel_returning_fix.sql",
+    "20260918143353_appointment_token_public_boundary.sql",
+    "20260918143427_appointment_token_slots.sql",
+    "20260918143814_appointment_token_cancel_lock.sql",
+    "20260918143918_appointment_token_cancel_lock_order.sql",
+    "20260918144319_public_barbershop_surface.sql",
+    "20260918144500_appointment_token_cancel_returning_fix.sql",
+    "20260918144535_public_barbershop_anon_boundary.sql",
+    "20260918145140_public_booking_config.sql",
+    "20260918145210_public_booking_deposit_config.sql",
+    "20260918150407_agenda_operational_engine.sql",
+    "20260918150747_agenda_confirm_deposit_guard.sql",
+    "20260918150955_agenda_argument_validation_order.sql",
+    "20260918151118_agenda_cross_barber_reschedule.sql",
+    "20260918151603_agenda_scope_and_index_hardening.sql",
+    "20260918151955_realtime_appointments_publication.sql",
+    "20260918153000_manual_booking_engine.sql",
+    "20260918153100_booking_phone_validation_fix.sql",
+    "20260918153200_booking_phone_validation_strict.sql",
+    "20260918153600_booking_phone_structural_validation.sql",
+    "20260918154000_manual_booking_result_contract.sql",
+    "20260918160210_enable_pg_trgm_for_customer_search.sql",
+    "20260918160223_customer_crm.sql",
+    "20260918160633_customer_crm_filter_fix.sql",
+    "20260918160814_customer_crm_barber_scope.sql",
+    "20260918162000_waitlist_engine.sql",
+    "20260918162100_waitlist_read_models.sql",
+    "20260918162200_waitlist_slot_release_trigger.sql",
+    "20260918162300_waitlist_join_fix.sql",
+    "20260918162400_waitlist_allocator_qualification_fix.sql",
+    "20260918162500_waitlist_claim_qualification_fix.sql",
+    "20260918162600_waitlist_claim_notification_fix.sql",
+    "20260918162700_waitlist_expire_return_fix.sql",
+    "20260918162800_waitlist_lock_order_fix.sql",
+    "20260918162900_waitlist_join_concurrency_fix.sql",
+    "20260918163000_waitlist_offer_identity_fix.sql",
+    "20260918163900_notifications_status_processing.sql",
+    "20260918164000_notifications_engine.sql",
+    "20260918165000_notifications_claim_scope_fix.sql",
+    "20260918165100_notification_manual_retry.sql",
+    "20260918165200_notification_retry_qualification_fix.sql",
+    "20260918170000_enable_cron_extensions.sql",
+    "20260918170001_scheduler_jobs.sql",
+    "20260918170500_notification_automation_status.sql",
+    "20260918170600_waitlist_expiry_notification_suppression.sql",
+    "20260918170700_notification_stale_state_guard.sql",
+    "20260918170900_notification_claim_return_query_fix.sql",
+    "20260918172000_payments_domain.sql",
+    "20260918172100_payment_rpc.sql",
+    "20260918172200_payment_config_actor_fix.sql",
+    "20260918172300_payment_public_and_reconciliation.sql",
+    "20260918172400_payment_reconciliation_cron.sql",
+    "20260918172500_payment_runtime_and_late_success.sql",
+    "20260918172700_payment_provider_column_qualification.sql",
+    "20260918172800_payment_provider_alias_fix.sql",
+    "20260918172900_payment_pgcrypto_qualification.sql",
+    "20260918180257_review_lifecycle.sql",
+    "20260918180346_review_public_contract.sql",
+    "20260918181012_review_submit_return_contract.sql",
+    "20260918181052_review_submit_return_contract_v2.sql",
+    "20260918182214_reports_engine.sql",
+    "20260918182244_reports_summary_alias_hardening.sql",
+    "20260918182312_reports_capacity_alias_hardening.sql",
+    "20260918182338_reports_daily_alias_hardening.sql",
+    "20260918182413_reports_barber_alias_hardening.sql",
+    "20260918183422_platform_admin_domain.sql",
+    "20260918183449_platform_admin_user_contract.sql",
+    "20260918183615_platform_admin_metrics_contract.sql",
+    "20260918184114_platform_admin_mutation_contract.sql",
+    "20260918184146_platform_admin_mutation_alias_hardening.sql",
+    "20260918184817_platform_admin_metrics_daily_fix.sql",
+    "20260918184824_platform_admin_support_unassign.sql",
+    "20260918235933_phase_25_public_performance_indexes.sql",
+    "20260919001000_phase_22_permissions_audit.sql",
+    "20260919001100_phase_22_notification_boundary_patch.sql",
+    "20260919005227_release_audit_appointments_read_model.sql",
+    "20261018030000_noir_brass_demo_theme.sql",
+    "20261019110000_booking_gateway_hardening.sql",
+    "20261019130000_notification_channels_email_first.sql",
+    "20261019140000_availability_week_batch.sql",
+    "20261019140257_default_haircut_photos_and_moz_demo_data.sql",
+    "20261019144435_refine_haircut_reference_photos_and_demo_profiles.sql",
+    "20261019150000_platform_foundations.sql",
+    "20261019160000_payment_rpc_privilege_lockdown.sql",
+    "20261019170000_token_rpc_lockdown.sql",
+    "20261019180000_complete_public_shop_profiles.sql",
+    "20261020053148_publish_shop_photos_and_polished_profiles.sql",
+    "20261020055712_photography_services_and_team.sql",
+    "20261020055726_repair_barber_hours_for_published_team.sql",
+    "20261020061812_repair_manage_token_expiry.sql",
+    "20261020062637_platform_access_audit.sql",
+    "20261020062902_force_password_change.sql",
+    "20261020063700_enforce_password_rotation.sql",
+    "20261020063931_fix_profile_password_flag_policy.sql",
+    "20261021130000_gmail_workspace_integration.sql",
+    "20261023064854_resend_webhook_event_tracking.sql",
+    "20261023065529_booking_rpc_idempotency_and_lockdown.sql",
+    "20261023065622_booking_rate_limit_primitives.sql",
+    "20261023065630_availability_week_batch_reconcile.sql",
+    "20261023070321_token_rpc_lockdown_reconciliation.sql",
+    "20261023070547_public_foreign_key_covering_indexes.sql",
+    "20261023090731_shop_domain_model_phase1.sql",
+    "20261023091111_shop_catalog_write_privileges_hardening.sql",
+    "20261023091126_shop_order_transition_invariants.sql",
+    "20261023091911_shop_foreign_key_covering_indexes.sql",
+    "20261023092152_shop_feature_flag_server_guard.sql",
+    "20261023093733_shop_catalog_management_phase2.sql",
+    "20261023094656_shop_catalog_image_authorizer_fk_index.sql",
+    "20261023095613_shop_catalog_management_phase2.sql",
+    "20261023095633_shop_catalog_publication_guard_phase2.sql",
+    "20261023100515_shop_catalog_image_metadata_privilege_hardening.sql",
+    "20261023100819_shop_catalog_product_rules_and_duplicate.sql",
+    "20261023100829_shop_catalog_duplicate_service_role_contract.sql",
+    "20261023101554_shop_order_options_validator_execute_grant.sql",
+    "20261023120503_shop_public_catalog_phase3.sql",
+    "20261023124453_shop_order_atomic_phase4.sql",
+    "20261023133806_20261023134000_shop_order_reservation_release_phase4.sql",
+    "20261023152000_waitlist_expire_status_persistence.sql",
+    "20261026110000_shop_order_operations_phase5.sql",
+    "20261026120000_shop_order_operations_hardening_phase5.sql",
+    "20261026130000_shop_order_item_restore_phase5.sql",
+    "20261026130100_shop_order_operations_integrity_phase5.sql",
+    "20261026140000_shop_order_item_restore_active_phase5.sql",
+    "20261026150000_shop_communications_reporting_phase6.sql",
+    "20261026160000_shop_catalog_reference_pilot_phase7.sql",
+    "20261026170000_shop_order_payment_ledger_phase7.sql",
+    "20261026180000_shop_payment_queue_partial_delivery_fix.sql",
+    "20261026190000_resend_email_event_fk_index.sql"
+  ],
+  "projects": {
+    "production": {
+      "ref": "alseiinjzwjdiwtvkdzy",
+      "migration_count": 144,
+      "migrations": [
+        {
+          "version": "20260918132000",
+          "name": "initial_schema"
+        },
+        {
+          "version": "20260918132200",
+          "name": "rls"
+        },
+        {
+          "version": "20260918132400",
+          "name": "engine"
+        },
+        {
+          "version": "20260918132513",
+          "name": "security_hardening"
+        },
+        {
+          "version": "20260918134600",
+          "name": "domain_integrity"
+        },
+        {
+          "version": "20260918134657",
+          "name": "domain_integrity_contract"
+        },
+        {
+          "version": "20260918135712",
+          "name": "atomic_barber_save"
+        },
+        {
+          "version": "20260918140253",
+          "name": "availability_engine_2"
+        },
+        {
+          "version": "20260918140609",
+          "name": "availability_security"
+        },
+        {
+          "version": "20260918141607",
+          "name": "booking_engine_2_0"
+        },
+        {
+          "version": "20260918141851",
+          "name": "20260918162700_booking_engine_2_0_phone_normalization"
+        },
+        {
+          "version": "20260918141926",
+          "name": "20260918163000_booking_engine_2_0_returning_fix"
+        },
+        {
+          "version": "20260918142515",
+          "name": "booking_engine_2_0_indexes"
+        },
+        {
+          "version": "20260918143050",
+          "name": "appointment_token_view"
+        },
+        {
+          "version": "20260918143124",
+          "name": "appointment_token_cancel"
+        },
+        {
+          "version": "20260918143139",
+          "name": "appointment_token_reschedule"
+        },
+        {
+          "version": "20260918143239",
+          "name": "appointment_token_view_customer_name"
+        },
+        {
+          "version": "20260918143317",
+          "name": "appointment_token_cancel_returning_fix"
+        },
+        {
+          "version": "20260918143353",
+          "name": "appointment_token_public_boundary"
+        },
+        {
+          "version": "20260918143427",
+          "name": "appointment_token_slots"
+        },
+        {
+          "version": "20260918143814",
+          "name": "appointment_token_cancel_lock"
+        },
+        {
+          "version": "20260918143918",
+          "name": "appointment_token_cancel_lock_order"
+        },
+        {
+          "version": "20260918144319",
+          "name": "public_barbershop_surface"
+        },
+        {
+          "version": "20260918144500",
+          "name": "appointment_token_cancel_returning_fix"
+        },
+        {
+          "version": "20260918144535",
+          "name": "public_barbershop_anon_boundary"
+        },
+        {
+          "version": "20260918145140",
+          "name": "public_booking_config"
+        },
+        {
+          "version": "20260918145210",
+          "name": "public_booking_deposit_config"
+        },
+        {
+          "version": "20260918150407",
+          "name": "agenda_operational_engine"
+        },
+        {
+          "version": "20260918150747",
+          "name": "agenda_confirm_deposit_guard"
+        },
+        {
+          "version": "20260918150955",
+          "name": "agenda_argument_validation_order"
+        },
+        {
+          "version": "20260918151118",
+          "name": "agenda_cross_barber_reschedule"
+        },
+        {
+          "version": "20260918151603",
+          "name": "agenda_scope_and_index_hardening"
+        },
+        {
+          "version": "20260918151955",
+          "name": "realtime_appointments_publication"
+        },
+        {
+          "version": "20260918153306",
+          "name": "manual_booking_engine"
+        },
+        {
+          "version": "20260918153505",
+          "name": "booking_phone_validation_fix"
+        },
+        {
+          "version": "20260918153729",
+          "name": "manual_booking_phone_structural"
+        },
+        {
+          "version": "20260918153845",
+          "name": "manual_booking_result_contract"
+        },
+        {
+          "version": "20260918160210",
+          "name": "enable_pg_trgm_for_customer_search"
+        },
+        {
+          "version": "20260918160223",
+          "name": "customer_crm"
+        },
+        {
+          "version": "20260918160633",
+          "name": "customer_crm_filter_fix"
+        },
+        {
+          "version": "20260918160814",
+          "name": "customer_crm_barber_scope"
+        },
+        {
+          "version": "20260918162103",
+          "name": "waitlist_engine"
+        },
+        {
+          "version": "20260918162207",
+          "name": "waitlist_read_models"
+        },
+        {
+          "version": "20260918162313",
+          "name": "waitlist_slot_release_trigger"
+        },
+        {
+          "version": "20260918162609",
+          "name": "waitlist_join_fix"
+        },
+        {
+          "version": "20260918162706",
+          "name": "waitlist_allocator_qualification_fix"
+        },
+        {
+          "version": "20260918162730",
+          "name": "waitlist_claim_qualification_fix"
+        },
+        {
+          "version": "20260918162753",
+          "name": "waitlist_claim_notification_fix"
+        },
+        {
+          "version": "20260918162815",
+          "name": "waitlist_expire_return_fix"
+        },
+        {
+          "version": "20260918162938",
+          "name": "waitlist_lock_order_fix"
+        },
+        {
+          "version": "20260918163038",
+          "name": "waitlist_join_concurrency_fix"
+        },
+        {
+          "version": "20260918163337",
+          "name": "waitlist_offer_identity_fix"
+        },
+        {
+          "version": "20260918164700",
+          "name": "notifications_status_processing"
+        },
+        {
+          "version": "20260918164708",
+          "name": "notifications_engine"
+        },
+        {
+          "version": "20260918165143",
+          "name": "notifications_claim_scope_fix"
+        },
+        {
+          "version": "20260918165310",
+          "name": "notification_manual_retry"
+        },
+        {
+          "version": "20260918165537",
+          "name": "notification_retry_qualification_fix"
+        },
+        {
+          "version": "20260918170232",
+          "name": "enable_cron_extensions"
+        },
+        {
+          "version": "20260918170404",
+          "name": "scheduler_jobs"
+        },
+        {
+          "version": "20260918170450",
+          "name": "notification_automation_status"
+        },
+        {
+          "version": "20260918170534",
+          "name": "waitlist_expiry_notification_suppression"
+        },
+        {
+          "version": "20260918170820",
+          "name": "notification_stale_state_guard"
+        },
+        {
+          "version": "20260918170907",
+          "name": "notification_claim_return_query_fix"
+        },
+        {
+          "version": "20260918172538",
+          "name": "20260918172000_payments_domain"
+        },
+        {
+          "version": "20260918172547",
+          "name": "20260918172000_payments_domain_reconcile"
+        },
+        {
+          "version": "20260918172557",
+          "name": "20260918172100_payment_rpc"
+        },
+        {
+          "version": "20260918172715",
+          "name": "20260918172200_payment_config_actor_fix"
+        },
+        {
+          "version": "20260918172758",
+          "name": "20260918172300_payment_public_and_reconciliation"
+        },
+        {
+          "version": "20260918173135",
+          "name": "20260918172400_payment_reconciliation_cron"
+        },
+        {
+          "version": "20260918173226",
+          "name": "20260918172500_payment_runtime_and_late_success"
+        },
+        {
+          "version": "20260918173437",
+          "name": "20260918172700_payment_provider_column_qualification"
+        },
+        {
+          "version": "20260918173525",
+          "name": "20260918172800_payment_provider_alias_fix"
+        },
+        {
+          "version": "20260918173617",
+          "name": "20260918172900_payment_pgcrypto_qualification"
+        },
+        {
+          "version": "20260918180257",
+          "name": "review_lifecycle"
+        },
+        {
+          "version": "20260918180346",
+          "name": "review_public_contract"
+        },
+        {
+          "version": "20260918181012",
+          "name": "review_submit_return_contract"
+        },
+        {
+          "version": "20260918181052",
+          "name": "review_submit_return_contract_v2"
+        },
+        {
+          "version": "20260918182214",
+          "name": "reports_engine"
+        },
+        {
+          "version": "20260918182244",
+          "name": "reports_summary_alias_hardening"
+        },
+        {
+          "version": "20260918182312",
+          "name": "reports_capacity_alias_hardening"
+        },
+        {
+          "version": "20260918182338",
+          "name": "reports_daily_alias_hardening"
+        },
+        {
+          "version": "20260918182413",
+          "name": "reports_barber_alias_hardening"
+        },
+        {
+          "version": "20260918183422",
+          "name": "platform_admin_domain"
+        },
+        {
+          "version": "20260918183449",
+          "name": "platform_admin_user_contract"
+        },
+        {
+          "version": "20260918183615",
+          "name": "platform_admin_metrics_contract"
+        },
+        {
+          "version": "20260918184114",
+          "name": "platform_admin_mutation_contract"
+        },
+        {
+          "version": "20260918184146",
+          "name": "platform_admin_mutation_alias_hardening"
+        },
+        {
+          "version": "20260918184817",
+          "name": "platform_admin_metrics_daily_fix"
+        },
+        {
+          "version": "20260918184824",
+          "name": "platform_admin_support_unassign"
+        },
+        {
+          "version": "20260918222131",
+          "name": "phase_22_permissions_hardening"
+        },
+        {
+          "version": "20260918222146",
+          "name": "20260919001000_phase_22_permissions_audit"
+        },
+        {
+          "version": "20260918222334",
+          "name": "phase_22_config_write_grants"
+        },
+        {
+          "version": "20260918222404",
+          "name": "20260919001100_phase_22_notification_boundary_patch"
+        },
+        {
+          "version": "20260918222928",
+          "name": "phase_22_public_read_grants"
+        },
+        {
+          "version": "20260918223047",
+          "name": "phase_22_permission_reconciliation"
+        },
+        {
+          "version": "20260918235933",
+          "name": "phase_25_public_performance_indexes"
+        },
+        {
+          "version": "20260919005227",
+          "name": "release_audit_appointments_read_model"
+        },
+        {
+          "version": "20261019140257",
+          "name": "default_haircut_photos_and_moz_demo_data"
+        },
+        {
+          "version": "20261019144435",
+          "name": "refine_haircut_reference_photos_and_demo_profiles"
+        },
+        {
+          "version": "20261020053148",
+          "name": "publish_shop_photos_and_polished_profiles"
+        },
+        {
+          "version": "20261020055712",
+          "name": "photography_services_and_team"
+        },
+        {
+          "version": "20261020055726",
+          "name": "repair_barber_hours_for_published_team"
+        },
+        {
+          "version": "20261020061812",
+          "name": "repair_manage_token_expiry"
+        },
+        {
+          "version": "20261020062637",
+          "name": "platform_access_audit"
+        },
+        {
+          "version": "20261020062902",
+          "name": "force_password_change"
+        },
+        {
+          "version": "20261020063700",
+          "name": "enforce_password_rotation"
+        },
+        {
+          "version": "20261020063931",
+          "name": "fix_profile_password_flag_policy"
+        },
+        {
+          "version": "20261021063049",
+          "name": "phase27_token_rpc_gateway_lockdown"
+        },
+        {
+          "version": "20261021141024",
+          "name": "gmail_workspace_integration"
+        },
+        {
+          "version": "20261021141221",
+          "name": "theme_engine_v2"
+        },
+        {
+          "version": "20261026094825",
+          "name": "booking_rpc_idempotency_and_lockdown"
+        },
+        {
+          "version": "20261026094830",
+          "name": "booking_rate_limit_primitives"
+        },
+        {
+          "version": "20261026094835",
+          "name": "availability_week_batch_reconcile"
+        },
+        {
+          "version": "20261026094839",
+          "name": "public_foreign_key_covering_indexes"
+        },
+        {
+          "version": "20261026094902",
+          "name": "shop_domain_model_phase1"
+        },
+        {
+          "version": "20261026094907",
+          "name": "shop_catalog_write_privileges_hardening"
+        },
+        {
+          "version": "20261026094913",
+          "name": "shop_order_transition_invariants"
+        },
+        {
+          "version": "20261026094917",
+          "name": "shop_foreign_key_covering_indexes"
+        },
+        {
+          "version": "20261026094922",
+          "name": "shop_feature_flag_server_guard"
+        },
+        {
+          "version": "20261026094930",
+          "name": "shop_catalog_management_phase2"
+        },
+        {
+          "version": "20261026094934",
+          "name": "shop_catalog_image_authorizer_fk_index"
+        },
+        {
+          "version": "20261026094938",
+          "name": "shop_catalog_management_phase2"
+        },
+        {
+          "version": "20261026094942",
+          "name": "shop_catalog_publication_guard_phase2"
+        },
+        {
+          "version": "20261026094946",
+          "name": "shop_catalog_image_metadata_privilege_hardening"
+        },
+        {
+          "version": "20261026095025",
+          "name": "shop_catalog_product_rules_and_duplicate"
+        },
+        {
+          "version": "20261026095029",
+          "name": "shop_catalog_duplicate_service_role_contract"
+        },
+        {
+          "version": "20261026095034",
+          "name": "shop_order_options_validator_execute_grant"
+        },
+        {
+          "version": "20261026095038",
+          "name": "shop_public_catalog_phase3"
+        },
+        {
+          "version": "20261026095050",
+          "name": "shop_order_atomic_phase4"
+        },
+        {
+          "version": "20261026095054",
+          "name": "20261023134000_shop_order_reservation_release_phase4"
+        },
+        {
+          "version": "20261026095109",
+          "name": "20261026110000_shop_order_operations_phase5"
+        },
+        {
+          "version": "20261026095114",
+          "name": "shop_order_operations_hardening_phase5"
+        },
+        {
+          "version": "20261026095119",
+          "name": "shop_order_item_restore_phase5"
+        },
+        {
+          "version": "20261026095125",
+          "name": "shop_order_operations_integrity_phase5"
+        },
+        {
+          "version": "20261026095134",
+          "name": "shop_order_item_restore_active_phase5"
+        },
+        {
+          "version": "20261026095139",
+          "name": "shop_communications_reporting_phase6"
+        },
+        {
+          "version": "20261026095143",
+          "name": "shop_catalog_reference_pilot_phase7"
+        },
+        {
+          "version": "20261026095148",
+          "name": "shop_order_payment_ledger_phase7"
+        },
+        {
+          "version": "20261026095200",
+          "name": "shop_payment_queue_partial_delivery_fix"
+        },
+        {
+          "version": "20261026100016",
+          "name": "token_rpc_lockdown_reconciliation"
+        },
+        {
+          "version": "20261026100258",
+          "name": "resend_webhook_event_tracking"
+        },
+        {
+          "version": "20261026100306",
+          "name": "waitlist_expire_status_persistence"
+        },
+        {
+          "version": "20261026100905",
+          "name": "resend_email_event_fk_index"
+        },
+        {
+          "version": "20261026101340",
+          "name": "phase_25_public_performance_indexes"
+        }
+      ]
+    },
+    "staging": {
+      "ref": "asikuyxaapcmayptimxi",
+      "migration_count": 114,
+      "migrations": [
+        {
+          "version": "20261019132753",
+          "name": "initial_schema"
+        },
+        {
+          "version": "20261019132819",
+          "name": "rls"
+        },
+        {
+          "version": "20261019132826",
+          "name": "engine"
+        },
+        {
+          "version": "20261019132831",
+          "name": "security_hardening"
+        },
+        {
+          "version": "20261019132837",
+          "name": "domain_integrity"
+        },
+        {
+          "version": "20261019132842",
+          "name": "domain_integrity_contract"
+        },
+        {
+          "version": "20261019132847",
+          "name": "atomic_barber_save"
+        },
+        {
+          "version": "20261019132852",
+          "name": "availability_engine_2"
+        },
+        {
+          "version": "20261019132857",
+          "name": "availability_security"
+        },
+        {
+          "version": "20261019132903",
+          "name": "booking_engine_2_0"
+        },
+        {
+          "version": "20261019132926",
+          "name": "20260918162700_booking_engine_2_0_phone_normalization"
+        },
+        {
+          "version": "20261019132930",
+          "name": "20260918163000_booking_engine_2_0_returning_fix"
+        },
+        {
+          "version": "20261019132935",
+          "name": "booking_engine_2_0_indexes"
+        },
+        {
+          "version": "20261019132939",
+          "name": "appointment_token_view"
+        },
+        {
+          "version": "20261019132944",
+          "name": "appointment_token_cancel"
+        },
+        {
+          "version": "20261019132949",
+          "name": "appointment_token_reschedule"
+        },
+        {
+          "version": "20261019132954",
+          "name": "appointment_token_view_customer_name"
+        },
+        {
+          "version": "20261019132959",
+          "name": "appointment_token_cancel_returning_fix"
+        },
+        {
+          "version": "20261019133033",
+          "name": "appointment_token_public_boundary"
+        },
+        {
+          "version": "20261019133037",
+          "name": "appointment_token_slots"
+        },
+        {
+          "version": "20261019133041",
+          "name": "appointment_token_cancel_lock"
+        },
+        {
+          "version": "20261019133045",
+          "name": "appointment_token_cancel_lock_order"
+        },
+        {
+          "version": "20261019133049",
+          "name": "public_barbershop_surface"
+        },
+        {
+          "version": "20261019133053",
+          "name": "appointment_token_cancel_returning_fix"
+        },
+        {
+          "version": "20261019133057",
+          "name": "public_barbershop_anon_boundary"
+        },
+        {
+          "version": "20261019133101",
+          "name": "public_booking_config"
+        },
+        {
+          "version": "20261019133115",
+          "name": "public_booking_deposit_config"
+        },
+        {
+          "version": "20261019133120",
+          "name": "agenda_operational_engine"
+        },
+        {
+          "version": "20261019133124",
+          "name": "agenda_confirm_deposit_guard"
+        },
+        {
+          "version": "20261019133128",
+          "name": "agenda_argument_validation_order"
+        },
+        {
+          "version": "20261019133133",
+          "name": "agenda_cross_barber_reschedule"
+        },
+        {
+          "version": "20261019133137",
+          "name": "agenda_scope_and_index_hardening"
+        },
+        {
+          "version": "20261019133141",
+          "name": "realtime_appointments_publication"
+        },
+        {
+          "version": "20261019133146",
+          "name": "manual_booking_engine"
+        },
+        {
+          "version": "20261019133201",
+          "name": "booking_phone_validation_fix"
+        },
+        {
+          "version": "20261019133348",
+          "name": "booking_phone_validation_strict"
+        },
+        {
+          "version": "20261019133426",
+          "name": "booking_phone_structural_validation"
+        },
+        {
+          "version": "20261019133431",
+          "name": "manual_booking_result_contract"
+        },
+        {
+          "version": "20261019133435",
+          "name": "enable_pg_trgm_for_customer_search"
+        },
+        {
+          "version": "20261019133440",
+          "name": "customer_crm"
+        },
+        {
+          "version": "20261019133444",
+          "name": "customer_crm_filter_fix"
+        },
+        {
+          "version": "20261019133448",
+          "name": "customer_crm_barber_scope"
+        },
+        {
+          "version": "20261019133452",
+          "name": "waitlist_engine"
+        },
+        {
+          "version": "20261019133456",
+          "name": "waitlist_read_models"
+        },
+        {
+          "version": "20261019133542",
+          "name": "waitlist_slot_release_trigger"
+        },
+        {
+          "version": "20261019133549",
+          "name": "waitlist_join_fix"
+        },
+        {
+          "version": "20261019133554",
+          "name": "waitlist_allocator_qualification_fix"
+        },
+        {
+          "version": "20261019133600",
+          "name": "waitlist_claim_qualification_fix"
+        },
+        {
+          "version": "20261019133607",
+          "name": "waitlist_claim_notification_fix"
+        },
+        {
+          "version": "20261019133614",
+          "name": "waitlist_expire_return_fix"
+        },
+        {
+          "version": "20261019133627",
+          "name": "waitlist_lock_order_fix"
+        },
+        {
+          "version": "20261019133638",
+          "name": "waitlist_join_concurrency_fix"
+        },
+        {
+          "version": "20261019133643",
+          "name": "waitlist_offer_identity_fix"
+        },
+        {
+          "version": "20261019133649",
+          "name": "notifications_status_processing"
+        },
+        {
+          "version": "20261019133656",
+          "name": "notifications_engine"
+        },
+        {
+          "version": "20261019133702",
+          "name": "notifications_claim_scope_fix"
+        },
+        {
+          "version": "20261019133707",
+          "name": "notification_manual_retry"
+        },
+        {
+          "version": "20261019133713",
+          "name": "notification_retry_qualification_fix"
+        },
+        {
+          "version": "20261019133725",
+          "name": "enable_cron_extensions"
+        },
+        {
+          "version": "20261019133731",
+          "name": "scheduler_jobs"
+        },
+        {
+          "version": "20261019133738",
+          "name": "notification_automation_status"
+        },
+        {
+          "version": "20261019133743",
+          "name": "waitlist_expiry_notification_suppression"
+        },
+        {
+          "version": "20261019133748",
+          "name": "notification_stale_state_guard"
+        },
+        {
+          "version": "20261019133754",
+          "name": "notification_claim_return_query_fix"
+        },
+        {
+          "version": "20261019133759",
+          "name": "payments_domain"
+        },
+        {
+          "version": "20261019133807",
+          "name": "payment_rpc"
+        },
+        {
+          "version": "20261019133820",
+          "name": "payment_config_actor_fix"
+        },
+        {
+          "version": "20261019133825",
+          "name": "payment_public_and_reconciliation"
+        },
+        {
+          "version": "20261019133830",
+          "name": "payment_reconciliation_cron"
+        },
+        {
+          "version": "20261019133836",
+          "name": "payment_runtime_and_late_success"
+        },
+        {
+          "version": "20261019133842",
+          "name": "payment_provider_column_qualification"
+        },
+        {
+          "version": "20261019133849",
+          "name": "payment_provider_alias_fix"
+        },
+        {
+          "version": "20261019133855",
+          "name": "payment_pgcrypto_qualification"
+        },
+        {
+          "version": "20261019133902",
+          "name": "review_lifecycle"
+        },
+        {
+          "version": "20261021132342",
+          "name": "theme_engine_v2"
+        },
+        {
+          "version": "20261023064854",
+          "name": "resend_webhook_event_tracking"
+        },
+        {
+          "version": "20261023065529",
+          "name": "booking_rpc_idempotency_and_lockdown"
+        },
+        {
+          "version": "20261023065622",
+          "name": "booking_rate_limit_primitives"
+        },
+        {
+          "version": "20261023065630",
+          "name": "availability_week_batch_reconcile"
+        },
+        {
+          "version": "20261023070321",
+          "name": "token_rpc_lockdown_reconciliation"
+        },
+        {
+          "version": "20261023070547",
+          "name": "public_foreign_key_covering_indexes"
+        },
+        {
+          "version": "20261023090731",
+          "name": "shop_domain_model_phase1"
+        },
+        {
+          "version": "20261023091111",
+          "name": "shop_catalog_write_privileges_hardening"
+        },
+        {
+          "version": "20261023091126",
+          "name": "shop_order_transition_invariants"
+        },
+        {
+          "version": "20261023091911",
+          "name": "shop_foreign_key_covering_indexes"
+        },
+        {
+          "version": "20261023092152",
+          "name": "shop_feature_flag_server_guard"
+        },
+        {
+          "version": "20261023093733",
+          "name": "shop_catalog_management_phase2"
+        },
+        {
+          "version": "20261023094656",
+          "name": "shop_catalog_image_authorizer_fk_index"
+        },
+        {
+          "version": "20261023095613",
+          "name": "shop_catalog_management_phase2"
+        },
+        {
+          "version": "20261023095633",
+          "name": "shop_catalog_publication_guard_phase2"
+        },
+        {
+          "version": "20261023100515",
+          "name": "shop_catalog_image_metadata_privilege_hardening"
+        },
+        {
+          "version": "20261023100819",
+          "name": "shop_catalog_product_rules_and_duplicate"
+        },
+        {
+          "version": "20261023100829",
+          "name": "shop_catalog_duplicate_service_role_contract"
+        },
+        {
+          "version": "20261023101554",
+          "name": "shop_order_options_validator_execute_grant"
+        },
+        {
+          "version": "20261023120503",
+          "name": "shop_public_catalog_phase3"
+        },
+        {
+          "version": "20261023124453",
+          "name": "shop_order_atomic_phase4"
+        },
+        {
+          "version": "20261023133806",
+          "name": "20261023134000_shop_order_reservation_release_phase4"
+        },
+        {
+          "version": "20261026063034",
+          "name": "20261026110000_shop_order_operations_phase5"
+        },
+        {
+          "version": "20261026064856",
+          "name": "shop_order_operations_hardening_phase5"
+        },
+        {
+          "version": "20261026065221",
+          "name": "shop_order_item_restore_phase5"
+        },
+        {
+          "version": "20261026070111",
+          "name": "shop_order_item_restore_active_phase5"
+        },
+        {
+          "version": "20261026071503",
+          "name": "shop_order_operations_integrity_phase5"
+        },
+        {
+          "version": "20261026085339",
+          "name": "shop_communications_reporting_phase6"
+        },
+        {
+          "version": "20261026085350",
+          "name": "shop_catalog_reference_pilot_phase7"
+        },
+        {
+          "version": "20261026092408",
+          "name": "shop_order_payment_ledger_phase7"
+        },
+        {
+          "version": "20261026092751",
+          "name": "reconcile_shop_phase6_schema_drift"
+        },
+        {
+          "version": "20261026092755",
+          "name": "reconcile_shop_phase7_schema_drift"
+        },
+        {
+          "version": "20261026093319",
+          "name": "shop_payment_queue_partial_delivery_fix"
+        },
+        {
+          "version": "20261026094018",
+          "name": "reconcile_shop_payment_reporting_phase7"
+        },
+        {
+          "version": "20261026094152",
+          "name": "reconcile_shop_payment_queue_partial_delivery_fix_v2"
+        },
+        {
+          "version": "20261026100303",
+          "name": "waitlist_expire_status_persistence"
+        },
+        {
+          "version": "20261026100358",
+          "name": "resend_webhook_event_tracking"
+        },
+        {
+          "version": "20261026100902",
+          "name": "resend_email_event_fk_index"
+        },
+        {
+          "version": "20261026101337",
+          "name": "phase_25_public_performance_indexes"
+        }
+      ]
+    }
+  },
+  "reviewed_resolutions": {
+    "production": {},
+    "staging": {}
+  },
+  "reviewed_local_sources": {
+    "production": {},
+    "staging": {}
+  }
+}

@@ -44,7 +44,7 @@ Executar em staging, sobre a base da aplicação e com feature flag pública des
 
 ## Checklist de aceitação humana
 
-Preencher após uma pessoa executar cada tarefa na interface, não apenas por execução SQL:
+**Estado neste snapshot de 26 de Outubro de 2026: NÃO EXECUTADO / SEM EVIDÊNCIA DE ACEITAÇÃO.** A automação não preenche esta secção. Preencher após uma pessoa executar cada tarefa na interface, não apenas por execução SQL:
 
 | Tarefa | Proprietário/gestor | Recepção | Barbeiro |
 |---|---|---|---|

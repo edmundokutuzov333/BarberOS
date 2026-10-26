@@ -88,6 +88,9 @@ jobs:
           done
           echo "Required runtime secret names are present. Values were not read or printed."
 
+      - name: Block release while migration-history mappings remain unresolved
+        run: node scripts/audit-supabase-migration-history.mjs --strict
+
       - name: Preview database changes
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
