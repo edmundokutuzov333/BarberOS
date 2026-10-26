@@ -196,6 +196,17 @@ function landing(token?: string, status?: string): URL {
 }
 
 async function appointmentFor(admin: SupabaseClient, token: string): Promise<Appointment> {
+  // Match token-gateway expiry semantics before using the booking RPC.
+  const { data: record, error: recordError } = await admin
+    .from("appointments")
+    .select("id, manage_token_expires_at")
+    .eq("manage_token", token)
+    .maybeSingle();
+  if (recordError) throw new CalendarError("GOOGLE_CALENDAR_PROVIDER_FAILED", 503);
+  if (!record || !record.manage_token_expires_at || Date.parse(record.manage_token_expires_at) <= Date.now()) {
+    throw new CalendarError("GOOGLE_CALENDAR_APPOINTMENT_NOT_FOUND", 404);
+  }
+
   const { data, error } = await admin.rpc("get_appointment_by_token", { p_token: token });
   if (error) throw new CalendarError("GOOGLE_CALENDAR_PROVIDER_FAILED", 503);
   const row = Array.isArray(data) ? data[0] : data;
