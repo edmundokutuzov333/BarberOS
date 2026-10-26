@@ -46,3 +46,12 @@ A preparação técnica passa quando os artigos só podem ser publicados após v
 O ensaio ponta a ponta encontrou um defeito na RPC `get_shop_order_payment_queue`: um pedido parcialmente entregue não tem necessariamente `delivered_at`, pelo que um pedido recente, liquidado sobre os artigos já entregues, podia desaparecer da fila. A migration forward-only `20261026180000_shop_payment_queue_partial_delivery_fix.sql` usa `coalesce(delivered_at, updated_at)` para ordenar e manter visíveis os pedidos recentes sem inventar o timestamp de entrega total.
 
 O teste `supabase/tests/shop_order_payments_phase8.sql` deixa agora `delivered_at` nulo no cenário de entrega parcial. Isto reproduz o estado real da máquina de estados e impede que o defeito volte a ficar oculto no teste.
+
+
+## Estado actualizado após a reconciliação de 26 de Outubro de 2026
+
+As migrations das Fases 1 a 7 e a correcção da fila de pagamentos foram aplicadas e verificadas também em produção, sem reset nem seed de catálogo. Os nove testes SQL das Fases 1, 2, 3, 4, 5, 7 e pagamentos passaram em staging e produção com fixtures revertidas. A produção tem quatro barbearias e zero flags activas; produtos, pedidos, pagamentos, movimentos de stock e alertas permanecem a zero após os testes. A Loja está instalada mas indisponível ao público, como exigido até a aceitação operacional.
+
+A RPC da fila de pagamentos foi corrigida para não eliminar um pedido parcialmente entregue apenas porque `delivered_at` ainda está nulo. A migration `20261026180000_shop_payment_queue_partial_delivery_fix.sql` e o cenário de regressão em `shop_order_payments_phase8.sql` deixam esta semântica explícita.
+
+O endpoint `booking-create` de produção está agora na versão 3, alinhada com o source actual sem CAPTCHA. O endpoint `token-gateway` está na versão 3 e suporta `shop_order.get`. Os registos de migration foram preservados; as diferenças históricas globais estão descritas em `docs/BARBEROS_MIGRATION_RECONCILIATION_2026-10-26.md`. A formação humana e o aceite do piloto continuam pendentes porque não devem ser simulados nem assinados automaticamente.
