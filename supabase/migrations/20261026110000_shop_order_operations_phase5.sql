@@ -20,7 +20,7 @@ grant select on public.shop_order_operation_events to authenticated;
 grant all on public.shop_order_operation_events to service_role;
 create policy shop_order_operation_events_manager_read on public.shop_order_operation_events
 for select using (
-  public.is_member(barbershop_id, array['owner','manager','receptionist']::public.app_role[])
+  public.is_member(barbershop_id, array['owner','manager']::public.app_role[])
   or public.is_platform_admin()
 );
 
@@ -39,7 +39,7 @@ as $function$
 declare v_result jsonb;
 begin
   if auth.uid() is null or not (
-    public.is_member(p_barbershop_id, array['owner','manager','receptionist']::public.app_role[])
+    public.is_member(p_barbershop_id, array['owner','manager']::public.app_role[])
     or public.is_platform_admin()
   ) then
     raise exception 'SHOP_ORDER_FORBIDDEN' using errcode='42501';
@@ -98,7 +98,7 @@ declare
   v_target public.shop_order_status;
 begin
   if v_actor is null or not (
-    public.is_member(p_barbershop_id, array['owner','manager','receptionist']::public.app_role[])
+    public.is_member(p_barbershop_id, array['owner','manager']::public.app_role[])
     or public.is_platform_admin()
   ) then raise exception 'SHOP_ORDER_FORBIDDEN' using errcode='42501'; end if;
 
@@ -171,7 +171,7 @@ declare
   v_status public.shop_order_item_status;
 begin
   if v_actor is null or not (
-    public.is_member(p_barbershop_id, array['owner','manager','receptionist']::public.app_role[])
+    public.is_member(p_barbershop_id, array['owner','manager']::public.app_role[])
     or public.is_platform_admin()
   ) then raise exception 'SHOP_ORDER_FORBIDDEN' using errcode='42501'; end if;
   if p_action not in ('accept','prepare','ready','unavailable','deliver','cancel') then raise exception 'INVALID_SHOP_ITEM_ACTION'; end if;
