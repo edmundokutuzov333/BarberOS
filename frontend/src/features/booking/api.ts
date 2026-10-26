@@ -50,20 +50,28 @@ export function normalizeMozPhone(value: string): string {
   return compact;
 }
 
-async function readFunctionError(error: unknown): Promise<{ code: string; status: number }> {
+async function readFunctionError(error: unknown): Promise<{ code: string; status: number; message?: string }> {
   const status = Number((error as { context?: Response })?.context?.status ?? 500);
   const context = (error as { context?: Response })?.context;
 
   if (context) {
     try {
-      const body = await context.clone().json() as { error?: string };
-      if (body?.error) return { code: body.error, status };
+      const body = await context.clone().json() as { error?: string; message?: string };
+      if (body?.error) return {
+        code: body.error,
+        status,
+        ...(typeof body.message === "string" ? { message: body.message } : {}),
+      };
     } catch {
       // Fall through to the SDK error message.
     }
   }
 
   const message = error instanceof Error ? error.message : String(error ?? '');
+  if (/failed to send a request to the edge function|failed to fetch|networkerror|load failed|cors/i.test(message)) {
+    return { code: 'BOOKING_NETWORK_UNAVAILABLE', status: 0 };
+  }
+
   const knownCodes = [
     'SLOT_TAKEN',
     'SLOT_UNAVAILABLE',
@@ -77,6 +85,9 @@ async function readFunctionError(error: unknown): Promise<{ code: string; status
     'BARBER_NOT_FOUND',
     'INVALID_DEPOSIT_CONFIGURATION',
     'RATE_LIMITED',
+    'RATE_LIMIT_UNAVAILABLE',
+    'BOOKING_REQUEST_INVALID',
+    'BOOKING_CREATE_FAILED',
     'IDEMPOTENCY_IN_PROGRESS',
     'IDEMPOTENCY_STORE_UNAVAILABLE',
     'IDEMPOTENCY_KEY_REUSED',
@@ -106,8 +117,8 @@ export async function bookAppointment(
   });
 
   if (error) {
-    const { code, status } = await readFunctionError(error);
-    throw new BookingRequestError(code, status, error.message);
+    const { code, status, message } = await readFunctionError(error);
+    throw new BookingRequestError(code, status, message);
   }
 
   if (!data?.ok || !data.booking?.manage_token) {
