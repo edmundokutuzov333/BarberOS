@@ -54,13 +54,14 @@ if (!tokenMigration.includes('p.proname like')
   throw new Error('TOKEN_RPC_LOCKDOWN_CONTRACT_MISSING');
 }
 
-for (const fn of ['booking-create', 'token-gateway', 'health', 'resend-webhook', 'gmail-integration']) {
+for (const fn of ['booking-create', 'token-gateway', 'health', 'resend-webhook', 'gmail-integration', 'google-calendar']) {
   if (!fs.existsSync(path.join(functionDir, fn, 'index.ts'))) {
     throw new Error('REQUIRED_EDGE_FUNCTION_MISSING:' + fn);
   }
 }
 if (!config.includes('[functions.token-gateway]')) throw new Error('TOKEN_GATEWAY_NOT_REGISTERED');
 if (!config.includes('[functions.gmail-integration]')) throw new Error('GMAIL_FUNCTION_NOT_REGISTERED');
+if (!config.includes('[functions.google-calendar]') || !config.includes('[functions.google-calendar]\nverify_jwt = false')) throw new Error('GOOGLE_CALENDAR_FUNCTION_NOT_REGISTERED');
 const gmailMigration = names.find((name) => name.endsWith('_gmail_workspace_integration.sql'));
 if (!gmailMigration) throw new Error('GMAIL_STORAGE_MIGRATION_MISSING');
 const gmailSchema = fs.readFileSync(path.join(migrationDir, gmailMigration), 'utf8');
@@ -85,6 +86,29 @@ if (/turnstile|captcha|cloudflare/i.test(wizard) || /turnstile|captcha|cloudflar
 }
 if (!bookingSource.includes('consume(') || !bookingSource.includes('idempotency_key')) {
   throw new Error('BOOKING_RATE_LIMIT_OR_IDEMPOTENCY_GUARD_MISSING');
+}
+
+
+const googleCalendarSource = fs.readFileSync(path.join(functionDir, 'google-calendar', 'index.ts'), 'utf8');
+for (const required of [
+  'GOOGLE_CALENDAR_CLIENT_ID',
+  'GOOGLE_CALENDAR_CLIENT_SECRET',
+  'GOOGLE_CALENDAR_STATE_SECRET',
+  'calendar.events.owned',
+  'AES-GCM',
+  'get_appointment_by_token',
+  'manage_token_expires_at',
+  'assertActiveAppointment',
+  'rate_limit_consume',
+]) {
+  if (!googleCalendarSource.includes(required)) throw new Error('GOOGLE_CALENDAR_SECURITY_CONTRACT_MISSING:' + required);
+}
+if (/refresh_token_ciphertext|localStorage|sessionStorage/.test(googleCalendarSource)) {
+  throw new Error('GOOGLE_CALENDAR_MUST_NOT_PERSIST_CUSTOMER_TOKENS');
+}
+const googleCalendarPage = fs.readFileSync(path.join(root, 'frontend', 'src', 'pages', 'AppointmentManage.tsx'), 'utf8');
+if (!googleCalendarPage.includes('Guardar no Google Calendar') || !googleCalendarPage.includes('getGoogleCalendarAuthorizationUrl')) {
+  throw new Error('GOOGLE_CALENDAR_CUSTOMER_FLOW_MISSING');
 }
 
 console.log(JSON.stringify({
