@@ -18,6 +18,7 @@ truncate table private.phase4_concurrency_fixture;
 
 do $phase4_concurrency_setup$
 declare
+  v_actor uuid := gen_random_uuid();
   v_shop uuid;
   v_slug text;
   v_barber uuid;
@@ -38,6 +39,11 @@ begin
     'phase4-race-' || left(replace(gen_random_uuid()::text, '-', ''), 12),
     'BarberOS Phase 4 Race QA', 'active', 'Africa/Maputo', 30, 30, 15
   ) returning id, slug into v_shop, v_slug;
+
+  insert into auth.users(id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
+  values(v_actor,'authenticated','authenticated','phase4-race-'||replace(v_actor::text,'-','')||'@example.invalid','',now(),
+    '{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now());
+  insert into public.barbershop_members(barbershop_id,user_id,role) values(v_shop,v_actor,'owner');
 
   insert into public.barbers(display_name, barbershop_id, is_active)
   values ('Barbeiro Race QA', v_shop, true) returning id into v_barber;
@@ -84,8 +90,15 @@ begin
   insert into public.shop_product_variants(barbershop_id, product_id, label, unit_label, price_minor, is_active)
   values (v_shop, v_product, 'Unidade', 'unidade', 1000, true) returning id into v_variant;
 
-  update public.shop_products set is_active = true where id = v_product;
   perform public.record_shop_inventory_movement(v_shop, v_variant, 1, 'opening_balance', 'CI concurrency fixture');
+  perform set_config('request.jwt.claim.sub',v_actor::text,true);
+  perform set_config('request.jwt.claim.role','authenticated',true);
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',v_actor,'role','authenticated')::text,true);
+  update public.shop_products set image_url='https://example.invalid/phase4-race-product.jpg',
+    image_alt='Phase 4 race isolated test fixture',image_source_note='CI-only fixture. No real catalogue asset or customer data.'
+    where id=v_product;
+  perform public.verify_shop_catalog_product(v_shop,v_product,'CI-only fixture; catalogue approval prerequisite for the stock race test.');
+  update public.shop_products set is_active = true where id = v_product;
 
   insert into private.phase4_concurrency_fixture(
     singleton, shop_id, slug, service_id, barber_id, product_id, variant_id, slot_a, slot_b, key_a, key_b
