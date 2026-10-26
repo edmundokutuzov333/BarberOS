@@ -28,6 +28,7 @@ export const NAV: NavItem[] = [
   { to: '/app/loja/produtos', label: 'Loja', icon: Package, testId: 'nav-shop' },
   { to: '/app/loja/pedidos', label: 'Pedidos da loja', icon: ClipboardCheck, testId: 'nav-shop-orders' },
   { to: '/app/loja/relatorios', label: 'Comunicações e relatórios', icon: BellRing, testId: 'nav-shop-reports' },
+  { to: '/app/loja/piloto', label: 'Preparação do piloto', icon: ClipboardList, testId: 'nav-shop-pilot' },
   { to: '/app/definicoes', label: 'Definições', icon: Settings, testId: 'nav-definicoes' },
 ];
 

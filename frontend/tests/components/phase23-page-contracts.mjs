@@ -260,7 +260,7 @@ tests.push(
     assert.match(migration, /SHOP_REPORT_FORBIDDEN/);
     assert.match(migration, /SHOP_NOTIFICATIONS_FORBIDDEN/);
     assert.match(migration, /paid_revenue_minor',null/);
-    assert.match(migration, /Africa\\/Maputo/);
+    assert.ok(migration.includes('Africa/Maputo'));
     assert.match(migration, /delivery_status='failed'/);
     assert.match(page, /Entrega não significa pagamento/);
     assert.match(page, /shop-notification-inbox/);
@@ -271,6 +271,31 @@ tests.push(
     assert.match(migration, /shop_order_notification_after_insert/);
     assert.match(migration, /shop_order_notification_after_status_update/);
     assert.match(migration, /SHOP_REPORT_INVALID_RANGE/);
+  }],
+);
+
+
+tests.push(
+  ['Phase 7 catalogue approval is tenant protected, source backed, and invalidated by catalogue changes', () => {
+    const migration = read('../supabase/migrations/20261026160000_shop_catalog_reference_pilot_phase7.sql');
+    const page = read('src/pages/app/LojaPiloto.tsx');
+    assert.match(migration, /SHOP_CATALOG_VERIFY_FORBIDDEN/);
+    assert.match(migration, /SHOP_CATALOG_IMAGE_NOT_APPROVED/);
+    assert.match(migration, /SHOP_PRODUCT_CATALOG_NOT_VERIFIED/);
+    assert.match(migration, /catalog_verified_by/);
+    assert.match(migration, /shop_products_catalog_verified_by_fk_idx/);
+    assert.match(page, /get_shop_phase7_catalog_readiness/);
+    assert.match(page, /verify_shop_catalog_product/);
+    assert.match(page, /Validar artigo para o piloto/);
+    assert.match(page, /A validação do catálogo não activa a loja para clientes/);
+  }],
+  ['Phase 6 alert acknowledgement uses a tenant-checked RPC rather than direct table updates', () => {
+    const migration = read('../supabase/migrations/20261026160000_shop_catalog_reference_pilot_phase7.sql');
+    const page = read('src/pages/app/LojaRelatorios.tsx');
+    assert.ok(migration.includes('mark_shop_notification_read'));
+    assert.ok(migration.includes('revoke update on public.shop_notification_events from authenticated'));
+    assert.ok(page.includes('mark_shop_notification_read'));
+    assert.ok(!page.includes("from('shop_notification_events').update"));
   }],
 );
 

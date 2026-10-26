@@ -125,3 +125,13 @@ A suite Phase 23 ultrapassou o erro do executor e o contrato CRM após as correc
 - Não são enviadas notificações externas. Email/WhatsApp só devem ser activados após configuração e teste do provider real; a tabela distingue canal e estado de entrega para não declarar sucesso sem confirmação.
 - Receita paga é apresentada como indisponível enquanto não existir ligação verificada entre pagamentos reais e linhas de venda da Loja. Pedido ou entrega não são contados como receita.
 - A migration ainda precisa de validação em base efémera/staging e não deve ser aplicada a produção até reconciliação do histórico e schema, conforme o gate da Fase 0.
+
+
+## Fase 7: catálogo de referência e preparação do piloto
+
+- Adicionada a preparação de piloto em `/app/loja/piloto`, com consulta a dados reais do tenant, contagens de preparação e confirmação explícita do responsável. Não existem seed rows de produtos, preços, SKUs ou imagens: os dados reais têm de ser fornecidos e verificados pela barbearia.
+- Nova migration forward-only `20261026160000_shop_catalog_reference_pilot_phase7.sql`: registo de verificação do catálogo, RPC de confirmação por owner/manager, readiness report por tenant, bloqueio de publicação sem validação, invalidação da aprovação após alterações relevantes ao produto/variantes, índices das FKs de Fase 6 e RPC idempotente para marcar alertas como lidos.
+- Corrigidos erros de TypeScript na página da Fase 6: propriedades de `Page`, `ErrorState` e `EmptyState` alinhadas com os componentes existentes; confirmação de leitura usa RPC, não escrita directa na tabela.
+- Acrescentado teste transaccional `supabase/tests/shop_catalog_phase7.sql` ao workflow de CI e contratos de página para as Fases 6/7.
+- Gate operacional permanece **NO-GO**: produção não contém o domínio da Loja nem a flag; staging tem a flag desligada para todos os tenants e o histórico de migrations necessita reconciliação antes de aplicar Fases 6/7. O sistema não pode declarar que um estabelecimento real foi seleccionado, que fotografias/SKUs foram validados fisicamente, nem que staff recebeu formação sem essa evidência.
+- Relatório: `docs/BARBEROS_SHOP_PHASE7_CATALOG_PILOT.md`.
