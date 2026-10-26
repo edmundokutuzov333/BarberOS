@@ -57,6 +57,10 @@ if (!String(frontendPackage.packageManager || '').startsWith('yarn@1.22.22')) {
 }
 if (frontendPackage.engines?.node !== '22.x') throw new Error('DEPLOY_CONFIG_FRONTEND_NODE_ENGINE_INVALID');
 
+const frontendIndexHtml = read('frontend/index.html');
+if (!frontendIndexHtml.includes('href="%VITE_SUPABASE_URL%"')) throw new Error('DEPLOY_ENV_SCOPED_SUPABASE_PRECONNECT_MISSING');
+if (/https:\\/\\/[^"' ]+\\.supabase\\.co/i.test(frontendIndexHtml)) throw new Error('DEPLOY_SUPABASE_URL_HARDCODED_IN_HTML');
+
 const supabaseConfig = read('supabase/config.toml');
 if (!supabaseConfig.includes('project_id = "alseiinjzwjdiwtvkdzy"')) throw new Error('DEPLOY_CONFIG_SUPABASE_PROJECT_INVALID');
 if (!supabaseConfig.includes('[functions.booking-create]') || !supabaseConfig.includes('[functions.token-gateway]')) throw new Error('DEPLOY_CONFIG_SUPABASE_FUNCTIONS_CONFIG_MISSING');
