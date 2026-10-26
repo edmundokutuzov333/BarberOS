@@ -99,3 +99,12 @@ A suite Phase 23 já ultrapassa o parser SQL após a alteração para `ClientCur
 
 
 A suite Phase 23 ultrapassou o erro do executor e o contrato CRM após as correcções. O teste seguinte revelou que `waitlist_phase13.sql` invocava como `anon` RPCs que o próprio contrato correctamente restringe a `service_role`. Corrigimos o teste para reflectir o caminho real do token gateway, sem ampliar privilégios. A aceitação global depende da nova execução CI.
+
+
+## Fase 5: fila operacional da Loja
+
+- A fila /app/loja/pedidos apresenta pedidos reais por estado, permite aceitar, preparar, marcar pronto, atribuir um membro do tenant, guardar notas internas, assinalar artigos indisponíveis, cancelar com motivo e registar entregas completas ou parciais.
+- A migration 20261026110000_shop_order_operations_phase5 cria a auditoria e as RPCs operacionais. A migration correctiva 20261026120000_shop_order_operations_hardening_phase5 é forward-only: fecha as transições de estado, impede repetição de movimentos com chave de operação, reconcilia reservas imutáveis durante entregas parciais, liberta reservas quando o pedido é cancelado ou falha e cobre FKs com índices.
+- O contrato supabase/tests/shop_order_operations_phase5.sql é transaccional e reverte os fixtures. Cobre atribuição, entrega total com reserva de todo o stock, entrega parcial com repetição da mesma operação, saldo reservado, indisponibilidade, cancelamento e falha. É executado depois dos contratos de Fase 4 no CI.
+- A suite scripts/test_booking_concurrency_phase23.py cria e remove o seu próprio tenant isolado. Não depende da suite anterior nem de seed.sql, e confirma que a segunda operação aguarda pelo lock antes de tentar reservar o mesmo slot.
+- As migrations da Fase 5 e de hardening são aplicadas apenas ao staging. A produção não contém ainda o schema da Loja e a cadeia de migrations difere materialmente do staging. O gate da Fase 0 continua NO-GO: não aplicar a Fase 5 isoladamente em produção nem activar a Loja até à reconciliação completa do schema, runtime/handler, secrets e aceitação HTTP de produção.
