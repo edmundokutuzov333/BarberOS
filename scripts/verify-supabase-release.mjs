@@ -115,7 +115,7 @@ console.log(JSON.stringify({
   migrations: names.length,
   latest: names.at(-1),
   project_ref: 'alseiinjzwjdiwtvkdzy',
-  required_edge_functions: ['booking-create', 'token-gateway', 'health', 'resend-webhook', 'gmail-integration'],
+  required_edge_functions: ['booking-create', 'token-gateway', 'health', 'resend-webhook', 'gmail-integration', 'google-calendar'],
   booking_security_contract: 'rate limiting + CORS allowlist + idempotency + token gateway; no CAPTCHA',
 }, null, 2));
 console.log('PASS | Supabase release contract');
