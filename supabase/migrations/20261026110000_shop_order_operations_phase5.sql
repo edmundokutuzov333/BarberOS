@@ -169,6 +169,9 @@ declare
   v_order public.appointment_product_orders%rowtype;
   v_item public.appointment_product_order_items%rowtype;
   v_status public.shop_order_item_status;
+  v_track_stock boolean;
+  v_remaining_reserved integer;
+  v_reservation record;
 begin
   if v_actor is null or not (
     public.is_member(p_barbershop_id, array['owner','manager']::public.app_role[])
@@ -194,16 +197,47 @@ begin
   end;
   if p_action='unavailable' and coalesce(length(btrim(p_note)),0)=0 then raise exception 'SHOP_ORDER_REASON_REQUIRED'; end if;
   if p_action='deliver' then
+    if v_item.status not in ('ready','partially_delivered') then
+      raise exception 'SHOP_ITEM_NOT_READY';
+    end if;
     if p_delivered_qty is null or p_delivered_qty < 1 or p_delivered_qty > v_item.qty then
       raise exception 'INVALID_DELIVERED_QUANTITY';
     end if;
     if v_item.delivered_qty + p_delivered_qty > v_item.qty then raise exception 'DELIVERED_QUANTITY_EXCEEDS_ORDER'; end if;
+    select p.track_stock into v_track_stock
+    from public.shop_product_variants v
+    join public.shop_products p on p.id=v.product_id and p.barbershop_id=v.barbershop_id
+    where v.id=v_item.variant_id and v.barbershop_id=p_barbershop_id;
+    if coalesce(v_track_stock,false) then
+      perform public.record_shop_inventory_movement(
+        p_barbershop_id,v_item.variant_id,-p_delivered_qty,'sale',
+        'Entrega do pedido ' || left(p_order_id::text,8)
+      );
+      v_remaining_reserved := p_delivered_qty;
+      for v_reservation in
+        select id,qty from public.inventory_reservations
+        where order_id=p_order_id and barbershop_id=p_barbershop_id
+          and variant_id=v_item.variant_id and status='reserved'
+        order by created_at for update
+      loop
+        exit when v_remaining_reserved <= 0;
+        if v_remaining_reserved >= v_reservation.qty then
+          update public.inventory_reservations set status='consumed',released_at=now(),updated_at=now()
+          where id=v_reservation.id;
+          v_remaining_reserved := v_remaining_reserved-v_reservation.qty;
+        else
+          update public.inventory_reservations set qty=qty-v_remaining_reserved,updated_at=now()
+          where id=v_reservation.id;
+          v_remaining_reserved := 0;
+        end if;
+      end loop;
+    end if;
     update public.appointment_product_order_items
       set delivered_qty=delivered_qty+p_delivered_qty,
           status=case when delivered_qty+p_delivered_qty=qty then 'delivered'::public.shop_order_item_status else 'partially_delivered'::public.shop_order_item_status end
       where id=p_item_id;
     insert into public.shop_order_operation_events(barbershop_id,order_id,actor_id,event_type,note,metadata)
-      values(p_barbershop_id,p_order_id,v_actor,'partial_delivery',nullif(btrim(p_note),''),jsonb_build_object('item_id',p_item_id,'delivered_qty',p_delivered_qty));
+      values(p_barbershop_id,p_order_id,v_actor,'partial_delivery',nullif(btrim(p_note),''),jsonb_build_object('item_id',p_item_id,'delivered_qty',p_delivered_qty,'stock_decremented',coalesce(v_track_stock,false)));
   else
     update public.appointment_product_order_items set status=v_status where id=p_item_id;
     if p_action='unavailable' then
@@ -215,7 +249,8 @@ begin
   end if;
 
   if p_action='deliver' then
-    if exists(select 1 from public.appointment_product_order_items where order_id=p_order_id and status='partially_delivered') then
+    if exists(select 1 from public.appointment_product_order_items where order_id=p_order_id and status in ('delivered','partially_delivered'))
+       and exists(select 1 from public.appointment_product_order_items where order_id=p_order_id and status<>'delivered') then
       update public.appointment_product_orders set status='partially_delivered' where id=p_order_id and status in ('preparing','ready');
     elsif not exists(select 1 from public.appointment_product_order_items where order_id=p_order_id and status<>'delivered') then
       update public.appointment_product_orders set status='delivered' where id=p_order_id and status in ('ready','partially_delivered');
