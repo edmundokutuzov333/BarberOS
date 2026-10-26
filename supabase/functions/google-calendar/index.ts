@@ -328,7 +328,8 @@ async function createOrUpdateEvent(accessToken: string, appointment: Appointment
   if (insert.ok) return "added";
   if (insert.status === 409) {
     // The event ID is immutable after insertion, so omit it from the PATCH body.
-    const { id: _eventId, ...patchBody } = body;
+    const { id: immutableEventId, ...patchBody } = body;
+    if (immutableEventId !== id) throw new CalendarError("GOOGLE_CALENDAR_PROVIDER_FAILED", 502);
     const update = await fetch(GOOGLE_EVENTS + "/" + encodeURIComponent(id), {
       method: "PATCH",
       headers,
