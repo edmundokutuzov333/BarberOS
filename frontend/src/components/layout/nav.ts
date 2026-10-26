@@ -1,4 +1,4 @@
-import { type LucideIcon, LayoutDashboard, CalendarDays, ClipboardList, Users, Scissors, Sparkles, UserRound, Clock, Hourglass, Bell, Mail, Star, BarChart3, Settings, CreditCard, Package, ClipboardCheck, BellRing } from 'lucide-react';
+import { type LucideIcon, LayoutDashboard, CalendarDays, ClipboardList, Users, Scissors, Sparkles, UserRound, Clock, Hourglass, Bell, Mail, Star, BarChart3, Settings, CreditCard, Package, ClipboardCheck, BellRing, Banknote } from 'lucide-react';
 import type { Role } from '@/lib/shop';
 import { canAccessAppRoute } from '@/lib/permissions';
 
@@ -29,6 +29,7 @@ export const NAV: NavItem[] = [
   { to: '/app/loja/pedidos', label: 'Pedidos da loja', icon: ClipboardCheck, testId: 'nav-shop-orders' },
   { to: '/app/loja/relatorios', label: 'Comunicações e relatórios', icon: BellRing, testId: 'nav-shop-reports' },
   { to: '/app/loja/piloto', label: 'Preparação do piloto', icon: ClipboardList, testId: 'nav-shop-pilot' },
+  { to: '/app/loja/pagamentos', label: 'Pagamentos da loja', icon: Banknote, testId: 'nav-shop-payments' },
   { to: '/app/definicoes', label: 'Definições', icon: Settings, testId: 'nav-definicoes' },
 ];
 

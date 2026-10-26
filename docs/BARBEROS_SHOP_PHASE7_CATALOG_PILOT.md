@@ -39,3 +39,10 @@ A simulação transaccional automatizada `supabase/tests/shop_phase7_pilot_day.s
 ## Critério de saída
 
 A preparação técnica passa quando os artigos só podem ser publicados após verificação, a proveniência de imagem e o responsável ficam registados e alterações invalidam aprovações antigas. O piloto só passa depois de uma barbearia real concluir um dia de teste e reconciliar pedidos, entregas e stock. A flag pública permanece desligada por defeito.
+
+
+## Defeito operacional encontrado e corrigido em 26 de Outubro de 2026
+
+O ensaio ponta a ponta encontrou um defeito na RPC `get_shop_order_payment_queue`: um pedido parcialmente entregue não tem necessariamente `delivered_at`, pelo que um pedido recente, liquidado sobre os artigos já entregues, podia desaparecer da fila. A migration forward-only `20261026180000_shop_payment_queue_partial_delivery_fix.sql` usa `coalesce(delivered_at, updated_at)` para ordenar e manter visíveis os pedidos recentes sem inventar o timestamp de entrega total.
+
+O teste `supabase/tests/shop_order_payments_phase8.sql` deixa agora `delivered_at` nulo no cenário de entrega parcial. Isto reproduz o estado real da máquina de estados e impede que o defeito volte a ficar oculto no teste.

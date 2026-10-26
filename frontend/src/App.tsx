@@ -41,6 +41,7 @@ const LojaProdutos = lazy(() => import('./pages/app/LojaProdutos'));
 const LojaPedidos = lazy(() => import('./pages/app/LojaPedidos'));
 const LojaRelatorios = lazy(() => import('./pages/app/LojaRelatorios'));
 const LojaPiloto = lazy(() => import('./pages/app/LojaPiloto'));
+const LojaPagamentos = lazy(() => import('./pages/app/LojaPagamentos'));
 const AgendaPage = lazy(() => import('./pages/app/Agenda'));
 const Marcacoes = lazy(() => import('./pages/app/Marcacoes'));
 const Clientes = lazy(() => import('./pages/app/Clientes'));
@@ -144,6 +145,7 @@ export default function App() {
               <Route path="loja/pedidos" element={<LojaPedidos />} />
               <Route path="loja/relatorios" element={<LojaRelatorios />} />
               <Route path="loja/piloto" element={<LojaPiloto />} />
+              <Route path="loja/pagamentos" element={<LojaPagamentos />} />
               <Route path="definicoes" element={<Navigate to="/app/definicoes/perfil" replace />} />
               <Route path="definicoes/:tab" element={<Definicoes />} />
               <Route path="*" element={<NotYet />} />

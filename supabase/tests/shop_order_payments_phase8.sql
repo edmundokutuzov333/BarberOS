@@ -17,7 +17,7 @@ begin
  insert into public.shop_product_variants(barbershop_id,product_id,label,unit_label,price_minor,is_active) values(v_shop,v_product,'Variante QA','unidade',1000,true) returning id into v_variant;
  insert into public.appointments(barbershop_id,barber_id,service_id,customer_id,starts_at,ends_at,duration_min,price_cents,status)
  values(v_shop,v_barber,v_service,v_customer,now()+interval '90 days',now()+interval '90 days 30 minutes',30,10000,'confirmed') returning id into v_appointment;
- insert into public.appointment_product_orders(barbershop_id,appointment_id,status,delivered_at) values(v_shop,v_appointment,'partially_delivered',now()) returning id into v_order;
+ insert into public.appointment_product_orders(barbershop_id,appointment_id,status) values(v_shop,v_appointment,'partially_delivered') returning id into v_order;
  insert into public.appointment_product_order_items(barbershop_id,order_id,product_id,variant_id,product_name_snapshot,variant_snapshot,unit_price_snapshot,qty,delivered_qty,options,line_total_snapshot,status)
  values(v_shop,v_order,v_product,v_variant,'Produto Payment QA','Variante QA',1000,4,3,'{}'::jsonb,4000,'partially_delivered') returning id into v_item;
  perform set_config('request.jwt.claim.sub',v_actor::text,true);perform set_config('request.jwt.claim.role','authenticated',true);perform set_config('request.jwt.claims',jsonb_build_object('sub',v_actor,'role','authenticated')::text,true);

@@ -313,6 +313,22 @@ tests.push(
   }],
 );
 
+
+tests.push(
+  ['Shop payments page is routed, tenant gated and does not claim automatic provider reconciliation', () => {
+    const app = read('src/App.tsx');
+    const nav = read('src/components/layout/nav.ts');
+    const page = read('src/pages/app/LojaPagamentos.tsx');
+    assert.ok(app.includes("const LojaPagamentos = lazy(() => import('./pages/app/LojaPagamentos'))"));
+    assert.ok(app.includes('path="loja/pagamentos" element={<LojaPagamentos />}'));
+    assert.ok(nav.includes("/app/loja/pagamentos"));
+    assert.ok(page.includes("get_shop_order_payment_queue"));
+    assert.ok(page.includes("record_shop_order_payment"));
+    assert.ok(page.includes("shop?.shop_enabled"));
+    assert.ok(page.includes("A confirmação do provider não é automática"));
+  }],
+);
+
 let failed = 0;
 for (const [name, run] of tests) {
   try {
