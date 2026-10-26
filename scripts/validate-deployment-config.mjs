@@ -59,7 +59,7 @@ if (frontendPackage.engines?.node !== '22.x') throw new Error('DEPLOY_CONFIG_FRO
 
 const frontendIndexHtml = read('frontend/index.html');
 if (!frontendIndexHtml.includes('href="%VITE_SUPABASE_URL%"')) throw new Error('DEPLOY_ENV_SCOPED_SUPABASE_PRECONNECT_MISSING');
-if (/https:\\/\\/[^"' ]+\\.supabase\\.co/i.test(frontendIndexHtml)) throw new Error('DEPLOY_SUPABASE_URL_HARDCODED_IN_HTML');
+if (frontendIndexHtml.includes('.supabase.co')) throw new Error('DEPLOY_SUPABASE_URL_HARDCODED_IN_HTML');
 
 const supabaseConfig = read('supabase/config.toml');
 if (!supabaseConfig.includes('project_id = "alseiinjzwjdiwtvkdzy"')) throw new Error('DEPLOY_CONFIG_SUPABASE_PROJECT_INVALID');
