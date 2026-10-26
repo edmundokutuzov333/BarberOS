@@ -94,7 +94,24 @@ window.addEventListener('load', () => {
   window.setTimeout(clearPreloadRecovery, PRELOAD_RECOVERY_WINDOW_MS);
 }, { once: true });
 
-registerSW({ immediate: true });
+function checkForServiceWorkerUpdate(registration: ServiceWorkerRegistration | undefined): void {
+  if (!registration || document.visibilityState === 'hidden') return;
+  void registration.update().catch(() => {
+    // Offline users keep the current application; the next visible check retries.
+  });
+}
+
+registerSW({
+  immediate: true,
+  onRegisteredSW: (_swUrl, registration) => {
+    if (!registration) return;
+    const check = () => checkForServiceWorkerUpdate(registration);
+    window.addEventListener('focus', check);
+    document.addEventListener('visibilitychange', check);
+    window.setInterval(check, 60_000);
+    check();
+  },
+});
 
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 15_000, retry: 1, refetchOnWindowFocus: false } } });
 const pathname = window.location.pathname;
