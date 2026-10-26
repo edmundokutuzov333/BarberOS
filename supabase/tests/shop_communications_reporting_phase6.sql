@@ -56,9 +56,9 @@ begin
    or (v_report->>'items_requested')::int <> 1 then
    raise exception 'FAIL: phase 6 reporting mismatch: %',v_report;
  end if;
- if v_report->>'paid_revenue_status' <> 'unavailable_no_verified_shop_payment_linkage'
-   or not (v_report ? 'paid_revenue_minor') or v_report->'paid_revenue_minor' <> 'null'::jsonb then
-   raise exception 'FAIL: report must not invent revenue: %',v_report;
+ if (v_report->>'paid_revenue_minor')::bigint <> 0
+   or v_report->>'paid_revenue_status' <> 'staff_confirmed_shop_payments_not_provider_reconciled' then
+   raise exception 'FAIL: report must show zero confirmed receipts without payment records: %',v_report;
  end if;
  if (v_report->>'unread_internal_alerts')::int <> 1 then
    raise exception 'FAIL: unread alert metric mismatch: %',v_report;

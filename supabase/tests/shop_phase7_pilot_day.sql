@@ -91,8 +91,8 @@ begin
    or (v_report->>'items_requested')::int<>4 or (v_report->>'items_delivered')::int<>4 then
    raise exception 'FAIL: daily report mismatch: %',v_report;
  end if;
- if v_report->'paid_revenue_minor'<>'null'::jsonb
-   or v_report->>'paid_revenue_status'<>'unavailable_no_verified_shop_payment_linkage' then
+ if (v_report->>'paid_revenue_minor')::bigint<>0
+   or v_report->>'paid_revenue_status'<>'staff_confirmed_shop_payments_not_provider_reconciled' then
    raise exception 'FAIL: delivery incorrectly reported as paid revenue: %',v_report;
  end if;
  if v_unread<>3 then raise exception 'FAIL: unread alerts expected 3, got %',v_unread; end if;
