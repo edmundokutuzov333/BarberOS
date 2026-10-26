@@ -48,7 +48,23 @@ begin
   end if;
 
   if v_actor is null then
-    raise exception 'PHASE22_NONADMIN_ACTOR_UNAVAILABLE';
+    -- A clean migration-only database has no non-admin actor outside the
+    -- selected tenant. Create a disposable auth user inside this test
+    -- transaction so the authorization contract does not depend on seed data.
+    insert into auth.users (
+      id, aud, role, email, encrypted_password, email_confirmed_at,
+      raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+    ) values (
+      gen_random_uuid(), 'authenticated', 'authenticated',
+      'phase22-nonadmin-' || left(replace(gen_random_uuid()::text,'-',''),12) || '@example.invalid',
+      '', now(), '{"provider":"email","providers":["email"]}'::jsonb,
+      '{}'::jsonb, now(), now()
+    )
+    returning id into v_actor;
+
+    if not exists (select 1 from public.profiles p where p.id=v_actor and not p.is_platform_admin) then
+      raise exception 'PHASE22_NONADMIN_ACTOR_PROFILE_UNAVAILABLE';
+    end if;
   end if;
 
   select p.id into v_admin from public.profiles p where p.is_platform_admin limit 1;

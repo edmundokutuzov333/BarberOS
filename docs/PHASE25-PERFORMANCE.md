@@ -87,3 +87,8 @@ O workflow [39979277275](https://github.com/edmundokutuzov333/BarberOS/actions/r
 O maior elemento LCP foi o título `Oryon Barber Studio`. Todos os valores cumprem os limites: LCP ≤ 2.500 ms, CLS ≤ 0,10, DOMContentLoaded ≤ 1.800 ms, RPC observado ≤ 1.200 ms e INP de laboratório ≤ 200 ms.
 
 Esta aprovação é evidência do SHA `cbee4f4`. A fixture de notificações é actualizada para usar uma marcação confirmada da barbearia dedicada; a próxima revisão de performance será desencadeada no novo SHA. O benchmark público é read-only e não substitui os testes do pedido transaccional da Loja nem certifica o schema de produção.
+
+
+## Regra de certificação por SHA candidato
+
+A aprovação de performance pertence exclusivamente ao SHA medido pelo workflow. Uma medição verde num commit anterior não certifica commits posteriores, mesmo quando a alteração parece não afectar o frontend. Cada candidato de release deve ter um run concluído neste workflow, com os três jobs aprovados: budget de assets, Fast 3G público e contrato SQL. Resultados pendentes, ignorados ou de outro SHA não satisfazem o gate.
