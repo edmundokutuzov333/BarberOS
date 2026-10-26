@@ -36,6 +36,7 @@ const tests = [
     assert.match(edge, /const GOOGLE_TOKEN = "https:\/\/oauth2\.googleapis\.com\/token"/);
     assert.match(edge, /createOrUpdateEvent/);
     assert.match(edge, /method: "PATCH"/);
+    assert.match(edge, /const \{ id: _eventId, \.\.\.patchBody \} = body/);
     assert.match(edge, /barberos-google-calendar:/);
     assert.doesNotMatch(edge, /refresh_token_ciphertext|from\("google_calendar_connections"\)/);
   }],
