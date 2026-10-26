@@ -19,7 +19,7 @@ const dateTime=(v:string)=>new Intl.DateTimeFormat('pt-PT',{dateStyle:'medium',t
 export default function LojaPedidos(){
  const {shop,role}=useShop(); const qc=useQueryClient(); const [filter,setFilter]=useState<Filter>('active'); const [notes,setNotes]=useState<Record<string,string>>({});
  const allowed=['owner','manager','receptionist'].includes(role??'');
- const q=useQuery({queryKey:['shop-order-queue',shop?.id,filter],enabled:!!shop?.id&&allowed,refetchInterval:30000,queryFn:async()=>{
+ const q=useQuery({queryKey:['shop-order-queue',shop?.id,filter],enabled:!!shop?.id&&!!shop?.shop_enabled&&allowed,refetchInterval:30000,queryFn:async()=>{
    const {data,error}=await (supabase as any).rpc('get_shop_order_queue',{p_barbershop_id:shop!.id,p_status:filter==='active'?null:filter});
    if(error)throw error; return (data??[]) as Order[];
  }});
@@ -34,6 +34,7 @@ export default function LojaPedidos(){
  const orders=q.data??[];
  const counts=useMemo(()=>orders.reduce((a,o)=>({...a,[o.status]:(a[o.status]??0)+1}),{} as Record<string,number>),[orders]);
  if(!allowed)return <Page title="Pedidos da loja" subtitle="Acesso reservado à gestão e à recepção."><Panel><EmptyState title="Sem permissões" body="Peça acesso ao proprietário da barbearia."/></Panel></Page>;
+ if(!shop?.shop_enabled)return <Page title="Pedidos da loja" subtitle="A fila operacional só fica disponível depois da activação segura da Loja."><Panel><EmptyState title="Loja ainda não activada" body="A fila de pedidos está protegida até a reconciliação do schema e a activação por barbearia estarem concluídas."/></Panel></Page>;
  return <Page testId="shop-orders-page" title="Pedidos da loja" subtitle="Prepare, acompanhe e registe cada entrega. O pedido não significa pagamento.">
   <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
    {[['Por preparar',(counts.received??0)+(counts.accepted??0)],['A confirmar',counts.needs_confirmation??0],['Em preparação',counts.preparing??0],['Prontos',counts.ready??0]].map(([label,value])=><Panel key={String(label)}><p className="t-label text-ink-mid">{label}</p><p className="text-2xl font-semibold mt-2">{value}</p></Panel>)}
