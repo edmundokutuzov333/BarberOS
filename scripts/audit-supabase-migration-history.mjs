@@ -47,13 +47,13 @@ function mapEnvironment(environment, project) {
   for (const [key, group] of groups) {
     const candidates = [...(byStem.get(key) ?? [])].sort((a,b)=>a.version.localeCompare(b.version));
     const remotes = [...group].sort((a,b)=>a.version.localeCompare(b.version));
-    if (candidates.length === 1) {
-      for (const remote of remotes) {
-        const status = remote.version === candidates[0].version ? 'exact_version_and_name' :
-          remote.rawName === key ? 'timestamp_alias_name_match' : 'embedded_timestamp_alias';
-        output.set(remote.version, {...remote, status, source_file:candidates[0].file});
-        mappedFiles.add(candidates[0].file);
-      }
+    if (candidates.length === 1 && remotes.length === 1) {
+      const remote = remotes[0];
+      const source = candidates[0];
+      const status = remote.version === source.version ? 'exact_version_and_name' :
+        remote.rawName === key ? 'timestamp_alias_name_match' : 'embedded_timestamp_alias';
+      output.set(remote.version, {...remote, status, source_file:source.file});
+      mappedFiles.add(source.file);
       continue;
     }
     for (const remote of remotes) {
@@ -61,7 +61,7 @@ function mapEnvironment(environment, project) {
       if (exact) {
         output.set(remote.version, {...remote,status:'exact_version_and_name',source_file:exact.file});
         mappedFiles.add(exact.file);
-      } else if (candidates.length === remotes.length) {
+      } else if (candidates.length > 1 && candidates.length === remotes.length) {
         const index = remotes.findIndex(item => item.version === remote.version);
         const candidate = candidates[index];
         output.set(remote.version, {...remote,status:'ordered_duplicate_name_alias',source_file:candidate.file});
@@ -72,11 +72,14 @@ function mapEnvironment(environment, project) {
     }
   }
 
+  const validEvidence = value => value && typeof value.status === 'string'
+    && value.status.trim().length > 0 && typeof value.evidence === 'string'
+    && value.evidence.trim().length >= 12;
   for (const remote of records) {
-    if (output.has(remote.version)) continue;
+    const existing = output.get(remote.version);
+    if (existing && existing.status !== 'ambiguous_duplicate_name') continue;
     const override = resolutions[remote.version];
-    if (override && typeof override.evidence === 'string' && override.evidence.trim().length >= 12
-      && typeof override.status === 'string' && override.status.trim()) {
+    if (validEvidence(override)) {
       if (override.source_file) {
         if (!localFiles.includes(override.source_file)) {
           output.set(remote.version,{...remote,status:'invalid_reviewed_resolution',review:override});
@@ -85,14 +88,16 @@ function mapEnvironment(environment, project) {
         mappedFiles.add(override.source_file);
       }
       output.set(remote.version,{...remote,status:'reviewed_'+override.status,source_file:override.source_file ?? null,evidence:override.evidence});
-    } else {
+    } else if (!existing) {
       output.set(remote.version,{...remote,status:'unresolved_remote_history'});
     }
   }
 
   const mapped = [...output.values()];
   const unresolved = mapped.filter(x=>['unresolved_remote_history','ambiguous_duplicate_name','invalid_reviewed_resolution'].includes(x.status));
-  const sourceNotRepresented = snapshot.source_files.filter(file=>!mappedFiles.has(file) && !reviewedLocal[file]);
+  const hasLocalReviewEvidence = value => value && typeof value.status === 'string' && value.status.trim().length > 0
+    && typeof value.evidence === 'string' && value.evidence.trim().length >= 12;
+  const sourceNotRepresented = snapshot.source_files.filter(file=>!mappedFiles.has(file) && !hasLocalReviewEvidence(reviewedLocal[file]));
   const newlyAddedLocalFiles = localFiles.filter(file=>!snapshotFiles.has(file));
   const counts = {};
   for (const item of mapped) counts[item.status] = (counts[item.status] ?? 0) + 1;
@@ -104,13 +109,16 @@ function mapEnvironment(environment, project) {
     unresolved_remote_records:unresolved.map(x=>({version:x.version,name:x.name,status:x.status,candidates:x.candidates})),
     source_files_not_mapped_at_snapshot:sourceNotRepresented,
     source_file_count_not_mapped:sourceNotRepresented.length,
+    unresolved_source_file_count:sourceNotRepresented.length,
     new_local_migration_files_since_snapshot:newlyAddedLocalFiles,
     unresolved_count:unresolved.length
   };
 }
 
 const results = Object.entries(snapshot.projects).map(([environment, project])=>mapEnvironment(environment,project));
-const unresolved = results.reduce((sum,result)=>sum+result.unresolved_count,0);
+const unresolvedRemote = results.reduce((sum,result)=>sum+result.unresolved_count,0);
+const unresolvedSources = results.reduce((sum,result)=>sum+result.unresolved_source_file_count,0);
+const unresolved = unresolvedRemote + unresolvedSources;
 const output = {
   audit:'BarberOS remote migration-history name mapping',
   captured_on:snapshot.captured_on,
@@ -119,7 +127,9 @@ const output = {
   source_file_count_in_snapshot:snapshot.source_files.length,
   mode:strict ? 'strict' : reportOnly ? 'report_only' : 'summary',
   status:unresolved ? 'NO_GO_UNRESOLVED_HISTORY_MAPPING' : 'HISTORY_NAME_MAPPING_COMPLETE',
-  unresolved_remote_total:unresolved,
+  unresolved_remote_total:unresolvedRemote,
+  unresolved_source_file_total:unresolvedSources,
+  unresolved_total:unresolved,
   projects:results,
   limitations:[
     'This script maps the captured remote history names to source filenames; it does not prove SQL equivalence or compare live database objects.',
@@ -129,6 +139,6 @@ const output = {
 };
 console.log(JSON.stringify(output,null,2));
 if (strict && unresolved > 0) {
-  console.error('Production release blocked: unresolved migration-history entries require source recovery or a reviewed, evidence-backed resolution.');
+  console.error('Production release blocked: unresolved remote history entries or unreviewed legacy source files require source recovery or an evidence-backed, reviewed disposition.');
   process.exitCode = 1;
 }
