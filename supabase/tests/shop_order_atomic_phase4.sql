@@ -3,6 +3,7 @@
 begin;
 do $shop_order_atomic_phase4$
 declare
+  v_actor uuid := gen_random_uuid();
   v_shop uuid;
   v_slug text;
   v_service uuid;
@@ -39,6 +40,10 @@ begin
     'phase4-' || left(replace(gen_random_uuid()::text, '-', ''), 12),
     'BarberOS Phase 4 QA', 'active', 'Africa/Maputo', 30, 30, 15
   ) returning id, slug into v_shop, v_slug;
+  insert into auth.users(id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
+  values(v_actor,'authenticated','authenticated','phase4-'||replace(v_actor::text,'-','')||'@example.invalid','',now(),
+    '{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now());
+  insert into public.barbershop_members(barbershop_id,user_id,role) values(v_shop,v_actor,'owner');
 
   insert into public.barbers(display_name, barbershop_id, is_active)
   values ('Barbeiro Fase 4 QA', v_shop, true)
@@ -86,8 +91,15 @@ begin
   ) values (v_shop, v_product, 'Unidade QA', 'unidade', 1234, true)
   returning id into v_variant;
 
-  update public.shop_products set is_active = true where id = v_product;
   perform public.record_shop_inventory_movement(v_shop, v_variant, 5, 'opening_balance', 'Fase 4 rollback fixture');
+  perform set_config('request.jwt.claim.sub',v_actor::text,true);
+  perform set_config('request.jwt.claim.role','authenticated',true);
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',v_actor,'role','authenticated')::text,true);
+  update public.shop_products set image_url='https://example.invalid/phase4-product.jpg',
+    image_alt='Phase 4 isolated test fixture',image_source_note='Only an isolated database fixture; not a real catalogue asset.' where id=v_product;
+  perform public.verify_shop_catalog_product(v_shop,v_product,'Fixture only; booking/order atomicity is tested in isolation.');
+  update public.shop_products set is_active = true where id = v_product;
+  perform set_config('request.jwt.claim.role','service_role',true);
 
   v_items := jsonb_build_array(jsonb_build_object(
     'variant_id', v_variant,

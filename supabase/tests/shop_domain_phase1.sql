@@ -3,6 +3,7 @@
 begin;
 do $shop_phase1$
 declare
+ v_actor uuid := gen_random_uuid();
  v_shop uuid; v_other_shop uuid; v_barber uuid; v_service uuid; v_customer uuid; v_appointment uuid;
  v_category uuid; v_product uuid; v_variant uuid; v_other_product uuid; v_other_variant uuid;
  v_order uuid; v_item uuid; v_reservation uuid; v_flag boolean; v_stock integer;
@@ -36,6 +37,11 @@ begin
  insert into public.barbershops(slug,name,status)
  values('phase1-'||left(replace(gen_random_uuid()::text,'-',''),12),'Shop Phase 1 Other Tenant','active')
  returning id into v_other_shop;
+ insert into auth.users(id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
+ values(v_actor,'authenticated','authenticated','phase1-'||replace(v_actor::text,'-','')||'@example.invalid','',now(),
+ '{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now());
+ insert into public.barbershop_members(barbershop_id,user_id,role)
+ values(v_shop,v_actor,'owner'),(v_other_shop,v_actor,'owner');
  insert into public.barbers(display_name,barbershop_id) values('Barbeiro QA',v_shop) returning id into v_barber;
  insert into public.services(barbershop_id,name,price_cents,duration_min) values(v_shop,'Serviço QA',12000,30) returning id into v_service;
  insert into public.customers(barbershop_id,name,phone)
@@ -47,6 +53,13 @@ begin
  values(v_shop,v_category,'QA','Água QA','consume_here',true,false) returning id into v_product;
  insert into public.shop_product_variants(barbershop_id,product_id,sku,label,unit_label,price_minor,is_active)
  values(v_shop,v_product,'QA-WATER','500 ml','unidade',1000,true) returning id into v_variant;
+ perform public.record_shop_inventory_movement(v_shop,v_variant,5,'opening_balance','phase1 rollback fixture');
+ perform set_config('request.jwt.claim.sub',v_actor::text,true);
+ perform set_config('request.jwt.claim.role','authenticated',true);
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',v_actor,'role','authenticated')::text,true);
+ update public.shop_products set image_url='https://example.invalid/phase1-product.jpg',
+   image_alt='Phase 1 isolated test fixture',image_source_note='Only an isolated database fixture; not a real catalogue asset.' where id=v_product;
+ perform public.verify_shop_catalog_product(v_shop,v_product,'Fixture only; product, variant and stock assertions are part of the isolated Phase 1 contract.');
  update public.shop_products set is_active=true where id=v_product;
 
  v_rejected:=false;
@@ -54,9 +67,12 @@ begin
  exception when foreign_key_violation then v_rejected:=true; end;
  if not v_rejected then raise exception 'FAIL: category cross-tenant reference was accepted'; end if;
  insert into public.shop_products(barbershop_id,name,track_stock,is_active)
- values(v_other_shop,'Produto Tenant B',true,false) returning id into v_other_product;
+ values(v_other_shop,'Produto Tenant B',false,false) returning id into v_other_product;
  insert into public.shop_product_variants(barbershop_id,product_id,label,price_minor,is_active)
  values(v_other_shop,v_other_product,'Unidade',1000,true) returning id into v_other_variant;
+ update public.shop_products set image_url='https://example.invalid/phase1-other-product.jpg',
+   image_alt='Phase 1 other tenant test fixture',image_source_note='Only an isolated test fixture; not a real catalogue asset.' where id=v_other_product;
+ perform public.verify_shop_catalog_product(v_other_shop,v_other_product,'Fixture only; other-tenant isolation contract.');
  update public.shop_products set is_active=true where id=v_other_product;
 
  v_rejected:=false;
@@ -85,7 +101,6 @@ begin
  values(v_shop,v_order,v_product,v_variant,'Água QA','500 ml',1000,2,'{}',2000) returning id into v_item;
 
  perform set_config('request.jwt.claim.role','service_role',true);
- perform public.record_shop_inventory_movement(v_shop,v_variant,5,'opening_balance','phase1 rollback fixture');
  select stock_on_hand into v_stock from public.shop_product_variants where id=v_variant;
  if v_stock<>5 then raise exception 'FAIL: opening movement did not update stock'; end if;
  v_rejected:=false;

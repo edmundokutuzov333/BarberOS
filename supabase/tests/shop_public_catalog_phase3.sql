@@ -2,6 +2,7 @@
 begin;
 do $shop_public_catalog_phase3$
 declare
+  v_actor uuid := gen_random_uuid();
   v_shop uuid;
   v_disabled_shop uuid;
   v_other_shop uuid;
@@ -36,6 +37,12 @@ begin
   insert into public.barbershops(slug, name, status)
   values ('phase3-other-' || left(replace(gen_random_uuid()::text, '-', ''), 12), 'Phase 3 other tenant QA', 'active')
   returning id into v_other_shop;
+
+  insert into auth.users(id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
+  values(v_actor,'authenticated','authenticated','phase3-'||replace(v_actor::text,'-','')||'@example.invalid','',now(),
+    '{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now());
+  insert into public.barbershop_members(barbershop_id,user_id,role)
+    values(v_shop,v_actor,'owner'),(v_disabled_shop,v_actor,'owner'),(v_other_shop,v_actor,'owner');
 
   perform set_config('request.jwt.claim.role', 'service_role', true);
   update public.barbershops set shop_enabled = true where id in (v_shop, v_other_shop);
@@ -73,13 +80,13 @@ begin
   insert into public.shop_product_variants(barbershop_id, product_id, label, price_minor, is_active)
   values (v_shop, v_hidden_product, 'Unidade', 100, true);
 
-  insert into public.shop_products(barbershop_id, category_id, name, is_active)
-  values (v_disabled_shop, v_disabled_category, 'Produto activo loja desligada QA', false) returning id into v_disabled_product;
+  insert into public.shop_products(barbershop_id, category_id, name, track_stock, is_active)
+  values (v_disabled_shop, v_disabled_category, 'Produto activo loja desligada QA', false, false) returning id into v_disabled_product;
   insert into public.shop_product_variants(barbershop_id, product_id, label, price_minor, is_active)
   values (v_disabled_shop, v_disabled_product, 'Unidade', 200, true) returning id into v_disabled_variant;
 
-  insert into public.shop_products(barbershop_id, name, is_active)
-  values (v_other_shop, 'Produto de outro tenant QA', false) returning id into v_other_product;
+  insert into public.shop_products(barbershop_id, name, track_stock, is_active)
+  values (v_other_shop, 'Produto de outro tenant QA', false, false) returning id into v_other_product;
   insert into public.shop_product_variants(barbershop_id, product_id, label, price_minor, is_active)
   values (v_other_shop, v_other_product, 'Unidade', 300, true);
 
@@ -102,8 +109,25 @@ begin
   insert into public.inventory_reservations(barbershop_id, order_id, variant_id, qty, status, expires_at)
   values (v_shop, v_order, v_stock_variant, 2, 'reserved', now() + interval '1 hour'),
          (v_shop, v_order, v_available_variant, 2, 'reserved', now() + interval '1 hour');
+
+  perform set_config('request.jwt.claim.sub',v_actor::text,true);
+  perform set_config('request.jwt.claim.role','authenticated',true);
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',v_actor,'role','authenticated')::text,true);
+  update public.shop_products set image_url='https://example.invalid/phase3-product.jpg',
+    image_alt='Phase 3 main product test fixture',image_source_note='Only an isolated database fixture; not a real catalogue asset.' where id=v_product;
+  perform public.verify_shop_catalog_product(v_shop,v_product,'Fixture only; public catalogue filters and stock reservations are tested in isolation.');
+  update public.shop_products set image_url='https://example.invalid/phase3-untracked.jpg',
+    image_alt='Phase 3 untracked test fixture',image_source_note='Only an isolated database fixture; not a real catalogue asset.' where id=v_untracked_product;
+  perform public.verify_shop_catalog_product(v_shop,v_untracked_product,'Fixture only; public catalogue filters without stock tracking.');
+  update public.shop_products set image_url='https://example.invalid/phase3-disabled.jpg',
+    image_alt='Phase 3 disabled tenant test fixture',image_source_note='Only an isolated database fixture; not a real catalogue asset.' where id=v_disabled_product;
+  perform public.verify_shop_catalog_product(v_disabled_shop,v_disabled_product,'Fixture only; disabled tenant must not expose active catalogue.');
+  update public.shop_products set image_url='https://example.invalid/phase3-other.jpg',
+    image_alt='Phase 3 other tenant test fixture',image_source_note='Only an isolated database fixture; not a real catalogue asset.' where id=v_other_product;
+  perform public.verify_shop_catalog_product(v_other_shop,v_other_product,'Fixture only; tenant isolation regression contract.');
   update public.shop_products set is_active = true where id in (v_product, v_untracked_product);
   update public.shop_products set is_active = true where id in (v_disabled_product, v_other_product);
+  perform set_config('request.jwt.claim.role','service_role',true);
 
   select public.get_public_shop_catalog((select slug from public.barbershops where id = v_shop))
   into v_public;
