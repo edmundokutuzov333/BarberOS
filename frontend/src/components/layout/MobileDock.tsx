@@ -12,8 +12,9 @@ export function MobileDock() {
   const reduce = useReducedMotion();
   const { pathname } = useLocation();
   const { signOut } = useAuth();
-  const { role } = useShop();
-  const navItems = navForRole(role);
+  const { role, shop } = useShop();
+  const shopSchemaAvailable = typeof (shop as unknown as { shop_enabled?: unknown } | null)?.shop_enabled === 'boolean';
+  const navItems = navForRole(role).filter((item) => shopSchemaAvailable || !item.to.startsWith('/app/loja'));
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const moreRef = useRef<HTMLButtonElement | null>(null);
   const wasOpenRef = useRef(false);

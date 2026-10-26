@@ -18,6 +18,27 @@ function FullSkeleton() {
   );
 }
 
+function ShopSchemaUnavailable() {
+  return (
+    <main className="min-h-screen p-6 grid place-items-center" data-testid="shop-schema-unavailable">
+      <section className="glass w-full max-w-xl rounded-3xl p-6 sm:p-8" aria-labelledby="shop-schema-unavailable-title">
+        <p className="t-label text-ink-mid">Configuração da Loja</p>
+        <h1 id="shop-schema-unavailable-title" className="text-2xl font-semibold text-ink-hi mt-2">
+          A Loja ainda não está instalada neste ambiente.
+        </h1>
+        <p className="t-body text-ink-mid mt-3">
+          O backend deste ambiente ainda não disponibiliza o esquema operacional da Loja. Esta área fica bloqueada até as migrations serem reconciliadas e aplicadas com segurança. Não foram executadas consultas nem alterações de catálogo.
+        </p>
+        <div className="mt-5">
+          <a href="/app" className="inline-flex min-h-11 items-center rounded-2xl bg-accent-soft px-4 text-sm font-medium text-accent-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft">
+            Ir para o início
+          </a>
+        </div>
+      </section>
+    </main>
+  );
+}
+
 function RoleDenied({ pathname }: { pathname: string }) {
   return (
     <div className="min-h-screen p-6 grid place-items-center" data-testid="role-access-denied">
@@ -113,6 +134,9 @@ export function AppShell() {
 
   if (loading) return <FullSkeleton />;
   if (!shop && pathname !== '/app/onboarding') return <Navigate to="/app/onboarding" replace />;
+
+  const shopSchemaAvailable = typeof (shop as unknown as { shop_enabled?: unknown } | null)?.shop_enabled === 'boolean';
+  if (pathname.startsWith('/app/loja') && !shopSchemaAvailable) return <ShopSchemaUnavailable />;
   if (pathname === '/app/onboarding') {
     if (shop && !(role === 'owner' || role === 'manager')) return <RoleDenied pathname={pathname} />;
     return <div className="barber-shell min-h-screen" id="main-content"><SkipLink /><AnimatedOutlet /></div>;

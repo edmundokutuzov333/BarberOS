@@ -299,6 +299,20 @@ tests.push(
   }],
 );
 
+tests.push(
+  ['Shop routes fail closed and are hidden when the backend has no shop schema', () => {
+    const shell = read('src/components/layout/AppShell.tsx');
+    const sidebar = read('src/components/layout/Sidebar.tsx');
+    const mobile = read('src/components/layout/MobileDock.tsx');
+    assert.ok(shell.includes('shop-schema-unavailable'));
+    assert.ok(shell.includes("pathname.startsWith('/app/loja')"));
+    assert.ok(sidebar.includes('shopSchemaAvailable'));
+    assert.ok(sidebar.includes("!item.to.startsWith('/app/loja')"));
+    assert.ok(mobile.includes('shopSchemaAvailable'));
+    assert.ok(mobile.includes("!item.to.startsWith('/app/loja')"));
+  }],
+);
+
 let failed = 0;
 for (const [name, run] of tests) {
   try {

@@ -16,7 +16,8 @@ export function Sidebar() {
   const { pathname } = useLocation();
   const { signOut, profile } = useAuth();
   const { shop, shops, role, setShopId } = useShop();
-  const navItems = navForRole(role);
+  const shopSchemaAvailable = typeof (shop as unknown as { shop_enabled?: unknown } | null)?.shop_enabled === 'boolean';
+  const navItems = navForRole(role).filter((item) => shopSchemaAvailable || !item.to.startsWith('/app/loja'));
 
   const toggle = () => { localStorage.setItem(KEY, collapsed ? '0' : '1'); setCollapsed(!collapsed); };
   const active = navItems.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)));
