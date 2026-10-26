@@ -4,7 +4,7 @@ import {
   httpStatusForDomainCode,
   publicBookingMessage,
 } from "./contract.ts";
-import { adminClient, clientIp, consume, corsHeaders, sha256Hex } from "../_shared/guard.ts";
+import { adminClient, clientIp, consume, corsHeaders, rateLimitSalt, sha256Hex } from "../_shared/guard.ts";
 
 function isUuid(value: unknown): value is string {
   return typeof value === "string"
@@ -139,6 +139,7 @@ Deno.serve(async (req) => {
   if (!isValidPayload(body)) return json({ ok: false, error: "BOOKING_REQUEST_INVALID" }, 400);
 
   const payload = body as BookingPayload;
+  let stage = "runtime_setup";
   try {
     const ip = clientIp(req);
     const admin = adminClient();
@@ -154,6 +155,7 @@ Deno.serve(async (req) => {
     // Legacy no-product idempotency rows may have no request_hash. Only those
     // old rows may be replayed without a fingerprint; all new requests are
     // fingerprinted by the atomic SQL transaction below.
+    stage = "idempotency_lookup";
     const result = await admin.from("booking_idempotency").select("response,request_hash").eq("key", key).maybeSingle();
     const cached = result.data as { response: unknown; request_hash?: string | null } | null;
     if (result.error) throw new Error("IDEMPOTENCY_STORE_UNAVAILABLE");
@@ -179,7 +181,8 @@ Deno.serve(async (req) => {
       throw new Error("IDEMPOTENCY_STORE_UNAVAILABLE");
     }
 
-    const salt = Deno.env.get("RATE_LIMIT_SALT")?.trim() ?? "";
+    stage = "rate_limit";
+    const salt = rateLimitSalt();
     if (!salt) throw new Error("RATE_LIMIT_UNAVAILABLE");
 
     const ipHash = await sha256Hex(salt + ":" + ip);
@@ -201,6 +204,7 @@ Deno.serve(async (req) => {
       }
     }
 
+    stage = "booking_rpc";
     const { data, error } = await admin.rpc("book_appointment_with_shop_order_idempotent", {
       p_idempotency_key: key, p_slug: slug, p_service_id: payload.p_service_id,
       p_haircut_id: payload.p_haircut_id ?? null, p_barber_id: payload.p_barber_id ?? null,
@@ -209,6 +213,7 @@ Deno.serve(async (req) => {
     });
     if (error) {
       const code = extractDomainCode(error);
+      console.error("booking-create RPC failed", { stage, code });
       return json({ ok: false, error: code, message: publicBookingMessage(code) }, httpStatusForDomainCode(code));
     }
     const row = data?.[0];
@@ -227,6 +232,7 @@ Deno.serve(async (req) => {
     return json(response);
   } catch (error) {
     const code = extractDomainCode(error);
+    console.error("booking-create failed", { stage, code });
     return json({ ok: false, error: code, message: publicBookingMessage(code) }, httpStatusForDomainCode(code));
   }
 });
