@@ -91,6 +91,10 @@ begin
  if (select delivered_at from public.appointment_product_orders where id=v_order) is not null then
    raise exception 'FAIL: partial delivery incorrectly set delivered_at';
  end if;
+ if not exists(select 1 from public.shop_notification_events
+   where barbershop_id=v_shop and order_id=v_order and event_type='order_partially_delivered') then
+   raise exception 'FAIL: partial delivery did not create an internal alert';
+ end if;
 
  -- Pay only what was actually delivered: 3 units x 1000 = 3000 minor currency units.
  v_payment_result:=public.record_shop_order_payment(v_shop,v_order,1500,'cash','REC-LIFECYCLE-001',

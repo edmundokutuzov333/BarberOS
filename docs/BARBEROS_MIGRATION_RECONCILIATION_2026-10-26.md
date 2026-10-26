@@ -145,3 +145,8 @@ Há entradas históricas remotas sem ficheiro de origem correspondente na branch
 ### Operação e formação humana
 
 A execução SQL automatizada não constitui formação nem prova de um dia de operação. O runbook continua por preencher porque não existe evidência de formandos, formador, tarefas executadas na interface, incidentes e aceitação assinada. A Loja deve permanecer desligada até à execução presencial/remota com operadores e aprovação documentada.
+
+
+### Defeito identificado pela simulação E2E integrada
+
+A primeira execução da simulação integrada no staging revelou que as transições de entrega parcial não geravam alerta interno: o contrato de notificações contemplava pedido recebido, aceite, pronto e entregue, mas não `partially_delivered`. Foi acrescentada em `supabase/migrations/20261026200000_shop_partial_delivery_notification.sql` uma correcção forward-only para aceitar `order_partially_delivered` e produzir um alerta com a quantidade restante em destaque. O teste E2E exige explicitamente esse evento. A migration permanece apenas no repositório até à validação no CI e à reconciliação segura do histórico do ambiente; não foi aplicada a staging nem produção durante esta alteração.
