@@ -129,7 +129,7 @@ try:
     ta = threading.Thread(
         target=book_worker,
         args=(a,a_started,release_a,slug,service_id,barber_id,slot,
-              "Phase 23 A","+258841"+uuid.uuid4().hex[:7],"barberos-phase23-a"),
+              "Phase 23 A","+25884"+str(uuid.uuid4().int)[:7],"barberos-phase23-a"),
     )
     ta.start()
     if not a_started.wait(10):
@@ -143,7 +143,7 @@ try:
     tb = threading.Thread(
         target=book_worker,
         args=(b,b_started,release_a,slug,service_id,barber_id,slot,
-              "Phase 23 B","+258842"+uuid.uuid4().hex[:7],"barberos-phase23-b"),
+              "Phase 23 B","+25885"+str(uuid.uuid4().int)[:7],"barberos-phase23-b"),
     )
     tb.start()
     if not b_started.wait(10):
