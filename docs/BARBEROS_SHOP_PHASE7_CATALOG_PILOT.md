@@ -55,3 +55,10 @@ As migrations das Fases 1 a 7 e a correcção da fila de pagamentos foram aplica
 A RPC da fila de pagamentos foi corrigida para não eliminar um pedido parcialmente entregue apenas porque `delivered_at` ainda está nulo. A migration `20261026180000_shop_payment_queue_partial_delivery_fix.sql` e o cenário de regressão em `shop_order_payments_phase8.sql` deixam esta semântica explícita.
 
 O endpoint `booking-create` de produção está agora na versão 3, alinhada com o source actual sem CAPTCHA. O endpoint `token-gateway` está na versão 3 e suporta `shop_order.get`. Os registos de migration foram preservados; as diferenças históricas globais estão descritas em `docs/BARBEROS_MIGRATION_RECONCILIATION_2026-10-26.md`. A formação humana e o aceite do piloto continuam pendentes porque não devem ser simulados nem assinados automaticamente.
+
+
+## Testes adicionais de aceitação
+
+A suite de fila de espera `supabase/tests/waitlist_phase13.sql` passou em produção e em staging com uma fixture isolada criada e revertida na mesma transacção. O teste cobre entrada na fila, deduplicação, trigger após cancelamento, oferta única, consulta por token, conversão em marcação, rotação e expiração.
+
+O ledger Resend foi validado por um contrato SQL reversível nos dois ambientes. A versão pgTAP `supabase/tests/resend_webhook_contract.test.sql` foi adicionada ao runner de CI isolado; não foi possível executá-la directamente em Supabase remoto porque esses projectos não têm a função pgTAP `plan(integer)`. A limitação é do executor de testes remoto, não uma falha no contrato do ledger.

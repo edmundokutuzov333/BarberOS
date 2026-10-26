@@ -15,7 +15,7 @@ FILES = [
     "migration_phase2.sql","security_phase1.sql","domain_integrity_phase3.sql","availability_phase4.sql",
     "booking_phase5.sql","appointment_token_phase6.sql","public_barbershop_phase7.sql","booking_wizard_phase8.sql",
     "agenda_phase9.sql","realtime_phase10.sql","manual_booking_phase11.sql","customer_crm_phase12.sql",
-    "waitlist_phase13.sql","notifications_phase14.sql","cron_phase15.sql","payments_phase16.sql",
+    "waitlist_phase13.sql","resend_webhook_contract.test.sql","notifications_phase14.sql","cron_phase15.sql","payments_phase16.sql",
     "payments_e2e_phase16.sql","reviews_phase17.sql","reports_phase18.sql","admin_phase19.sql",
     "phase22_permissions.sql","phase23_contract.sql","phase23_behavior.sql",
     "shop_domain_phase1.sql","shop_catalog_phase2.sql","shop_catalog_rules_phase2.sql",

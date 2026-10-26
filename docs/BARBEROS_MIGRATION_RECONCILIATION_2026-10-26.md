@@ -94,3 +94,10 @@ A listagem de migrations não deve ser interpretada apenas por igualdade exacta 
 - `token_rpc_lockdown` foi reconciliada por `token_rpc_lockdown_reconciliation`; os privilégios resultantes foram verificados.
 
 Continuam a existir diferenças de nomes/registos para migrations antigas de domínios fora da Loja, incluindo fundações da plataforma, alguns patches de permissões e aliases históricos de telefone/pagamentos. Essas migrations antigas contêm `create or replace function` e não devem ser aplicadas cegamente depois de patches mais recentes, porque podem substituir comportamento actual. A equivalência total de todos esses domínios requer comparação funcional individual; o estado da Loja e dos seus pré-requisitos críticos foi validado separadamente. Não se fez `db reset`, alteração manual da tabela de histórico, nem remoção de dados de produção.
+
+
+## Validação operacional complementar em 26 de Outubro
+
+A suite completa `supabase/tests/waitlist_phase13.sql` foi executada em produção com rollback. Em staging, foi executada a mesma suite dentro de uma transacção com tenant, owner, serviço, barbeiro e horário de QA temporários, porque o staging não tinha uma barbearia elegível para servir de fixture; o teste passou e todos os dados temporários foram revertidos.
+
+O contrato `supabase/tests/resend_webhook_contract.test.sql` usa pgTAP e não pode ser executado directamente nos projectos remotos consultados porque a extensão/função `plan(integer)` não está instalada nesses ambientes. Para não confundir essa limitação do runner com uma falha do ledger, foi executado em ambos um contrato SQL alternativo, dentro de transacção revertida: confirma RLS, bloqueio de acesso anon/authenticated, privilégio service_role e deduplicação idempotente de `provider_event_id`. Esse contrato passou em staging e produção. O teste pgTAP foi adicionado à suite de CI isolada em `scripts/test_database_phase23.py`.
