@@ -99,7 +99,7 @@ for (const required of [
   'get_appointment_by_token',
   'manage_token_expires_at',
   'assertActiveAppointment',
-  'rate_limit_consume',
+  'consume(admin',
 ]) {
   if (!googleCalendarSource.includes(required)) throw new Error('GOOGLE_CALENDAR_SECURITY_CONTRACT_MISSING:' + required);
 }
