@@ -1703,6 +1703,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      restore_shop_order_item_operation: {
+        Args: { p_barbershop_id: string; p_order_id: string; p_item_id: string; p_note?: string | null }
+        Returns: Json
+      }
+      update_shop_order_item_operation: {
+        Args: { p_barbershop_id: string; p_order_id: string; p_item_id: string; p_action: string; p_delivered_qty?: number | null; p_note?: string | null; p_operation_key?: string | null }
+        Returns: Json
+      }
+      update_shop_order_operation: {
+        Args: { p_barbershop_id: string; p_order_id: string; p_action: string; p_note?: string | null; p_assigned_to?: string | null }
+        Returns: Json
+      }
+      get_shop_order_queue: {
+        Args: { p_barbershop_id: string; p_status?: string | null }
+        Returns: Json
+      }
       duplicate_shop_product: {
         Args: { p_barbershop_id: string; p_product_id: string }
         Returns: string

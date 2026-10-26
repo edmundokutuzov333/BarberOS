@@ -1,6 +1,5 @@
 -- BarberOS | Fase 5 | integridade operacional, idempotência e índices.
--- Forward-only. Aplicar apenas depois da cadeia de migrations reconciliada.
-begin;
+-- Forward-only. Aplicar apenas depois da cadeia de migrations reconciliada. 
 
 alter table public.shop_order_operation_events
   add column if not exists operation_key uuid;
@@ -365,4 +364,3 @@ $function$;
 revoke all on function public.update_shop_order_item_operation(uuid,uuid,uuid,text,integer,text,uuid) from public,anon;
 grant execute on function public.update_shop_order_item_operation(uuid,uuid,uuid,text,integer,text,uuid) to authenticated;
 
-commit;

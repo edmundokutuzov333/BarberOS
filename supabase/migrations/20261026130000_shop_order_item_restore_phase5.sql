@@ -1,6 +1,5 @@
 -- BarberOS | Fase 5 | recuperar um artigo anteriormente marcado como indisponível.
--- Restauração explícita após a equipa confirmar a disponibilidade e o pedido ser aceite.
-begin;
+-- Restauração explícita após a equipa confirmar a disponibilidade e o pedido ser aceite. 
 
 create or replace function private.shop_order_item_status_guard()
 returns trigger language plpgsql security definer set search_path = ''
@@ -81,4 +80,3 @@ $function$;
 revoke all on function public.restore_shop_order_item_operation(uuid,uuid,uuid,text) from public,anon;
 grant execute on function public.restore_shop_order_item_operation(uuid,uuid,uuid,text) to authenticated;
 
-commit;
