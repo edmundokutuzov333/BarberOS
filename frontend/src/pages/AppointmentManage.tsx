@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { CalendarPlus, CheckCircle2, Clock3, CreditCard, MapPin, MessageCircle, Scissors, ShieldCheck, Smartphone, UserRound, XCircle, Star } from 'lucide-react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { CalendarPlus, CheckCircle2, Clock3, CreditCard, Download, MapPin, MessageCircle, Scissors, ShieldCheck, Smartphone, UserRound, XCircle, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { Brand } from '@/components/ui/Brand';
 import { Button } from '@/components/ui/Button';
@@ -10,6 +10,7 @@ import { Field } from '@/components/ui/Field';
 import { humanError, formatMT } from '@/lib/utils';
 import { useInitiatePayment, usePaymentStatus, type PaymentProvider } from '@/features/payments/api';
 import { buildWhatsAppLink, downloadAppointmentCalendar } from '@/lib/calendar';
+import { getGoogleCalendarAuthorizationUrl } from '@/features/appointments/google-calendar';
 import {
   useAppointmentByToken,
   useShopOrderByToken,
@@ -44,7 +45,9 @@ function cancellationHelp(rule: string): string {
 
 export default function AppointmentManage() {
   const { token } = useParams<{ token: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [mode, setMode] = useState<'view' | 'cancel' | 'reschedule'>('view');
+  const [calendarPending, setCalendarPending] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [date, setDate] = useState('');
   const [selectedStart, setSelectedStart] = useState<string | null>(null);
@@ -76,6 +79,21 @@ export default function AppointmentManage() {
       void query.refetch();
     }
   }, [paymentStatus.data?.status]);
+
+  useEffect(() => {
+    const result = searchParams.get('calendar');
+    if (!result) return;
+
+    if (result === 'added') toast.success('Marcação adicionada ao Google Calendar.');
+    else if (result === 'updated') toast.success('Evento do Google Calendar actualizado.');
+    else if (result === 'denied') toast.info('A autorização do Google Calendar foi cancelada. A marcação continua válida.');
+    else if (result === 'inactive') toast.error('Esta marcação já não está activa ou o prazo da reserva terminou.');
+    else toast.error('Não foi possível guardar a marcação no Google Calendar. Tente novamente.');
+
+    const clean = new URLSearchParams(searchParams);
+    clean.delete('calendar');
+    setSearchParams(clean, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const whatsappMessage = useMemo(() => {
     if (!data) return '';
@@ -121,6 +139,18 @@ export default function AppointmentManage() {
     } catch (error) {
       toast.error(humanError(error));
       await query.refetch();
+    }
+  };
+
+  const addToGoogleCalendar = async () => {
+    if (!token || calendarPending) return;
+    setCalendarPending(true);
+    try {
+      const authorizationUrl = await getGoogleCalendarAuthorizationUrl(token);
+      window.location.assign(authorizationUrl);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível iniciar o Google Calendar.');
+      setCalendarPending(false);
     }
   };
 
@@ -435,7 +465,12 @@ export default function AppointmentManage() {
 
         {(data.appointment_status === 'pending' || data.appointment_status === 'confirmed') && (
           <div className="mt-4 grid sm:grid-cols-2 gap-3">
-            <Button full variant="secondary" onClick={() => downloadAppointmentCalendar(data, manageUrl)}><CalendarPlus size={16} />Adicionar ao calendário</Button>
+            <Button full variant="secondary" loading={calendarPending} onClick={addToGoogleCalendar} data-testid="add-to-google-calendar">
+              <CalendarPlus size={16} />Guardar no Google Calendar
+            </Button>
+            <Button full variant="ghost" onClick={() => downloadAppointmentCalendar(data, manageUrl)} data-testid="download-appointment-calendar">
+              <Download size={16} />Outras aplicações (.ics)
+            </Button>
             {hasContact && (
               <a href={buildWhatsAppLink(data.shop_whatsapp || data.shop_phone || '', whatsappMessage)} target="_blank" rel="noreferrer" className="block">
                 <Button full variant="secondary"><MessageCircle size={16} />Falar com a barbearia</Button>
