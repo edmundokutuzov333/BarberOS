@@ -9,6 +9,17 @@ function read(relativePath) {
 }
 
 const tests = [
+  ['Phase 5 order queue exposes tenant member assignment and rejects non-member assignees in the database contract', () => {
+    const page = read('src/pages/app/LojaPedidos.tsx');
+    const operation = read('../supabase/migrations/20261026120000_shop_order_operations_hardening_phase5.sql');
+    assert.match(page, /supabase\\.rpc\\('list_members',\\s*\\{\\s*p_shop:\\s*shop!\\.id\\s*\\}\\)/);
+    assert.match(page, /aria-label="Responsável do pedido"/);
+    assert.match(page, /action:'assign',assignee:/);
+    assert.match(page, /membersQuery\\.isLoading\\|\\|membersQuery\\.isError/);
+    assert.match(page, /if\\(!shop\\?\\.shop_enabled\\)/);
+    assert.match(operation, /SHOP_ORDER_ASSIGNEE_NOT_MEMBER/);
+    assert.match(operation, /public\\.is_member\\(p_barbershop_id,/);
+  }],
   ['Booking Wizard uses six-step flow and backend contracts', () => {
     const source = read('src/pages/BookingWizard.tsx');
     assert.match(source, /STEP_LABELS = \['Serviço', 'Corte', 'Barbeiro', 'Data', 'Hora', 'Dados'\]/);

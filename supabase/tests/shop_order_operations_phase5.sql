@@ -88,6 +88,15 @@ begin
   if (select assigned_to from public.appointment_product_orders where id=v_order) is distinct from v_actor then
     raise exception 'FAIL: assignment was not persisted';
   end if;
+
+  v_rejected := false;
+  begin
+    perform public.update_shop_order_operation(v_shop,v_order,'assign',null,gen_random_uuid());
+  exception when raise_exception then
+    get stacked diagnostics v_error=message_text;
+    if v_error='SHOP_ORDER_ASSIGNEE_NOT_MEMBER' then v_rejected:=true; else raise; end if;
+  end;
+  if not v_rejected then raise exception 'FAIL: non-member assignee was accepted'; end if;
   perform public.update_shop_order_operation(v_shop,v_order,'accept',null,null);
   perform public.update_shop_order_item_operation(v_shop,v_order,v_item,'accept',null,null,null);
   perform public.update_shop_order_operation(v_shop,v_order,'prepare',null,null);
@@ -244,7 +253,16 @@ begin
   end;
   if not v_rejected then raise exception 'FAIL: operation key reused with a different quantity was accepted'; end if;
 
-  raise notice 'PASS | Phase 5: assignment, full and partial delivery, reservation reconciliation, idempotent retries, unavailability, cancellation, failure.';
+  v_rejected := false;
+  begin
+    perform public.update_shop_order_operation(v_shop,v_order,'prepare',null,null);
+  exception when raise_exception then
+    get stacked diagnostics v_error=message_text;
+    if v_error like 'SHOP_ORDER_INVALID_TRANSITION:%' then v_rejected:=true; else raise; end if;
+  end;
+  if not v_rejected then raise exception 'FAIL: terminal delivered order accepted a new preparation transition'; end if;
+
+  raise notice 'PASS | Phase 5: membership-checked assignment, full and partial delivery, reservation reconciliation, idempotent retries, unavailability, cancellation, failure and terminal transition rejection.';
 end;
 $shop_order_operations_phase5$;
 rollback;
