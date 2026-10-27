@@ -26,6 +26,7 @@ if (typeof window !== 'undefined' && /^\/barbearia\/[^/]+\/?$/.test(window.locat
 }
 const PublicBarbershop = lazy(loadPublicBarbershop);
 const BookingWizard = lazy(() => import('./pages/BookingWizard'));
+const ShopSimulationDemo = lazy(() => import('./pages/ShopSimulationDemo'));
 const Vaga = lazy(() => import('./pages/Vaga'));
 const ReviewSubmit = lazy(() => import('./pages/ReviewSubmit'));
 const Dashboard = lazy(() => import('./pages/app/Dashboard'));
@@ -87,6 +88,7 @@ export default function App() {
   const isQuietSurface =
     /^\/(?:entrar|registar|recuperar)(?:\/|$)/.test(pathname) ||
     /^\/(?:marcacao|vaga)(?:\/|$)/.test(pathname) ||
+    pathname === '/demonstracao-loja' ||
     /^\/barbearia\/[^/]+\/marcar\/?$/.test(pathname);
   const atmosphereVariant: 'ambient' | 'hero' | 'quiet' | 'showcase' =
     isLanding ? 'hero' : isPublicShop ? 'showcase' : isAbout ? 'hero' : isQuietSurface ? 'quiet' : 'ambient';
@@ -121,6 +123,7 @@ export default function App() {
         <Route path="/vaga/:token" element={<Vaga />} />
         <Route path="/barbearia/:slug" element={<PublicBarbershop />} />
         <Route path="/barbearia/:slug/marcar" element={<BookingWizard />} />
+        <Route path="/demonstracao-loja" element={<ShopSimulationDemo />} />
 
         <Route element={<PrivateProviders />}>
           <Route element={<RequireAuth />}>
