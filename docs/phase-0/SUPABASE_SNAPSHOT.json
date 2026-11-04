@@ -1,0 +1,60 @@
+{
+  "captured_at": "2026-09-18T13:10:41Z",
+  "project": {
+    "ref": "alseiinjzwjdiwtvkdzy",
+    "name": "BarberOS",
+    "status": "ACTIVE_HEALTHY",
+    "region": "eu-west-2",
+    "postgres_engine": "17",
+    "postgres_version": "17.6.1.166"
+  },
+  "migrations": {
+    "github": [
+      "0001_schema.sql",
+      "0002_rls.sql",
+      "0003_engine.sql"
+    ],
+    "supabase": [],
+    "migration_schema_exists": false
+  },
+  "edge_functions": [],
+  "realtime_tables": [],
+  "cron_schema_exists": false,
+  "storage_buckets": [
+    "shop-logos",
+    "shop-photos",
+    "barbers",
+    "haircuts"
+  ],
+  "row_counts": {
+    "profiles": 3,
+    "plans": 3,
+    "barbershops": 2,
+    "barbershop_members": 2,
+    "barbers": 1,
+    "services": 2,
+    "barber_services": 1,
+    "haircuts": 44,
+    "working_hours": 14,
+    "time_blocks": 0,
+    "customers": 1,
+    "appointments": 1,
+    "waitlist_entries": 0,
+    "reviews": 0,
+    "payments": 0,
+    "notifications": 2,
+    "audit_logs": 1
+  },
+  "public_domain_tables_rls_enabled": true,
+  "appointments_no_overlap": true,
+  "security_advisors": {
+    "extension_in_public": 1,
+    "anon_security_definer_function_executable": 14,
+    "authenticated_security_definer_function_executable": 14,
+    "leaked_password_protection_disabled": 1
+  },
+  "performance_advisors": {
+    "unindexed_foreign_keys": 28
+  },
+  "changes_made": false
+}
