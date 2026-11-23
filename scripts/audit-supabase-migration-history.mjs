@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isMigrationArchive } from './migration-archive.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const snapshotPath = path.join(root, 'docs', 'barberos-migration-history-snapshot-2026-10-26.json');
@@ -80,6 +81,13 @@ function mapEnvironment(environment, project) {
     if (existing && existing.status !== 'ambiguous_duplicate_name') continue;
     const override = resolutions[remote.version];
     if (validEvidence(override)) {
+      if (override.archive_file) {
+        const relative = override.archive_file;
+        if (!isMigrationArchive(root, environment, relative)) {
+          output.set(remote.version, {...remote,status:'invalid_reviewed_resolution',review:override});
+          continue;
+        }
+      }
       if (override.source_file) {
         if (!localFiles.includes(override.source_file)) {
           output.set(remote.version,{...remote,status:'invalid_reviewed_resolution',review:override});
@@ -87,7 +95,7 @@ function mapEnvironment(environment, project) {
         }
         mappedFiles.add(override.source_file);
       }
-      output.set(remote.version,{...remote,status:'reviewed_'+override.status,source_file:override.source_file ?? null,evidence:override.evidence});
+      output.set(remote.version,{...remote,status:'reviewed_'+override.status,source_file:override.source_file ?? null,archive_file:override.archive_file ?? null,evidence:override.evidence});
     } else if (!existing) {
       output.set(remote.version,{...remote,status:'unresolved_remote_history'});
     }

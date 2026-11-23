@@ -1198,8 +1198,85 @@
     }
   },
   "reviewed_resolutions": {
-    "production": {},
-    "staging": {}
+    "production": {
+      "20260918153729": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/production/20260918153729_manual_booking_phone_structural.sql",
+        "evidence": "Compared with live supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      },
+      "20260918172547": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/production/20260918172547_20260918172000_payments_domain_reconcile.sql",
+        "evidence": "Compared with live supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      },
+      "20260918222131": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/production/20260918222131_phase_22_permissions_hardening.sql",
+        "evidence": "Compared with live supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      },
+      "20260918222334": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/production/20260918222334_phase_22_config_write_grants.sql",
+        "evidence": "Compared with live supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      },
+      "20260918222928": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/production/20260918222928_phase_22_public_read_grants.sql",
+        "evidence": "Compared with live supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      },
+      "20260918223047": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/production/20260918223047_phase_22_permission_reconciliation.sql",
+        "evidence": "Compared with live supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      },
+      "20261021063049": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/production/20261021063049_phase27_token_rpc_gateway_lockdown.sql",
+        "evidence": "Compared with live supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      },
+      "20261021141221": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/production/20261021141221_theme_engine_v2.sql",
+        "evidence": "Compared with live supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      },
+      "20261026101340": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/production/20261026101340_phase_25_public_performance_indexes.sql",
+        "evidence": "Compared with live supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      }
+    },
+    "staging": {
+      "20261021132342": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/staging/20261021132342_theme_engine_v2.sql",
+        "evidence": "Compared with live staging supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      },
+      "20261026092751": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/staging/20261026092751_reconcile_shop_phase6_schema_drift.sql",
+        "evidence": "Compared with live staging supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      },
+      "20261026092755": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/staging/20261026092755_reconcile_shop_phase7_schema_drift.sql",
+        "evidence": "Compared with live staging supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      },
+      "20261026094018": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/staging/20261026094018_reconcile_shop_payment_reporting_phase7.sql",
+        "evidence": "Compared with live staging supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      },
+      "20261026094152": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/staging/20261026094152_reconcile_shop_payment_queue_partial_delivery_fix_v2.sql",
+        "evidence": "Compared with live staging supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      },
+      "20261026100358": {
+        "status": "archived_remote_sql",
+        "archive_file": "docs/remote-migration-archive/staging/20261026100358_resend_webhook_event_tracking.sql",
+        "evidence": "Compared with live staging supabase_migrations.schema_migrations.statements on 2026-11-23; archived SQL matches the recorded statements after statement joining."
+      }
+    }
   },
   "reviewed_local_sources": {
     "production": {},
