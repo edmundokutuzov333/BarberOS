@@ -50,6 +50,8 @@ jobs:
           deno-version: v2.x
       - name: Test Resend webhook signature verification
         run: deno test supabase/functions/resend-webhook/signature_test.ts
+      - name: Test HTTP boundary and booking error contracts
+        run: deno test supabase/functions/_shared/http_test.ts supabase/functions/booking-create/contract.test.ts
 
   database:
     name: Supabase migrations and security contracts

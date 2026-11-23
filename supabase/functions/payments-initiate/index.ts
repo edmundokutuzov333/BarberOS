@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { ProviderError, initiatePayment, type PaymentProvider, type ProviderConfig } from "../_shared/payment-providers.ts";
 
-const cors={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
+import { browserCors, preflight } from "../_shared/http.ts";
 
 function secretKey(): string {
   const direct=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
@@ -15,13 +15,14 @@ function secretKey(): string {
   } catch {}
   throw new Error("SUPABASE_SECRET_KEY_UNAVAILABLE");
 }
-function json(body:unknown,status=200):Response{
-  return new Response(JSON.stringify(body),{status,headers:{...cors,"content-type":"application/json","cache-control":"no-store"}});
-}
 function validProvider(value:unknown): value is PaymentProvider { return value==="mpesa" || value==="emola"; }
 
 Deno.serve(async(req)=>{
-  if(req.method==="OPTIONS") return new Response("ok",{headers:cors});
+  const cors = browserCors(req, Deno.env.get("ALLOWED_ORIGINS") ?? "");
+  const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
+    status, headers: { ...cors, "content-type": "application/json", "cache-control": "no-store" },
+  });
+  if(req.method==="OPTIONS") return preflight(cors);
   if(req.method!=="POST") return json({ok:false,error:"METHOD_NOT_ALLOWED"},405);
 
   let body:any;

@@ -2,16 +2,19 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { queryPayment, type PaymentProvider, type ProviderConfig } from "../_shared/payment-providers.ts";
 
-const cors={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
+import { browserCors, preflight } from "../_shared/http.ts";
 function secretKey():string{
  const direct=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim(); if(direct)return direct;
  try{const parsed=JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS")||"");if(parsed?.default)return String(parsed.default);const first=Object.values(parsed).find(v=>typeof v==="string");if(first)return String(first);}catch{}
  throw new Error("SUPABASE_SECRET_KEY_UNAVAILABLE");
 }
-function json(body:unknown,status=200){return new Response(JSON.stringify(body),{status,headers:{...cors,"content-type":"application/json","cache-control":"no-store"}});}
 
 Deno.serve(async(req)=>{
- if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
+ const cors = browserCors(req, Deno.env.get("ALLOWED_ORIGINS") ?? "");
+ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
+   status, headers: { ...cors, "content-type": "application/json", "cache-control": "no-store" },
+ });
+ if(req.method==="OPTIONS")return preflight(cors);
  if(req.method!=="POST")return json({ok:false,error:"METHOD_NOT_ALLOWED"},405);
  let body:any;try{body=await req.json();}catch{return json({ok:false,error:"PAYMENT_REQUEST_INVALID"},400);}
  if(typeof body?.token!=="string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.token))return json({ok:false,error:"PAYMENT_REQUEST_INVALID"},400);

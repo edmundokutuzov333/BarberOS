@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { browserCors, preflight } from "../_shared/http.ts";
 
 type Action = "reset_password" | "list_events" | "complete_password_change";
 
@@ -17,14 +18,7 @@ function json(body: unknown, status = 200, cors: Record<string, string> = {}): R
 }
 
 function corsHeaders(req: Request): Record<string, string> {
-  const allowed = (Deno.env.get("ALLOWED_ORIGINS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  const origin = req.headers.get("origin") ?? "";
-  return {
-    "Access-Control-Allow-Origin": allowed.includes(origin) ? origin : (allowed[0] ?? ""),
-    "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Vary": "Origin",
-  };
+  return browserCors(req, Deno.env.get("ALLOWED_ORIGINS") ?? "");
 }
 
 function adminClient(): SupabaseClient {
@@ -60,7 +54,7 @@ function isUuid(value: unknown): value is string {
 
 Deno.serve(async (req: Request) => {
   const cors = corsHeaders(req);
-  if (req.method === "OPTIONS") return new Response("ok", { status: 204, headers: cors });
+  if (req.method === "OPTIONS") return preflight(cors);
   if (req.method !== "POST") return json({ ok: false, error: "METHOD_NOT_ALLOWED" }, 405, cors);
 
   const authorization = req.headers.get("authorization") ?? "";
