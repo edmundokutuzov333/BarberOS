@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { isMigrationArchive } from './migration-archive.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const snapshotPath = path.join(root, 'docs', 'barberos-migration-history-snapshot-2026-10-26.json');
+const snapshotPath = path.join(root, 'docs', 'barberos-migration-history-snapshot-2026-11-23.json');
 const strict = process.argv.includes('--strict');
 const reportOnly = process.argv.includes('--report-only');
 const snapshot = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
