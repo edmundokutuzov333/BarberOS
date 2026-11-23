@@ -52,6 +52,8 @@ jobs:
         run: deno test supabase/functions/resend-webhook/signature_test.ts
       - name: Test HTTP boundary and booking error contracts
         run: deno test supabase/functions/_shared/http_test.ts supabase/functions/booking-create/contract.test.ts
+      - name: Typecheck Gmail and signed webhook runtime
+        run: deno check --node-modules-dir=auto supabase/functions/gmail-integration/index.ts supabase/functions/resend-webhook/index.ts
 
   database:
     name: Supabase migrations and security contracts

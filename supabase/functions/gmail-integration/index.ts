@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { browserCors } from "../_shared/http.ts";
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -32,13 +33,7 @@ function obj(value: unknown): value is Record<string, unknown> { return !!value 
 function code(error: unknown): ErrCode { return error instanceof AppError ? error.code : "INTERNAL_ERROR"; }
 function status(error: unknown): number { return error instanceof AppError ? error.status : 500; }
 function headers(req: Request): Record<string, string> {
-  const origins = val("ALLOWED_ORIGINS").split(",").map((s) => s.trim()).filter(Boolean);
-  const origin = req.headers.get("origin") ?? "";
-  return {
-    ...(origins.includes(origin) ? { "Access-Control-Allow-Origin": origin } : {}),
-    "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
-    "Access-Control-Allow-Methods": "POST, OPTIONS", "Vary": "Origin",
-  };
+  return browserCors(req, val("ALLOWED_ORIGINS"));
 }
 function reply(req: Request, body: unknown, statusCode = 200): Response {
   return new Response(JSON.stringify(body), { status: statusCode, headers: {
@@ -74,7 +69,7 @@ function b64url(bytes: Uint8Array): string {
   let s = ""; for (const byte of bytes) s += String.fromCharCode(byte);
   return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
-function unb64url(input: string): Uint8Array {
+function unb64url(input: string): Uint8Array<ArrayBuffer> {
   const s = input.replace(/-/g, "+").replace(/_/g, "/");
   const bin = atob(s + "=".repeat((4 - s.length % 4) % 4));
   return Uint8Array.from(bin, (c) => c.charCodeAt(0));
@@ -234,7 +229,7 @@ async function listThreads(admin: SupabaseClient, c: Conn, search: unknown): Pro
       subject: header(last,"Subject") || "(sem assunto)", date: header(last,"Date"),
       unread: messages.some((m) => m.labelIds?.includes("UNREAD")), message_count: messages.length };
   }));
-  return result.filter((r): r is Record<string, unknown> => r !== null);
+  return result.filter((r): r is NonNullable<typeof r> => r !== null);
 }
 function redirect(params: Record<string,string>): Response {
   const url = new URL("/app/comunicacoes", appUrl());

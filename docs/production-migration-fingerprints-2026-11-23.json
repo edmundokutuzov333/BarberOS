@@ -1,0 +1,727 @@
+{
+  "captured_on": "2026-11-23",
+  "project_ref": "alseiinjzwjdiwtvkdzy",
+  "records": [
+    {
+      "version": "20260918132000",
+      "name": "initial_schema",
+      "statements_md5": "af50896c138554ace87623260a684f95"
+    },
+    {
+      "version": "20260918132200",
+      "name": "rls",
+      "statements_md5": "b50f87d046b057c15205978c92c0565d"
+    },
+    {
+      "version": "20260918132400",
+      "name": "engine",
+      "statements_md5": "85cf2e0e8a8e3db144a385ee5a3ffc83"
+    },
+    {
+      "version": "20260918132513",
+      "name": "security_hardening",
+      "statements_md5": "0422cab7f64dcf2a36766a91ea46360c"
+    },
+    {
+      "version": "20260918134600",
+      "name": "domain_integrity",
+      "statements_md5": "b3dc1de7a671ff6d7e97cbd119086321"
+    },
+    {
+      "version": "20260918134657",
+      "name": "domain_integrity_contract",
+      "statements_md5": "5905a5a43f5bb09b66699831de7ed3da"
+    },
+    {
+      "version": "20260918135712",
+      "name": "atomic_barber_save",
+      "statements_md5": "a6c11fd0a84aacd44d13664e220ad754"
+    },
+    {
+      "version": "20260918140253",
+      "name": "availability_engine_2",
+      "statements_md5": "482f5dc4df68f970828ed9f489efeb4e"
+    },
+    {
+      "version": "20260918140609",
+      "name": "availability_security",
+      "statements_md5": "49565263a0c7c4ef6ba8990143656240"
+    },
+    {
+      "version": "20260918141607",
+      "name": "booking_engine_2_0",
+      "statements_md5": "a540b04d76c141b32f788ba87d32b038"
+    },
+    {
+      "version": "20260918141851",
+      "name": "20260918162700_booking_engine_2_0_phone_normalization",
+      "statements_md5": "b2fef0862e4d5d8425af96edfda32ed0"
+    },
+    {
+      "version": "20260918141926",
+      "name": "20260918163000_booking_engine_2_0_returning_fix",
+      "statements_md5": "b8c22f724f6142c5c331d5bfbca70a95"
+    },
+    {
+      "version": "20260918142515",
+      "name": "booking_engine_2_0_indexes",
+      "statements_md5": "73e011d3f228a9af3790e2c93657d60b"
+    },
+    {
+      "version": "20260918143050",
+      "name": "appointment_token_view",
+      "statements_md5": "6c6cadf256d229c7686465e9b67b70aa"
+    },
+    {
+      "version": "20260918143124",
+      "name": "appointment_token_cancel",
+      "statements_md5": "35250a1de7d02b0376cd21482af11c28"
+    },
+    {
+      "version": "20260918143139",
+      "name": "appointment_token_reschedule",
+      "statements_md5": "a6b162e5d1a5b34f03f1a395e365b0fc"
+    },
+    {
+      "version": "20260918143239",
+      "name": "appointment_token_view_customer_name",
+      "statements_md5": "4e7d1aa8a53b43832ddce9698f2ce896"
+    },
+    {
+      "version": "20260918143317",
+      "name": "appointment_token_cancel_returning_fix",
+      "statements_md5": "359b0b8e65181d64af0da3c9fa55ec62"
+    },
+    {
+      "version": "20260918143353",
+      "name": "appointment_token_public_boundary",
+      "statements_md5": "8b001fb7f4699b5d0dfd804a3de65fa2"
+    },
+    {
+      "version": "20260918143427",
+      "name": "appointment_token_slots",
+      "statements_md5": "7eeffef2ed219a7cbb2b2fc1d15b1b21"
+    },
+    {
+      "version": "20260918143814",
+      "name": "appointment_token_cancel_lock",
+      "statements_md5": "64831b841c63d7b6e39ce5f924fc50c0"
+    },
+    {
+      "version": "20260918143918",
+      "name": "appointment_token_cancel_lock_order",
+      "statements_md5": "28a5ebe126db71cc8a5f378ff2e74f92"
+    },
+    {
+      "version": "20260918144319",
+      "name": "public_barbershop_surface",
+      "statements_md5": "3642e67f50d03cf1faae29385624e736"
+    },
+    {
+      "version": "20260918144500",
+      "name": "appointment_token_cancel_returning_fix",
+      "statements_md5": "3138365bfdb706a86f1ba0a4c0f6e938"
+    },
+    {
+      "version": "20260918144535",
+      "name": "public_barbershop_anon_boundary",
+      "statements_md5": "8c0ac22b0a10502af2b63c8ce10af5c0"
+    },
+    {
+      "version": "20260918145140",
+      "name": "public_booking_config",
+      "statements_md5": "0a97e5c393576979bcca27dae2e52e85"
+    },
+    {
+      "version": "20260918145210",
+      "name": "public_booking_deposit_config",
+      "statements_md5": "64da9e2b2e41bd9a163dd13ce7a08c47"
+    },
+    {
+      "version": "20260918150407",
+      "name": "agenda_operational_engine",
+      "statements_md5": "40875529e31f4bec4eb40d0eec563b9b"
+    },
+    {
+      "version": "20260918150747",
+      "name": "agenda_confirm_deposit_guard",
+      "statements_md5": "1e37da60952a51e51587fd4bcbc62757"
+    },
+    {
+      "version": "20260918150955",
+      "name": "agenda_argument_validation_order",
+      "statements_md5": "4b9ad9adf3a75945bb30376c4e95d960"
+    },
+    {
+      "version": "20260918151118",
+      "name": "agenda_cross_barber_reschedule",
+      "statements_md5": "fb1903f23690ad04f6a918bbcbed1ad7"
+    },
+    {
+      "version": "20260918151603",
+      "name": "agenda_scope_and_index_hardening",
+      "statements_md5": "a1e76cd4d97142b5feb0cedcefd46335"
+    },
+    {
+      "version": "20260918151955",
+      "name": "realtime_appointments_publication",
+      "statements_md5": "7ab48a160d9f120986e1b11e86360aac"
+    },
+    {
+      "version": "20260918153306",
+      "name": "manual_booking_engine",
+      "statements_md5": "ea7ebed53640e03a874eeea4ba089648"
+    },
+    {
+      "version": "20260918153505",
+      "name": "booking_phone_validation_fix",
+      "statements_md5": "b912d03a91f54e6d173977ee37d8377d"
+    },
+    {
+      "version": "20260918153729",
+      "name": "manual_booking_phone_structural",
+      "statements_md5": "a67210d6a972275e2d89dc37aa38f25e"
+    },
+    {
+      "version": "20260918153845",
+      "name": "manual_booking_result_contract",
+      "statements_md5": "b5aad8f5608be3fd43affabffa7430cf"
+    },
+    {
+      "version": "20260918160210",
+      "name": "enable_pg_trgm_for_customer_search",
+      "statements_md5": "a9f2a818cb67519ee57158cd560ed77a"
+    },
+    {
+      "version": "20260918160223",
+      "name": "customer_crm",
+      "statements_md5": "5fad59698ecdfb86e58f1b977eea7a4b"
+    },
+    {
+      "version": "20260918160633",
+      "name": "customer_crm_filter_fix",
+      "statements_md5": "5319e1ff034f53fd92d2a947343b6054"
+    },
+    {
+      "version": "20260918160814",
+      "name": "customer_crm_barber_scope",
+      "statements_md5": "2f4228a0197f250e838a82603b51c74d"
+    },
+    {
+      "version": "20260918162103",
+      "name": "waitlist_engine",
+      "statements_md5": "d7fe12dec37cd266cb3307f533733879"
+    },
+    {
+      "version": "20260918162207",
+      "name": "waitlist_read_models",
+      "statements_md5": "a7ac72e4a920ffc120d10af5f00564b2"
+    },
+    {
+      "version": "20260918162313",
+      "name": "waitlist_slot_release_trigger",
+      "statements_md5": "ae3be3acbc2c0c1684156496b000ccf2"
+    },
+    {
+      "version": "20260918162609",
+      "name": "waitlist_join_fix",
+      "statements_md5": "a5edde860e2758419da502ef3483558b"
+    },
+    {
+      "version": "20260918162706",
+      "name": "waitlist_allocator_qualification_fix",
+      "statements_md5": "3cbcc608d9d7fc0be2912ffae0cb13d1"
+    },
+    {
+      "version": "20260918162730",
+      "name": "waitlist_claim_qualification_fix",
+      "statements_md5": "73d5a1f70029bf86a0627f1b3bf21a2a"
+    },
+    {
+      "version": "20260918162753",
+      "name": "waitlist_claim_notification_fix",
+      "statements_md5": "997aeb5ddfb9e4023986a54af350ee4d"
+    },
+    {
+      "version": "20260918162815",
+      "name": "waitlist_expire_return_fix",
+      "statements_md5": "79b767121fe95d8638d5dfbcbccde5c2"
+    },
+    {
+      "version": "20260918162938",
+      "name": "waitlist_lock_order_fix",
+      "statements_md5": "e5cf7c4158375de50f9421b0d767ad37"
+    },
+    {
+      "version": "20260918163038",
+      "name": "waitlist_join_concurrency_fix",
+      "statements_md5": "34c5af78bb4e44cf7106a4d994deaa49"
+    },
+    {
+      "version": "20260918163337",
+      "name": "waitlist_offer_identity_fix",
+      "statements_md5": "485561e550bc0536e79dd2b704fe17ec"
+    },
+    {
+      "version": "20260918164700",
+      "name": "notifications_status_processing",
+      "statements_md5": "6da35f71952e9f42894c38478f140dce"
+    },
+    {
+      "version": "20260918164708",
+      "name": "notifications_engine",
+      "statements_md5": "c729e0f5e357830d1492939c125e742e"
+    },
+    {
+      "version": "20260918165143",
+      "name": "notifications_claim_scope_fix",
+      "statements_md5": "3d1aa1979b04d1a2f8a74a43cf643165"
+    },
+    {
+      "version": "20260918165310",
+      "name": "notification_manual_retry",
+      "statements_md5": "cecf50a97b0bffee1807fc79cebd5ffa"
+    },
+    {
+      "version": "20260918165537",
+      "name": "notification_retry_qualification_fix",
+      "statements_md5": "df8a72913134f0f38f43ba1b74f141b5"
+    },
+    {
+      "version": "20260918170232",
+      "name": "enable_cron_extensions",
+      "statements_md5": "aea9a29780fb576d15dbb71ea9c1ff54"
+    },
+    {
+      "version": "20260918170404",
+      "name": "scheduler_jobs",
+      "statements_md5": "71495997895c72773e15fe33539a0238"
+    },
+    {
+      "version": "20260918170450",
+      "name": "notification_automation_status",
+      "statements_md5": "f93e294e15645a9b0a4c71dfc9e99a50"
+    },
+    {
+      "version": "20260918170534",
+      "name": "waitlist_expiry_notification_suppression",
+      "statements_md5": "be8dda2da407f9c4be63db843ab86eee"
+    },
+    {
+      "version": "20260918170820",
+      "name": "notification_stale_state_guard",
+      "statements_md5": "1b1e1a07434a1f287c3fa7cc515a90b4"
+    },
+    {
+      "version": "20260918170907",
+      "name": "notification_claim_return_query_fix",
+      "statements_md5": "7aa54c133a3f85fab1ed153abb1778fe"
+    },
+    {
+      "version": "20260918172538",
+      "name": "20260918172000_payments_domain",
+      "statements_md5": "850a8db00cfb3e5a9d7b0cb3c67b328b"
+    },
+    {
+      "version": "20260918172547",
+      "name": "20260918172000_payments_domain_reconcile",
+      "statements_md5": "94576dd1766e896510783d068cac22e2"
+    },
+    {
+      "version": "20260918172557",
+      "name": "20260918172100_payment_rpc",
+      "statements_md5": "565403f5652ef08797d9a9b2f024429f"
+    },
+    {
+      "version": "20260918172715",
+      "name": "20260918172200_payment_config_actor_fix",
+      "statements_md5": "fe1888df3b9ad25c0508bc737bc81a44"
+    },
+    {
+      "version": "20260918172758",
+      "name": "20260918172300_payment_public_and_reconciliation",
+      "statements_md5": "fd287fe0b714e4c59342c21559f215d3"
+    },
+    {
+      "version": "20260918173135",
+      "name": "20260918172400_payment_reconciliation_cron",
+      "statements_md5": "66926220e855e4e351c3e10b4ec455f7"
+    },
+    {
+      "version": "20260918173226",
+      "name": "20260918172500_payment_runtime_and_late_success",
+      "statements_md5": "c7f727f930d60308b48a6f31eec2beb8"
+    },
+    {
+      "version": "20260918173437",
+      "name": "20260918172700_payment_provider_column_qualification",
+      "statements_md5": "b186cf39444972a1f2cf835780947a3a"
+    },
+    {
+      "version": "20260918173525",
+      "name": "20260918172800_payment_provider_alias_fix",
+      "statements_md5": "ca90d1e488aca313fc7471d9f44b7660"
+    },
+    {
+      "version": "20260918173617",
+      "name": "20260918172900_payment_pgcrypto_qualification",
+      "statements_md5": "ef574ec6fa2544fdf639c3c1f1320e39"
+    },
+    {
+      "version": "20260918180257",
+      "name": "review_lifecycle",
+      "statements_md5": "e2fa3cf66f77a7e990c7ea2b57e33d96"
+    },
+    {
+      "version": "20260918180346",
+      "name": "review_public_contract",
+      "statements_md5": "1bd404faebb2b137c403306ca8a1af0c"
+    },
+    {
+      "version": "20260918181012",
+      "name": "review_submit_return_contract",
+      "statements_md5": "b3015bfc656b2ff8d4a67acad902e395"
+    },
+    {
+      "version": "20260918181052",
+      "name": "review_submit_return_contract_v2",
+      "statements_md5": "e2ef77f250bc7f617d5b5af2c44a7bfa"
+    },
+    {
+      "version": "20260918182214",
+      "name": "reports_engine",
+      "statements_md5": "4c3b08c940c6f5bdec91dd2a1948c236"
+    },
+    {
+      "version": "20260918182244",
+      "name": "reports_summary_alias_hardening",
+      "statements_md5": "015256ac1f91618dfe946a2a7ac7834c"
+    },
+    {
+      "version": "20260918182312",
+      "name": "reports_capacity_alias_hardening",
+      "statements_md5": "007c30ff812c8da9f4fb287b4fbb499e"
+    },
+    {
+      "version": "20260918182338",
+      "name": "reports_daily_alias_hardening",
+      "statements_md5": "d2ce725a8541bafd37cf12f999b677a3"
+    },
+    {
+      "version": "20260918182413",
+      "name": "reports_barber_alias_hardening",
+      "statements_md5": "4cb8ce83ef5654d8edb0a490dfaa2235"
+    },
+    {
+      "version": "20260918183422",
+      "name": "platform_admin_domain",
+      "statements_md5": "3d04f15d7a5dc841ad9413d886f4fe6a"
+    },
+    {
+      "version": "20260918183449",
+      "name": "platform_admin_user_contract",
+      "statements_md5": "3b0f183a23eb0189542fa390f1a72b61"
+    },
+    {
+      "version": "20260918183615",
+      "name": "platform_admin_metrics_contract",
+      "statements_md5": "a0a2c8fdf1fc0713bf48925458b9441a"
+    },
+    {
+      "version": "20260918184114",
+      "name": "platform_admin_mutation_contract",
+      "statements_md5": "ce1f53c382a011b4fd832374838f8bb8"
+    },
+    {
+      "version": "20260918184146",
+      "name": "platform_admin_mutation_alias_hardening",
+      "statements_md5": "ecbc5c3c4adf58c8005ebd239d5feb39"
+    },
+    {
+      "version": "20260918184817",
+      "name": "platform_admin_metrics_daily_fix",
+      "statements_md5": "3a90718609033fab8794318df0b8960a"
+    },
+    {
+      "version": "20260918184824",
+      "name": "platform_admin_support_unassign",
+      "statements_md5": "4a2040c694c062a3601b3bb539b2548d"
+    },
+    {
+      "version": "20260918222131",
+      "name": "phase_22_permissions_hardening",
+      "statements_md5": "5e821cddf0d92fe79b545d21e62190ee"
+    },
+    {
+      "version": "20260918222146",
+      "name": "20260919001000_phase_22_permissions_audit",
+      "statements_md5": "7ebca5e30febd121b00b075dbdb3391c"
+    },
+    {
+      "version": "20260918222334",
+      "name": "phase_22_config_write_grants",
+      "statements_md5": "a05a2fe527331fdfed62b6d24f7e7167"
+    },
+    {
+      "version": "20260918222404",
+      "name": "20260919001100_phase_22_notification_boundary_patch",
+      "statements_md5": "bf30ea9640763cf2b528944ad39bd4e0"
+    },
+    {
+      "version": "20260918222928",
+      "name": "phase_22_public_read_grants",
+      "statements_md5": "dffd64d571a5ad205886af65237d6c1c"
+    },
+    {
+      "version": "20260918223047",
+      "name": "phase_22_permission_reconciliation",
+      "statements_md5": "6f52878e6602617e3bd9f51bf2752545"
+    },
+    {
+      "version": "20260918235933",
+      "name": "phase_25_public_performance_indexes",
+      "statements_md5": "ec155cb5f5e60e7b6de4623e5a6eaec0"
+    },
+    {
+      "version": "20260919005227",
+      "name": "release_audit_appointments_read_model",
+      "statements_md5": "3b4cdec383c20d93143959d2fa1cfc27"
+    },
+    {
+      "version": "20261019140257",
+      "name": "default_haircut_photos_and_moz_demo_data",
+      "statements_md5": "95bbb86514dd1bcff2928d9c6e4955ce"
+    },
+    {
+      "version": "20261019144435",
+      "name": "refine_haircut_reference_photos_and_demo_profiles",
+      "statements_md5": "88425966a8aef39564e0271c0ecdfd19"
+    },
+    {
+      "version": "20261020053148",
+      "name": "publish_shop_photos_and_polished_profiles",
+      "statements_md5": "82c91976d567cacea9e801ff83a00bad"
+    },
+    {
+      "version": "20261020055712",
+      "name": "photography_services_and_team",
+      "statements_md5": "d1be7a557e2d187ce35f5682cb2bf266"
+    },
+    {
+      "version": "20261020055726",
+      "name": "repair_barber_hours_for_published_team",
+      "statements_md5": "b6235c4bfd36a8c85b94c55ff4cd24ae"
+    },
+    {
+      "version": "20261020061812",
+      "name": "repair_manage_token_expiry",
+      "statements_md5": "1d4c43e74434e03f745313c381851e37"
+    },
+    {
+      "version": "20261020062637",
+      "name": "platform_access_audit",
+      "statements_md5": "61275839cdabd03616ccca29f9b09ff1"
+    },
+    {
+      "version": "20261020062902",
+      "name": "force_password_change",
+      "statements_md5": "765c173ca952a95e271f8c6d08a9cb10"
+    },
+    {
+      "version": "20261020063700",
+      "name": "enforce_password_rotation",
+      "statements_md5": "f996c24a853b19c37e6709fbfa93fd48"
+    },
+    {
+      "version": "20261020063931",
+      "name": "fix_profile_password_flag_policy",
+      "statements_md5": "57d8e57b48d528b05cf62f06f01bdde7"
+    },
+    {
+      "version": "20261021063049",
+      "name": "phase27_token_rpc_gateway_lockdown",
+      "statements_md5": "311f988ef405b507af3079bd648a4cfa"
+    },
+    {
+      "version": "20261021141024",
+      "name": "gmail_workspace_integration",
+      "statements_md5": "02ed7e8ec100cf15a6171c10997a5cd9"
+    },
+    {
+      "version": "20261021141221",
+      "name": "theme_engine_v2",
+      "statements_md5": "eea9b4e96478265d80e00edb2541736a"
+    },
+    {
+      "version": "20261026094825",
+      "name": "booking_rpc_idempotency_and_lockdown",
+      "statements_md5": "9adefdeaae253179a467c41237252de1"
+    },
+    {
+      "version": "20261026094830",
+      "name": "booking_rate_limit_primitives",
+      "statements_md5": "f906f261c08499dcf83836d8436c31da"
+    },
+    {
+      "version": "20261026094835",
+      "name": "availability_week_batch_reconcile",
+      "statements_md5": "6015f7850f1869f8ac14eb4693675320"
+    },
+    {
+      "version": "20261026094839",
+      "name": "public_foreign_key_covering_indexes",
+      "statements_md5": "31a21bb15f0f7ca6bce3047326772675"
+    },
+    {
+      "version": "20261026094902",
+      "name": "shop_domain_model_phase1",
+      "statements_md5": "9f308d8aa78ecf575352b3c6a76044c5"
+    },
+    {
+      "version": "20261026094907",
+      "name": "shop_catalog_write_privileges_hardening",
+      "statements_md5": "bc5db9bc25ab15f2a370e745f9250975"
+    },
+    {
+      "version": "20261026094913",
+      "name": "shop_order_transition_invariants",
+      "statements_md5": "e75c34df21f14d3d806ba21274242fee"
+    },
+    {
+      "version": "20261026094917",
+      "name": "shop_foreign_key_covering_indexes",
+      "statements_md5": "0f46538dbe04f5fe46c42341cfc072e9"
+    },
+    {
+      "version": "20261026094922",
+      "name": "shop_feature_flag_server_guard",
+      "statements_md5": "ff095cb4034e800349a637ba64c52222"
+    },
+    {
+      "version": "20261026094930",
+      "name": "shop_catalog_management_phase2",
+      "statements_md5": "5622b921374d06a30a922e73e99cd422"
+    },
+    {
+      "version": "20261026094934",
+      "name": "shop_catalog_image_authorizer_fk_index",
+      "statements_md5": "7ed9761caecc61093ab157f2d9e674e2"
+    },
+    {
+      "version": "20261026094938",
+      "name": "shop_catalog_management_phase2",
+      "statements_md5": "13e21524e38d6980e927a21ea13ad681"
+    },
+    {
+      "version": "20261026094942",
+      "name": "shop_catalog_publication_guard_phase2",
+      "statements_md5": "9167a5940017b735581c04608ca5f605"
+    },
+    {
+      "version": "20261026094946",
+      "name": "shop_catalog_image_metadata_privilege_hardening",
+      "statements_md5": "d1d7dfd0cbae9b1fc7e85c46d5121b46"
+    },
+    {
+      "version": "20261026095025",
+      "name": "shop_catalog_product_rules_and_duplicate",
+      "statements_md5": "0878216389256014c2bef1bc1930372a"
+    },
+    {
+      "version": "20261026095029",
+      "name": "shop_catalog_duplicate_service_role_contract",
+      "statements_md5": "06db1b3f8c6aed418f4c7dcf70850448"
+    },
+    {
+      "version": "20261026095034",
+      "name": "shop_order_options_validator_execute_grant",
+      "statements_md5": "c5622af0b4165649e6cd24e142a5ec03"
+    },
+    {
+      "version": "20261026095038",
+      "name": "shop_public_catalog_phase3",
+      "statements_md5": "13a04e0dd78e2b8444e693caabe4a895"
+    },
+    {
+      "version": "20261026095050",
+      "name": "shop_order_atomic_phase4",
+      "statements_md5": "f3fd2df201233f2be70721fa996ed889"
+    },
+    {
+      "version": "20261026095054",
+      "name": "20261023134000_shop_order_reservation_release_phase4",
+      "statements_md5": "b9cdffa49dbf2ef6c9b6570527b6c636"
+    },
+    {
+      "version": "20261026095109",
+      "name": "20261026110000_shop_order_operations_phase5",
+      "statements_md5": "e712bc903dbae2a23f37ec846001962e"
+    },
+    {
+      "version": "20261026095114",
+      "name": "shop_order_operations_hardening_phase5",
+      "statements_md5": "64d23c87fbde2efb6dc280f34f0fb259"
+    },
+    {
+      "version": "20261026095119",
+      "name": "shop_order_item_restore_phase5",
+      "statements_md5": "e131f1bde04422dd1d72a6d0fabea009"
+    },
+    {
+      "version": "20261026095125",
+      "name": "shop_order_operations_integrity_phase5",
+      "statements_md5": "8372b5f6a100a0bc3ef50e4bb84086e5"
+    },
+    {
+      "version": "20261026095134",
+      "name": "shop_order_item_restore_active_phase5",
+      "statements_md5": "14b594df26f38edce1d07bae27329f4d"
+    },
+    {
+      "version": "20261026095139",
+      "name": "shop_communications_reporting_phase6",
+      "statements_md5": "d0462de59c8bd22ac64b02896ec76c72"
+    },
+    {
+      "version": "20261026095143",
+      "name": "shop_catalog_reference_pilot_phase7",
+      "statements_md5": "0542a665bc65cfb16dcad451c74bbaa1"
+    },
+    {
+      "version": "20261026095148",
+      "name": "shop_order_payment_ledger_phase7",
+      "statements_md5": "401bcb754104e448e91883b06708c5db"
+    },
+    {
+      "version": "20261026095200",
+      "name": "shop_payment_queue_partial_delivery_fix",
+      "statements_md5": "d637e0d4f323e606a4ed41627ba162f7"
+    },
+    {
+      "version": "20261026100016",
+      "name": "token_rpc_lockdown_reconciliation",
+      "statements_md5": "6514a593eb635e9fe3ff6b01248a3f49"
+    },
+    {
+      "version": "20261026100258",
+      "name": "resend_webhook_event_tracking",
+      "statements_md5": "616fc1f5905fc1ab17888ae2f57efb04"
+    },
+    {
+      "version": "20261026100306",
+      "name": "waitlist_expire_status_persistence",
+      "statements_md5": "5699ab69941ef15c33a0c62e6e1e96f1"
+    },
+    {
+      "version": "20261026100905",
+      "name": "resend_email_event_fk_index",
+      "statements_md5": "efe737dd00145de280d94431b7bab3d8"
+    },
+    {
+      "version": "20261026101340",
+      "name": "phase_25_public_performance_indexes",
+      "statements_md5": "2e595d034991cead6b2f67456dc90864"
+    }
+  ],
+  "scope": "Live history metadata and SQL fingerprints; not a database backup or schema-equivalence certification."
+}

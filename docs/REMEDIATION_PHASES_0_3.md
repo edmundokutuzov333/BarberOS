@@ -87,3 +87,29 @@ still denies access to the BarberOS project on all available account links. An
 attempt to manage the connection through the desktop UI was denied by the computer
 use tool. Account reconnection must be completed by the user before API-based schema
 reconciliation can proceed. No production schema or migration history was changed.
+
+## Connected API checkpoint, 2026-11-23
+
+The new Conta BarberOS MCP account now authorizes production and staging. Live
+production history has 144 records, captured with SQL fingerprints in
+production-migration-fingerprints-2026-11-23.json. Homonymous performance migrations
+have different fingerprints and must not be silently treated as equivalent.
+
+All 37 production public tables have RLS enabled. Gmail storage is inaccessible
+to both browser roles, and record_email_event(text,text,text) exists. Five cron
+jobs are active; recent SQL executions succeeded. SQL scheduling success is not
+proof that the dispatched HTTP requests or downstream providers succeeded.
+
+Published resend-webhook v1 and gmail-integration v3 using the repository files
+through MCP. Gmail now shares the tested browser CORS policy. Fixed WebCrypto
+ArrayBuffer typing and the nullable thread-list predicate. Deno typechecking and
+19 boundary/signature/booking tests pass; CI now checks both function entrypoints.
+The live read-only runtime suite passes all 18 checks.
+
+External configuration is still incomplete: unsigned Resend POST returns 503
+because RESEND_WEBHOOK_SECRET is absent. Database notification failures aggregate
+to 179 EMAIL_PROVIDER_NOT_CONFIGURED and 31 WHATSAPP_PROVIDER_NOT_CONFIGURED.
+There are zero Gmail connections. No historical notification was requeued and no
+customer was contacted. Provider delivery, OAuth consent and refresh, backups,
+restore acceptance, full schema reconciliation and regenerated client types remain
+outstanding. These findings prevent certification of phases 0–3 as complete.
