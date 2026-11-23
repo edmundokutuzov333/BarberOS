@@ -1,0 +1,67 @@
+{
+  "status": "DECLARED_BOUNDARIES_PRESENT",
+  "scope": "Static name and literal argument compatibility only; no runtime authorization, payload value, return, provider or E2E certification",
+  "missing_rpcs": [],
+  "missing_tables": [],
+  "missing_edges": [],
+  "invalid_payloads": [],
+  "unresolved_dynamic_calls": [],
+  "opaque_payloads": [
+    {
+      "file": "frontend/src/components/config/HoursEditor.tsx",
+      "line": 53,
+      "names": [
+        "replace_working_hours"
+      ]
+    },
+    {
+      "file": "frontend/src/features/reports/api.ts",
+      "line": 40,
+      "names": [
+        "get_report_summary"
+      ]
+    },
+    {
+      "file": "frontend/src/features/reports/api.ts",
+      "line": 41,
+      "names": [
+        "get_report_daily"
+      ]
+    },
+    {
+      "file": "frontend/src/features/reports/api.ts",
+      "line": 42,
+      "names": [
+        "get_report_services"
+      ]
+    },
+    {
+      "file": "frontend/src/features/reports/api.ts",
+      "line": 43,
+      "names": [
+        "get_report_haircuts"
+      ]
+    },
+    {
+      "file": "frontend/src/features/reports/api.ts",
+      "line": 44,
+      "names": [
+        "get_report_barbers"
+      ]
+    },
+    {
+      "file": "frontend/src/features/reviews/api.ts",
+      "line": 27,
+      "names": [
+        "get_reviews"
+      ]
+    },
+    {
+      "file": "frontend/src/features/waitlist/api.ts",
+      "line": 102,
+      "names": [
+        "join_waitlist"
+      ]
+    }
+  ]
+}

@@ -3,7 +3,8 @@
 ## Estado
 
 Em 2026-11-23, produção concluiu OAuth real com a conta de teste aprovada, guardou
-tokens cifrados e passou listagem, leitura e envio pelo frontend. O projecto Google
+tokens cifrados e passou listagem, leitura, envio, resposta, renovação automática,
+desligação com revogação confirmada e reconexão pelo frontend. O projecto Google
 continua em modo de testes. Ver evidências e limitações em
 `EMAIL_INTEGRATION_ACCEPTANCE_2026-11-23.md`; isto não aprova acesso público antes
 da verificação Google e da certificação dos restantes fluxos.

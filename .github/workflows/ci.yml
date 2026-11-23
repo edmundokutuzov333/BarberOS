@@ -29,6 +29,11 @@ jobs:
       - run: corepack yarn lint
       - run: corepack yarn typecheck
       - run: corepack yarn test
+      - name: Verify the frontend contract inventory against captured production metadata
+        run: |
+          node --test ../scripts/inventory-frontend-contracts.test.mjs ../scripts/compare-frontend-contracts.test.mjs
+          node ../scripts/inventory-frontend-contracts.mjs > "$RUNNER_TEMP/frontend-contracts.json"
+          node ../scripts/compare-frontend-contracts.mjs "$RUNNER_TEMP/frontend-contracts.json" ../docs/contracts/production-2026-11-24.json
       - run: corepack yarn build
       - run: corepack yarn perf:budget
 

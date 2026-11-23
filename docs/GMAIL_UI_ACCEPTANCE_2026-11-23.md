@@ -55,7 +55,7 @@ This is an explicit failed global audit, not application-wide UX certification.
 The maintained noir/brass design and behavioral ownership are now recorded in
 `DESIGN.md`, `UX-CONTRACT.md` and `premium-ui.json`; runtime tokens stay canonical.
 
-Google public publishing/verification, reconnect/revocation, staging provider
+Google public publishing/verification, staging provider
 credentials, the remaining database-history dispositions and all other phase
 acceptance gates remain open until separately demonstrated.
 

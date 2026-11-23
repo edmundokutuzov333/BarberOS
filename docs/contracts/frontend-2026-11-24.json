@@ -1,0 +1,2840 @@
+{
+  "scope": "Static source inventory; presence is not runtime contract acceptance",
+  "source_files_parsed": 164,
+  "rpc_names": [
+    "add_member_by_email",
+    "admin_assign_barbershop_plan",
+    "admin_create_support_ticket",
+    "admin_get_activity",
+    "admin_get_barbershop",
+    "admin_get_metrics",
+    "admin_get_overview",
+    "admin_list_barbershops",
+    "admin_list_payments",
+    "admin_list_plans",
+    "admin_list_support_tickets",
+    "admin_list_users",
+    "admin_set_barbershop_status",
+    "admin_update_plan",
+    "admin_update_support_ticket",
+    "book_appointment_manual",
+    "cancel_waitlist",
+    "create_barbershop",
+    "create_shop_operation_incident",
+    "delete_schedule_override",
+    "duplicate_shop_product",
+    "get_agenda_appointments",
+    "get_agenda_schedule",
+    "get_available_days",
+    "get_available_slots",
+    "get_available_slots_week",
+    "get_customer",
+    "get_customer_appointments",
+    "get_customer_metrics",
+    "get_customers",
+    "get_dashboard_snapshot",
+    "get_notification_automation_status",
+    "get_notification_metrics",
+    "get_notifications",
+    "get_payment_accounts",
+    "get_payment_metrics",
+    "get_payments",
+    "get_public_barbershop",
+    "get_public_shop_catalog",
+    "get_report_barbers",
+    "get_report_daily",
+    "get_report_haircuts",
+    "get_report_services",
+    "get_report_summary",
+    "get_reviews",
+    "get_shop_notification_inbox",
+    "get_shop_order_payment_queue",
+    "get_shop_order_queue",
+    "get_shop_phase6_report",
+    "get_shop_phase7_catalog_readiness",
+    "get_waitlist",
+    "get_waitlist_metrics",
+    "join_waitlist",
+    "list_members",
+    "list_shop_operation_incidents",
+    "mark_shop_notification_read",
+    "record_shop_inventory_movement",
+    "record_shop_order_payment",
+    "reorder_barbers",
+    "reorder_haircuts",
+    "reorder_services",
+    "replace_working_hours",
+    "reschedule_appointment_by_operator",
+    "restore_shop_order_item_operation",
+    "retry_notification",
+    "save_barber",
+    "save_schedule_override",
+    "seed_haircut_catalogue",
+    "set_review_publication",
+    "transition_appointment",
+    "update_customer",
+    "update_shop_operation_incident",
+    "update_shop_order_item_operation",
+    "update_shop_order_operation",
+    "verify_shop_catalog_product"
+  ],
+  "edge_names": [
+    "admin-credential-manager",
+    "booking-create",
+    "gmail-integration",
+    "google-calendar",
+    "payments-configure",
+    "payments-initiate",
+    "payments-status",
+    "token-gateway"
+  ],
+  "table_names": [
+    "barbers",
+    "barbershop_members",
+    "barbershops",
+    "haircuts",
+    "inventory_movements",
+    "profiles",
+    "reviews",
+    "schedule_overrides",
+    "services",
+    "shop_catalog_audit_events",
+    "shop_product_categories",
+    "shop_product_variants",
+    "shop_products",
+    "time_blocks",
+    "working_hours"
+  ],
+  "storage_buckets": [
+    "barbers",
+    "haircuts",
+    "shop-logos",
+    "shop-photos"
+  ],
+  "auth_methods": [
+    "getSession",
+    "getUser",
+    "onAuthStateChange",
+    "resetPasswordForEmail",
+    "signInWithPassword",
+    "signOut",
+    "signUp",
+    "updateUser"
+  ],
+  "unresolved_dynamic_calls": [],
+  "routes": [
+    {
+      "path": "/",
+      "declared_path": "/",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 111
+    },
+    {
+      "path": "/marcar",
+      "declared_path": "/marcar",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 112
+    },
+    {
+      "path": "/sobre",
+      "declared_path": "/sobre",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 113
+    },
+    {
+      "path": "/privacidade",
+      "declared_path": "/privacidade",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 114
+    },
+    {
+      "path": "/termos",
+      "declared_path": "/termos",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 115
+    },
+    {
+      "path": "/b/:slug",
+      "declared_path": "/b/:slug",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 116
+    },
+    {
+      "path": "/entrar",
+      "declared_path": "/entrar",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 117
+    },
+    {
+      "path": "/registar",
+      "declared_path": "/registar",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 118
+    },
+    {
+      "path": "/recuperar",
+      "declared_path": "/recuperar",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 119
+    },
+    {
+      "path": "/alterar-palavra-passe",
+      "declared_path": "/alterar-palavra-passe",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 120
+    },
+    {
+      "path": "/marcacao/:token",
+      "declared_path": "/marcacao/:token",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 121
+    },
+    {
+      "path": "/marcacao/:token/avaliar",
+      "declared_path": "/marcacao/:token/avaliar",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 122
+    },
+    {
+      "path": "/vaga/:token",
+      "declared_path": "/vaga/:token",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 123
+    },
+    {
+      "path": "/barbearia/:slug",
+      "declared_path": "/barbearia/:slug",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 124
+    },
+    {
+      "path": "/barbearia/:slug/marcar",
+      "declared_path": "/barbearia/:slug/marcar",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 125
+    },
+    {
+      "path": "/demonstracao-loja",
+      "declared_path": "/demonstracao-loja",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 126
+    },
+    {
+      "path": "/app",
+      "declared_path": "/app",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 130
+    },
+    {
+      "path": "/app",
+      "declared_path": null,
+      "index": true,
+      "file": "frontend/src/App.tsx",
+      "line": 131
+    },
+    {
+      "path": "/app/onboarding",
+      "declared_path": "onboarding",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 132
+    },
+    {
+      "path": "/app/agenda",
+      "declared_path": "agenda",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 133
+    },
+    {
+      "path": "/app/marcacoes",
+      "declared_path": "marcacoes",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 134
+    },
+    {
+      "path": "/app/clientes",
+      "declared_path": "clientes",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 135
+    },
+    {
+      "path": "/app/clientes/:customerId",
+      "declared_path": "clientes/:customerId",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 136
+    },
+    {
+      "path": "/app/lista-espera",
+      "declared_path": "lista-espera",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 137
+    },
+    {
+      "path": "/app/notificacoes",
+      "declared_path": "notificacoes",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 138
+    },
+    {
+      "path": "/app/comunicacoes",
+      "declared_path": "comunicacoes",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 139
+    },
+    {
+      "path": "/app/pagamentos",
+      "declared_path": "pagamentos",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 140
+    },
+    {
+      "path": "/app/avaliacoes",
+      "declared_path": "avaliacoes",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 141
+    },
+    {
+      "path": "/app/relatorios",
+      "declared_path": "relatorios",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 142
+    },
+    {
+      "path": "/app/servicos",
+      "declared_path": "servicos",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 143
+    },
+    {
+      "path": "/app/cortes",
+      "declared_path": "cortes",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 144
+    },
+    {
+      "path": "/app/barbeiros",
+      "declared_path": "barbeiros",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 145
+    },
+    {
+      "path": "/app/horarios",
+      "declared_path": "horarios",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 146
+    },
+    {
+      "path": "/app/loja/produtos",
+      "declared_path": "loja/produtos",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 147
+    },
+    {
+      "path": "/app/loja/pedidos",
+      "declared_path": "loja/pedidos",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 148
+    },
+    {
+      "path": "/app/loja/relatorios",
+      "declared_path": "loja/relatorios",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 149
+    },
+    {
+      "path": "/app/loja/piloto",
+      "declared_path": "loja/piloto",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 150
+    },
+    {
+      "path": "/app/loja/pagamentos",
+      "declared_path": "loja/pagamentos",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 151
+    },
+    {
+      "path": "/app/definicoes",
+      "declared_path": "definicoes",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 152
+    },
+    {
+      "path": "/app/definicoes/:tab",
+      "declared_path": "definicoes/:tab",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 153
+    },
+    {
+      "path": "/app/*",
+      "declared_path": "*",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 154
+    },
+    {
+      "path": "/admin",
+      "declared_path": "/admin",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 159
+    },
+    {
+      "path": "/admin",
+      "declared_path": null,
+      "index": true,
+      "file": "frontend/src/App.tsx",
+      "line": 160
+    },
+    {
+      "path": "/admin/barbearias",
+      "declared_path": "barbearias",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 161
+    },
+    {
+      "path": "/admin/barbearias/:shopId",
+      "declared_path": "barbearias/:shopId",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 162
+    },
+    {
+      "path": "/admin/utilizadores",
+      "declared_path": "utilizadores",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 163
+    },
+    {
+      "path": "/admin/planos",
+      "declared_path": "planos",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 164
+    },
+    {
+      "path": "/admin/pagamentos",
+      "declared_path": "pagamentos",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 165
+    },
+    {
+      "path": "/admin/suporte",
+      "declared_path": "suporte",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 166
+    },
+    {
+      "path": "/admin/metricas",
+      "declared_path": "metricas",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 167
+    },
+    {
+      "path": "/admin/*",
+      "declared_path": "*",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 168
+    },
+    {
+      "path": "/*",
+      "declared_path": "*",
+      "index": false,
+      "file": "frontend/src/App.tsx",
+      "line": 173
+    }
+  ],
+  "calls": [
+    {
+      "kind": "table",
+      "names": [
+        "barbers"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/BarbersEditor.tsx",
+      "line": 23,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "list_members"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/BarbersEditor.tsx",
+      "line": 33,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "save_barber"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/BarbersEditor.tsx",
+      "line": 57,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barber_id",
+        "p_bio",
+        "p_display_name",
+        "p_photo_url",
+        "p_service_ids",
+        "p_shop",
+        "p_user_id",
+        "p_years_experience"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "barbers"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/BarbersEditor.tsx",
+      "line": 74,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "barbers"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/BarbersEditor.tsx",
+      "line": 78,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "haircuts"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/HaircutsEditor.tsx",
+      "line": 23,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "seed_haircut_catalogue"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/HaircutsEditor.tsx",
+      "line": 45,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "haircuts"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/HaircutsEditor.tsx",
+      "line": 57,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "haircuts"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/HaircutsEditor.tsx",
+      "line": 58,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "haircuts"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/HaircutsEditor.tsx",
+      "line": 65,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "haircuts"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/HaircutsEditor.tsx",
+      "line": 69,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "reorder_haircuts"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/HaircutsEditor.tsx",
+      "line": 82,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_ids",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "working_hours"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/HoursEditor.tsx",
+      "line": 29,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "replace_working_hours"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/HoursEditor.tsx",
+      "line": 53,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": true
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "replace_working_hours"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/HoursEditor.tsx",
+      "line": 61,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barber_id",
+        "p_rows",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "time_blocks"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/HoursEditor.tsx",
+      "line": 115,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "time_blocks"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/HoursEditor.tsx",
+      "line": 122,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "time_blocks"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/HoursEditor.tsx",
+      "line": 129,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "add_member_by_email"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/MembersEditor.tsx",
+      "line": 27,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_email",
+        "p_role",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "barbershop_members"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/MembersEditor.tsx",
+      "line": 32,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "schedule_overrides"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/ScheduleOverridesEditor.tsx",
+      "line": 49,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "save_schedule_override"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/ScheduleOverridesEditor.tsx",
+      "line": 94,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barber_id",
+        "p_closes_at",
+        "p_id",
+        "p_is_closed",
+        "p_note",
+        "p_opens_at",
+        "p_override_date",
+        "p_reason",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "delete_schedule_override"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/ScheduleOverridesEditor.tsx",
+      "line": 119,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_id",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "services"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/ServicesEditor.tsx",
+      "line": 22,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "services"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/ServicesEditor.tsx",
+      "line": 51,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "services"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/ServicesEditor.tsx",
+      "line": 52,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "services"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/ServicesEditor.tsx",
+      "line": 60,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "services"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/ServicesEditor.tsx",
+      "line": 64,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "barbershops"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/config/ShopForms.tsx",
+      "line": 17,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "reorder_services",
+        "reorder_haircuts",
+        "reorder_barbers"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/components/ui/SortableList.tsx",
+      "line": 22,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_ids",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [],
+      "dynamic": true,
+      "forwarding": true,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 45,
+      "owner": "rpc",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": true
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "admin_get_overview"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 51,
+      "owner": "getAdminOverview",
+      "via": "rpc",
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "admin_list_barbershops"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 55,
+      "owner": "getAdminShops",
+      "via": "rpc",
+      "payload_keys": [
+        "p_limit",
+        "p_offset",
+        "p_search",
+        "p_status"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "admin_get_barbershop"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 59,
+      "owner": "getAdminShopDetail",
+      "via": "rpc",
+      "payload_keys": [
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "admin_set_barbershop_status"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 64,
+      "owner": "setAdminShopStatus",
+      "via": "rpc",
+      "payload_keys": [
+        "p_shop",
+        "p_status"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "admin_assign_barbershop_plan"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 68,
+      "owner": "assignAdminShopPlan",
+      "via": "rpc",
+      "payload_keys": [
+        "p_plan",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "admin_list_users"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 72,
+      "owner": "getAdminUsers",
+      "via": "rpc",
+      "payload_keys": [
+        "p_limit",
+        "p_offset",
+        "p_search"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "admin_list_plans"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 76,
+      "owner": "getAdminPlans",
+      "via": "rpc",
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "admin_update_plan"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 82,
+      "owner": "updateAdminPlan",
+      "via": "rpc",
+      "payload_keys": [
+        "p_features",
+        "p_is_active",
+        "p_max_barbers",
+        "p_name",
+        "p_plan",
+        "p_price_cents"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "admin_list_payments"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 89,
+      "owner": "getAdminPayments",
+      "via": "rpc",
+      "payload_keys": [
+        "p_limit",
+        "p_offset",
+        "p_provider",
+        "p_search",
+        "p_status"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "admin_list_support_tickets"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 96,
+      "owner": "getAdminSupport",
+      "via": "rpc",
+      "payload_keys": [
+        "p_limit",
+        "p_offset",
+        "p_priority",
+        "p_search",
+        "p_status"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "admin_create_support_ticket"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 103,
+      "owner": "createAdminSupport",
+      "via": "rpc",
+      "payload_keys": [
+        "p_description",
+        "p_priority",
+        "p_shop",
+        "p_subject"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "admin_update_support_ticket"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 110,
+      "owner": "updateAdminSupport",
+      "via": "rpc",
+      "payload_keys": [
+        "p_assigned_to",
+        "p_clear_assignee",
+        "p_priority",
+        "p_status",
+        "p_ticket"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "admin_get_activity"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 120,
+      "owner": "getAdminActivity",
+      "via": "rpc",
+      "payload_keys": [
+        "p_limit"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "admin_get_metrics"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 124,
+      "owner": "getAdminMetrics",
+      "via": "rpc",
+      "payload_keys": [
+        "p_from",
+        "p_to"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "edge",
+      "names": [
+        "admin-credential-manager"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/admin/api.ts",
+      "line": 206,
+      "owner": "credentialFunction",
+      "via": null,
+      "payload_keys": [
+        "body"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_agenda_appointments"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/agenda/api.ts",
+      "line": 21,
+      "owner": "getAgendaAppointments",
+      "via": null,
+      "payload_keys": [
+        "p_from",
+        "p_shop",
+        "p_to"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_agenda_schedule"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/agenda/api.ts",
+      "line": 35,
+      "owner": "getAgendaSchedule",
+      "via": null,
+      "payload_keys": [
+        "p_from",
+        "p_shop",
+        "p_to"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "transition_appointment"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/agenda/api.ts",
+      "line": 80,
+      "owner": "transitionAppointment",
+      "via": null,
+      "payload_keys": [
+        "p_action",
+        "p_appointment",
+        "p_reason",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "reschedule_appointment_by_operator"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/agenda/api.ts",
+      "line": 115,
+      "owner": "rescheduleAppointmentByOperator",
+      "via": null,
+      "payload_keys": [
+        "p_appointment",
+        "p_new_barber_id",
+        "p_new_start",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "edge",
+      "names": [
+        "google-calendar"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/appointments/google-calendar.ts",
+      "line": 19,
+      "owner": "getGoogleCalendarAuthorizationUrl",
+      "via": null,
+      "payload_keys": [
+        "body"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "edge",
+      "names": [
+        "token-gateway"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/appointments/token-gateway.ts",
+      "line": 25,
+      "owner": "invokeTokenGateway",
+      "via": null,
+      "payload_keys": [
+        "body"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_available_slots_week"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/availability/api.ts",
+      "line": 14,
+      "owner": "getAvailableSlotsWeek",
+      "via": null,
+      "payload_keys": [
+        "p_barber_id",
+        "p_from",
+        "p_service_id",
+        "p_slug"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_available_slots"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/availability/api.ts",
+      "line": 36,
+      "owner": "getAvailableSlots",
+      "via": null,
+      "payload_keys": [
+        "p_barber_id",
+        "p_date",
+        "p_service_id",
+        "p_slug"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_available_days"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/availability/api.ts",
+      "line": 54,
+      "owner": "getAvailableDays",
+      "via": null,
+      "payload_keys": [
+        "p_barber_id",
+        "p_from",
+        "p_service_id",
+        "p_slug",
+        "p_to"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "edge",
+      "names": [
+        "booking-create"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/booking/api.ts",
+      "line": 110,
+      "owner": "bookAppointment",
+      "via": null,
+      "payload_keys": [
+        "body"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "services"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/booking/manual-api.ts",
+      "line": 28,
+      "owner": "getManualBookingCatalog",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "haircuts"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/booking/manual-api.ts",
+      "line": 35,
+      "owner": "getManualBookingCatalog",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "barbers"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/booking/manual-api.ts",
+      "line": 42,
+      "owner": "getManualBookingCatalog",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "book_appointment_manual"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/booking/manual-api.ts",
+      "line": 84,
+      "owner": "bookManualAppointment",
+      "via": null,
+      "payload_keys": [
+        "p_barber_id",
+        "p_email",
+        "p_haircut_id",
+        "p_internal_note",
+        "p_name",
+        "p_phone",
+        "p_service_id",
+        "p_shop",
+        "p_start"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_customer_metrics"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/customers/api.ts",
+      "line": 13,
+      "owner": "getCustomerMetrics",
+      "via": null,
+      "payload_keys": [
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_customers"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/customers/api.ts",
+      "line": 25,
+      "owner": "getCustomers",
+      "via": null,
+      "payload_keys": [
+        "p_limit",
+        "p_offset",
+        "p_search",
+        "p_shop",
+        "p_view"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_customer"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/customers/api.ts",
+      "line": 37,
+      "owner": "getCustomer",
+      "via": null,
+      "payload_keys": [
+        "p_customer",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_customer_appointments"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/customers/api.ts",
+      "line": 53,
+      "owner": "getCustomerAppointments",
+      "via": null,
+      "payload_keys": [
+        "p_customer",
+        "p_limit",
+        "p_offset",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "update_customer"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/customers/api.ts",
+      "line": 72,
+      "owner": "updateCustomer",
+      "via": null,
+      "payload_keys": [
+        "p_customer",
+        "p_email",
+        "p_name",
+        "p_notes",
+        "p_phone",
+        "p_preferences",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "edge",
+      "names": [
+        "gmail-integration"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/gmail/api.ts",
+      "line": 57,
+      "owner": "gmailRequest",
+      "via": null,
+      "payload_keys": [
+        "body"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_notification_metrics"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/notifications/api.ts",
+      "line": 41,
+      "owner": "getNotificationMetrics",
+      "via": null,
+      "payload_keys": [
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "retry_notification"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/notifications/api.ts",
+      "line": 54,
+      "owner": "retryNotification",
+      "via": null,
+      "payload_keys": [
+        "p_notification",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_notification_automation_status"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/notifications/api.ts",
+      "line": 65,
+      "owner": "getNotificationAutomationStatus",
+      "via": null,
+      "payload_keys": [
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_notifications"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/notifications/api.ts",
+      "line": 82,
+      "owner": "getNotifications",
+      "via": null,
+      "payload_keys": [
+        "p_channel",
+        "p_limit",
+        "p_offset",
+        "p_shop",
+        "p_status"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "edge",
+      "names": [],
+      "dynamic": true,
+      "forwarding": true,
+      "file": "frontend/src/features/payments/api.ts",
+      "line": 55,
+      "owner": "invokeFunction",
+      "via": null,
+      "payload_keys": [
+        "body"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_payment_accounts"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/payments/api.ts",
+      "line": 75,
+      "owner": "getPaymentAccounts",
+      "via": null,
+      "payload_keys": [
+        "p_shop",
+        "p_supabase_url"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "edge",
+      "names": [
+        "payments-configure"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/payments/api.ts",
+      "line": 84,
+      "owner": "configurePaymentProvider",
+      "via": "invokeFunction",
+      "payload_keys": [],
+      "opaque_payload": true
+    },
+    {
+      "kind": "edge",
+      "names": [
+        "payments-initiate"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/payments/api.ts",
+      "line": 89,
+      "owner": "initiatePayment",
+      "via": "invokeFunction",
+      "payload_keys": [
+        "idempotency_key"
+      ],
+      "opaque_payload": true
+    },
+    {
+      "kind": "edge",
+      "names": [
+        "payments-status"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/payments/api.ts",
+      "line": 96,
+      "owner": "getPaymentStatus",
+      "via": "invokeFunction",
+      "payload_keys": [
+        "token"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_payments"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/payments/api.ts",
+      "line": 103,
+      "owner": "getPayments",
+      "via": null,
+      "payload_keys": [
+        "p_limit",
+        "p_offset",
+        "p_shop",
+        "p_status"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_payment_metrics"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/payments/api.ts",
+      "line": 114,
+      "owner": "getPaymentMetrics",
+      "via": null,
+      "payload_keys": [
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_public_barbershop"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/public-shop/api.ts",
+      "line": 64,
+      "owner": "getPublicBarbershop",
+      "via": null,
+      "payload_keys": [
+        "p_slug"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "barbershops"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/public-shop/api.ts",
+      "line": 81,
+      "owner": "getPublicBarbershops",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "services"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/public-shop/api.ts",
+      "line": 86,
+      "owner": "getPublicBarbershops",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "reviews"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/public-shop/api.ts",
+      "line": 87,
+      "owner": "getPublicBarbershops",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_public_shop_catalog"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/public-shop/catalog.ts",
+      "line": 47,
+      "owner": "getPublicShopCatalog",
+      "via": null,
+      "payload_keys": [
+        "p_slug"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_report_summary"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/reports/api.ts",
+      "line": 40,
+      "owner": "getReportData",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": true
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_report_daily"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/reports/api.ts",
+      "line": 41,
+      "owner": "getReportData",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": true
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_report_services"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/reports/api.ts",
+      "line": 42,
+      "owner": "getReportData",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": true
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_report_haircuts"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/reports/api.ts",
+      "line": 43,
+      "owner": "getReportData",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": true
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_report_barbers"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/reports/api.ts",
+      "line": 44,
+      "owner": "getReportData",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": true
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_reviews"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/reviews/api.ts",
+      "line": 27,
+      "owner": "getReviews",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": true
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "set_review_publication"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/reviews/api.ts",
+      "line": 33,
+      "owner": "setReviewPublication",
+      "via": null,
+      "payload_keys": [
+        "p_is_published",
+        "p_review",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_waitlist_metrics"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/waitlist/api.ts",
+      "line": 67,
+      "owner": "getWaitlistMetrics",
+      "via": null,
+      "payload_keys": [
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_waitlist"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/waitlist/api.ts",
+      "line": 79,
+      "owner": "getWaitlist",
+      "via": null,
+      "payload_keys": [
+        "p_limit",
+        "p_offset",
+        "p_search",
+        "p_shop",
+        "p_status"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "join_waitlist"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/waitlist/api.ts",
+      "line": 102,
+      "owner": "joinWaitlist",
+      "via": null,
+      "payload_keys": [
+        "p_customer_name",
+        "p_date_from",
+        "p_date_to",
+        "p_period",
+        "p_phone",
+        "p_service_id",
+        "p_slug"
+      ],
+      "opaque_payload": true
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "cancel_waitlist"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/waitlist/api.ts",
+      "line": 140,
+      "owner": "cancelWaitlist",
+      "via": null,
+      "payload_keys": [
+        "p_entry",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "auth",
+      "names": [
+        "getSession"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/lib/auth.tsx",
+      "line": 30,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "auth",
+      "names": [
+        "onAuthStateChange"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/lib/auth.tsx",
+      "line": 34,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "profiles"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/lib/auth.tsx",
+      "line": 47,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "auth",
+      "names": [
+        "signOut"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/lib/auth.tsx",
+      "line": 63,
+      "owner": "signOut",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "barbershop_members"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/lib/shop.tsx",
+      "line": 44,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "storage",
+      "names": [
+        "shop-logos",
+        "shop-photos",
+        "barbers",
+        "haircuts"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/lib/storage.ts",
+      "line": 26,
+      "owner": "uploadImage",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "storage",
+      "names": [
+        "shop-logos",
+        "shop-photos",
+        "barbers",
+        "haircuts"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/lib/storage.ts",
+      "line": 28,
+      "owner": "uploadImage",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_dashboard_snapshot"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/Dashboard.tsx",
+      "line": 38,
+      "owner": "loadDashboard",
+      "via": null,
+      "payload_keys": [
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_shop_order_payment_queue"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaPagamentos.tsx",
+      "line": 28,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barbershop_id"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "record_shop_order_payment"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaPagamentos.tsx",
+      "line": 32,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_amount_minor",
+        "p_barbershop_id",
+        "p_confirmation_note",
+        "p_confirmation_reference",
+        "p_idempotency_key",
+        "p_order_id",
+        "p_payment_method"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "list_members"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaPedidos.tsx",
+      "line": 23,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_shop_order_queue"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaPedidos.tsx",
+      "line": 25,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barbershop_id",
+        "p_status"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "update_shop_order_operation"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaPedidos.tsx",
+      "line": 29,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_action",
+        "p_assigned_to",
+        "p_barbershop_id",
+        "p_note",
+        "p_order_id"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "restore_shop_order_item_operation"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaPedidos.tsx",
+      "line": 33,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barbershop_id",
+        "p_item_id",
+        "p_note",
+        "p_order_id"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "update_shop_order_item_operation"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaPedidos.tsx",
+      "line": 33,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_action",
+        "p_barbershop_id",
+        "p_delivered_qty",
+        "p_item_id",
+        "p_note",
+        "p_operation_key",
+        "p_order_id"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_shop_phase7_catalog_readiness"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaPiloto.tsx",
+      "line": 31,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barbershop_id"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_products"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaPiloto.tsx",
+      "line": 32,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_product_variants"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaPiloto.tsx",
+      "line": 33,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "verify_shop_catalog_product"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaPiloto.tsx",
+      "line": 35,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barbershop_id",
+        "p_product_id",
+        "p_verification_note"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_product_categories"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 39,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_products"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 40,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_product_variants"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 41,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_catalog_audit_events"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 42,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "inventory_movements"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 43,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_product_categories"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 52,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_product_categories"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 52,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_products"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 53,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_products"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 53,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_products"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 53,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_product_variants"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 54,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_product_variants"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 54,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "duplicate_shop_product"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 55,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barbershop_id",
+        "p_product_id"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_products"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 56,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_products"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 56,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "record_shop_inventory_movement"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 57,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barbershop_id",
+        "p_delta_qty",
+        "p_note",
+        "p_reason",
+        "p_variant_id"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_product_categories"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 66,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "shop_product_variants"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaProdutos.tsx",
+      "line": 70,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_shop_phase6_report"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaRelatorios.tsx",
+      "line": 51,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barbershop_id",
+        "p_from",
+        "p_to"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "get_shop_notification_inbox"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaRelatorios.tsx",
+      "line": 52,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barbershop_id",
+        "p_limit"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "mark_shop_notification_read"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaRelatorios.tsx",
+      "line": 53,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barbershop_id",
+        "p_notification_id"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "list_shop_operation_incidents"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaRelatorios.tsx",
+      "line": 57,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barbershop_id",
+        "p_limit",
+        "p_status"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "create_shop_operation_incident"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaRelatorios.tsx",
+      "line": 61,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_barbershop_id",
+        "p_details",
+        "p_incident_type",
+        "p_order_id",
+        "p_severity",
+        "p_summary"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "auth",
+      "names": [
+        "getUser"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaRelatorios.tsx",
+      "line": 71,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "update_shop_operation_incident"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/LojaRelatorios.tsx",
+      "line": 73,
+      "owner": null,
+      "via": null,
+      "payload_keys": [
+        "p_assigned_to",
+        "p_barbershop_id",
+        "p_incident_id",
+        "p_resolution_note",
+        "p_status"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "create_barbershop"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/Onboarding.tsx",
+      "line": 48,
+      "owner": "submit",
+      "via": null,
+      "payload_keys": [
+        "p_name",
+        "p_phone",
+        "p_slug",
+        "p_whatsapp"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "table",
+      "names": [
+        "barbershops"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/app/Onboarding.tsx",
+      "line": 75,
+      "owner": null,
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "edge",
+      "names": [
+        "admin-credential-manager"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/auth/AlterarPalavraPasse.tsx",
+      "line": 34,
+      "owner": "submit",
+      "via": null,
+      "payload_keys": [
+        "body"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "auth",
+      "names": [
+        "updateUser"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/auth/AlterarPalavraPasse.tsx",
+      "line": 47,
+      "owner": "submit",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "auth",
+      "names": [
+        "signOut"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/auth/AlterarPalavraPasse.tsx",
+      "line": 54,
+      "owner": "submit",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "auth",
+      "names": [
+        "signInWithPassword"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/auth/Entrar.tsx",
+      "line": 44,
+      "owner": "submit",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    },
+    {
+      "kind": "auth",
+      "names": [
+        "resetPasswordForEmail"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/auth/Recuperar.tsx",
+      "line": 17,
+      "owner": "submit",
+      "via": null,
+      "payload_keys": [
+        "redirectTo"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "auth",
+      "names": [
+        "signUp"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/pages/auth/Registar.tsx",
+      "line": 22,
+      "owner": "submit",
+      "via": null,
+      "payload_keys": [],
+      "opaque_payload": false
+    }
+  ]
+}
