@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { adminClient, corsHeaders } from "../_shared/guard.ts";
+import { configurationPresence } from './configuration.ts';
 
 Deno.serve(async (req) => {
   const cors = corsHeaders(req);
@@ -20,6 +21,7 @@ Deno.serve(async (req) => {
       version,
       db_ms: Math.round(performance.now() - startedAt),
       checked_at: new Date().toISOString(),
+      configuration_presence: configurationPresence(name => Deno.env.get(name)),
     }), {
       headers: { ...cors, "content-type": "application/json", "cache-control": "no-store" },
     });
