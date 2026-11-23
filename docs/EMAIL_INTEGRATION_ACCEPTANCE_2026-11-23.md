@@ -140,3 +140,29 @@ The suspended email QA tenant and its three controlled notifications were remove
 after receipts were recorded. Cleanup asserted the exact generated slug, suspended
 status, zero members, zero appointments and exactly three owned notifications in a
 transaction. No historical customer notification was requeued or deleted.
+
+## Confirmed disconnect and reconnect on the published site
+
+Commit `b2bab01f6ecf40ecbf2d9d56a3ca8cb06fe72d3f` passed all seven triggered
+workflows, including the 16-scenario Gmail browser suite and the real isolated
+booking/stock concurrency gates. Vercel deployment
+`dpl_JBkNDNT1pyUPzmZ3Pt59CgXFoGwg` is READY, targets production and resolves all
+three official aliases to this exact main commit.
+
+Gmail is deployed at production version 7 and staging version 3, both bundle
+SHA-256 `39903cbaea775e94a10d28ca71ef8895d3a374e59f8ba3c47af7f289ddb60669`.
+The production app-owned confirmation opened with Cancel focused and fit the
+viewport. One confirmed disconnect returned provider revocation confirmation,
+closed the dialog and showed the connect panel. SQL independently showed zero
+remaining rows for that owner's shop.
+
+A new frontend connect completed consent with only the approved account and the
+two intended Gmail scopes. The callback returned to communications, restored the
+real inbox and persisted exactly one connection with a current expiry and both
+tokens encrypted. The account is left connected. Google still reports the app as
+unverified/testing, which remains a public-launch gate.
+
+The first reload briefly used an older service-worker asset. A registration update
+activated the exact new production bundle; no cache, authentication storage or
+private mailbox data was deleted. This receipt verifies the deployed interface,
+not merely the repository or a successful Vercel HTTP response.

@@ -1333,6 +1333,18 @@
       "20261026220000_shop_incident_foreign_key_indexes_phase8.sql": {
         "status": "applied_by_verified_rollforward",
         "evidence": "Domain tables, policies, grants, complete RPC bodies and FK indexes preserved in idempotent rollforward 20261123124859 reconcile_operation_incidents; production transactional tenant/lifecycle acceptance passed 2026-11-23."
+      },
+      "20260918153200_booking_phone_validation_strict.sql": {
+        "status": "superseded_by_verified_structural_validator",
+        "evidence": "Archived production 20260918153729 manual_booking_phone_structural differs from this complete file only in the first comment and the equivalent strict phone predicate. Current private.book_appointment_core MD5 d9240dd1d93561082f25ddd4e1b4d0de retains that structural validator. The 16-case read-only booking_phone_boundary_audit.sql passes isolated, staging and production on 2026-11-23; no replay or booking mutation is needed."
+      },
+      "20261019160000_payment_rpc_privilege_lockdown.sql": {
+        "status": "represented_by_verified_idempotency_and_privileges",
+        "evidence": "Current nine-argument book_appointment_idempotent definition MD5 03f78b2316997ade89d50c0fa5f47897 equals the fresh full-chain database. All booking/payment entry points covered by this source deny anon/authenticated and grant service_role. Catalog-only token_gateway_privilege_audit.sql passes in isolated, staging and production; no provider/payment execution. Production history records 20261026094825 booking_rpc_idempotency_and_lockdown."
+      },
+      "20261019170000_token_rpc_lockdown.sql": {
+        "status": "represented_by_verified_gateway_privileges",
+        "evidence": "Current catalog verifies every matching *_by_token RPC and all five explicitly named waitlist/payment RPCs deny anon/authenticated and grant service_role. token_gateway_privilege_audit.sql passes in isolated, staging and production on 2026-11-23. Production history includes 20261021063049 phase27_token_rpc_gateway_lockdown and 20261026100016 token_rpc_lockdown_reconciliation; no historical replay or grant change was performed."
       }
     },
     "staging": {
@@ -1351,6 +1363,14 @@
       "20261123124324_reconcile_operation_incidents.sql": {
         "status": "exact_sql_remote_alias",
         "evidence": "Complete source applied through migration 20261123124407 on 2026-11-23; incident lifecycle and tenant-boundary transaction passed with rollback after deployment."
+      },
+      "20261019160000_payment_rpc_privilege_lockdown.sql": {
+        "status": "represented_by_verified_idempotency_and_privileges",
+        "evidence": "Current nine-argument book_appointment_idempotent definition MD5 03f78b2316997ade89d50c0fa5f47897 equals the fresh full-chain database. All booking/payment entry points covered by this source deny anon/authenticated and grant service_role. Catalog-only token_gateway_privilege_audit.sql passes in isolated, staging and production; no provider/payment execution. Production history records 20261026094825 booking_rpc_idempotency_and_lockdown."
+      },
+      "20261019170000_token_rpc_lockdown.sql": {
+        "status": "represented_by_verified_gateway_privileges",
+        "evidence": "Current catalog verifies every matching *_by_token RPC and all five explicitly named waitlist/payment RPCs deny anon/authenticated and grant service_role. token_gateway_privilege_audit.sql passes in isolated, staging and production on 2026-11-23. Production history includes 20261021063049 phase27_token_rpc_gateway_lockdown and 20261026100016 token_rpc_lockdown_reconciliation; no historical replay or grant change was performed."
       }
     }
   }
