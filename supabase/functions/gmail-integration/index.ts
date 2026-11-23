@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { accountAccessFailure } from "../_shared/account.ts";
 import { browserCors } from "../_shared/http.ts";
 import { replyMetadata } from "./reply.ts";
 import { revokeGoogleGrant } from "./disconnect.ts";
@@ -13,7 +14,7 @@ const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.g
 const ID_RE = /^[A-Za-z0-9_-]{1,256}$/;
 const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
 
-type ErrCode = "AUTH_REQUIRED" | "SHOP_REQUIRED" | "SHOP_ACCESS_DENIED" | "MANAGEMENT_ROLE_REQUIRED" |
+type ErrCode = "ACCOUNT_STATE_UNAVAILABLE" | "PASSWORD_CHANGE_REQUIRED" | "AUTH_REQUIRED" | "SHOP_REQUIRED" | "SHOP_ACCESS_DENIED" | "MANAGEMENT_ROLE_REQUIRED" |
   "GMAIL_CONFIGURATION_MISSING" | "GMAIL_STORAGE_NOT_READY" | "GMAIL_NOT_CONNECTED" |
   "GMAIL_REAUTH_REQUIRED" | "GMAIL_INVALID_REQUEST" | "GMAIL_PROVIDER_REQUEST_FAILED" |
   "GMAIL_RATE_LIMITED" | "GMAIL_SEND_FAILED" | "INTERNAL_ERROR";
@@ -103,6 +104,10 @@ async function authUser(req: Request, admin: SupabaseClient) {
 }
 async function shopAccess(admin: SupabaseClient, userId: string, id: unknown): Promise<string> {
   if (typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id)) throw new AppError("SHOP_REQUIRED", 400);
+  const { data: profile, error: profileError } = await admin.from("profiles")
+    .select("password_change_required").eq("id", userId).maybeSingle();
+  const denied = accountAccessFailure(profile, { databaseError: Boolean(profileError) });
+  if (denied) throw new AppError(denied.code, denied.status);
   const { data, error } = await admin.from("barbershop_members").select("role").eq("barbershop_id", id).eq("user_id", userId).maybeSingle();
   if (error) throw new AppError("SHOP_ACCESS_DENIED", 503);
   if (!data) throw new AppError("SHOP_ACCESS_DENIED", 403);
@@ -256,6 +261,7 @@ async function oauthCallback(req: Request, admin: SupabaseClient): Promise<Respo
   if (!authCode || authCode.length > 4096) return redirect({gmail:"error",reason:"invalid_response"});
   try {
     const cfg = settings();
+    await shopAccess(admin, data.user_id, data.barbershop_id);
     const token = await googleToken({code:authCode,client_id:cfg.clientId,client_secret:cfg.clientSecret,redirect_uri:cfg.redirect,grant_type:"authorization_code"});
     const grantedScopeText = token.scopes.length ? token.scopes.join(" ") : (url.searchParams.get("scope") ?? "");
     const grantedScopes = new Set(grantedScopeText.split(/\s+/).filter(Boolean));
@@ -263,11 +269,8 @@ async function oauthCallback(req: Request, admin: SupabaseClient): Promise<Respo
     const resp = await fetch(GMAIL + "/profile", {headers:{authorization:"Bearer "+token.access}});
     const profile: unknown = await resp.json().catch(()=>({}));
     if (!resp.ok || !obj(profile) || typeof profile.emailAddress !== "string" || !EMAIL_RE.test(profile.emailAddress)) throw new AppError("GMAIL_PROVIDER_REQUEST_FAILED",502);
-    const { data: member, error: memberError } = await admin.from("barbershop_members").select("role")
-      .eq("barbershop_id",data.barbershop_id).eq("user_id",data.user_id).maybeSingle();
-    if (memberError) throw new AppError("GMAIL_STORAGE_NOT_READY",503);
-    if (!member) throw new AppError("SHOP_ACCESS_DENIED",403);
-    if (member.role !== "owner" && member.role !== "manager") throw new AppError("MANAGEMENT_ROLE_REQUIRED",403);
+    // Revalidate account and tenant membership after the provider round trips.
+    await shopAccess(admin, data.user_id, data.barbershop_id);
     const oldResult = await admin.from("gmail_connections").select("gmail_address,refresh_token_ciphertext")
       .eq("barbershop_id",data.barbershop_id).maybeSingle();
     if (oldResult.error) throw new AppError("GMAIL_STORAGE_NOT_READY",503);
@@ -284,7 +287,9 @@ async function oauthCallback(req: Request, admin: SupabaseClient): Promise<Respo
   } catch (e) {
     const reason = e instanceof AppError && e.code === "GMAIL_CONFIGURATION_MISSING" ? "not_configured" :
       e instanceof AppError && e.code === "GMAIL_STORAGE_NOT_READY" ? "backend_not_ready" :
-      e instanceof AppError && e.code === "SHOP_ACCESS_DENIED" ? "access_denied" : "provider_error";
+      e instanceof AppError && e.code === "PASSWORD_CHANGE_REQUIRED" ? "password_change_required" :
+      e instanceof AppError && e.code === "ACCOUNT_STATE_UNAVAILABLE" ? "account_unavailable" :
+      e instanceof AppError && (e.code === "SHOP_ACCESS_DENIED" || e.code === "MANAGEMENT_ROLE_REQUIRED") ? "access_denied" : "provider_error";
     return redirect({gmail:"error",reason});
   }
 }

@@ -61,6 +61,13 @@ const tests = [
     assert.match(edge, /gmail\.send/);
     assert.match(edge, /searchParams\.get\("scope"\)/);
   }],
+  ["Operational and callback paths recheck the authoritative account state", () => {
+    assert.match(edge, /accountAccessFailure\(profile/);
+    assert.match(edge, /select\("password_change_required"\)/);
+    assert.match(edge, /await shopAccess\(admin, data.user_id, data.barbershop_id\);[\s\S]*?const token = await googleToken/);
+    assert.match(edge, /Revalidate account and tenant membership/);
+    assert.match(page, /PASSWORD_CHANGE_REQUIRED:/);
+  }],
   ["Function is registered without gateway JWT so Google can reach OAuth callback", () => {
     assert.match(config, /\[functions\.gmail-integration\]\s+verify_jwt = false/);
     assert.match(edge, /url\.searchParams\.has\("code"\)/);

@@ -30,6 +30,8 @@ export function slugify(s: string): string {
 }
 
 const ERRORS: Record<string, string> = {
+  PASSWORD_CHANGE_REQUIRED: 'Defina a nova palavra-passe antes de continuar.',
+  ACCOUNT_STATE_UNAVAILABLE: 'Não foi possível verificar o estado da conta. Aguarde e tente novamente.',
   SLOT_TAKEN: 'Este horário acabou de ser ocupado. Escolha outro horário.',
   SLOT_UNAVAILABLE: 'Este horário acabou de ser ocupado. Escolha outro horário.',
   INVALID_DATE: 'Escolhe uma data válida.',

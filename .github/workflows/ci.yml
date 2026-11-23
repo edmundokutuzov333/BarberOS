@@ -60,9 +60,9 @@ jobs:
       - name: Test Resend webhook signature verification
         run: deno test supabase/functions/resend-webhook/signature_test.ts
       - name: Test HTTP boundary and booking error contracts
-        run: deno test supabase/functions/_shared/http_test.ts supabase/functions/booking-create/contract.test.ts supabase/functions/health/configuration_test.ts
+        run: deno test supabase/functions/_shared/http_test.ts supabase/functions/_shared/account_test.ts supabase/functions/booking-create/contract.test.ts supabase/functions/health/configuration_test.ts
       - name: Typecheck Gmail and signed webhook runtime
-        run: deno check --node-modules-dir=auto supabase/functions/gmail-integration/index.ts supabase/functions/resend-webhook/index.ts supabase/functions/notify-dispatch/index.ts
+        run: deno check --node-modules-dir=auto supabase/functions/admin-credential-manager/index.ts supabase/functions/gmail-integration/index.ts supabase/functions/resend-webhook/index.ts supabase/functions/notify-dispatch/index.ts
       - name: Test notification delivery failure transitions
         run: deno test supabase/functions/notify-dispatch/delivery_test.ts
       - name: Test Gmail reply recipients and conversation headers
@@ -95,6 +95,13 @@ jobs:
           }
       - name: Apply the complete migration chain from empty state
         run: supabase db reset
+      - name: Validate the pending password-rotation reconciliation candidate
+        shell: bash
+        run: |
+          DB_CONTAINER="supabase_db_$BARBEROS_LOCAL_PROJECT_ID"
+          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/reconciliation/password_rotation_boundaries.sql
+          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/reconciliation/password_rotation_boundaries.sql
+          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/password_rotation_boundary.sql
       - name: Run pgTAP security and core platform contracts
         run: |
           supabase test db \

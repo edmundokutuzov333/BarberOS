@@ -27,8 +27,8 @@ some staging token-management bodies still differ from production.
 ## Current schema scope
 
 Production has 39 public tables and staging 38; every one has RLS enabled. The
-fresh local chain has 47 public tables. Production has platform access events,
-plans and support tickets absent from staging; staging has platform settings absent
+fresh local chain has 47 public tables. Production has platform access events
+and support tickets absent from staging; staging has platform settings absent
 from production. Eight prototype-foundation tables in the source chain are absent
 from production. Counts do not establish schema parity, and RLS presence alone does
 not establish correct authorization. These differences still need explicit intent,

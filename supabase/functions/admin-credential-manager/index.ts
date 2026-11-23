@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { accountAccessFailure } from "../_shared/account.ts";
 import { browserCors, preflight } from "../_shared/http.ts";
 
 type Action = "reset_password" | "list_events" | "complete_password_change";
@@ -91,7 +92,11 @@ Deno.serve(async (req: Request) => {
   const admin = adminClient();
   const { data: actorProfile, error: profileError } = await admin
     .from("profiles").select("is_platform_admin, password_change_required").eq("id", actor.id).maybeSingle();
-  if (profileError) return json({ ok: false, error: "ADMIN_CHECK_UNAVAILABLE" }, 503, cors);
+  const denied = accountAccessFailure(actorProfile, {
+    databaseError: Boolean(profileError),
+    allowRequiredPasswordChange: action === "complete_password_change",
+  });
+  if (denied) return json({ ok: false, error: denied.code }, denied.status, cors);
 
   if (action === "complete_password_change") {
     if (actorProfile?.password_change_required !== true) {

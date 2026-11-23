@@ -72,3 +72,12 @@ failure, corrupt ciphertext and the bounded POST request. The confirmation also
 discloses Google's project-wide grant invalidation for the same account.
 
 Provider behavior source: [Google OAuth web-server revocation documentation](https://developers.google.com/identity/protocols/oauth2/web-server#tokenrevoke).
+
+## Account-state boundary extension, 2026-11-24
+
+The suite now has 18 passing desktop/mobile scenarios. A server denial requiring
+password rotation hides the cached inbox/detail, disables new detail reads and
+provides real navigation to the existing password-change flow. The HTTP account
+policy and pending SQL reconciliation are documented separately in
+`PASSWORD_ROTATION_RECONCILIATION_2026-11-24.md`; this browser fixture does not
+claim the pending SQL candidate is already deployed.

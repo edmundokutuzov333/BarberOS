@@ -44,7 +44,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => { await server?.close(); });
 
 async function fixture(page) {
-  const state = { connected: true, sends: [], disconnects: 0, failSend: false, failDisconnect: false, revocationConfirmed: true, delaySend: false, releaseSend: null };
+  const state = { connected: true, sends: [], disconnects: 0, accountBlocked: false, failSend: false, failDisconnect: false, revocationConfirmed: true, delaySend: false, releaseSend: null };
   const message = (id, body) => ({ id, from:'owner@example.com', to:'owner@example.com', cc:'', subject:id==='old'?'Conversa anterior':id==='other'?'Outra barbearia':'Nova conversa', date:'2026-11-23T18:00:00Z', body, message_id:`<${id}@example.com>`, references:'' });
   await page.route('https://*.supabase.co/**', async route => {
     const req=route.request();
@@ -65,6 +65,7 @@ async function fixture(page) {
       if(state.failDisconnect) {status=502;result={ok:false,error:'GMAIL_PROVIDER_REQUEST_FAILED'};}
       else {state.connected=false;result={ok:true,disconnected:true,revocation_confirmed:state.revocationConfirmed};}
     }
+    if(state.accountBlocked) {status=403;result={ok:false,error:'PASSWORD_CHANGE_REQUIRED'};}
     return route.fulfill({status,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(result)});
   });
   await page.goto(origin+'/__gmail-test');
@@ -211,4 +212,16 @@ test('unconfirmed provider revocation removes local access and shows honest reco
   await expect(page.getByTestId('gmail-connect')).toBeVisible();
   await expect(page.getByRole('link',{name:'Reveja o acesso nas definições da conta Google.'})).toHaveAttribute('href','https://myaccount.google.com/permissions');
   expect(state.disconnects).toBe(1);
+});
+
+
+test('an account blocked by password rotation hides mail and offers real recovery navigation',async({page})=>{
+  const state=await fixture(page);
+  await expect(page.getByTestId('gmail-thread').locator('article')).toHaveCount(1);
+  state.accountBlocked=true;
+  await page.getByRole('button',{name:'Actualizar',exact:true}).click();
+  await expect(page.getByTestId('gmail-password-recovery')).toBeVisible();
+  await expect(page.getByTestId('gmail-inbox')).toHaveCount(0);
+  await expect(page.getByTestId('gmail-thread')).toHaveCount(0);
+  await expect(page.getByRole('link',{name:'Definir nova palavra-passe'})).toHaveAttribute('href','/alterar-palavra-passe');
 });

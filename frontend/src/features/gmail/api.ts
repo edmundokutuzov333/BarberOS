@@ -119,11 +119,11 @@ export function useGmailThreads(shopId?: string, search = "", enabled = true) {
   });
 }
 
-export function useGmailThread(shopId?: string, threadId?: string) {
+export function useGmailThread(shopId?: string, threadId?: string, enabled = true) {
   return useQuery({
     queryKey: ["gmail", "thread", shopId, threadId],
     queryFn: () => getGmailThread(shopId!, threadId!),
-    enabled: Boolean(shopId && threadId),
+    enabled: Boolean(shopId && threadId) && enabled,
     staleTime: 5_000,
     retry: false,
   });

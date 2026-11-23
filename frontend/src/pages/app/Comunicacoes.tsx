@@ -35,6 +35,8 @@ function explainGmailError(error: unknown): string {
     GMAIL_RATE_LIMITED: "O Google limitou temporariamente este pedido. Aguarde e tente novamente.",
     GMAIL_PROVIDER_REQUEST_FAILED: "O Gmail não conseguiu concluir o pedido. Confirme a ligação e tente novamente.",
     GMAIL_SEND_FAILED: "A mensagem não foi enviada. Confirme os dados e tente novamente.",
+    PASSWORD_CHANGE_REQUIRED: "Defina a nova palavra-passe antes de utilizar o Gmail.",
+    ACCOUNT_STATE_UNAVAILABLE: "Não foi possível verificar o estado da conta. Aguarde e tente novamente.",
     AUTH_REQUIRED: "A sessão expirou. Entre novamente no BarberOS.",
     SHOP_ACCESS_DENIED: "Não tem acesso a esta barbearia.",
     MANAGEMENT_ROLE_REQUIRED: "A gestão do Gmail está disponível apenas para donos e gerentes.",
@@ -97,6 +99,7 @@ export default function Comunicacoes() {
   const [subject, setSubject] = useState("");
   const [newBody, setNewBody] = useState("");
   const [busyAction, setBusyAction] = useState(false);
+  const [passwordBlocked, setPasswordBlocked] = useState(false);
   const [disconnectOpen, setDisconnectOpen] = useState(false);
   const [revocationPending, setRevocationPending] = useState(false);
   const [draftErrors, setDraftErrors] = useState<{ to?: string; subject?: string; body?: string }>({});
@@ -105,9 +108,10 @@ export default function Comunicacoes() {
   const toRef = useRef<HTMLInputElement>(null);
   const subjectRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const needsPasswordChange = passwordBlocked || (status.error instanceof Error && status.error.message === "PASSWORD_CHANGE_REQUIRED");
   const actions = useGmailActions(shopId);
-  const threads = useGmailThreads(shopId || undefined, search, connected);
-  const threadQuery = useGmailThread(shopId || undefined, selectedThreadId ?? undefined);
+  const threads = useGmailThreads(shopId || undefined, search, connected && !needsPasswordChange);
+  const threadQuery = useGmailThread(shopId || undefined, selectedThreadId ?? undefined, connected && !needsPasswordChange);
   const messages = threadQuery.data?.thread.messages ?? [];
   const thread = threadQuery.data?.thread;
 
@@ -115,6 +119,7 @@ export default function Comunicacoes() {
   useEffect(() => {
     activeShopId.current = shopId;
     setBusyAction(false);
+    setPasswordBlocked(false);
     setSelectedThreadId(null);
     setReplyBody("");
     setSearch("");
@@ -155,6 +160,8 @@ export default function Comunicacoes() {
         invalid_response: "O Google devolveu uma resposta de autorização inválida.",
         provider_error: "O Google não concluiu a autorização. Confirme o consentimento OAuth.",
         reauthorize: "É necessário autorizar novamente a conta Gmail.",
+        password_change_required: "Defina a nova palavra-passe antes de ligar o Gmail.",
+        account_unavailable: "Não foi possível verificar o estado da conta. Aguarde e tente ligar novamente.",
       };
       toast.error(explanation[reason ?? ""] ?? "Não foi possível ligar o Gmail.");
     }
@@ -166,6 +173,12 @@ export default function Comunicacoes() {
     void status.refetch();
   }, [searchParams, setSearchParams, shopId, shops, setShopId, status.refetch]);
 
+  const reportActionError = (error: unknown) => {
+    if (activeShopId.current !== shopId) return;
+    if (error instanceof Error && error.message === "PASSWORD_CHANGE_REQUIRED") setPasswordBlocked(true);
+    toast.error(explainGmailError(error));
+  };
+
   const connect = async () => {
     if (!shopId) return;
     setBusyAction(true);
@@ -175,7 +188,7 @@ export default function Comunicacoes() {
       if (!result.url) throw new Error("GMAIL_PROVIDER_REQUEST_FAILED");
       window.location.assign(result.url);
     } catch (error) {
-      if (activeShopId.current === shopId) toast.error(explainGmailError(error));
+      reportActionError(error);
     } finally {
       if (activeShopId.current === shopId) setBusyAction(false);
     }
@@ -196,7 +209,7 @@ export default function Comunicacoes() {
       if (result.revocation_confirmed === true) toast.success("Conta Gmail desligada e autorização revogada.");
       else toast.warning("Conta desligada no BarberOS. O Google não confirmou a revogação da autorização.");
     } catch (error) {
-      if (activeShopId.current === shopId) toast.error(explainGmailError(error));
+      reportActionError(error);
     } finally {
       if (activeShopId.current === shopId) setBusyAction(false);
     }
@@ -215,7 +228,7 @@ export default function Comunicacoes() {
       setSelectedThreadId(nextThreadId);
       await Promise.all([threads.refetch(), threadQuery.refetch()]);
     } catch (error) {
-      if (activeShopId.current === shopId) toast.error(explainGmailError(error));
+      reportActionError(error);
     } finally {
       if (activeShopId.current === shopId) setBusyAction(false);
     }
@@ -246,7 +259,7 @@ export default function Comunicacoes() {
       toast.success("Email enviado.");
       await threads.refetch();
     } catch (error) {
-      if (activeShopId.current === shopId) toast.error(explainGmailError(error));
+      reportActionError(error);
     } finally {
       if (activeShopId.current === shopId) setBusyAction(false);
     }
@@ -269,11 +282,19 @@ export default function Comunicacoes() {
       }
     >
       {status.isLoading && <Skeleton className="h-36" lines={4} />}
-      {status.error && !status.isLoading && (
+      {needsPasswordChange && (
+        <Panel testId="gmail-password-recovery" className="max-w-3xl">
+          <p role="alert" className="t-body text-ink-hi">Defina a nova palavra-passe antes de utilizar o Gmail.</p>
+          <a href="/alterar-palavra-passe" className="mt-3 inline-flex min-h-11 items-center text-accent-soft underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">
+            Definir nova palavra-passe
+          </a>
+        </Panel>
+      )}
+      {status.error && !status.isLoading && !needsPasswordChange && (
         <ErrorState message={explainGmailError(status.error)} onRetry={() => void status.refetch()} />
       )}
 
-      {!status.isLoading && !status.error && status.data?.configured === false && (
+      {!needsPasswordChange && !status.isLoading && !status.error && status.data?.configured === false && (
         <Panel testId="gmail-not-configured" className="max-w-3xl">
           <div className="flex items-start gap-4">
             <div className="rounded-2xl border border-accent-soft/20 bg-accent-soft/10 p-3 text-accent-soft"><Mail size={22} /></div>
@@ -290,7 +311,7 @@ export default function Comunicacoes() {
         </Panel>
       )}
 
-      {!status.isLoading && !status.error && status.data?.configured && !connected && (
+      {!needsPasswordChange && !status.isLoading && !status.error && status.data?.configured && !connected && (
         <Panel testId="gmail-connect-panel" className="max-w-3xl">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
             <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-accent-soft/20 bg-accent-soft/10 text-accent-soft"><Mail size={25} /></div>
@@ -314,7 +335,7 @@ export default function Comunicacoes() {
         </Panel>
       )}
 
-      {!status.isLoading && !status.error && connected && (
+      {!needsPasswordChange && !status.isLoading && !status.error && connected && (
         <>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[.025] p-3.5">
             <div className="flex min-w-0 items-center gap-3">
