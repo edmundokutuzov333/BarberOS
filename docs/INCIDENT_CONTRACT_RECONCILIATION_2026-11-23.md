@@ -35,3 +35,29 @@ Isolating database ports exposed another independent failure: the HTTP concurren
 job installed Playwright 1.56.1, which does not support the current Ubuntu runner.
 It now installs the repository's frozen Yarn lockfile, using the same Playwright
 version as the other browser jobs. A remote rerun is required before certification.
+
+## Production acceptance and generated contracts
+
+Migration applied in staging as `20261123124407` and production as
+`20261123124859`. The transactional incident acceptance file passed in production
+and rolled its fixtures back. The source commit `0d71431` passed all five triggered
+workflows: primary verification, Phase 23 acceptance, Phase 24 concurrency,
+Phase 26 deployment contracts and the Vercel production deployment. The HTTP
+concurrency job now executes successfully with the locked browser tooling.
+
+Database types were regenerated through the production API after this migration.
+`frontend/src/lib/database.generated.ts` is the unmodified generated artifact.
+`database.types.ts` retains a narrow, key-checked nullability contract because the
+Postgres catalog does not encode nullable SQL arguments. This preserves explicit
+null for optional filters, barber selection and clearing optional fields, while
+shop IDs and required service IDs remain non-null. Compile-time assertions check
+these boundaries without changing the generated table or response types.
+
+Typechecking, lint, the complete frontend unit/component/contract command and the
+production build passed locally with the public environment variables supplied.
+The first local contract invocation stopped at the expected missing-environment
+guard; rerunning with the required public configuration passed.
+
+The migration snapshot now records 145 production and 120 staging entries. The
+audit still blocks release with 43 unresolved sources, including the newly exposed
+production partial-delivery notification migration. This is not a release approval.

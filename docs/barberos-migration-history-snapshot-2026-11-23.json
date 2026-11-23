@@ -154,7 +154,7 @@
   "projects": {
     "production": {
       "ref": "alseiinjzwjdiwtvkdzy",
-      "migration_count": 144,
+      "migration_count": 145,
       "migrations": [
         {
           "version": "20260918132000",
@@ -731,12 +731,16 @@
         {
           "version": "20261026101340",
           "name": "phase_25_public_performance_indexes"
+        },
+        {
+          "version": "20261123124859",
+          "name": "reconcile_operation_incidents"
         }
       ]
     },
     "staging": {
       "ref": "asikuyxaapcmayptimxi",
-      "migration_count": 114,
+      "migration_count": 120,
       "migrations": [
         {
           "version": "20261019132753",
@@ -1213,6 +1217,10 @@
         {
           "version": "20261123123144",
           "name": "reconcile_gmail_storage"
+        },
+        {
+          "version": "20261123124407",
+          "name": "reconcile_operation_incidents"
         }
       ]
     }
@@ -1309,6 +1317,22 @@
       "20261019140000_availability_week_batch.sql": {
         "status": "exact_sql_replayed_by_reconciliation",
         "evidence": "Complete file matches live production migration 20261026094835 availability_week_batch_reconcile after statement joining, compared 2026-11-23."
+      },
+      "20261123124324_reconcile_operation_incidents.sql": {
+        "status": "exact_sql_remote_alias",
+        "evidence": "Complete source applied through migration 20261123124859 on 2026-11-23; incident lifecycle and tenant-boundary transaction passed with rollback after deployment."
+      },
+      "20261123123022_reconcile_gmail_storage.sql": {
+        "status": "exact_sql_already_represented",
+        "evidence": "The complete SQL after the two explanatory header lines equals production migration 20261021141024 gmail_workspace_integration after statement joining, compared on 2026-11-23. No production replay needed."
+      },
+      "20261026210000_shop_operation_incidents_phase8.sql": {
+        "status": "applied_by_verified_rollforward",
+        "evidence": "Domain tables, policies, grants, complete RPC bodies and FK indexes preserved in idempotent rollforward 20261123124859 reconcile_operation_incidents; production transactional tenant/lifecycle acceptance passed 2026-11-23."
+      },
+      "20261026220000_shop_incident_foreign_key_indexes_phase8.sql": {
+        "status": "applied_by_verified_rollforward",
+        "evidence": "Domain tables, policies, grants, complete RPC bodies and FK indexes preserved in idempotent rollforward 20261123124859 reconcile_operation_incidents; production transactional tenant/lifecycle acceptance passed 2026-11-23."
       }
     },
     "staging": {
@@ -1323,6 +1347,10 @@
       "20261123123022_reconcile_gmail_storage.sql": {
         "status": "exact_sql_remote_alias",
         "evidence": "Live staging migration 20261123123144 records the complete SQL from local file 20261123123022_reconcile_gmail_storage.sql; verified after API apply on 2026-11-23."
+      },
+      "20261123124324_reconcile_operation_incidents.sql": {
+        "status": "exact_sql_remote_alias",
+        "evidence": "Complete source applied through migration 20261123124407 on 2026-11-23; incident lifecycle and tenant-boundary transaction passed with rollback after deployment."
       }
     }
   }
