@@ -1,0 +1,14 @@
+begin;
+select plan(10);
+select has_table('public','gmail_connections','Gmail connection storage exists');
+select has_table('public','gmail_oauth_states','OAuth state storage exists');
+select ok((select relrowsecurity and relforcerowsecurity from pg_class where oid='public.gmail_connections'::regclass),'Connection storage forces RLS');
+select ok((select relrowsecurity and relforcerowsecurity from pg_class where oid='public.gmail_oauth_states'::regclass),'OAuth state storage forces RLS');
+select ok(not has_table_privilege('anon','public.gmail_connections','SELECT,INSERT,UPDATE,DELETE'),'Anonymous callers cannot access tokens');
+select ok(not has_table_privilege('authenticated','public.gmail_connections','SELECT,INSERT,UPDATE,DELETE'),'Signed-in browser callers cannot access tokens');
+select ok(not has_table_privilege('anon','public.gmail_oauth_states','SELECT,INSERT,UPDATE,DELETE'),'Anonymous callers cannot access OAuth state');
+select ok(not has_table_privilege('authenticated','public.gmail_oauth_states','SELECT,INSERT,UPDATE,DELETE'),'Signed-in browser callers cannot access OAuth state');
+select ok((select bool_and(has_table_privilege('service_role',t,p)) from unnest(array['public.gmail_connections','public.gmail_oauth_states'])t cross join unnest(array['SELECT','INSERT','UPDATE','DELETE'])p),'Service boundary retains every required storage privilege');
+select has_index('public','gmail_oauth_states','gmail_oauth_states_expiry_idx','Expired OAuth state lookup is indexed');
+select * from finish();
+rollback;
