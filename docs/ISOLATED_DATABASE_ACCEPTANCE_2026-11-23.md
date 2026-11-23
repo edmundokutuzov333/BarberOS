@@ -50,3 +50,27 @@ No secret values, sender addresses or tokens are included in this health result.
 
 Production health remained HTTP 200 with a successful database roundtrip.
 External service readiness remains a separate release gate.
+
+## Staging Gmail reconciliation
+
+Before changing staging, captured a repeatable-read logical backup of its 36
+public application tables. The encrypted AES-256-GCM backup is stored on the ADATA
+SSD under BarberOS/backups/staging-20261123-before-gmail.encrypted.json. A separate
+0600 recovery key is outside the repository in the user's private Codex backup
+directory. Decryption and SHA-256 integrity verification succeeded; this does not
+yet certify restoration of the full database or Auth/Storage subsystems.
+
+Applied the idempotent source migration 20261123123022_reconcile_gmail_storage.sql
+to staging. Supabase recorded version 20261123123144, name reconcile_gmail_storage;
+recorded statements match the complete source SQL. No remote history was edited.
+Post-apply checks confirmed both tables, forced RLS, denied browser DML/SELECT and
+all service-role storage privileges. Ten pgTAP storage assertions passed locally,
+including a repeated application of the migration.
+
+Staging gmail-integration v1 and health v2 now use the same source hashes as their
+production counterparts. Staging Gmail preflight returns 204 for the official
+origin. OAuth credential configuration remains absent; no mailbox was connected.
+
+The refreshed history audit reports 42 unresolved local sources. A regression fix
+prevents migrations already mapped to live history from also being counted as
+unreviewed additions. Actual unapplied sources still fail the strict release gate.

@@ -109,7 +109,7 @@ function mapEnvironment(environment, project) {
   const newlyAddedLocalFiles = localFiles.filter(file=>!snapshotFiles.has(file));
   const latestRemoteVersion = (project.migrations ?? []).map(item=>item.version).sort().at(-1) ?? '00000000000000';
   const unreviewedNewLocalBeforeRemoteHead = newlyAddedLocalFiles.filter(file =>
-    file.slice(0,14) <= latestRemoteVersion && !hasLocalReviewEvidence(reviewedLocal[file]));
+    file.slice(0,14) <= latestRemoteVersion && !mappedFiles.has(file) && !hasLocalReviewEvidence(reviewedLocal[file]));
   const counts = {};
   for (const item of mapped) counts[item.status] = (counts[item.status] ?? 0) + 1;
   return {

@@ -1209,6 +1209,10 @@
         {
           "version": "20261026133146",
           "name": "notification_channels_email_first_staging_reconciliation"
+        },
+        {
+          "version": "20261123123144",
+          "name": "reconcile_gmail_storage"
         }
       ]
     }
@@ -1311,6 +1315,14 @@
       "20261019140000_availability_week_batch.sql": {
         "status": "exact_sql_replayed_by_reconciliation",
         "evidence": "Complete file matches live staging migration 20261023065630 availability_week_batch_reconcile after statement joining, compared 2026-11-23."
+      },
+      "20261021130000_gmail_workspace_integration.sql": {
+        "status": "applied_by_verified_rollforward",
+        "evidence": "Full source SQL reapplied through staging migration 20261123123144 reconcile_gmail_storage on 2026-11-23; both forced-RLS tables, denied browser grants and service privileges verified after apply."
+      },
+      "20261123123022_reconcile_gmail_storage.sql": {
+        "status": "exact_sql_remote_alias",
+        "evidence": "Live staging migration 20261123123144 records the complete SQL from local file 20261123123022_reconcile_gmail_storage.sql; verified after API apply on 2026-11-23."
       }
     }
   }
