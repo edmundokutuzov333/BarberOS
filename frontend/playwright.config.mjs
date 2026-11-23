@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const baseURL = process.env.BARBEROS_E2E_BASE_URL || 'http://127.0.0.1:4173';
-const runLocalServer = !process.env.BARBEROS_E2E_BASE_URL;
+const runLocalServer = !process.env.BARBEROS_E2E_BASE_URL && process.env.BARBEROS_E2E_NO_PREVIEW !== '1';
 const previewCommand = process.env.CI
   ? 'yarn preview --host 127.0.0.1 --port 4173 --strictPort'
   : 'yarn build && yarn preview --host 127.0.0.1 --port 4173 --strictPort';

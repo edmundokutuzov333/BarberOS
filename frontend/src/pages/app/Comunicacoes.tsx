@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -8,6 +8,10 @@ import {
 import { Page } from "@/components/layout/Page";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
+import {
+  AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader,
+  AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/Primitives";
 import { EmptyState, ErrorState, Panel, Skeleton } from "@/components/ui/States";
 import { useShop } from "@/lib/shop";
@@ -48,17 +52,18 @@ function formatMailDate(value: string): string {
 }
 
 function ThreadRow({
-  item, selected, onClick,
+  item, selected, disabled, onClick,
 }: {
-  item: GmailThreadPreview; selected: boolean; onClick: () => void;
+  item: GmailThreadPreview; selected: boolean; disabled: boolean; onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={selected}
+      disabled={disabled}
       className={[
-        "w-full min-w-0 rounded-2xl border p-3.5 text-left transition-colors",
+        "disabled:opacity-60 disabled:pointer-events-none w-full min-w-0 rounded-2xl border p-3.5 text-left transition-colors",
         selected ? "border-accent-soft/50 bg-accent-soft/10" : "border-white/10 bg-white/[.025] hover:bg-white/[.06]",
       ].join(" ")}
     >
@@ -92,6 +97,14 @@ export default function Comunicacoes() {
   const [subject, setSubject] = useState("");
   const [newBody, setNewBody] = useState("");
   const [busyAction, setBusyAction] = useState(false);
+  const [disconnectOpen, setDisconnectOpen] = useState(false);
+  const [revocationPending, setRevocationPending] = useState(false);
+  const [draftErrors, setDraftErrors] = useState<{ to?: string; subject?: string; body?: string }>({});
+  const activeShopId = useRef(shopId);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const toRef = useRef<HTMLInputElement>(null);
+  const subjectRef = useRef<HTMLInputElement>(null);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
   const actions = useGmailActions(shopId);
   const threads = useGmailThreads(shopId || undefined, search, connected);
   const threadQuery = useGmailThread(shopId || undefined, selectedThreadId ?? undefined);
@@ -100,19 +113,27 @@ export default function Comunicacoes() {
 
   const visibleThreads = useMemo(() => threads.data?.threads ?? [], [threads.data?.threads]);
   useEffect(() => {
+    activeShopId.current = shopId;
+    setBusyAction(false);
     setSelectedThreadId(null);
     setReplyBody("");
     setSearch("");
     setSearchDraft("");
     setComposeOpen(false);
+    setTo("");
+    setSubject("");
+    setNewBody("");
+    setDisconnectOpen(false);
+    setRevocationPending(false);
+    setDraftErrors({});
   }, [shopId]);
   useEffect(() => {
-    if (!selectedThreadId && visibleThreads.length) setSelectedThreadId(visibleThreads[0].id);
-    if (selectedThreadId && !visibleThreads.some((item) => item.id === selectedThreadId) && visibleThreads.length) {
+    // A sent conversation may be outside the current inbox filter. Its detail
+    // remains selected until an explicit search, row selection or shop change.
+    if (connected && !composeOpen && !selectedThreadId && visibleThreads.length) {
       setSelectedThreadId(visibleThreads[0].id);
     }
-    if (!visibleThreads.length && !threads.isFetching) setSelectedThreadId(null);
-  }, [visibleThreads, selectedThreadId, threads.isFetching]);
+  }, [connected, composeOpen, visibleThreads, selectedThreadId]);
 
   useEffect(() => {
     const result = searchParams.get("gmail");
@@ -150,54 +171,73 @@ export default function Comunicacoes() {
     setBusyAction(true);
     try {
       const result = await actions.connect();
+      if (activeShopId.current !== shopId) return;
       if (!result.url) throw new Error("GMAIL_PROVIDER_REQUEST_FAILED");
       window.location.assign(result.url);
     } catch (error) {
-      toast.error(explainGmailError(error));
+      if (activeShopId.current === shopId) toast.error(explainGmailError(error));
     } finally {
-      setBusyAction(false);
+      if (activeShopId.current === shopId) setBusyAction(false);
     }
   };
 
   const disconnect = async () => {
-    if (!shopId || !window.confirm("Desligar a conta Gmail desta barbearia? A caixa de entrada deixará de estar disponível no BarberOS.")) return;
+    if (!shopId || busyAction) return;
     setBusyAction(true);
     try {
-      await actions.disconnect();
+      const result = await actions.disconnect();
+      if (activeShopId.current !== shopId) return;
       setSelectedThreadId(null);
       setComposeOpen(false);
-      toast.success("Conta Gmail desligada.");
+      setDisconnectOpen(false);
+      setTo(""); setSubject(""); setNewBody("");
+      setReplyBody("");
+      setRevocationPending(result.revocation_confirmed !== true);
+      if (result.revocation_confirmed === true) toast.success("Conta Gmail desligada e autorização revogada.");
+      else toast.warning("Conta desligada no BarberOS. O Google não confirmou a revogação da autorização.");
     } catch (error) {
-      toast.error(explainGmailError(error));
+      if (activeShopId.current === shopId) toast.error(explainGmailError(error));
     } finally {
-      setBusyAction(false);
+      if (activeShopId.current === shopId) setBusyAction(false);
     }
   };
 
   const sendReply = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!shopId || !selectedThreadId || !replyBody.trim()) return;
+    if (!shopId || busyAction || !selectedThreadId || !replyBody.trim()) return;
     setBusyAction(true);
     try {
       const result = await actions.send({ thread_id: selectedThreadId, body: replyBody.trim() });
+      if (activeShopId.current !== shopId) return;
       setReplyBody("");
       toast.success("Resposta enviada pelo Gmail.");
       const nextThreadId = result.thread_id ?? selectedThreadId;
       setSelectedThreadId(nextThreadId);
       await Promise.all([threads.refetch(), threadQuery.refetch()]);
     } catch (error) {
-      toast.error(explainGmailError(error));
+      if (activeShopId.current === shopId) toast.error(explainGmailError(error));
     } finally {
-      setBusyAction(false);
+      if (activeShopId.current === shopId) setBusyAction(false);
     }
   };
 
   const sendNewMessage = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!shopId || !to.trim() || !subject.trim() || !newBody.trim()) return;
+    if (!shopId || busyAction) return;
+    const errors = {
+      to: /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(to.trim()) ? undefined : "Introduza um endereço de email válido.",
+      subject: subject.trim() ? undefined : "Introduza o assunto.",
+      body: newBody.trim() ? undefined : "Escreva a mensagem.",
+    };
+    setDraftErrors(errors);
+    if (errors.to || errors.subject || errors.body) {
+      (errors.to ? toRef.current : errors.subject ? subjectRef.current : bodyRef.current)?.focus();
+      return;
+    }
     setBusyAction(true);
     try {
       const result = await actions.send({ to: to.trim(), subject: subject.trim(), body: newBody.trim() });
+      if (activeShopId.current !== shopId) return;
       setTo("");
       setSubject("");
       setNewBody("");
@@ -206,9 +246,9 @@ export default function Comunicacoes() {
       toast.success("Email enviado.");
       await threads.refetch();
     } catch (error) {
-      toast.error(explainGmailError(error));
+      if (activeShopId.current === shopId) toast.error(explainGmailError(error));
     } finally {
-      setBusyAction(false);
+      if (activeShopId.current === shopId) setBusyAction(false);
     }
   };
 
@@ -260,6 +300,10 @@ export default function Comunicacoes() {
                 Autorize a conta Google para ler mensagens e enviar respostas. O BarberOS não pede nem guarda a palavra-passe do Gmail.
               </p>
               <p className="t-label mt-2 text-ink-lo">A ligação é privada desta barbearia e pode ser revogada a qualquer momento.</p>
+              {revocationPending && <p role="alert" className="t-body mt-3 text-st-warning">
+                O BarberOS removeu a ligação, mas o Google não confirmou a revogação.
+                {" "}<a className="underline" href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">Reveja o acesso nas definições da conta Google.</a>
+              </p>}
               <div className="mt-5">
                 <Button onClick={() => void connect()} loading={busyAction} data-testid="gmail-connect">
                   <ExternalLink size={15} /> Ligar conta Google
@@ -280,18 +324,41 @@ export default function Comunicacoes() {
                 <p className="t-label truncate text-ink-mid">{status.data?.connection.email}</p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => void disconnect()} loading={busyAction} data-testid="gmail-disconnect">
-              <Unlink size={14} /> Desligar
-            </Button>
+            <AlertDialog open={disconnectOpen} onOpenChange={(open) => { if (!busyAction) setDisconnectOpen(open); }}>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm" disabled={busyAction} data-testid="gmail-disconnect">
+                  <Unlink size={14} /> Desligar
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Desligar a conta Gmail?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    A caixa de entrada deixará de estar disponível nesta barbearia e será pedida a revogação ao Google.
+                    As mensagens existentes no Gmail serão preservadas. Poderá voltar a ligar a conta.
+                    A revogação Google poderá exigir nova autorização noutras barbearias que usem esta mesma conta no BarberOS.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="gap-2">
+                  <AlertDialogCancel asChild><Button variant="secondary" disabled={busyAction}>Cancelar</Button></AlertDialogCancel>
+                  <Button variant="danger" loading={busyAction} onClick={() => void disconnect()}>Desligar conta</Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
 
           <div className="mb-4 flex flex-col gap-2 sm:flex-row">
-            <form className="flex min-w-0 flex-1 gap-2" onSubmit={(event) => {
+            <form noValidate className="flex min-w-0 flex-1 gap-2" onSubmit={(event) => {
               event.preventDefault();
+              if (busyAction) return;
+              if (search !== searchDraft.trim()) { setSelectedThreadId(null); setReplyBody(""); }
               setSearch(searchDraft.trim());
+              setComposeOpen(false);
             }}>
               <div className="min-w-0 flex-1">
                 <Field
+                  ref={searchRef}
+                  disabled={busyAction}
                   label="Pesquisar mensagens"
                   name="gmail-search"
                   value={searchDraft}
@@ -299,23 +366,26 @@ export default function Comunicacoes() {
                   placeholder="Remetente, assunto ou termos"
                 />
               </div>
-              <Button type="submit" variant="secondary" className="mt-6" aria-label="Pesquisar"><Search size={15} />Pesquisar</Button>
+              {(searchDraft || search) && <Button variant="ghost" disabled={busyAction} className="mt-6" aria-label="Limpar pesquisa" onClick={() => {
+                setSearchDraft(""); setSearch(""); setSelectedThreadId(null); setReplyBody(""); searchRef.current?.focus();
+              }}><X size={15} /></Button>}
+              <Button type="submit" disabled={busyAction} variant="secondary" className="mt-6" aria-label="Pesquisar"><Search size={15} />Pesquisar</Button>
             </form>
-            <Button variant="secondary" className="self-end" onClick={() => { setComposeOpen(true); setSelectedThreadId(null); }}>
+            <Button variant="secondary" disabled={busyAction} className="self-end" onClick={() => { setComposeOpen(true); setSelectedThreadId(null); }}>
               <Plus size={15} /> Nova mensagem
             </Button>
           </div>
 
           {composeOpen ? (
             <Panel testId="gmail-compose" title="Nova mensagem">
-              <form className="space-y-4" onSubmit={(event) => void sendNewMessage(event)}>
+              <form noValidate className="space-y-4" onSubmit={(event) => void sendNewMessage(event)}>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="Destinatário" name="gmail-to" type="email" inputMode="email" autoComplete="email" value={to} onChange={(event) => setTo(event.target.value)} required placeholder="cliente@exemplo.com" />
-                  <Field label="Assunto" name="gmail-subject" value={subject} onChange={(event) => setSubject(event.target.value)} required maxLength={200} placeholder="Assunto do email" />
+                  <Field ref={toRef} error={draftErrors.to} disabled={busyAction} label="Destinatário" name="gmail-to" type="email" inputMode="email" autoComplete="email" value={to} onChange={(event) => setTo(event.target.value)} required placeholder="cliente@exemplo.com" />
+                  <Field ref={subjectRef} error={draftErrors.subject} disabled={busyAction} label="Assunto" name="gmail-subject" value={subject} onChange={(event) => setSubject(event.target.value)} required maxLength={200} placeholder="Assunto do email" />
                 </div>
-                <Textarea label="Mensagem" name="gmail-message" value={newBody} onChange={(event) => setNewBody(event.target.value)} required rows={8} maxLength={50000} placeholder="Escreva a mensagem..." />
+                <Textarea ref={bodyRef} error={draftErrors.body} disabled={busyAction} className="resize-none" label="Mensagem" name="gmail-message" value={newBody} onChange={(event) => setNewBody(event.target.value)} required rows={8} maxLength={50000} placeholder="Escreva a mensagem..." />
                 <div className="flex flex-wrap justify-end gap-2">
-                  <Button type="button" variant="ghost" onClick={() => setComposeOpen(false)}><X size={15} /> Cancelar</Button>
+                  <Button type="button" variant="ghost" disabled={busyAction} onClick={() => setComposeOpen(false)}><X size={15} /> Cancelar</Button>
                   <Button type="submit" loading={busyAction}><Send size={15} /> Enviar email</Button>
                 </div>
               </form>
@@ -333,7 +403,7 @@ export default function Comunicacoes() {
                   <EmptyState title="Sem mensagens" body={search ? "Não foram encontradas conversas para esta pesquisa." : "As mensagens recebidas aparecerão aqui."} />
                 )}
                 <div className="space-y-2">
-                  {visibleThreads.map((item) => <ThreadRow key={item.id} item={item} selected={item.id === selectedThreadId} onClick={() => setSelectedThreadId(item.id)} />)}
+                  {visibleThreads.map((item) => <ThreadRow key={item.id} item={item} disabled={busyAction} selected={item.id === selectedThreadId} onClick={() => { if (!busyAction) { setSelectedThreadId(item.id); setReplyBody(""); } }} />)}
                 </div>
               </Panel>
 
@@ -362,8 +432,8 @@ export default function Comunicacoes() {
                         </article>
                       ))}
                     </div>
-                    <form className="mt-4 space-y-3 border-t border-white/10 pt-4" onSubmit={(event) => void sendReply(event)}>
-                      <Textarea label="Responder nesta conversa" name="gmail-reply" value={replyBody} onChange={(event) => setReplyBody(event.target.value)} rows={4} maxLength={50000} required placeholder="Escreva a sua resposta..." />
+                    <form noValidate className="mt-4 space-y-3 border-t border-white/10 pt-4" onSubmit={(event) => void sendReply(event)}>
+                      <Textarea className="resize-none" disabled={busyAction} label="Responder nesta conversa" name="gmail-reply" value={replyBody} onChange={(event) => setReplyBody(event.target.value)} rows={4} maxLength={50000} required placeholder="Escreva a sua resposta..." />
                       <div className="flex justify-end">
                         <Button type="submit" loading={busyAction} disabled={!replyBody.trim()}><Send size={15} /> Enviar resposta</Button>
                       </div>

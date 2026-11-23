@@ -112,3 +112,31 @@ Reply-To, recognizes outgoing aliases using Gmail SENT metadata, preserves threa
 headers and supports self-addressed replies. Nine Deno cases cover these boundaries.
 Frontend selection repair, post-deployment reply, refresh and revocation acceptance
 remain pending at this checkpoint. Google remains in testing mode.
+
+## Gmail reply deployment and token-refresh receipt
+
+Commit `7bee9d41c8232becf083db7b193a1817c0033c9f` passed all six triggered
+workflows. Gmail reply code is deployed to staging version 2 and production
+version 6, both bundle SHA-256
+`c2e5ab62b0d1f714fb475791985545a000f8737d944e01fb67f6b94e833816c5`.
+The stage endpoint rejected an unauthenticated request with 401.
+
+The existing retained self-reply was submitted exactly once in the production UI.
+The conversation changed from one to two messages; the reply text and Portuguese
+accents were read back, and the successful submit cleared the draft.
+
+For the same approved owner's connection only, expiry metadata was moved into the
+past without changing either token. Refreshing the actual inbox then renewed the
+access token and persisted more than 30 minutes of validity, with both token
+fields still encrypted. This proves the refresh grant against Google rather than
+inferring it from secret presence.
+
+Using the same real frontend session, a Gmail status request for the suspended QA
+tenant returned 403 `SHOP_ACCESS_DENIED`; a direct authenticated REST request for
+the private Gmail token table returned 403 / SQLSTATE `42501`. No token, private
+mail body or unrelated inbox data was printed by these checks.
+
+The suspended email QA tenant and its three controlled notifications were removed
+after receipts were recorded. Cleanup asserted the exact generated slug, suspended
+status, zero members, zero appointments and exactly three owned notifications in a
+transaction. No historical customer notification was requeued or deleted.

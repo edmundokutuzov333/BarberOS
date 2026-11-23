@@ -1,19 +1,31 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 import { X, ImagePlus } from 'lucide-react';
-import { useRef, useState, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { forwardRef, useId, useRef, useState, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 import { uploadImage, type Bucket } from '@/lib/storage';
 import { toast } from 'sonner';
 
 export function Modal({ open, onOpenChange, title, children, testId }: { open: boolean; onOpenChange: (o: boolean) => void; title: string; children: ReactNode; testId?: string }) {
+  const returnFocus = useRef<HTMLElement | null>(null);
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm" />
         <Dialog.Content
           data-testid={testId}
-          className="fixed inset-x-4 top-4 bottom-4 z-50 m-auto h-fit w-auto max-w-lg glass glass-2 p-6 sm:p-7 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain touch-pan-y no-scrollbar outline-none"
+          aria-describedby={undefined}
+          onOpenAutoFocus={() => {
+            returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+          }}
+          onCloseAutoFocus={(event) => {
+            // Controlled modals have no Dialog.Trigger for Radix to restore.
+            if (returnFocus.current?.isConnected) {
+              event.preventDefault();
+              returnFocus.current.focus();
+            }
+          }}
+          className="!fixed inset-x-4 top-4 bottom-4 z-50 m-auto h-fit w-auto max-w-lg glass glass-2 p-6 sm:p-7 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain touch-pan-y no-scrollbar outline-none"
         >
           <div className="flex items-start justify-between gap-4 mb-5">
             <Dialog.Title className="t-title">{title}</Dialog.Title>
@@ -65,15 +77,26 @@ export function Select({ label, className, children, ...rest }: SelectHTMLAttrib
   );
 }
 
-export function Textarea({ label, className, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }) {
-  const inputId = rest.id ?? rest.name;
-  return (
-    <label className="block min-w-0" htmlFor={inputId}>
-      <span className="t-label text-ink-mid mb-1.5 block">{label}</span>
-      <textarea id={inputId} className={cn('field min-h-[112px] resize-y', className)} {...rest} />
-    </label>
-  );
-}
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; error?: string }>(
+  ({ label, className, error, ...rest }, ref) => {
+    const generatedId = useId();
+    const inputId = rest.id ?? rest.name ?? `textarea-${generatedId.replace(/:/g, '')}`;
+    const errorId = error ? `${inputId}-error` : undefined;
+    const describedBy = [rest['aria-describedby'], errorId].filter(Boolean).join(' ') || undefined;
+    return (
+      <div className="block min-w-0">
+        <label className="block" htmlFor={inputId}>
+          <span className="t-label text-ink-mid mb-1.5 block">{label}</span>
+        </label>
+        <textarea {...rest} ref={ref} id={inputId} aria-invalid={error ? true : rest['aria-invalid']}
+          aria-describedby={describedBy} aria-errormessage={errorId}
+          className={cn('field min-h-[112px] resize-none', error && 'border-st-noshow/60', className)} />
+        {error && <span id={errorId} role="alert" className="t-label text-st-noshow mt-1.5 block">{error}</span>}
+      </div>
+    );
+  },
+);
+Textarea.displayName = 'Textarea';
 
 export function ImageUpload({ bucket, shopId, ratio, value, onChange, label, className, testId, shape = 'card' }: {
   bucket: Bucket; shopId: string; ratio: number; value: string | null; onChange: (url: string) => void; label: string; className?: string; testId?: string; shape?: 'card' | 'circle';

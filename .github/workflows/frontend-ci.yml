@@ -66,5 +66,8 @@ jobs:
       - name: Browser smoke and serious/critical accessibility tests (desktop and mobile)
         run: corepack yarn test:e2e:smoke
 
+      - name: Gmail browser recovery, tenant isolation and accessibility regressions
+        run: corepack yarn test:e2e:gmail
+
       - name: Production asset budget
         run: corepack yarn perf:budget

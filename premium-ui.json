@@ -1,0 +1,31 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": [
+    "frontend/src"
+  ],
+  "canonicalMap": "UX-CONTRACT.md",
+  "requiredCapabilities": [
+    "Table Selection",
+    "Toast",
+    "Form",
+    "CRUD",
+    "Select/Listbox"
+  ],
+  "commands": {
+    "typecheck": "yarn --cwd frontend typecheck",
+    "lint": "yarn --cwd frontend lint",
+    "browser": "yarn --cwd frontend test:e2e:gmail"
+  },
+  "requiredCommands": [
+    "typecheck",
+    "lint",
+    "browser"
+  ],
+  "evidence": {
+    "crudFullFlow": "frontend/tests/e2e/gmail-ui.spec.mjs",
+    "failurePaths": "frontend/tests/e2e/gmail-ui.spec.mjs"
+  },
+  "ownership": {
+    "Select/Listbox": "native"
+  }
+}

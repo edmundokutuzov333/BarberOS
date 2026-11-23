@@ -2,12 +2,12 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { browserCors } from "../_shared/http.ts";
 import { replyMetadata } from "./reply.ts";
+import { revokeGoogleGrant } from "./disconnect.ts";
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
-const GOOGLE_REVOKE = "https://oauth2.googleapis.com/revoke";
 const GMAIL = "https://gmail.googleapis.com/gmail/v1/users/me";
 const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.send"];
 const ID_RE = /^[A-Za-z0-9_-]{1,256}$/;
@@ -343,11 +343,11 @@ Deno.serve(async (req: Request) => {
     }
     if (p.action === "disconnect") {
       const c=await connectionFor(admin,shop);
-      if(!c) return reply(req,{ok:true,disconnected:true});
-      try { await fetch(GOOGLE_REVOKE,{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body:new URLSearchParams({token:await decrypt(c.refresh_token_ciphertext)})}); } catch { /* local deletion still required */ }
+      if(!c) return reply(req,{ok:true,disconnected:true,revocation_confirmed:false});
+      const revoked = await revokeGoogleGrant(() => decrypt(c.refresh_token_ciphertext));
       const {error}=await admin.from("gmail_connections").delete().eq("id",c.id);
       if(error) throw new AppError("GMAIL_STORAGE_NOT_READY",503);
-      return reply(req,{ok:true,disconnected:true});
+      return reply(req,{ok:true,disconnected:true,revocation_confirmed:revoked});
     }
     const c=await connectionFor(admin,shop);
     if(!c) throw new AppError("GMAIL_NOT_CONNECTED",409);

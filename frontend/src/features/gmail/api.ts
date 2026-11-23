@@ -46,6 +46,7 @@ type GmailResponse = {
   message_id?: string | null;
   thread_id?: string | null;
   disconnected?: boolean;
+  revocation_confirmed?: boolean;
 };
 
 async function gmailRequest<T extends GmailResponse>(
