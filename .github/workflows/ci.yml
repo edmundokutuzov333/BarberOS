@@ -42,6 +42,7 @@ jobs:
       - run: node scripts/validate-deployment-config.mjs
       - run: node scripts/verify-supabase-release.mjs
       - run: node --test scripts/migration-archive.test.mjs
+      - run: node --test scripts/compare-schema-manifests.test.mjs
       - name: Audit captured migration history without altering remote state
         run: node scripts/audit-supabase-migration-history.mjs --report-only
       - name: Secret scan
