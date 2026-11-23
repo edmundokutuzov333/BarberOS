@@ -12,6 +12,7 @@ on:
       - ".github/workflows/ci.yml"
       - ".github/workflows/deploy-vercel.yml"
       - "scripts/database_safety.py"
+      - "scripts/prepare-isolated-supabase.mjs"
       - "scripts/test_database_safety_contract.py"
       - "scripts/test_database_phase23.py"
       - "scripts/test_booking_concurrency_phase23.py"
@@ -33,6 +34,7 @@ on:
       - "supabase/config.toml"
       - ".github/workflows/deploy-vercel.yml"
       - "scripts/database_safety.py"
+      - "scripts/prepare-isolated-supabase.mjs"
       - "scripts/test_database_safety_contract.py"
       - "scripts/test_database_phase23.py"
       - "scripts/test_booking_concurrency_phase23.py"
@@ -150,15 +152,23 @@ jobs:
   database:
     name: Database acceptance suite
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      BARBEROS_LOCAL_PROJECT_ID: barberos_p23_${{ github.run_id }}_${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Allocate isolated local identity and available ports
+        run: node scripts/prepare-isolated-supabase.mjs
       - uses: supabase/setup-cli@v2
         with:
-          version: latest
+          version: 2.81.3
           github-token: ${{ github.token }}
       - name: Start isolated local Supabase
-        run: supabase start --exclude studio,imgproxy,inbucket,logflare,vector
+        run: supabase start --exclude studio,imgproxy,mailpit,logflare,vector,supavisor
       - name: Reset isolated database from versioned migrations
         run: supabase db reset
       - name: Setup Python
@@ -171,11 +181,9 @@ jobs:
         run: python scripts/test_database_safety_contract.py
       - name: Run database suite
         env:
-          BARBEROS_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
           BARBEROS_TEST_ALLOW_MUTATION: '1'
         run: python scripts/test_database_phase23.py
       - name: Booking concurrency
         env:
-          BARBEROS_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
           BARBEROS_TEST_ALLOW_MUTATION: '1'
         run: python scripts/test_booking_concurrency_phase23.py

@@ -16,6 +16,7 @@ on:
       - "supabase/functions/booking-create/**"
       - "supabase/tests/phase24_concurrency_contract.sql"
       - "scripts/test_booking_concurrency_phase24.py"
+      - "scripts/prepare-isolated-supabase.mjs"
       - "docs/PHASE24-CONCURRENCY.md"
       - "frontend/package.json"
       - ".github/workflows/phase24-concurrency.yml"
@@ -39,6 +40,7 @@ on:
       - "supabase/functions/booking-create/**"
       - "supabase/tests/phase24_concurrency_contract.sql"
       - "scripts/test_booking_concurrency_phase24.py"
+      - "scripts/prepare-isolated-supabase.mjs"
       - "docs/PHASE24-CONCURRENCY.md"
       - "frontend/package.json"
       - ".github/workflows/phase24-concurrency.yml"
@@ -97,15 +99,23 @@ jobs:
   database-concurrency:
     name: Phase 24 database concurrency
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      BARBEROS_LOCAL_PROJECT_ID: barberos_p24db_${{ github.run_id }}_${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Allocate isolated local identity and available ports
+        run: node scripts/prepare-isolated-supabase.mjs
       - uses: supabase/setup-cli@v2
         with:
-          version: latest
+          version: 2.81.3
           github-token: ${{ github.token }}
       - name: Start isolated local Supabase
-        run: supabase start --exclude studio,imgproxy,inbucket,logflare,vector
+        run: supabase start --exclude studio,imgproxy,mailpit,logflare,vector,supavisor
       - name: Reset isolated database from versioned migrations
         run: supabase db reset
       - name: Setup Python
@@ -115,8 +125,6 @@ jobs:
       - name: Install psycopg
         run: pip install "psycopg[binary]==3.2.12"
       - name: Run read-only database concurrency contract
-        env:
-          BARBEROS_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
         run: |
           python - <<'PY'
           import os
@@ -130,7 +138,6 @@ jobs:
           PY
       - name: Run deterministic concurrent booking acceptance
         env:
-          BARBEROS_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
           BARBEROS_TEST_ALLOW_MUTATION: "1"
         run: |
           python scripts/test_booking_concurrency_phase24.py
@@ -140,15 +147,23 @@ jobs:
     needs:
       - frontend
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      BARBEROS_LOCAL_PROJECT_ID: barberos_p24http_${{ github.run_id }}_${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Allocate isolated local identity and available ports
+        run: node scripts/prepare-isolated-supabase.mjs
       - uses: supabase/setup-cli@v2
         with:
-          version: latest
+          version: 2.81.3
           github-token: ${{ github.token }}
       - name: Start isolated local Supabase
-        run: supabase start --exclude studio,imgproxy,inbucket,logflare,vector
+        run: supabase start --exclude studio,imgproxy,mailpit,logflare,vector,supavisor
       - name: Reset isolated database from versioned migrations
         run: supabase db reset
       - name: Prepare local test environment
@@ -167,7 +182,7 @@ jobs:
           echo "VITE_SUPABASE_PUBLISHABLE_KEY=$ANON_KEY" >> "$GITHUB_ENV"
           echo "BARBEROS_E2E_CONCURRENCY_URL=$API_URL/functions/v1/booking-create" >> "$GITHUB_ENV"
           echo "BARBEROS_E2E_CONCURRENCY_SKIP_CLEANUP=1" >> "$GITHUB_ENV"
-          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep -E 'supabase_db_' | head -n 1)"
+          DB_CONTAINER="supabase_db_$BARBEROS_LOCAL_PROJECT_ID"
           test -n "$DB_CONTAINER"
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/phase24_http_concurrency_setup.sql
           FIXTURE="$(docker exec "$DB_CONTAINER" psql -U postgres -d postgres -At -F '|' -c "select slug, service_id, barber_id, slot_start from private.phase24_http_concurrency_fixture where singleton")"

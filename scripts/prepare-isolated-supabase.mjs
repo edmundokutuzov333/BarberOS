@@ -35,6 +35,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const file='supabase/config.toml';
     const updated=configureIsolatedStack(fs.readFileSync(file,'utf8'),projectId,ports);
     fs.writeFileSync(file,updated);
+    if (process.env.GITHUB_ENV) {
+      fs.appendFileSync(process.env.GITHUB_ENV,
+        `BARBEROS_TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:${ports[1]}/postgres\n`);
+    }
     console.log(JSON.stringify({project_id:projectId,api_port:ports[0],db_port:ports[1],shadow_port:ports[2],studio_port:ports[3]}));
   } finally {
     await Promise.all(servers.map(server=>new Promise(resolve=>server.close(resolve))));

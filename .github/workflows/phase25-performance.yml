@@ -5,6 +5,7 @@ on:
     paths:
       - "frontend/**"
       - "scripts/check-performance-budget.mjs"
+      - "scripts/prepare-isolated-supabase.mjs"
       - "supabase/migrations/*phase_25*"
       - "supabase/tests/phase25_*"
       - "docs/PHASE25-PERFORMANCE.md"
@@ -18,6 +19,7 @@ on:
     paths:
       - "frontend/**"
       - "scripts/check-performance-budget.mjs"
+      - "scripts/prepare-isolated-supabase.mjs"
       - "supabase/migrations/*phase_25*"
       - "supabase/tests/phase25_*"
       - "docs/PHASE25-PERFORMANCE.md"
@@ -78,14 +80,22 @@ jobs:
   database-contract:
     name: Phase 25 database performance contract
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      BARBEROS_LOCAL_PROJECT_ID: barberos_p25_${{ github.run_id }}_${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Allocate isolated local identity and available ports
+        run: node scripts/prepare-isolated-supabase.mjs
       - uses: supabase/setup-cli@v2
         with:
-          version: latest
+          version: 2.81.3
           github-token: ${{ github.token }}
       - name: Start isolated local Supabase
-        run: supabase start --exclude studio,imgproxy,inbucket,logflare,vector
+        run: supabase start --exclude studio,imgproxy,mailpit,logflare,vector,supavisor
       - name: Reset isolated database from versioned migrations
         run: supabase db reset
       - uses: actions/setup-python@v5
@@ -93,8 +103,6 @@ jobs:
           python-version: "3.12"
       - run: pip install "psycopg[binary]==3.2.12"
       - name: Run read-only performance contract
-        env:
-          BARBEROS_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
         run: |
           python - <<'PY'
           import os
