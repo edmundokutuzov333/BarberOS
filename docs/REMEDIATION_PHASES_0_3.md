@@ -67,3 +67,23 @@ email delivery, OAuth refresh, payment settlement or database equivalence.
 
 These phases are not certified complete by the source fixes alone. A successful
 frontend deployment does not deploy Supabase functions or reconcile database state.
+
+## Production checkpoint, 2026-11-23
+
+The dashboard deployed admin-credential-manager, payments-initiate, payments-status
+and payments-configure using an entrypoint importing the immutable GitHub source at
+`09dfe4cc437671365f88d51b3e973358f518f83e`. Supabase resolves and bundles that source
+during deployment; this keeps the deployed business logic tied to a reviewed commit.
+
+Live certification after deployment: 15 checks passed and 3 failed. All four repaired
+functions now pass official-origin preflight and untrusted-origin isolation. Admin
+OPTIONS returns 204 instead of 500. Invalid payment initiation returns the expected
+PAYMENT_REQUEST_INVALID response without initiating a payment. Gmail preflight still
+returns 404 (two checks); Resend webhook presence still returns 404 (one check).
+
+GitHub verification for both source commits passed. Production database history,
+backups, provider credentials and storage prerequisites remain uncertified. MCP
+still denies access to the BarberOS project on all available account links. An
+attempt to manage the connection through the desktop UI was denied by the computer
+use tool. Account reconnection must be completed by the user before API-based schema
+reconciliation can proceed. No production schema or migration history was changed.
