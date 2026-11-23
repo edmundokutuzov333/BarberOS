@@ -43,6 +43,7 @@ jobs:
       - run: node scripts/verify-supabase-release.mjs
       - run: node --test scripts/migration-archive.test.mjs
       - run: node --test scripts/compare-schema-manifests.test.mjs
+      - run: node --test scripts/prepare-isolated-supabase.test.mjs
       - name: Audit captured migration history without altering remote state
         run: node scripts/audit-supabase-migration-history.mjs --report-only
       - name: Secret scan
@@ -61,17 +62,24 @@ jobs:
     name: Supabase migrations and security contracts
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      BARBEROS_LOCAL_PROJECT_ID: barberos_ci_${{ github.run_id }}_${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Allocate isolated local identity and available ports
+        run: node scripts/prepare-isolated-supabase.mjs
       - uses: supabase/setup-cli@v2
         with:
-          version: latest
+          version: 2.81.3
           github-token: ${{ github.token }}
       - name: Start isolated local Supabase
         shell: bash
         run: |
           set -o pipefail
-          supabase start --debug --exclude studio,imgproxy,inbucket,logflare,vector 2>&1 | tee "$RUNNER_TEMP/barberos-supabase-start.log" || {
+          supabase start --debug --exclude studio,imgproxy,mailpit,logflare,vector,supavisor 2>&1 | tee "$RUNNER_TEMP/barberos-supabase-start.log" || {
             tail -n 120 "$RUNNER_TEMP/barberos-supabase-start.log"
             exit 1
           }
@@ -86,7 +94,7 @@ jobs:
       - name: Run transactional shop domain contracts
         shell: bash
         run: |
-          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          DB_CONTAINER="supabase_db_$BARBEROS_LOCAL_PROJECT_ID"
           test -n "$DB_CONTAINER"
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/shop_domain_phase1.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/shop_catalog_phase2.sql
@@ -104,7 +112,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep -E 'supabase_db_' | head -n1)"
+          DB_CONTAINER="supabase_db_$BARBEROS_LOCAL_PROJECT_ID"
           test -n "$DB_CONTAINER"
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/shop_order_concurrency_setup_phase4.sql
           set +e
