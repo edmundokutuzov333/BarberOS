@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { browserCors } from "../_shared/http.ts";
+import { replyMetadata } from "./reply.ts";
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -194,7 +195,9 @@ function b64utf8(s: string): string {
 function rawEmail(to: string, subject: string, body: string, extra: Record<string, string> = {}): string {
   const recipient = sender(to);
   if (!EMAIL_RE.test(recipient)) throw new AppError("GMAIL_INVALID_REQUEST", 400);
-  const safeSub = subject.replace(/[\r\n]+/g, " ").trim().slice(0, 200);
+  // Compose and reply metadata already bound the subject. Do not truncate again
+  // after adding Re:, which would change a 200-character conversation subject.
+  const safeSub = subject.replace(/[\r\n]+/g, " ").trim();
   const encodedSubject = /^[\x20-\x7e]*$/.test(safeSub) ? safeSub : "=?UTF-8?B?" + b64utf8(safeSub) + "?=";
   const text = b64utf8(body.replace(/\r\n/g, "\n").replace(/\r/g, "\n")).match(/.{1,76}/g)?.join("\r\n") ?? "";
   const raw = ["To: " + recipient, "Subject: " + encodedSubject,
@@ -207,7 +210,8 @@ async function readThread(admin: SupabaseClient, c: Conn, input: unknown) {
   if (!obj(response)) throw new AppError("GMAIL_PROVIDER_REQUEST_FAILED", 502);
   const t = response as Thread;
   const messages = (t.messages ?? []).map((m) => ({
-    id: m.id ?? "", from: header(m, "From"), to: header(m, "To"), cc: header(m, "Cc"),
+    id: m.id ?? "", from: header(m, "From"), to: header(m, "To"), cc: header(m, "Cc"), reply_to: header(m, "Reply-To"),
+    sent_by_owner: m.labelIds?.includes("SENT") ?? false,
     subject: header(m, "Subject"), date: header(m, "Date"), body: bodyText(m),
     message_id: header(m, "Message-ID"), references: header(m, "References"),
   }));
@@ -297,16 +301,11 @@ async function sendMail(admin: SupabaseClient, c: Conn, p: Record<string,unknown
   if (typeof p.thread_id === "string" && p.thread_id) {
     threadId = safeId(p.thread_id);
     const thread = await readThread(admin,c,threadId);
-    const messages = Array.isArray(thread.messages) ? thread.messages as Array<Record<string,unknown>> : [];
-    const last = [...messages].reverse().find((m) => sender(String(m.from ?? "")).toLowerCase() !== c.gmail_address.toLowerCase());
-    if (!last) throw new AppError("GMAIL_PROVIDER_REQUEST_FAILED",502);
-    to = sender(String(last.from ?? ""));
-    subject = String(last.subject ?? "").replace(/[\r\n]+/g," ").slice(0,200).trim();
-    const msgId = String(last.message_id ?? "").trim(), refs = String(last.references ?? "").trim();
-    if (msgId) extra["In-Reply-To"] = msgId;
-    const joined = [refs,msgId].filter(Boolean).join(" ").slice(0,3000);
-    if (joined) extra.References = joined;
-    if (!subject.toLowerCase().startsWith("re:")) subject = "Re: " + subject;
+    const metadata = replyMetadata(thread.messages, c.gmail_address);
+    if (!metadata) throw new AppError("GMAIL_INVALID_REQUEST",400);
+    to = metadata.to;
+    subject = metadata.subject;
+    Object.assign(extra, metadata.headers);
   } else {
     to = typeof p.to === "string" ? p.to.trim() : "";
     subject = typeof p.subject === "string" ? p.subject.replace(/[\r\n]+/g," ").trim().slice(0,200) : "";

@@ -5,6 +5,7 @@ import path from "node:path";
 const root = process.cwd();
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const edge = read("../supabase/functions/gmail-integration/index.ts");
+const reply = read("../supabase/functions/gmail-integration/reply.ts");
 const migration = read("../supabase/migrations/20261021130000_gmail_workspace_integration.sql");
 const api = read("src/features/gmail/api.ts");
 const page = read("src/pages/app/Comunicacoes.tsx");
@@ -54,8 +55,9 @@ const tests = [
   ["Gmail can list and read conversations and supports reply headers", () => {
     assert.match(edge, /threads\?/);
     assert.match(edge, /threads\/" \+ encodeURIComponent/);
-    assert.match(edge, /In-Reply-To/);
-    assert.match(edge, /References/);
+    assert.match(edge, /replyMetadata\(thread.messages,\s*c.gmail_address\)/);
+    assert.match(reply, /In-Reply-To/);
+    assert.match(reply, /References/);
     assert.match(edge, /gmail\.send/);
     assert.match(edge, /searchParams\.get\("scope"\)/);
   }],

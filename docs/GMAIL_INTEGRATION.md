@@ -2,6 +2,12 @@
 
 ## Estado
 
+Em 2026-11-23, produção concluiu OAuth real com a conta de teste aprovada, guardou
+tokens cifrados e passou listagem, leitura e envio pelo frontend. O projecto Google
+continua em modo de testes. Ver evidências e limitações em
+`EMAIL_INTEGRATION_ACCEPTANCE_2026-11-23.md`; isto não aprova acesso público antes
+da verificação Google e da certificação dos restantes fluxos.
+
 A interface e o código de integração estão versionados no repositório. A integração não fica operacional até serem configuradas as credenciais OAuth do Google, os segredos da Edge Function, a migration e a publicação controlada no ambiente-alvo. A ausência de configuração deve mostrar o estado «Gmail ainda não configurado», nunca uma ligação simulada.
 
 ## Funcionalidades implementadas no código

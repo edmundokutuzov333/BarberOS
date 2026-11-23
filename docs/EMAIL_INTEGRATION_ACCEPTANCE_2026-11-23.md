@@ -73,3 +73,42 @@ failure and failure-state persistence errors. All pass. The runtime typecheck
 passes with `@supabase/server` pinned to the verified version 1.9.2. The first
 typecheck exposed nullable fallback URLs; the extraction now preserves their
 existing null semantics rather than inventing a fallback URL.
+
+## Dispatcher rollout and authentication acceptance
+
+Source commit `7a342d1` passed all four triggered workflows. The dispatcher is
+active in staging version 1 and production version 7 with identical bundle SHA-256
+`abf4d31ab33055a48a745dde3baa8c28b7e4bdef58dd988a68f510fa95c0c6d7`.
+Both reject an unauthenticated scheduler request with 401.
+
+The production version sent a new controlled email in one attempt and persisted
+its delivered event. In the same batch, an unsupported template became `failed`
+after one attempt, with no provider message ID; it did not remain `processing`.
+This verifies the repaired transition against the real scheduler and database.
+
+Supabase Auth previously had custom SMTP disabled, Site URL
+`http://localhost:3000` and no allowed redirect URLs. It now uses encrypted TLS
+SMTP on port 465 with an independently rotatable, domain-restricted Resend key.
+The Site URL is the deployed frontend; only the exact app, communications and
+password-reset paths were added. An existing approved owner requested a magic
+link successfully. Resend reports delivery, and following the validated link from
+the provider's own email preview established a real session at `/app/comunicacoes`.
+The Gmail web search did not independently confirm inbox placement of that Auth
+email; SMTP acceptance is not an inbox-placement certification.
+
+## Gmail live acceptance and discovered regressions
+
+The real frontend connect button completed the Google consent and backend callback
+for the approved owner. The Gmail page displays the connected account. SQL confirms
+encrypted access/refresh tokens, a current expiry and the granted scopes. A
+controlled notification conversation was listed and read. A self-addressed Gmail
+message was sent and read back with its Unicode subject and body preserved.
+
+Two concrete regressions were reproduced: sending under an unrelated search resets
+the selected conversation to an older visible row; replying to a self-addressed
+conversation returns a false provider failure because the old resolver requires a
+non-owner sender. The new reply resolver follows the latest message, respects
+Reply-To, recognizes outgoing aliases using Gmail SENT metadata, preserves threading
+headers and supports self-addressed replies. Nine Deno cases cover these boundaries.
+Frontend selection repair, post-deployment reply, refresh and revocation acceptance
+remain pending at this checkpoint. Google remains in testing mode.

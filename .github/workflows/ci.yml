@@ -60,6 +60,8 @@ jobs:
         run: deno check --node-modules-dir=auto supabase/functions/gmail-integration/index.ts supabase/functions/resend-webhook/index.ts supabase/functions/notify-dispatch/index.ts
       - name: Test notification delivery failure transitions
         run: deno test supabase/functions/notify-dispatch/delivery_test.ts
+      - name: Test Gmail reply recipients and conversation headers
+        run: deno test supabase/functions/gmail-integration/reply_test.ts
 
   database:
     name: Supabase migrations and security contracts
