@@ -207,7 +207,9 @@ jobs:
           exit 1
       - name: Install Playwright runner
         working-directory: frontend
-        run: npm install --no-save --package-lock=false --legacy-peer-deps @playwright/test@1.56.1
+        run: |
+          corepack enable
+          corepack yarn install --frozen-lockfile
       - name: Install Chromium
         working-directory: frontend
         run: npx playwright install --with-deps chromium
