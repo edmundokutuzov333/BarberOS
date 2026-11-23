@@ -66,13 +66,18 @@ Para email, o adapter usa Resend e uma chave de idempotencia baseada no UUID da 
 
 ## Fallback
 
-Cada mensagem elegivel gera um URL `wa.me` com a mensagem pre-preenchida. Em falha de email, o dispatcher tenta WhatsApp automaticamente quando o provider esta configurado. Em falha sem entrega, o URL fica guardado para a equipa enviar manualmente pela Area de Notificacoes.
+Cada mensagem elegivel gera um URL `wa.me` com a mensagem pre-preenchida. Em falha sem entrega, o URL fica guardado para a equipa enviar manualmente pela Area de Notificacoes. O dispatcher envia apenas pelo canal associado à notificação; não muda de fornecedor automaticamente.
 
 ## Retry
 
 Maximo de cinco tentativas. Backoff: 30s, 2m, 10m, 30m e 2h.
 
 Trabalhos presos em `processing` ha mais de 10 minutos sao recuperados pelo proprio dispatcher.
+
+Falhas permanentes de configuração, destinatário, template ou dados inválidos são
+registadas como `failed`. Erros de rede, HTTP 408/429 e falhas temporárias do
+fornecedor podem voltar à fila. A preparação da mensagem é protegida pelo mesmo
+tratamento de falhas da entrega, evitando deixar templates inválidos em `processing`.
 
 Cron e orquestracao temporal ficam na FASE 15.
 

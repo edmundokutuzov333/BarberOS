@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { withSupabase } from "npm:@supabase/server";
+import { withSupabase } from "npm:@supabase/server@1.9.2";
+import { deliverNotification, deliveryErrorMessage as safeError } from "./delivery.ts";
 
 type DispatchJob = {
   id: string;
@@ -62,11 +63,6 @@ const MAX_ERROR = 700;
 function env(name: string): string | undefined {
   const value = Deno.env.get(name)?.trim();
   return value || undefined;
-}
-
-function safeError(error: unknown): string {
-  if (error instanceof Error) return error.message.slice(0, MAX_ERROR);
-  return String(error ?? "notification_delivery_failed").slice(0, MAX_ERROR);
 }
 
 function publicUrl(): string {
@@ -352,16 +348,7 @@ async function sendEmail(job: DispatchJob, message: string): Promise<string> {
   }
 }
 
-function retryable(error: unknown): boolean {
-  const message = safeError(error);
-  if (message.includes("NOT_CONFIGURED") || message.includes("RECIPIENT_INVALID")) return false;
-  const status = typeof error === "object" && error && "status" in error
-    ? Number((error as { status?: unknown }).status)
-    : NaN;
-  return Number.isNaN(status) || status === 408 || status === 429 || status >= 500;
-}
-
-async function rpc(client: RpcClient, name: string, args: Record<string, unknown>): Promise<any> {
+async function rpc(client: RpcClient, name: string, args: Record<string, unknown>): Promise<unknown> {
   const result = await client.rpc(name, args);
   if (result.error) throw new Error("RPC_" + name + ":" + result.error.message);
   return result.data;
@@ -376,29 +363,34 @@ async function markSent(client: RpcClient, job: DispatchJob, providerId: string,
 }
 
 async function dispatchOne(client: RpcClient, job: DispatchJob): Promise<Record<string, unknown>> {
-  const d = dataFor(job);
-  const message = messageFor(job.template_key, d, job);
-  const fallback = fallbackUrl(job, message);
-
-  try {
-    if (job.channel === "whatsapp") {
-      const id = await sendWhatsApp(job, message);
-      await markSent(client, job, id, "whatsapp");
-      return { id: job.id, status: "sent", provider: "whatsapp", fallback_url: fallback };
-    }
-
-    const id = await sendEmail(job, message);
-    await markSent(client, job, id, "email");
-    return { id: job.id, status: "sent", provider: "email", fallback_url: fallback };
-  } catch (primary) {
-    const row = await rpc(client, "mark_notification_failure", {
-      p_id: job.id,
-      p_error: safeError(primary),
-      p_retryable: retryable(primary),
-      p_fallback_url: fallback,
-    });
-    return { id: job.id, status: row?.[0]?.status === "queued" ? "retrying" : "failed", fallback_url: fallback };
-  }
+  return deliverNotification(job, {
+    prepare(current) {
+      const message = messageFor(current.template_key, dataFor(current), current);
+      return { message, fallbackUrl: fallbackUrl(current, message) };
+    },
+    async send(current, message) {
+      return current.channel === "whatsapp"
+        ? { provider: "whatsapp", providerMessageId: await sendWhatsApp(current, message) }
+        : { provider: "email", providerMessageId: await sendEmail(current, message) };
+    },
+    async markSent(current, delivery) {
+      await markSent(client, current, delivery.providerMessageId, delivery.provider);
+    },
+    async markFailure(current, failure) {
+      const rows = await rpc(client, "mark_notification_failure", {
+        p_id: current.id,
+        p_error: failure.message,
+        p_retryable: failure.retryable,
+        p_fallback_url: failure.fallbackUrl,
+      });
+      const row: unknown = Array.isArray(rows) ? rows[0] : null;
+      if (!row || typeof row !== "object" || !("status" in row) ||
+        (row.status !== "queued" && row.status !== "failed")) {
+        throw new Error("NOTIFICATION_FAILURE_EMPTY_RESPONSE");
+      }
+      return row.status;
+    },
+  });
 }
 
 export default {
