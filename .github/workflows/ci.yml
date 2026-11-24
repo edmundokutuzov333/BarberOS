@@ -49,6 +49,7 @@ jobs:
       - run: node --test scripts/migration-archive.test.mjs
       - run: node --test scripts/compare-schema-manifests.test.mjs
       - run: node --test scripts/prepare-isolated-supabase.test.mjs
+      - run: node --test scripts/rehearse-local-restore.test.mjs
       - run: node --test scripts/audit-supabase-migration-history.test.mjs
       - name: Audit captured migration history without altering remote state
         run: node scripts/audit-supabase-migration-history.mjs --report-only

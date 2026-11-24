@@ -26,18 +26,36 @@ some staging token-management bodies still differ from production.
 
 ## Current schema scope
 
-Production has 39 public tables and staging 38; every one has RLS enabled. The
+Production has 39 public tables and staging 39; every one has RLS enabled. The
 fresh local chain has 47 public tables. Production has platform access events
-and support tickets absent from staging; staging has platform settings absent
+and support tickets previously absent from staging; platform access events now
+exist in both. Support tickets remain absent from staging, which has platform settings absent
 from production. Eight prototype-foundation tables in the source chain are absent
 from production. Counts do not establish schema parity, and RLS presence alone does
 not establish correct authorization. These differences still need explicit intent,
 contract tests and reviewed forward migrations.
 
-The current history auditor reports 38 unresolved source dispositions (six in
-production and 32 in staging), zero unmapped remote migration records. A source
+The current history auditor reports 36 unresolved source dispositions (six in
+production and 30 in staging), zero unmapped remote migration records. A source
 mapping is not permission to replay older SQL: later tenant hardening, notification
 semantics and data already owned by shops must be preserved.
+
+## Staging prerequisites applied on 2026-11-24
+
+After the encrypted public-table capture
+`staging-20261124-before-profile-flag.encrypted.json` (plaintext package SHA-256
+`9f6038093d3a84f58e388c086ceaab388e5bcd8abf2d15f9d3004348f71eac5b`),
+two existing source migrations were applied unchanged:
+
+| Source | Actual server version | Name |
+| --- | --- | --- |
+| `20261020062902_force_password_change.sql` | `20261123234032` | `force_password_change` |
+| `20261020062637_platform_access_audit.sql` | `20261123234200` | `platform_access_audit` |
+
+The live history contains 122 staging records. The new flag is non-null/default
+false with zero accounts awaiting rotation; the audit table has RLS and denies
+browser SELECT. These prerequisites do not install the pending SQL authorization
+candidate, reporting RPCs or the administrative Edge Function.
 
 ## Current security advisors
 

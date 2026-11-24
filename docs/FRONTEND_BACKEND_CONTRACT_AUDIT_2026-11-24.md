@@ -63,7 +63,7 @@ collection to continue; it does not turn staging green.
 
 Reconcile stage reporting, administration, password-change prerequisites and their
 policies from reviewed source/production contracts; test each tenant and admin
-boundary before deploying the corresponding functions. Continue the 38 unresolved
+boundary before deploying the corresponding functions. Continue the 36 unresolved
 historical source dispositions and restore acceptance. Replace remaining casts in
 critical commerce/admin flows with typed contracts after schema intent is settled.
 No phase is declared complete by this inventory alone.

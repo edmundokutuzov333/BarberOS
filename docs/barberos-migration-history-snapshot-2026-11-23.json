@@ -740,7 +740,7 @@
     },
     "staging": {
       "ref": "asikuyxaapcmayptimxi",
-      "migration_count": 120,
+      "migration_count": 122,
       "migrations": [
         {
           "version": "20261019132753",
@@ -1221,6 +1221,14 @@
         {
           "version": "20261123124407",
           "name": "reconcile_operation_incidents"
+        },
+        {
+          "version": "20261123234032",
+          "name": "force_password_change"
+        },
+        {
+          "version": "20261123234200",
+          "name": "platform_access_audit"
         }
       ]
     }
@@ -1373,5 +1381,6 @@
         "evidence": "Current catalog verifies every matching *_by_token RPC and all five explicitly named waitlist/payment RPCs deny anon/authenticated and grant service_role. token_gateway_privilege_audit.sql passes in isolated, staging and production on 2026-11-23. Production history includes 20261021063049 phase27_token_rpc_gateway_lockdown and 20261026100016 token_rpc_lockdown_reconciliation; no historical replay or grant change was performed."
       }
     }
-  }
+  },
+  "last_refreshed_on": "2026-11-24"
 }

@@ -4,10 +4,16 @@ import { AuthCard, FormError } from './Entrar';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/lib/auth';
+import { AuthProvider, useAuth } from '@/lib/auth';
 import { humanError } from '@/lib/utils';
 
 export default function AlterarPalavraPasse() {
+  // This recovery route is outside the private app layout. It needs its own
+  // session/profile boundary, without depending on tenant membership queries.
+  return <AuthProvider><PasswordChangeForm /></AuthProvider>;
+}
+
+function PasswordChangeForm() {
   const { user, profile, loading } = useAuth();
   const location = useLocation();
   const [password, setPassword] = useState('');

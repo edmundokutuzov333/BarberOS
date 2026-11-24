@@ -46,6 +46,29 @@ The SQL remains outside the migration chain under `supabase/reconciliation` whil
 historical-source reconciliation is frozen. CI clearly labels and tests this
 candidate separately from resetting the published chain. It has not been applied
 to either cloud database; the production SQL exposure is still an open release
-blocker. The HTTP code is independently deployable against production's existing
-flag column; its deployment and live denial/healthy-account acceptance must be
-recorded before claiming that boundary complete.
+blocker.
+
+HTTP deployment from `315a735d013e412d263bda9bdd97d593640443a8` is verified:
+Gmail production v8/staging v4 share bundle
+`72335aaba8998203450c9dfbb4bd28e3989ff403fd6af400d10b8c891a75d244`;
+credential management production v9 has bundle
+`d95ad9aac719dbb12191efccd5bde4e7788f84c3e4a2cb4ba0935eccd2768c3c`.
+With the authorized owner's rotation flag temporarily enabled, actual signed-in
+requests to both functions returned 403 `PASSWORD_CHANGE_REQUIRED`. A controlled
+OAuth callback returned 302 to the official application with reason
+`password_change_required`, before code exchange. The original flag was restored
+to false in a finally block and the controlled OAuth state removed. No password
+was submitted or changed. Baseline Gmail status succeeds; this regular owner is
+correctly denied platform-admin operations.
+
+The published Gmail UI hides inbox/thread data and shows its recovery link under
+the same temporary flag. Following that link exposed another real defect: the
+recovery route was outside PrivateProviders and thus never obtained AuthContext.
+It displayed `A verificar a conta…` indefinitely although a direct profile request
+returned 200 with the authoritative flag. The route now supplies its own
+AuthProvider, without tenant queries. Public-page provider promotion and moving
+recovery under the entire tenant layout were rejected because they respectively
+increase public bootstrap work and couple account recovery to shop availability.
+Real-router browser regressions cover entry, missing session, both completion
+paths, backend failure/retry and validation. Production acceptance of this latest
+route correction must be recorded after deployment.

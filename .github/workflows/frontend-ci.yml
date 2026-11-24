@@ -66,6 +66,9 @@ jobs:
       - name: Browser smoke and serious/critical accessibility tests (desktop and mobile)
         run: corepack yarn test:e2e:smoke
 
+      - name: Real recovery route, session and password-completion regressions
+        run: corepack yarn playwright test tests/e2e/password-recovery.spec.mjs
+
       - name: Gmail browser recovery, tenant isolation and accessibility regressions
         run: corepack yarn test:e2e:gmail
 

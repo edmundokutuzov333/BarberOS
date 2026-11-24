@@ -47,6 +47,34 @@ decryption was verified byte-for-byte. Plaintext package SHA-256:
 Receipts and before/after manifests are retained alongside the encrypted package.
 No backup decryption key or database encryption key is stored in Git.
 
+## Independent restore from the encrypted package
+
+The committed `scripts/rehearse-local-restore.mjs` repeats the full procedure from
+the encrypted archive and expected manifests without consulting the original
+source database. It pins image digest
+`sha256:965e2dfb5a23a0d6541b6106541e777b303656ebabd4e878746b189d550c0a66`.
+A second fresh target, `barberos_restore_package_20261124`, passed exact schema,
+70 rowset hashes and three Vault authentication checks. Five automated tests cover
+target naming, refusal of remote Docker, ownership/digest isolation, authenticated
+decryption and tampering. Existing targets require deliberate `--resume` and must
+have matching package ownership labels and network isolation.
+
+```bash
+DOCKER_HOST=unix:///Users/edmundokutuzov/.colima/barberos/docker.sock \
+node scripts/rehearse-local-restore.mjs \
+  --archive '/Volumes/ADATA SC740/BarberOS/backups/local-foundation-20261124.encrypted.json' \
+  --key /Users/edmundokutuzov/.codex/private-backups/barberos/local-foundation-20261124.key \
+  --manifest '/Volumes/ADATA SC740/BarberOS/backups/local-foundation-20261124.source-manifest.json' \
+  --rowsets '/Volumes/ADATA SC740/BarberOS/backups/local-foundation-20261124.rowsets.json' \
+  --target barberos_restore_new_rehearsal \
+  --output /tmp/barberos-restore-receipt.json
+```
+
+Use an unused target name. The script refuses cloud/remote Docker hosts, restores
+only its disposable target and removes its own plaintext dump after verification.
+It leaves the verified target and private diagnostic log for inspection. Stop or
+remove only that explicitly named rehearsal target when no longer needed.
+
 ## Limits
 
 This proves local restore mechanics and exposed real missing prerequisites. It
