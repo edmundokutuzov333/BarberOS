@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { supabase } from '@/lib/supabase';
+import type { PaymentSimulatorRpc } from './simulator.database.generated';
+import type { Json } from '@/lib/database.types';
 
 export const purposes = { deposit: 'Sinal de marcação', service: 'Serviço', product: 'Produto da loja', subscription: 'Subscrição BarberOS' } as const;
 export const scenarios = { success: 'Pagamento confirmado', insufficient_funds: 'Saldo insuficiente', cancelled: 'Cancelado pelo cliente', invalid_number: 'Número inválido', pending: 'Pendente e confirmado depois', timeout: 'Timeout e reconciliação', duplicate_callback: 'Callback duplicado', late_success: 'Pagamento após expiração', provider_error: 'Falha da operadora' } as const;
@@ -28,7 +30,7 @@ export type Command =
 export const simulatorVisible = import.meta.env.VITE_PAYMENT_SIMULATOR_ENABLED === 'true' ||
   /^https:\/\/asikuyxaapcmayptimxi\.supabase\.co\/?$/.test(String(import.meta.env.VITE_SUPABASE_URL ?? ''));
 
-async function invoke<T>(action:string,payload:object,schema:z.ZodType<T>):Promise<T>{
+async function invoke<T>(action:PaymentSimulatorRpc['Args']['p_action'],payload:Json,schema:z.ZodType<T>):Promise<T>{
   const {data,error}=await supabase.functions.invoke('payment-simulator',{body:{action,payload}});
   if(error){
     const context=(error as {context?:Response}).context;
@@ -36,9 +38,11 @@ async function invoke<T>(action:string,payload:object,schema:z.ZodType<T>):Promi
     if(context){try{const value:unknown=await context.clone().json(); const parsed=z.object({error:z.string()}).safeParse(value); if(parsed.success)message=parsed.data.error;}catch{/* retain safe message */}}
     throw new Error(message);
   }
-  const parsed=z.object({ok:z.literal(true),data:schema}).safeParse(data);
+  const envelope=z.object({ok:z.literal(true),data:z.unknown()}).safeParse(data);
+  if(!envelope.success)throw new Error('SIM_INVALID_RESPONSE');
+  const parsed=schema.safeParse(envelope.data.data);
   if(!parsed.success)throw new Error('SIM_INVALID_RESPONSE');
-  return parsed.data.data;
+  return parsed.data;
 }
 export const simulatorAvailability=()=>invoke('availability',{},availabilitySchema);
 export const listSimulations=()=>invoke('list',{},listSchema);

@@ -4,6 +4,7 @@ import { FlaskConical } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/States';
 import { fmt, formatMT } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
 import { amountToMinor, executeSimulation, listSimulations, purposes, scenarios, simulationError, simulatorAvailability, type Action, type Command, type Purpose, type Run, type Scenario } from './simulator-api';
 
 const states={pending:'Pendente',paid:'Pago (teste)',failed:'Falhado',refunded:'Reembolsado (teste)'};
@@ -12,18 +13,19 @@ const eventLabels={create:'Pedido criado',confirm:'Resposta do simulador',reconc
 const outcomeLabels:Record<string,string>={REQUESTED:'Pedido criado',CONFIRMED:'Confirmação recebida',INSUFFICIENT_FUNDS:'Saldo insuficiente',CANCELLED:'Cancelado pelo cliente',INVALID_NUMBER:'Número inválido',PENDING:'A aguardar confirmação',TIMEOUT:'Tempo de resposta excedido',PROVIDER_ERROR:'Falha de comunicação',PROVIDER_REJECTED:'Operadora rejeitou a cobrança',RECONCILED:'Confirmado por reconciliação',LATE_SUCCESS:'Confirmação após expiração',REFUNDED:'Reembolso concluído',DUPLICATE_IGNORED:'Evento duplicado ignorado'};
 export default function PaymentSimulator(){
   const [open,setOpen]=useState(false);
+  const { user }=useAuth();
   return <Panel className="space-y-4">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="min-w-0"><div className="flex items-center gap-2"><FlaskConical size={18}/><h2 className="t-card text-ink-hi">BarberOS Payment Simulator</h2></div><p className="t-body text-ink-mid mt-1">Laboratório M-Pesa · sem dinheiro real · separado dos pagamentos operacionais</p></div>
       <Button variant="secondary" onClick={()=>setOpen(v=>!v)} aria-expanded={open}>{open?'Fechar laboratório':'Abrir laboratório'}</Button>
     </div>
-    {open&&<SimulatorWorkspace/>}
+    {open&&user&&<SimulatorWorkspace key={user.id} actor={user.id}/>}
   </Panel>;
 }
-function SimulatorWorkspace(){
+function SimulatorWorkspace({actor}:{actor:string}){
   const qc=useQueryClient();
-  const availability=useQuery({queryKey:['payment-simulator','availability'],queryFn:simulatorAvailability,retry:false});
-  const history=useQuery({queryKey:['payment-simulator','list'],queryFn:listSimulations,enabled:availability.data?.enabled===true,retry:false});
+  const availability=useQuery({queryKey:['payment-simulator',actor,'availability'],queryFn:simulatorAvailability,retry:false});
+  const history=useQuery({queryKey:['payment-simulator',actor,'list'],queryFn:listSimulations,enabled:availability.data?.enabled===true,retry:false});
   const [shop,setShop]=useState('');
   const [purpose,setPurpose]=useState<Purpose>('deposit');
   const [scenario,setScenario]=useState<Scenario>('success');
@@ -34,7 +36,7 @@ function SimulatorWorkspace(){
   const [retryCommand,setRetryCommand]=useState<Command|null>(null);
   const locked=useRef(false);
   const mutate=useMutation({mutationFn:executeSimulation,retry:false,
-    onSuccess:(run)=>{setSelected(run.id);setLatest(run);setRetryCommand(null);setMessage('');qc.setQueryData<Awaited<ReturnType<typeof listSimulations>>>(['payment-simulator','list'],old=>old?{...old,runs:[run,...old.runs.filter(x=>x.id!==run.id)].slice(0,25)}:old);void qc.invalidateQueries({queryKey:['payment-simulator','list']});},
+    onSuccess:(run)=>{setSelected(run.id);setLatest(run);setRetryCommand(null);setMessage('');qc.setQueryData<Awaited<ReturnType<typeof listSimulations>>>(['payment-simulator',actor,'list'],old=>old?{...old,runs:[run,...old.runs.filter(x=>x.id!==run.id)].slice(0,25)}:old);void qc.invalidateQueries({queryKey:['payment-simulator',actor,'list']});},
     onError:(error,command)=>{setMessage(simulationError(error));setRetryCommand(command);},
     onSettled:()=>{locked.current=false;},
   });

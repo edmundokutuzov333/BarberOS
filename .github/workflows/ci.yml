@@ -187,3 +187,18 @@ jobs:
             exit 1
           fi
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/shop_order_concurrency_assert_phase4.sql
+
+  payment-simulator-browser:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: corepack enable
+      - run: corepack yarn install --frozen-lockfile
+      - run: corepack yarn playwright install --with-deps chromium
+      - run: corepack yarn test:e2e:payment-simulator
