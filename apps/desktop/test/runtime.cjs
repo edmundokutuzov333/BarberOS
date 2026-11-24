@@ -46,7 +46,11 @@ const fs = require('node:fs/promises');
     const day = page.getByRole('listbox', { name: 'Dias disponíveis' }).getByRole('option').filter({ hasText: /\d+ vagas?/ }).first();
     await day.click({ timeout: 60000 });
     await page.getByRole('listbox', { name: 'Horas disponíveis' }).getByRole('option').first().click({ timeout: 60000 });
-    await page.getByText('Clubman', { exact: false }).first().waitFor({ timeout: 60000 });
+    await page.getByTestId('public-shop-product-' + catalog.products[0].id).waitFor({ timeout: 60000 });
+    assert.equal(await page.locator('[data-testid^="public-shop-product-"]').count(), catalog.products.length);
+    const photo = page.getByTestId('public-shop-product-' + catalog.products[0].id).locator('img').first();
+    await photo.waitFor();
+    assert.equal(await photo.evaluate(image => image.complete && image.naturalWidth > 0), true);
     await page.screenshot({ path: path.join(output, '04-booking-real-catalog.png'), fullPage: true });
     await page.context().route('https://barber-os-orpin.vercel.app/**', route => route.abort('internetdisconnected'));
     await app.evaluate(({ BrowserWindow }) => { BrowserWindow.getAllWindows()[0].webContents.loadURL('https://barber-os-orpin.vercel.app/').catch(() => {}); });
@@ -59,5 +63,9 @@ const fs = require('node:fs/promises');
     assert.deepEqual(failures, [], 'No renderer exceptions');
     await fs.writeFile(path.join(output, 'result.json'), JSON.stringify({ passed: true, platform: process.platform, testedAt: new Date().toISOString(), checks: ['packaged-launch', 'production-home', 'sandbox-isolation', 'backend-login-rejection', 'real-shop-catalog', 'booking-route', 'offline-recovery'], rendererErrors: failures }, null, 2));
     console.log('PASS | packaged BarberOS production runtime, isolation and offline recovery');
+  } catch (error) {
+    const page = app.windows()[0];
+    if (page) { await page.screenshot({ path: path.join(output, 'failure.png'), timeout: 10000 }).catch(() => {}); await fs.writeFile(path.join(output, 'failure.txt'), (await page.locator('body').innerText().catch(() => 'Page unavailable'))); }
+    throw error;
   } finally { await app.close(); await fs.rm(profile, { recursive: true, force: true }); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
