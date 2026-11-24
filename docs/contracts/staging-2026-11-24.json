@@ -1414,6 +1414,22 @@
       "required_argument_count": 0
     },
     {
+      "name": "publish_shop_catalog_product",
+      "returns": "jsonb",
+      "anon_execute": false,
+      "definition_md5": "8406c101ebe59ced2a6e43732c6ded12",
+      "input_arguments": [
+        "p_barbershop_id",
+        "p_product_id",
+        "p_publish",
+        "p_expected_updated_at",
+        "p_verification_note"
+      ],
+      "identity_arguments": "p_barbershop_id uuid, p_product_id uuid, p_publish boolean, p_expected_updated_at timestamp with time zone, p_verification_note text",
+      "authenticated_execute": true,
+      "required_argument_count": 4
+    },
+    {
       "name": "rate_limit_consume",
       "returns": "TABLE(allowed boolean, remaining integer, retry_after_seconds integer)",
       "anon_execute": false,
@@ -1662,6 +1678,21 @@
       "required_argument_count": 2
     },
     {
+      "name": "save_shop_catalog_product",
+      "returns": "jsonb",
+      "anon_execute": false,
+      "definition_md5": "40d0b9e87793379b03d4c3a998040f11",
+      "input_arguments": [
+        "p_barbershop_id",
+        "p_product_id",
+        "p_payload",
+        "p_expected_updated_at"
+      ],
+      "identity_arguments": "p_barbershop_id uuid, p_product_id uuid, p_payload jsonb, p_expected_updated_at timestamp with time zone",
+      "authenticated_execute": true,
+      "required_argument_count": 3
+    },
+    {
       "name": "scheduler_secret_valid",
       "returns": "boolean",
       "anon_execute": false,
@@ -1891,5 +1922,6 @@
       "verify_jwt": false,
       "bundle_sha256": "8cd979407ecc274b2fdd082816281598e5b58b22a9f0f651a6314a0da4f17ce1"
     }
-  ]
+  ],
+  "catalog_capture": "2026-11-24, after transactional catalog migration; live PostgreSQL metadata"
 }
