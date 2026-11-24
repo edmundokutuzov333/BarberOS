@@ -43,7 +43,8 @@ has not been certified. Metadata-only cloud captures are not data backups.
 History-name closure does not establish complete schema equivalence or production
 readiness. Retired prototype objects remain in the fresh local chain; selected
 staging legacy overloads/triggers still require semantic review. Membership UI
-removal still needs its RPC correction. The static inventory does not validate
+removal has since been corrected and verified in the real production browser;
+see LIVE_TEAM_MUTATION_ACCEPTANCE_2026-11-24.md. The static inventory does not validate
 every payload, return value or permission. Staging integrations, Calendar, Google
 public OAuth verification and full end-to-end certification remain open.
 

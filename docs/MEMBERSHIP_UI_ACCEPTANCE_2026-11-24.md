@@ -66,3 +66,8 @@ form and its real directory with no error state. It initially served the older
 service-worker shell; after the new worker activated, reload served
 index-BSszT-EQ.js and the new contract was confirmed. This read acceptance did not
 remove a real staff member or test an external provider.
+
+The subsequent controlled production mutation also passed: cancel, scoped removal,
+audit cardinality, persistence after reload, guarded fixture cleanup and original
+tenant restoration. See LIVE_TEAM_MUTATION_ACCEPTANCE_2026-11-24.md. It used an
+isolated suspended QA tenant and a synthetic member, with no real staff removed.
