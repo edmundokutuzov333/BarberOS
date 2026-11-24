@@ -9,7 +9,9 @@ function api(endpoint) { return JSON.parse(execFileSync('gh', ['api', endpoint],
 function head() { return api(`repos/${repository}/commits/main`).sha; }
 function draft() {
   const pages = JSON.parse(execFileSync('gh', ['api', '--paginate', '--slurp', `repos/${repository}/releases?per_page=100`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }));
-  return pages.flat().find(value => value.tag_name === tag);
+  const matches = pages.flat().filter(value => value.tag_name === tag);
+  if (matches.length > 1) throw new Error('Ambiguous draft reservation; refuse to choose between duplicate release IDs');
+  return matches[0];
 }
 let reserved = draft();
 for (let attempt = 0; !reserved && attempt < 4; attempt++) {
@@ -18,17 +20,16 @@ for (let attempt = 0; !reserved && attempt < 4; attempt++) {
   try {
     // Reserve while this exact source is the default-branch head. GitHub's
     // contents-only token cannot create a release against older workflow files.
-    execFileSync('gh', ['release', 'create', tag, '--draft', '--target', source, '--title', `BarberOS ${version} — macOS, Windows e Android`, '--notes', `Native build pending. Immutable source main: ${source}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    reserved = JSON.parse(execFileSync('gh', ['api', '--method', 'POST', `repos/${repository}/releases`, '-f', `tag_name=${tag}`, '-f', `target_commitish=${source}`, '-F', 'draft=true', '-f', `name=BarberOS ${version} — macOS, Windows e Android`, '-f', `body=Native build pending. Immutable source main: ${source}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }));
   } catch (error) {
     reserved = draft();
     if (reserved) break;
     if (head() === source || !String(error.stderr).includes('403')) throw error;
     console.log('Main advanced during reservation; retrying a fresh source before any build starts.');
   }
-  reserved = draft();
 }
-if (!reserved?.draft || !/^[a-f0-9]{40}$/.test(reserved.target_commitish || '')) throw new Error('Missing immutable unpublished reservation; never overwrite a public version');
+if (!Number.isSafeInteger(reserved?.id) || !reserved?.draft || !/^[a-f0-9]{40}$/.test(reserved.target_commitish || '')) throw new Error('Missing immutable unpublished reservation; never overwrite a public version');
 const comparison = api(`repos/${repository}/compare/${reserved.target_commitish}...main`);
 if (!['identical', 'ahead'].includes(comparison.status)) throw new Error('Reserved source is no longer in main history');
-fs.appendFileSync(process.env.GITHUB_OUTPUT, `source_sha=${reserved.target_commitish}\n`);
+fs.appendFileSync(process.env.GITHUB_OUTPUT, `source_sha=${reserved.target_commitish}\nrelease_id=${reserved.id}\n`);
 console.log(`Reserved ${tag} from main ${reserved.target_commitish}; every platform must check out this same source.`);

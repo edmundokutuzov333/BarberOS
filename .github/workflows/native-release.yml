@@ -22,8 +22,11 @@ jobs:
       contents: write
     outputs:
       source_sha: ${{ steps.source.outputs.source_sha }}
+      release_id: ${{ steps.source.outputs.release_id }}
     steps:
       - uses: actions/checkout@v4
+      - name: Verify reservation consistency regressions
+        run: node --test scripts/native/tests/*.test.cjs
       - name: Reserve immutable main snapshot before platform builds
         id: source
         env:
@@ -174,5 +177,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           BARBEROS_SOURCE_COMMIT: ${{ needs.reserve.outputs.source_sha }}
+          BARBEROS_RELEASE_ID: ${{ needs.reserve.outputs.release_id }}
           NATIVE_VERSION: 1.0.${{ github.run_number }}
         run: node scripts/native/publish-release.cjs

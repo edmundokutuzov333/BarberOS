@@ -20,22 +20,29 @@ const notesFile = path.join(directory, 'release-notes.md');
 fs.writeFileSync(notesFile, `BarberOS ${version}\n\nSource main: ${sha}\n\nProduction: https://barber-os-orpin.vercel.app\n\nThe online interface follows production deployments from main. Native binary changes are versioned separately. macOS builds are ad-hoc signed test distributions, not Apple-notarized. Windows builds are test distributions without Authenticode signing. Android APK uses the stable release key linked to the production domain. The Android AAB is intended for future Play Console submission, not direct installation.\n\nChecks: desktop packaged production runtime on both macOS architectures and Windows; Android lint, release signature and live domain verification. See workflow artifacts for evidence.\n`);
 const tag = `native-v${version}`;
 const repository = process.env.GITHUB_REPOSITORY || 'edmundokutuzov333/BarberOS';
-function existingRelease() {
-  // GitHub's tag endpoint returns 404 for an unpublished draft. The authenticated
-  // release listing includes drafts and is therefore the source for recovery.
-  const pages = JSON.parse(execFileSync('gh', ['api', '--paginate', '--slurp', `repos/${repository}/releases?per_page=100`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }));
-  return pages.flat().find(value => value.tag_name === tag) || null;
-}
-let release = existingRelease();
-if (release && (!release.draft || release.target_commitish !== sha)) throw new Error('Release already published or source differs; published versions are immutable');
-if (!release) throw new Error('Reserved draft missing; refuse late creation against a moving default branch');
-// Cancellation or upload failures leave an unpublished draft, never a partially visible release.
-execFileSync('gh', ['release', 'upload', tag, ...assets, checksumFile, '--clobber'], { stdio: 'inherit' });
-release = existingRelease();
-if (!release) throw new Error('Uploaded draft could not be retrieved');
+const releaseId = process.env.BARBEROS_RELEASE_ID;
+if (!/^[1-9][0-9]*$/.test(releaseId || '')) throw new Error('Missing canonical reserved release ID');
+const endpoint = `repos/${repository}/releases/${releaseId}`;
+function api(args) { return JSON.parse(execFileSync('gh', ['api', ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })); }
+const release = api([endpoint]);
+if (!release.draft || release.tag_name !== tag || release.target_commitish !== sha) throw new Error('Reserved source/version differs or release is already public; never replace public assets');
 for (const file of [...assets, checksumFile]) {
-  const asset = release.assets.find(value => value.name === path.basename(file));
+  const name = path.basename(file);
   const digest = crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
-  if (!asset || asset.state !== 'uploaded' || asset.size !== fs.statSync(file).size || (asset.digest && asset.digest !== `sha256:${digest}`)) throw new Error(`Remote artifact verification failed: ${path.basename(file)}`);
+  const size = fs.statSync(file).size;
+  let uploaded = release.assets.find(value => value.name === name);
+  const matches = asset => asset && asset.state === 'uploaded' && asset.name === name && asset.size === size && asset.digest === `sha256:${digest}`;
+  if (uploaded && !matches(uploaded)) {
+    // Only this still-private, source-matched reservation can be repaired.
+    execFileSync('gh', ['api', '--method', 'DELETE', `repos/${repository}/releases/assets/${uploaded.id}`], { stdio: 'inherit' });
+    uploaded = null;
+  }
+  if (!uploaded) uploaded = api(['--method', 'POST', `https://uploads.github.com/repos/${repository}/releases/${releaseId}/assets?name=${encodeURIComponent(name)}`, '--header', 'Content-Type: application/octet-stream', '--input', file]);
+  // Use the authoritative mutation response, not an eventually consistent
+  // release listing. A missing observation must never repeat a successful write.
+  if (!matches(uploaded)) throw new Error(`Remote artifact verification failed: ${name}`);
+  console.log(`Verified ${name}`);
 }
-execFileSync('gh', ['release', 'edit', tag, '--notes-file', notesFile, '--draft=false', '--latest'], { stdio: 'inherit' });
+const published = api(['--method', 'PATCH', endpoint, '-F', 'draft=false', '-f', 'make_latest=true', '-f', `body=${fs.readFileSync(notesFile, 'utf8')}`]);
+if (published.id !== Number(releaseId) || published.draft || published.tag_name !== tag) throw new Error('Publication response differs from the verified reservation');
+console.log(`Published ${published.html_url} from ${sha}`);
