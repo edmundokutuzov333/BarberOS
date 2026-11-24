@@ -25,9 +25,9 @@ export function Modal({ open, onOpenChange, title, children, testId }: { open: b
               returnFocus.current.focus();
             }
           }}
-          className="!fixed inset-x-2 top-[max(.5rem,env(safe-area-inset-top))] bottom-[max(.5rem,env(safe-area-inset-bottom))] sm:inset-x-4 sm:top-4 sm:bottom-4 z-50 m-auto h-fit w-auto max-w-lg glass glass-2 p-4 sm:p-7 max-h-[calc(100dvh-max(.5rem,env(safe-area-inset-top))-max(.5rem,env(safe-area-inset-bottom)))] sm:max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain touch-pan-y outline-none"
+          className="barberos-modal glass glass-2 z-50 flex flex-col min-w-0 outline-none"
         >
-          <div className="flex items-start justify-between gap-4 mb-5">
+          <div className="flex shrink-0 items-start justify-between gap-4 p-4 sm:px-7 sm:pt-7 sm:pb-4">
             <Dialog.Title className="t-title">{title}</Dialog.Title>
             <Dialog.Close
               data-testid="modal-close"
@@ -37,7 +37,7 @@ export function Modal({ open, onOpenChange, title, children, testId }: { open: b
               <X size={18} aria-hidden />
             </Dialog.Close>
           </div>
-          {children}
+          <div data-testid="modal-scroll-body" className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 pb-4 sm:px-7 sm:pb-7">{children}</div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

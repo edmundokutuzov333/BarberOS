@@ -501,3 +501,22 @@ textarea.field{
 /* Avoid iOS input focus zoom and preserve flexible field widths on touch devices. */
 @media (pointer: coarse) { .field { font-size:16px; min-width:0; } }
 fieldset { min-inline-size:0; }
+
+/* Radix content is portalled to body. Bound the panel independently of its
+   intrinsic content; only the body scrolls, never the viewport or heading. */
+.barberos-modal {
+  position: fixed !important;
+  inset-inline: max(.5rem, env(safe-area-inset-left)) max(.5rem, env(safe-area-inset-right));
+  top: max(.5rem, env(safe-area-inset-top));
+  bottom: max(.5rem, env(safe-area-inset-bottom));
+  margin: auto;
+  width: auto;
+  max-width: 32rem;
+  height: fit-content;
+  max-height: calc(100dvh - max(.5rem, env(safe-area-inset-top)) - max(.5rem, env(safe-area-inset-bottom)));
+  overflow: hidden;
+}
+@media (min-width:640px) {
+  .barberos-modal { inset: 1rem; max-height: calc(100dvh - 2rem); }
+}
+.barberos-modal > [data-testid="modal-scroll-body"] { scroll-behavior: auto; }

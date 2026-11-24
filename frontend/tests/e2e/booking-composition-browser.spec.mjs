@@ -110,7 +110,12 @@ test('mobile owner edits category, add-ons and restricted secondary offers via a
  await expect(manual).toContainText('380 MT');
  await expect(manual.getByTestId('manual-booking-barber')).not.toContainText('Barbeiro Sem Complemento QA');
  await expect.poll(()=>manual.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
- await manual.getByTestId('manual-booking-slots').getByRole('button').first().click();
+ const body=manual.getByTestId('modal-scroll-body');
+ await expect.poll(()=>body.evaluate(el=>el.scrollHeight>el.clientHeight)).toBe(true);
+ await expect.poll(async()=>{const b=await manual.boundingBox();return !!b && b.y>=0 && b.y+b.height<=740;}).toBe(true);
+ const slot=manual.getByTestId('manual-booking-slots').getByRole('button').first();
+ await slot.click();
+ await expect(slot).toHaveAttribute('aria-pressed','true');
  await manual.getByTestId('manual-booking-name').fill('Cliente Manual QA');
  await manual.getByTestId('manual-booking-phone').fill('840000088');
  await manual.getByTestId('manual-booking-submit').click();

@@ -438,7 +438,7 @@ export default function ManualBookingModal({
                           type="button"
                           aria-pressed={start === slot.slot_start}
                           onClick={() => { setStart(slot.slot_start); setErrors((current) => ({ ...current, start: '' })); }}
-                          className={'h-10 rounded-2xl border text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft ' +
+                          className={'min-h-11 rounded-2xl border text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft ' +
                             (start === slot.slot_start ? 'border-accent-soft bg-accent-soft/15 text-ink-hi' : 'border-white/10 bg-white/5 text-ink-mid hover:bg-white/[.07]')}
                         >
                           {formatTime(slot.slot_start, timezone)}
