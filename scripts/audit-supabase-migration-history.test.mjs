@@ -14,6 +14,7 @@ test('already mapped migrations newer than the baseline are not reported as unre
     assert.ok(staging.new_local_migration_files_since_snapshot.includes(file));
     assert.ok(!staging.unreviewed_new_local_files_not_after_remote_head.includes(file),file);
   }
-  assert.equal(report.status,'NO_GO_UNRESOLVED_HISTORY_MAPPING');
-  assert.ok(report.unresolved_source_file_total>0,'Real unapplied sources must keep release blocked');
+  assert.equal(report.unresolved_total,report.unresolved_remote_total+report.unresolved_source_file_total+report.pending_forward_reconciliation_total);
+  if(report.unresolved_total>0) assert.match(report.status,/^NO_GO_/,'Unreviewed sources or pending forward deployment must keep release blocked');
+  else assert.equal(report.status,'HISTORY_NAME_MAPPING_COMPLETE');
 });

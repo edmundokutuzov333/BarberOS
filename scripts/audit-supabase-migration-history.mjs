@@ -105,7 +105,8 @@ function mapEnvironment(environment, project) {
   const mapped = [...output.values()];
   const unresolved = mapped.filter(x=>['unresolved_remote_history','ambiguous_duplicate_name','invalid_reviewed_resolution'].includes(x.status));
   const hasLocalReviewEvidence = file => localFiles.includes(file)
-    && validSourceReview(reviewedLocal[file], fs.readFileSync(path.join(migrationDir,file),'utf8'));
+    && validSourceReview(reviewedLocal[file], fs.readFileSync(path.join(migrationDir,file),'utf8'),
+      relative => fs.readFileSync(path.join(root,relative)));
   const sourceNotRepresented = snapshot.source_files.filter(file=>!mappedFiles.has(file) && !hasLocalReviewEvidence(file));
   const newlyAddedLocalFiles = localFiles.filter(file=>!snapshotFiles.has(file));
   const latestRemoteVersion = (project.migrations ?? []).map(item=>item.version).sort().at(-1) ?? '00000000000000';
@@ -122,6 +123,8 @@ function mapEnvironment(environment, project) {
     source_files_not_mapped_at_snapshot:sourceNotRepresented,
     source_file_count_not_mapped:sourceNotRepresented.length,
     invalid_local_source_reviews:Object.keys(reviewedLocal).filter(file=>!hasLocalReviewEvidence(file)),
+    reviewed_pending_reconciliations:Object.keys(reviewedLocal).filter(file=>
+      reviewedLocal[file].status==='reviewed_pending_forward' && hasLocalReviewEvidence(file)),
     new_local_migration_files_since_snapshot:newlyAddedLocalFiles,
     unreviewed_new_local_files_not_after_remote_head:unreviewedNewLocalBeforeRemoteHead,
     unresolved_source_file_count:sourceNotRepresented.length + unreviewedNewLocalBeforeRemoteHead.length,
@@ -132,7 +135,9 @@ function mapEnvironment(environment, project) {
 const results = Object.entries(snapshot.projects).map(([environment, project])=>mapEnvironment(environment,project));
 const unresolvedRemote = results.reduce((sum,result)=>sum+result.unresolved_count,0);
 const unresolvedSources = results.reduce((sum,result)=>sum+result.unresolved_source_file_count,0);
-const unresolved = unresolvedRemote + unresolvedSources;
+const pendingReconciliations = results.reduce((sum,result)=>sum+result.reviewed_pending_reconciliations.length,0);
+const historyReviewComplete = unresolvedRemote + unresolvedSources === 0;
+const unresolved = unresolvedRemote + unresolvedSources + pendingReconciliations;
 const output = {
   audit:'BarberOS remote migration-history name mapping',
   captured_on:snapshot.captured_on,
@@ -140,7 +145,10 @@ const output = {
   current_local_migration_count:localFiles.length,
   source_file_count_in_snapshot:snapshot.source_files.length,
   mode:strict ? 'strict' : reportOnly ? 'report_only' : 'summary',
-  status:unresolved ? 'NO_GO_UNRESOLVED_HISTORY_MAPPING' : 'HISTORY_NAME_MAPPING_COMPLETE',
+  status:!historyReviewComplete ? 'NO_GO_UNRESOLVED_HISTORY_MAPPING' : pendingReconciliations
+    ? 'NO_GO_PENDING_FORWARD_RECONCILIATION' : 'HISTORY_NAME_MAPPING_COMPLETE',
+  history_review_complete:historyReviewComplete,
+  pending_forward_reconciliation_total:pendingReconciliations,
   unresolved_remote_total:unresolvedRemote,
   unresolved_source_file_total:unresolvedSources,
   unresolved_total:unresolved,
@@ -153,6 +161,8 @@ const output = {
 };
 console.log(JSON.stringify(output,null,2));
 if (strict && unresolved > 0) {
-  console.error('Production release blocked: unresolved remote history entries or unreviewed legacy source files require source recovery or an evidence-backed, reviewed disposition.');
+  console.error(historyReviewComplete
+    ? 'Production release blocked: reviewed forward reconciliations still require cloud deployment and runtime acceptance.'
+    : 'Production release blocked: unresolved remote history entries or unreviewed legacy source files require source recovery or an evidence-backed, reviewed disposition.');
   process.exitCode = 1;
 }

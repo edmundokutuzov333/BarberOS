@@ -42,11 +42,19 @@ Eighteen desktop/mobile browser scenarios pass, including that recovery state.
 
 ## Deployment state
 
-The SQL remains outside the migration chain under `supabase/reconciliation` while
-historical-source reconciliation is frozen. CI clearly labels and tests this
-candidate separately from resetting the published chain. It has not been applied
-to either cloud database; the production SQL exposure is still an open release
-blocker.
+The final history review is complete and the reviewed components are now compiled
+into CLI-generated migration `20261124044009_reconcile_application_authorization.sql`.
+CI resets and tests that versioned chain, rather than patching it with a separate
+candidate. The cloud migration has not yet been applied; production SQL exposure
+remains an open release blocker. The exact source/component hashes and pending
+cloud dispositions are recorded in `FINAL_HISTORY_FORWARD_PLAN_2026-11-24.md`.
+
+Further review found that shop creation did not call a membership helper at all;
+it now explicitly checks authoritative account state, including missing profiles,
+and returns the same shop on an identical owner's retry. Profile editing uses
+column-specific grants for full_name/phone/avatar_url, preserving server-only
+control of rotation/admin flags. These additional cases pass in the independently
+restored isolated database.
 
 HTTP deployment from `315a735d013e412d263bda9bdd97d593640443a8` is verified:
 Gmail production v8/staging v4 share bundle

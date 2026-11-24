@@ -28,6 +28,13 @@ begin
   if not denied then raise exception 'FORCED_OWNER_DASHBOARD_ALLOWED'; end if;
   denied:=false;
   begin
+    perform public.create_barbershop('Blocked shop','rotation-blocked-'||replace(current_setting('barberos.test_shop'),'-',''),null,null);
+  exception when others then
+    if sqlerrm='PASSWORD_CHANGE_REQUIRED' then denied:=true; else raise; end if;
+  end;
+  if not denied then raise exception 'FORCED_OWNER_CREATED_SHOP'; end if;
+  denied:=false;
+  begin
     update public.profiles set password_change_required=false where id=auth.uid();
   exception when insufficient_privilege then denied:=true;
   end;
@@ -53,10 +60,14 @@ where id in(current_setting('barberos.test_owner')::uuid,current_setting('barber
 select set_config('request.jwt.claim.sub',current_setting('barberos.test_owner'),true);
 set local role authenticated;
 do $test$
+declare created uuid; replayed uuid; created_slug text:='rotation-created-'||replace(current_setting('barberos.test_shop'),'-','');
 begin
   if public.get_dashboard_snapshot(current_setting('barberos.test_shop')::uuid) is null then raise exception 'ACTIVE_OWNER_DASHBOARD_EMPTY'; end if;
   update public.profiles set full_name='Active owner' where id=auth.uid();
   if not found then raise exception 'ACTIVE_OWNER_PROFILE_UPDATE_MISSING'; end if;
+  created:=public.create_barbershop('Rotation creation contract',created_slug,null,null);
+  replayed:=public.create_barbershop('Rotation creation contract',created_slug,null,null);
+  if created is null or replayed is distinct from created then raise exception 'ACTIVE_OWNER_SHOP_CREATION_REPLAY_FAILED'; end if;
   begin
     update public.profiles set is_platform_admin=true where id=auth.uid();
     raise exception 'ACTIVE_OWNER_SELF_PROMOTION_ALLOWED';
@@ -83,6 +94,10 @@ begin
   begin perform public.get_dashboard_snapshot(current_setting('barberos.test_shop')::uuid);
   exception when others then if sqlerrm='PASSWORD_CHANGE_REQUIRED' then denied:=true; else raise; end if; end;
   if not denied then raise exception 'MISSING_PROFILE_OWNER_ALLOWED'; end if;
+  denied:=false;
+  begin perform public.create_barbershop('Missing profile shop','rotation-missing-'||replace(current_setting('barberos.test_shop'),'-',''),null,null);
+  exception when others then if sqlerrm='PASSWORD_CHANGE_REQUIRED' then denied:=true; else raise; end if; end;
+  if not denied then raise exception 'MISSING_PROFILE_SHOP_CREATION_ALLOWED'; end if;
 end;
 $test$;
 reset role;

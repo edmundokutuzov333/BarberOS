@@ -17,3 +17,12 @@ test('older behavioral contract evidence remains compatible while incomplete rev
   assert.equal(validSourceReview({ ...review, evidence: 'OK' }, sql), false);
   assert.equal(validSourceReview(review, undefined), false);
 });
+test('reviewing a forward plan validates both source and candidate bytes without certifying deployment', () => {
+  const candidate = 'select 1;';
+  const forward = { ...review, status: 'reviewed_pending_forward', forward_candidates: [{ path: 'supabase/reconciliation/application_contracts.sql', sha256: createHash('sha256').update(candidate).digest('hex') }] };
+  assert.equal(validSourceReview(forward, sql, () => candidate), true);
+  assert.equal(validSourceReview(forward, sql, () => candidate + '--changed'), false);
+  assert.equal(validSourceReview(forward, sql), false);
+  assert.equal(validSourceReview({ ...forward, forward_candidates: [] }, sql, () => candidate), false);
+  assert.equal(validSourceReview({ ...forward, forward_candidates: [{ ...forward.forward_candidates[0], path: '../unreviewed.sql' }] }, sql, () => candidate), false);
+});

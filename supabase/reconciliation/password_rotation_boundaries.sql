@@ -85,3 +85,49 @@ with check(
   and is_platform_admin=(select p.is_platform_admin from public.profiles p where p.id=(select auth.uid()))
   and password_change_required=(select p.password_change_required from public.profiles p where p.id=(select auth.uid()))
 );
+
+-- Cloud production currently revokes table UPDATE altogether. Permit only
+-- ordinary self-profile fields; identity/privileged flags remain server-only.
+-- RLS still restricts rows and provides a second protected-flag boundary.
+revoke update on public.profiles from anon,authenticated;
+grant select on public.profiles to authenticated;
+grant update(full_name,phone,avatar_url) on public.profiles to authenticated;
+
+-- Shop creation has no existing membership to check, so it requires its own
+-- account-state boundary. Slug uniqueness also makes identical owner retries
+-- return the existing shop without duplicating membership, hours or audit.
+create or replace function public.create_barbershop(
+  p_name text,p_slug text,p_phone text default null,p_whatsapp text default null
+)
+returns uuid language plpgsql security definer set search_path=''
+as $function$
+declare v_actor uuid:=auth.uid(); v_id uuid; v_plan uuid;
+  v_name text:=nullif(btrim(p_name),''); v_slug text:=lower(btrim(p_slug));
+  v_phone text:=nullif(btrim(p_phone),''); v_whatsapp text:=nullif(btrim(p_whatsapp),'');
+begin
+  if v_actor is null then raise exception 'NOT_AUTHENTICATED'; end if;
+  if private.current_password_change_required(v_actor) then raise exception 'PASSWORD_CHANGE_REQUIRED'; end if;
+  if v_name is null or length(v_name)<2 then raise exception 'INVALID_NAME'; end if;
+  if v_slug is null or v_slug !~ '^[a-z0-9]+(-[a-z0-9]+)*$' then raise exception 'INVALID_SLUG'; end if;
+  select p.id into v_plan from public.plans p where p.code='starter' and p.is_active;
+  if v_plan is null then raise exception 'PLAN_NOT_ACTIVE'; end if;
+  insert into public.barbershops(name,slug,phone,whatsapp,plan_id)
+    values(v_name,v_slug,v_phone,v_whatsapp,v_plan)
+    on conflict(slug) do nothing returning id into v_id;
+  if v_id is null then
+    select s.id into v_id from public.barbershops s
+      join public.barbershop_members m on m.barbershop_id=s.id and m.user_id=v_actor and m.role='owner'
+      where s.slug=v_slug and s.name=v_name and s.phone is not distinct from v_phone and s.whatsapp is not distinct from v_whatsapp;
+    if v_id is not null then return v_id; end if;
+    raise exception 'SLUG_TAKEN';
+  end if;
+  insert into public.barbershop_members(barbershop_id,user_id,role) values(v_id,v_actor,'owner');
+  insert into public.working_hours(barbershop_id,weekday,opens_at,closes_at,is_closed)
+    select v_id,d,'09:00','19:00',d=0 from generate_series(0,6) d;
+  insert into public.audit_logs(barbershop_id,actor_id,action,entity,entity_id)
+    values(v_id,v_actor,'barbershop.created','barbershops',v_id);
+  return v_id;
+end;
+$function$;
+revoke all on function public.create_barbershop(text,text,text,text) from public,anon;
+grant execute on function public.create_barbershop(text,text,text,text) to authenticated,service_role;

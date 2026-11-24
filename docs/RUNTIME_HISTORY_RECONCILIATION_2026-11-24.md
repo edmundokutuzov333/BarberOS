@@ -34,8 +34,11 @@ from production. Counts do not establish schema parity, and RLS presence alone d
 not establish correct authorization. These differences still need explicit intent,
 contract tests and reviewed forward migrations.
 
-The current history auditor reports nine unresolved source dispositions (zero in
-production and nine in staging), zero unmapped remote migration records. Eight
+The current history auditor reports zero unreviewed sources and zero unmapped
+remote records. Nine reviewed staging forward dispositions still await cloud
+deployment, keeping status `NO_GO_PENDING_FORWARD_RECONCILIATION`. Their exact
+source/candidate hashes and intent are in `FINAL_HISTORY_FORWARD_PLAN_2026-11-24.md`.
+Eight
 unsafe demo/unwired prototype dispositions are deliberately retired with exact
 source hashes; see `LEGACY_SOURCE_DISPOSITIONS_2026-11-24.md`. A source
 mapping is not permission to replay older SQL: later tenant hardening, notification

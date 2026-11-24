@@ -1499,6 +1499,117 @@
         "status": "represented_immutability_preserve_selected_theme",
         "source_sha256": "95f02478cae5c86ce4886f55a31238f6c125eeb75a2f989e912d85092124fd56",
         "evidence": "tenant_immutability_boundary.sql passes local/stage/production as authenticated owner of two tenants: root profile edit succeeds and child reparent raises TENANT_IMMUTABLE. Production has the exact JSON-safe prevent_tenant_reparent helper; stage uses 14 prevent_tenant_move triggers. The hardcoded Oryon theme override is deliberately not replayed; persisted production theme is speakeasy."
+      },
+      "20260918180346_review_public_contract.sql": {
+        "status": "reviewed_pending_forward",
+        "source_sha256": "530cce65582427abcf095143d01ede46f557e181a509ec15e50450af4e70cb1d",
+        "forward_candidates": [
+          {
+            "path": "supabase/reconciliation/application_contracts.sql",
+            "sha256": "d343d309cab128552841282cf713e0bbcde8a0252f48f9c2603d738a58f08448"
+          },
+          {
+            "path": "supabase/reconciliation/review_notifications.sql",
+            "sha256": "62d2bc4a2f819f3ad24eca2118b7c976f5a41adfd650302d16060b7741440fc2"
+          }
+        ],
+        "evidence": "Replace legacy review_id state with has_review, preserve service-only token execution and enqueue new review requests through enabled channels; synthetic review_public_contract_boundary passes in an independently restored database. Full source reviewed; cloud deployment remains a separate release blocker. See docs/FINAL_HISTORY_FORWARD_PLAN_2026-11-24.md."
+      },
+      "20260918181012_review_submit_return_contract.sql": {
+        "status": "reviewed_pending_forward",
+        "source_sha256": "0d2c05dbfa05a7ac02c12b3bafdb8d030970fac89b3d7d5f101e0d0c970864f3",
+        "forward_candidates": [
+          {
+            "path": "supabase/reconciliation/application_contracts.sql",
+            "sha256": "d343d309cab128552841282cf713e0bbcde8a0252f48f9c2603d738a58f08448"
+          }
+        ],
+        "evidence": "Do not replay the ambiguous first INSERT RETURNING implementation. Promote the reviewed final submission function preserving immutable/idempotent reviews and the gateway ACL. Full source reviewed; cloud deployment remains a separate release blocker. See docs/FINAL_HISTORY_FORWARD_PLAN_2026-11-24.md."
+      },
+      "20260918181052_review_submit_return_contract_v2.sql": {
+        "status": "reviewed_pending_forward",
+        "source_sha256": "d69b1f076bdcb6357094b4525a266546634ed644cba8702ba78405836a130c28",
+        "forward_candidates": [
+          {
+            "path": "supabase/reconciliation/application_contracts.sql",
+            "sha256": "d343d309cab128552841282cf713e0bbcde8a0252f48f9c2603d738a58f08448"
+          }
+        ],
+        "evidence": "Promote the final qualified review submission contract with service-only execution; do not re-open the historical anonymous/authenticated grants. Full source reviewed; cloud deployment remains a separate release blocker. See docs/FINAL_HISTORY_FORWARD_PLAN_2026-11-24.md."
+      },
+      "20260919001000_phase_22_permissions_audit.sql": {
+        "status": "reviewed_pending_forward",
+        "source_sha256": "0ff83939e43f98f0336af9b7f5320f9b8e683917ef22c520f36e94fcc227af9c",
+        "forward_candidates": [
+          {
+            "path": "supabase/reconciliation/application_contracts.sql",
+            "sha256": "d343d309cab128552841282cf713e0bbcde8a0252f48f9c2603d738a58f08448"
+          },
+          {
+            "path": "supabase/reconciliation/password_rotation_boundaries.sql",
+            "sha256": "1d395ff40e1193a59cbf24c2e125366a26cd129ce732cc3fc40cb96661e29899"
+          },
+          {
+            "path": "supabase/reconciliation/tenant_membership_boundaries.sql",
+            "sha256": "2a8ed3f5aa622f2450c5c73c300ca540731800a39a703faaa875be94a0434a58"
+          }
+        ],
+        "evidence": "Reconcile role-specific policies, core table ACLs and staff read models without historical blanket function grants. Shared account guards and serialized membership mutations preserve authoritative state and at least one owner. Full source reviewed; cloud deployment remains a separate release blocker. See docs/FINAL_HISTORY_FORWARD_PLAN_2026-11-24.md."
+      },
+      "20260919001100_phase_22_notification_boundary_patch.sql": {
+        "status": "reviewed_pending_forward",
+        "source_sha256": "ab208a10eb63af3d290021d1148f99f1417df26dbc2c311ad502965f59ef4e5f",
+        "forward_candidates": [
+          {
+            "path": "supabase/reconciliation/application_contracts.sql",
+            "sha256": "d343d309cab128552841282cf713e0bbcde8a0252f48f9c2603d738a58f08448"
+          }
+        ],
+        "evidence": "Promote the current operator-only notification metrics contract; keep notifications RPC-only, not a direct browser table. Full source reviewed; cloud deployment remains a separate release blocker. See docs/FINAL_HISTORY_FORWARD_PLAN_2026-11-24.md."
+      },
+      "20260919005227_release_audit_appointments_read_model.sql": {
+        "status": "reviewed_pending_forward",
+        "source_sha256": "1e3c7ae19564b5a4dfb84140bd58678416ab2a36cd8ed480d7af1bc1c297c317",
+        "forward_candidates": [
+          {
+            "path": "supabase/reconciliation/application_contracts.sql",
+            "sha256": "d343d309cab128552841282cf713e0bbcde8a0252f48f9c2603d738a58f08448"
+          }
+        ],
+        "evidence": "Promote the current tenant/barber-scoped appointment read model with validated range, pagination and tenant-qualified joins. Full source reviewed; cloud deployment remains a separate release blocker. See docs/FINAL_HISTORY_FORWARD_PLAN_2026-11-24.md."
+      },
+      "20261020055712_photography_services_and_team.sql": {
+        "status": "reviewed_pending_forward",
+        "source_sha256": "88a98d4d7f75ba71ec8554951a1b38c793f7d3c474ea15bf05cb5be9444f48d5",
+        "forward_candidates": [
+          {
+            "path": "supabase/reconciliation/application_contracts.sql",
+            "sha256": "d343d309cab128552841282cf713e0bbcde8a0252f48f9c2603d738a58f08448"
+          }
+        ],
+        "evidence": "Install only services.photo_url and the public payload field. Explicitly retire the mixed source sections that replace prices, staff identities, ratings, service links, photographs and schedules of hardcoded shops. Full source reviewed; cloud deployment remains a separate release blocker. See docs/FINAL_HISTORY_FORWARD_PLAN_2026-11-24.md."
+      },
+      "20261020063700_enforce_password_rotation.sql": {
+        "status": "reviewed_pending_forward",
+        "source_sha256": "59f6b64b439b95894aa2bb0a15f3a7e86977550aaea29f8eee530f500054f84d",
+        "forward_candidates": [
+          {
+            "path": "supabase/reconciliation/password_rotation_boundaries.sql",
+            "sha256": "1d395ff40e1193a59cbf24c2e125366a26cd129ce732cc3fc40cb96661e29899"
+          }
+        ],
+        "evidence": "Replace wrapper-only rotation enforcement with authoritative private membership/admin guards, missing-profile denial and a guarded/idempotent create_barbershop path. Do not restore the inaccessible-helper profile policy. Full source reviewed; cloud deployment remains a separate release blocker. See docs/FINAL_HISTORY_FORWARD_PLAN_2026-11-24.md."
+      },
+      "20261020063931_fix_profile_password_flag_policy.sql": {
+        "status": "reviewed_pending_forward",
+        "source_sha256": "cba2798368eb2d465ffbe62aeb8c2200d9d8f9e80a79d71ec3b41410a9cf7e38",
+        "forward_candidates": [
+          {
+            "path": "supabase/reconciliation/password_rotation_boundaries.sql",
+            "sha256": "1d395ff40e1193a59cbf24c2e125366a26cd129ce732cc3fc40cb96661e29899"
+          }
+        ],
+        "evidence": "Preserve protected flags with own-row comparisons and grant only full_name/phone/avatar_url edits. Flag and administrator changes remain server-only. Full source reviewed; cloud deployment remains a separate release blocker. See docs/FINAL_HISTORY_FORWARD_PLAN_2026-11-24.md."
       }
     }
   },

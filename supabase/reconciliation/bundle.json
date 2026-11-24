@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "migration": "supabase/migrations/20261124044009_reconcile_application_authorization.sql",
+  "components": [
+    {
+      "path": "supabase/reconciliation/application_contracts.sql",
+      "sha256": "d343d309cab128552841282cf713e0bbcde8a0252f48f9c2603d738a58f08448"
+    },
+    {
+      "path": "supabase/reconciliation/password_rotation_boundaries.sql",
+      "sha256": "1d395ff40e1193a59cbf24c2e125366a26cd129ce732cc3fc40cb96661e29899"
+    },
+    {
+      "path": "supabase/reconciliation/tenant_membership_boundaries.sql",
+      "sha256": "2a8ed3f5aa622f2450c5c73c300ca540731800a39a703faaa875be94a0434a58"
+    },
+    {
+      "path": "supabase/reconciliation/review_notifications.sql",
+      "sha256": "62d2bc4a2f819f3ad24eca2118b7c976f5a41adfd650302d16060b7741440fc2"
+    }
+  ],
+  "migration_sha256": "84067a707a8f7bb3ad6035f85ba309ce71a6ebce4623256e88a713a3ff5cc25f"
+}
