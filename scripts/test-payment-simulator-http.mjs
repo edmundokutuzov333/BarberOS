@@ -91,10 +91,20 @@ try{
  assert.equal((await call(other.token,'list')).status,403);
  sql("update public.profiles set password_change_required=false,is_platform_admin=false where id="+uuid(other.id)+";");
  assert.equal((await call(other.token,'list')).status,403);
+ // Browser logout revokes the actor's sessions. Verify the old session is
+ // rejected, then use a legitimate fresh local login for the gate test.
+ let gateToken=actor.token;
+ if(process.env.BARBEROS_SIMULATOR_BROWSER==='1'){
+  assert.equal((await call(actor.token,'availability')).status,401);
+  const fresh=await request('/auth/v1/token?grant_type=password',{email:actor.email,password:actor.password},config.ANON_KEY);
+  assert.equal(fresh.status,200,'Fresh local sign-in after logout failed');
+  assert.ok(fresh.result?.access_token,'Fresh session missing');
+  gateToken=fresh.result.access_token;
+ }
  // The feature gate must reject mutations even for a valid administrator.
  sql('update private.payment_simulator_settings set enabled=false where singleton;');
- assert.equal(ok(await call(actor.token,'availability')).enabled,false);
- assert.equal((await call(actor.token,'create',{...payload,request_id:randomUUID()})).status,403);
+ assert.equal(ok(await call(gateToken,'availability')).enabled,false);
+ assert.equal((await call(gateToken,'create',{...payload,request_id:randomUUID()})).status,403);
  sql('update private.payment_simulator_settings set enabled=true where singleton;');
  const after=sql("select (select count(*) from public.payments)||':'||(select count(*) from public.shop_order_payments)||':'||(select count(*) from public.appointments)||':'||(select value::text from public.platform_settings where key='payments');");
  assert.equal(after,before,'Operational data changed during simulator acceptance');
