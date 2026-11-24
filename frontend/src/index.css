@@ -513,6 +513,8 @@ fieldset { min-inline-size:0; }
   grid-template-columns: minmax(0, 1fr);
   place-items: center;
   box-sizing: border-box;
+  width: 100vw;
+  width: 100dvw;
   height: 100vh;
   height: 100dvh;
   padding: max(.5rem, env(safe-area-inset-top)) max(.5rem, env(safe-area-inset-right)) max(.5rem, env(safe-area-inset-bottom)) max(.5rem, env(safe-area-inset-left));

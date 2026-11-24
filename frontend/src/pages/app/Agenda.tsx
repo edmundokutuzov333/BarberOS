@@ -238,7 +238,7 @@ function DayGrid({
   };
 
   return (
-    <div className="overflow-x-auto rounded-3xl border border-white/10">
+    <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-3xl border border-white/10">
       <div className="min-w-[760px]">
         <div className="grid grid-cols-[5rem_repeat(auto-fit,minmax(13rem,1fr))] border-b border-white/10 bg-white/[.03]">
           <div className="p-3 t-label text-ink-mid">Hora</div>
@@ -423,12 +423,12 @@ export default function AgendaPage() {
       title="Agenda"
       subtitle={label}
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
           <Button variant="secondary" size="sm" pill onClick={() => setManualBookingOpen(true)}>
             <Plus size={15} />Nova marcação
           </Button>
           <Button variant="secondary" size="sm" pill onClick={() => { setSelectedDate(today); setView('day'); }}>Hoje</Button>
-          <div className="flex rounded-full border border-white/10 overflow-hidden" role="group" aria-label="Visualização da agenda">
+          <div className="flex shrink-0 rounded-full border border-white/10 overflow-hidden" role="group" aria-label="Visualização da agenda">
             <button type="button" onClick={() => setView('day')} aria-pressed={view === 'day'} className={'px-3 h-9 t-label ' + (view === 'day' ? 'bg-white/10 text-ink-hi' : 'text-ink-mid')}>Dia</button>
             <button type="button" onClick={() => setView('week')} aria-pressed={view === 'week'} className={'px-3 h-9 t-label ' + (view === 'week' ? 'bg-white/10 text-ink-hi' : 'text-ink-mid')}>Semana</button>
           </div>

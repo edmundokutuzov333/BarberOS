@@ -114,10 +114,10 @@ test('mobile owner edits category, add-ons and restricted secondary offers via a
  await expect.poll(()=>body.evaluate(el=>el.scrollHeight>el.clientHeight)).toBe(true);
  const geometry=()=>manual.evaluate(el=>{
    const r=el.getBoundingClientRect(), frame=el.parentElement.getBoundingClientRect(), v=window.visualViewport;
-   return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,frameTop:frame.top,frameBottom:frame.bottom,innerHeight,innerWidth,scrollY:window.scrollY,visualHeight:v?.height,visualTop:v?.offsetTop,computedHeight:getComputedStyle(el).height,maxHeight:getComputedStyle(el).maxHeight};
+   return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,frameTop:frame.top,frameBottom:frame.bottom,innerHeight,innerWidth,scrollY:window.scrollY,visualHeight:v?.height,visualWidth:v?.width,visualTop:v?.offsetTop,visualLeft:v?.offsetLeft,computedHeight:getComputedStyle(el).height,maxHeight:getComputedStyle(el).maxHeight};
  });
  const g=await geometry(); console.log('MANUAL_MODAL_GEOMETRY',JSON.stringify(g));
- await expect.poll(async()=>{const r=await geometry();return r.top>=r.frameTop-1 && r.bottom<=r.frameBottom+1 && r.top>=-1 && r.bottom<=r.innerHeight+1 && r.left>=-1 && r.right<=r.innerWidth+1;}).toBe(true);
+ await expect.poll(async()=>{const r=await geometry();return r.top>=r.frameTop-1 && r.bottom<=r.frameBottom+1 && r.top>=(r.visualTop??0)-1 && r.bottom<=(r.visualTop??0)+(r.visualHeight??r.innerHeight)+1 && r.left>=(r.visualLeft??0)-1 && r.right<=(r.visualLeft??0)+(r.visualWidth??r.innerWidth)+1;}).toBe(true);
  // Public tests consume today's earliest slots; select a deterministic future
  // fixture date distinct from the composed HTTP race (today + 3 days).
  const todayParts=new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Maputo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
