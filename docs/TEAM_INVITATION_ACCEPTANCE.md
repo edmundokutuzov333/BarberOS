@@ -1,0 +1,5 @@
+# Team invitations
+
+Private hashed capability, single-use acceptance, verified email, seven-day expiry, shop/membership lock and owner authority at issue and acceptance. A barber invitation binds the selected unlinked professional transactionally. Issuing a replacement revokes the previous link. Revocation and acceptance are audited without recording the token. No automatic mail is sent: the owner copies the private link and shares it with the intended employee. The acceptance page retains the link only for the current browser session and removes the fragment from the address bar.
+
+Staging receipts: source 20261124123000 mapped to server 20261124124108; source 20261124124000 mapped to server 20261124124222. Both transactional rehearsal and post-apply fixtures passed: LIVE_ROLE_BOUNDARIES_PASSED and TEAM_INVITATION_BOUNDARY_PASSED. Production remains unchanged. The candidate contract inventory is captured from staging; unchanged Edge Function declarations are carried from the production snapshot and must not be interpreted as staging provider certification.

@@ -30,6 +30,19 @@ export function slugify(s: string): string {
 }
 
 const ERRORS: Record<string, string> = {
+  INVITATION_INVALID: 'Este convite não é válido para a sua conta, expirou ou foi revogado.',
+  INVITATION_EMAIL_UNVERIFIED: 'Confirme o email da sua conta antes de aceitar o convite.',
+  INVITATION_BARBER_UNAVAILABLE: 'O profissional associado já não está disponível. Peça um novo convite.',
+  INVITATION_ROLE_CONFLICT: 'A sua função foi alterada. Contacte o dono da barbearia.',
+  INVITATION_RESPONSE_INVALID: 'Não foi possível confirmar a resposta do convite. Tente novamente.',
+  BARBER_INVITATION_PENDING: 'Já existe um convite pendente para este profissional.',
+  INVITATION_LIMIT: 'O limite de convites pendentes foi atingido. Revogue os convites antigos.',
+  ALREADY_MEMBER: 'Esta conta já pertence à barbearia. Altere a função na lista da equipa.',
+  SHOP_NOT_OPERATIONAL: 'Esta barbearia não está disponível para novas operações.',
+
+  BARBER_ACCOUNT_LINK_RPC_REQUIRED: 'Associe a conta através do formulário do barbeiro.',
+  OWNER_REQUIRED: 'Esta operação exige o acesso do dono da barbearia.',
+
   SESSION_END_FAILED: 'Não foi possível terminar a sessão. Verifique a ligação e tente novamente.',
   LAST_OWNER: 'A barbearia precisa de manter pelo menos um dono. Adicione outro dono antes de alterar este acesso.',
   MEMBER_SELF_REMOVE: 'Não pode remover o seu próprio acesso.',

@@ -60,7 +60,7 @@ function PasswordChangeForm() {
     }
 
     await supabase.auth.signOut();
-    window.location.replace('/entrar');
+    window.location.replace((location.state as { from?: string } | null)?.from === '/convite' ? '/convite' : '/entrar');
   };
 
   return (

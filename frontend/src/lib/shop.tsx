@@ -44,6 +44,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     queryKey: ['memberships', user?.id],
     enabled,
     retry: false,
+    refetchOnWindowFocus: 'always',
+    refetchOnReconnect: 'always',
+    refetchInterval: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('barbershop_members')

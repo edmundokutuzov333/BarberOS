@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthCard, FormError } from './Entrar';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
@@ -8,6 +8,7 @@ import { humanError } from '@/lib/utils';
 
 export default function Registar() {
   const nav = useNavigate();
+  const invitation = (useLocation().state as { from?: string } | null)?.from === '/convite';
   const [form, setForm] = useState({ name: '', phone: '', email: '', pw: '' });
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -21,26 +22,26 @@ export default function Registar() {
     setBusy(true);
     const { data, error } = await supabase.auth.signUp({
       email: form.email.trim(), password: form.pw,
-      options: { data: { full_name: form.name.trim(), phone: form.phone.trim() || null } },
+      options: { data: { full_name: form.name.trim(), phone: form.phone.trim() || null }, ...(invitation ? { emailRedirectTo: new URL('/convite', window.location.origin).toString() } : {}) },
     });
     setBusy(false);
     if (error) return setErr(humanError(error));
-    if (data.session) return nav('/app/onboarding', { replace: true });
+    if (data.session) return nav(invitation ? '/convite' : '/app/onboarding', { replace: true });
     setCheckEmail(true);
   };
 
   if (checkEmail) {
     return (
       <AuthCard testId="register-check-email" title="Confirma o teu email" subtitle={`Enviámos um link para ${form.email}. Abre-o para activar a conta.`}
-        footer={<Link data-testid="go-login-link" to="/entrar" className="text-accent-soft hover:text-ink-hi transition-colors">Já confirmei, entrar</Link>}>
+        footer={<Link data-testid="go-login-link" to="/entrar" state={invitation ? { from: '/convite' } : undefined} className="text-accent-soft hover:text-ink-hi transition-colors">Já confirmei, entrar</Link>}>
         <p className="t-body text-ink-mid">Se não aparecer em dois minutos, verifica a pasta de spam.</p>
       </AuthCard>
     );
   }
 
   return (
-    <AuthCard testId="register-page" title="Criar conta" subtitle="Em dois minutos tens a tua barbearia online."
-      footer={<>Já tens conta? <Link data-testid="go-login-link" to="/entrar" className="text-accent-soft hover:text-ink-hi transition-colors">Entrar</Link></>}>
+    <AuthCard testId="register-page" title="Criar conta" subtitle={invitation ? "Crie a sua conta para entrar na equipa da barbearia." : "Em dois minutos tens a tua barbearia online."}
+      footer={<>Já tens conta? <Link data-testid="go-login-link" to="/entrar" state={invitation ? { from: '/convite' } : undefined} className="text-accent-soft hover:text-ink-hi transition-colors">Entrar</Link></>}>
       <form onSubmit={submit} className="space-y-4" noValidate>
         <Field data-testid="register-name-input" label="O teu nome" name="full_name" autoComplete="name" required value={form.name} onChange={set('name')} placeholder="Ex.: Carlos Mate" />
         <Field data-testid="register-phone-input" label="Telemóvel" name="phone" type="tel" autoComplete="tel" prefix="+258" value={form.phone} onChange={set('phone')} placeholder="84 000 0000" />

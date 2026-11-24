@@ -12,10 +12,14 @@ const tests = [
   ['Phase 5 order queue exposes tenant member assignment and rejects non-member assignees in the database contract', () => {
     const page = read('src/pages/app/LojaPedidos.tsx');
     const operation = read('../supabase/migrations/20261026120000_shop_order_operations_hardening_phase5.sql');
-    assert.match(page, /supabase\.rpc\('list_members',\s*\{\s*p_shop:\s*shop!\.id\s*\}\)/);
+    assert.doesNotMatch(page, /supabase\.rpc\('list_members'/);
+    assert.match(page, /rpc\('get_shop_order_queue'/);
+    const reconciled = read('../supabase/migrations/20261124123000_reconcile_live_role_boundaries.sql');
+    assert.match(reconciled, /'assignees',v_assignees/);
+    assert.match(reconciled, /where m\.barbershop_id=p_barbershop_id/);
     assert.match(page, /aria-label="Responsável do pedido"/);
     assert.match(page, /action:'assign',assignee:/);
-    assert.match(page, /membersQuery\.isLoading\|\|membersQuery\.isError/);
+    assert.match(page, /!Array\.isArray\(o\.assignees\)/);
     assert.match(page, /if\(!shop\?\.shop_enabled\)/);
     assert.match(operation, /SHOP_ORDER_ASSIGNEE_NOT_MEMBER/);
     assert.match(operation, /public\.is_member\(p_barbershop_id,/);

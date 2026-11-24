@@ -17,7 +17,7 @@ test.beforeAll(async()=>{
         export const useShop=()=>{
           const [id,setId]=useState('${shopId}');const [role,setRole]=useState('owner');
           useEffect(()=>{window.__setMemberShop=()=>setId('${secondShop}');window.__setMemberRole=setRole;},[]);
-          return {shop:{id},role};
+          return {shop:{id},role,refresh:async()=>{}};
         };`;
     },configureServer(vite){vite.middlewares.use('/__members-test',async(_req,res,next)=>{
       try{const html=await vite.transformIndexHtml('/__members-test','<!doctype html><html lang="pt-MZ"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Team regression</title></head><body><div id="root"></div><script type="module" src="/tests/fixtures/members-entry.tsx"></script></body></html>');res.setHeader('Content-Type','text/html');res.end(html);}catch(e){next(e);}
