@@ -5,7 +5,7 @@ declare
  k uuid; r jsonb; v jsonb; payload jsonb; failed boolean; live_pay bigint; live_store bigint;
 begin
  select count(*) into live_pay from public.payments; select count(*) into live_store from public.shop_order_payments;
- update private.payment_simulator_settings set enabled=true where singleton;
+ update private.payment_simulator_settings set enabled=true,auto_enroll_shops=false where singleton;
  insert into auth.users(id,aud,role,email) values(actor,'authenticated','authenticated',actor||'@example.invalid');
  insert into public.profiles(id,full_name,is_platform_admin,password_change_required) values(actor,'QA checkout',true,false) on conflict(id) do update set is_platform_admin=true,password_change_required=false;
  insert into public.plans(code,name,price_cents,max_barbers,features,is_active) values('qa-'||actor,'QA plan',150000,5,'{}',true) returning id into plan;
@@ -68,5 +68,28 @@ begin
  if has_function_privilege('anon','public.payment_checkout_by_token(uuid,text,jsonb)','EXECUTE') or has_function_privilege('authenticated','public.payment_checkout_by_token(uuid,text,jsonb)','EXECUTE') or has_table_privilege('authenticated','private.payment_checkout_runs','SELECT') then raise exception 'FAIL grants';end if;
  if (select count(*) from public.payments)<>live_pay or (select count(*) from public.shop_order_payments)<>live_store or private.payments_available() then raise exception 'FAIL operational revenue isolation';end if;
  raise notice 'PASS operational QA checkout: deposit hold, service net, delivered products, late refund, callback, monthly plan, idempotency and live isolation';
+end $$;
+-- Enrollment must be opt-in, idempotent and cover existing and future shops.
+do $$
+declare existing_shop uuid; new_shop uuid; disabled_shop uuid; n bigint; seed text:=gen_random_uuid()::text;
+begin
+ update private.payment_simulator_settings set enabled=true,auto_enroll_shops=false where singleton;
+ insert into public.barbershops(slug,name,status) values('qa-enroll-before-'||seed,'QA before activation','active') returning id into existing_shop;
+ if exists(select 1 from private.payment_checkout_test_shops where shop_id=existing_shop) then raise exception 'FAIL default enrollment'; end if;
+ update private.payment_simulator_settings set auto_enroll_shops=true where singleton;
+ if exists(select 1 from public.barbershops b where not exists(select 1 from private.payment_checkout_test_shops s where s.shop_id=b.id)) then raise exception 'FAIL existing shop backfill'; end if;
+ if not private.payment_checkout_allowed(existing_shop) then raise exception 'FAIL existing eligibility'; end if;
+ insert into public.barbershops(slug,name,status) values('qa-enroll-after-'||seed,'QA after activation','active') returning id into new_shop;
+ if not private.payment_checkout_allowed(new_shop) then raise exception 'FAIL future shop eligibility'; end if;
+ select count(*) into n from private.payment_checkout_test_shops;
+ update private.payment_simulator_settings set auto_enroll_shops=true where singleton;
+ if (select count(*) from private.payment_checkout_test_shops)<>n then raise exception 'FAIL enrollment idempotency'; end if;
+ update private.payment_simulator_settings set enabled=false,auto_enroll_shops=false where singleton;
+ if private.payment_checkout_allowed(new_shop) then raise exception 'FAIL simulator kill switch'; end if;
+ insert into public.barbershops(slug,name,status) values('qa-enroll-disabled-'||seed,'QA disabled','active') returning id into disabled_shop;
+ if exists(select 1 from private.payment_checkout_test_shops where shop_id=disabled_shop) then raise exception 'FAIL disabled auto enrollment'; end if;
+ if private.payments_available() then raise exception 'FAIL live gate changed'; end if;
+ if has_function_privilege('anon','private.payment_checkout_auto_enroll_new_shop()','EXECUTE') or has_function_privilege('authenticated','private.payment_checkout_auto_enroll_existing_shops()','EXECUTE') then raise exception 'FAIL enrollment trigger grants'; end if;
+ raise notice 'PASS auto-enrollment: default deny, backfill, future shops, idempotency, kill switch and grants';
 end $$;
 rollback;
