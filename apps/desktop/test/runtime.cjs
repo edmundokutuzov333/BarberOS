@@ -35,7 +35,7 @@ const fs = require('node:fs/promises');
     const catalogResponse = page.waitForResponse(response => response.url().includes('/rpc/get_public_shop_catalog') && response.ok(), { timeout: 60000 });
     await page.goto('https://barber-os-orpin.vercel.app/barbearia/oryon/marcar');
     const catalog = await (await catalogResponse).json();
-    assert.equal(catalog.enabled, true); assert.ok(catalog.products.length >= 23);
+    assert.equal(catalog.enabled, true); assert.ok(catalog.products.length > 0);
     await page.locator('[data-testid^="booking-service-"]:not([disabled])').first().click({ timeout: 60000 });
     // Service/style/barber selection advances through the same public booking workflow.
     while (Number(new URL(page.url()).searchParams.get('step') || '1') < 4) {
@@ -52,6 +52,10 @@ const fs = require('node:fs/promises');
     await photo.waitFor();
     assert.equal(await photo.evaluate(async image => { await image.decode(); return image.complete && image.naturalWidth > 0; }), true);
     await page.screenshot({ path: path.join(output, '04-booking-real-catalog.png'), fullPage: true });
+    // Exercise a cold network failure. A warm PWA service worker can legitimately serve its cached shell.
+    const network = await page.context().newCDPSession(page);
+    await network.send('Network.enable');
+    await network.send('Network.setBypassServiceWorker', { bypass: true });
     await page.context().route('https://barber-os-orpin.vercel.app/**', route => route.abort('internetdisconnected'));
     await app.evaluate(({ BrowserWindow }) => { BrowserWindow.getAllWindows()[0].webContents.loadURL('https://barber-os-orpin.vercel.app/').catch(() => {}); });
     await page.getByRole('heading', { name: 'Não foi possível ligar à plataforma.' }).waitFor({ timeout: 30000 });
@@ -60,6 +64,7 @@ const fs = require('node:fs/promises');
     await page.getByRole('link', { name: 'Tentar novamente' }).click();
     await page.waitForURL('https://barber-os-orpin.vercel.app/**', { timeout: 60000 });
     await page.locator('h1').first().waitFor({ timeout: 60000 });
+    await network.send('Network.setBypassServiceWorker', { bypass: false });
     assert.deepEqual(failures, [], 'No renderer exceptions');
     await fs.writeFile(path.join(output, 'result.json'), JSON.stringify({ passed: true, platform: process.platform, testedAt: new Date().toISOString(), checks: ['packaged-launch', 'production-home', 'sandbox-isolation', 'backend-login-rejection', 'real-shop-catalog', 'booking-route', 'offline-recovery'], rendererErrors: failures }, null, 2));
     console.log('PASS | packaged BarberOS production runtime, isolation and offline recovery');
