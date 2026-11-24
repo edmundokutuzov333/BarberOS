@@ -14,7 +14,7 @@
 - The native matrix runs from main when native files change, and can be dispatched manually. Web-only changes use the existing deployment workflow and do not need a binary release.
 - Version `1.0.<native workflow run_number>` and Android monotonically increasing versionCode use the same run counter. Do not replace this workflow with one whose counter restarts; preserve versionCode continuity.
 - Release tag points to the exact main SHA, desktop includes `src/release.json`, all downloadable binaries have SHA-256 checksums. Releases publish only when the complete matrix passes. Never replace existing release assets to hide failed validation; issue a new main commit/release.
-- Node 22, npm lockfile, pinned Electron/builder/Playwright/sharp, Gradle wrapper checksum and fixed Android plugin/browser-helper versions. Native signing timestamps/SDK tools make byte-identical rebuilds a separate concern from reproducible dependency/build inputs.
+- Node 22, JDK21, Gradle9.9.2 / AGP9.5.2 / Android SDK37, npm lockfile, pinned Electron/builder/Playwright/sharp, Gradle wrapper checksum and fixed Android plugin/browser-helper versions. Native signing timestamps/SDK tools make byte-identical rebuilds a separate concern from reproducible dependency/build inputs.
 
 ## Environments and secrets
 
@@ -46,6 +46,6 @@ Android APKs are release-signed for direct testing. AAB is for future Play Conso
 
 `BARBEROS_EXECUTABLE=/Applications/BarberOS.app/Contents/MacOS/BarberOS node apps/desktop/test/runtime.cjs` exercises the actual packaged executable against production, renderer isolation, rejected login, public shop, live catalog/availability, selection flow and network recovery; writes screenshots and JSON evidence. It does not create fictitious production appointments or claim authenticated staff workflows have been newly certified.
 
-Android: JDK17, Android SDK36, stable signing env → `cd apps/android && bash gradlew --no-daemon lintRelease assembleRelease bundleRelease`; `node scripts/native/verify-android.cjs` verifies actual APK certificate against source and public domain. The release pipeline also installs the signed APK on an Android35 emulator, verifies that Chrome renders BarberOS without a URL toolbar (trusted full-screen mode), and saves a screenshot/UI hierarchy. Physical Android device acceptance remains a separate check.
+Android: JDK21, Android SDK37, stable signing env → `cd apps/android && bash gradlew --no-daemon lintRelease assembleRelease bundleRelease`; `node scripts/native/verify-android.cjs` verifies actual APK certificate against source and public domain. The release pipeline also installs the signed APK on an Android35 emulator, verifies that Chrome renders BarberOS without a URL toolbar (trusted full-screen mode), and saves a screenshot/UI hierarchy. Physical Android device acceptance remains a separate check.
 
 Rollback: preserve main history, revert the offending source through a new commit and redeploy. Native profiles and backend schema are unchanged by installation. Uninstalling a desktop app does not delete the Supabase account or cloud business data.

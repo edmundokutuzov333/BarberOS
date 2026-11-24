@@ -1,11 +1,11 @@
 plugins { id 'com.android.application' }
 android {
     namespace 'app.barberos.mobile'
-    compileSdk 36
+    compileSdk 37
     defaultConfig {
         applicationId 'app.barberos.mobile'
         minSdk 24
-        targetSdk 36
+        targetSdk 37
         versionCode Integer.parseInt(System.getenv('ANDROID_VERSION_CODE') ?: '1')
         versionName System.getenv('NATIVE_VERSION') ?: '1.0.0'
         manifestPlaceholders = [sourceCommit: System.getenv('GITHUB_SHA') ?: 'local']

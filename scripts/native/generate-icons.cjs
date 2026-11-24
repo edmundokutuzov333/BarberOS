@@ -30,7 +30,7 @@ async function main() {
   for (const [density, size] of Object.entries({ mdpi: 48, hdpi: 72, xhdpi: 96, xxhdpi: 144, xxxhdpi: 192 })) {
     const dir = path.join(res, `mipmap-${density}`); await fs.mkdir(dir, { recursive: true });
     await sharp(svg).resize(size).png().toFile(path.join(dir, 'ic_launcher.png'));
-    await sharp(svg).resize(size).png().toFile(path.join(dir, 'ic_launcher_round.png'));
+    await sharp(Buffer.from(svg.toString().replace(/<rect[^>]+\/>/, '<circle cx="256" cy="256" r="256" fill="#090909"/>'))).resize(size).png().toFile(path.join(dir, 'ic_launcher_round.png'));
   }
   const web = path.join(root, 'frontend/public/native-icons'); await fs.mkdir(web, { recursive: true });
   for (const size of [192, 512]) await sharp(svg).resize(size).png().toFile(path.join(web, `icon-${size}.png`));
