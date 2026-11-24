@@ -24,7 +24,7 @@ Android private signing key is outside the repository and supplied by encrypted 
 
 ## Runtime security and capabilities
 
-Desktop: sandbox enabled globally/per window, no Node integration/preload/IPC exposed to remote pages, context isolation and web security enabled. Navigation stays on the exact HTTPS origin; external HTTPS/mail/tel links go to system handlers; new windows and webviews are blocked. Camera is first-party/video-only with OS and application consent; microphone, geolocation and other permissions are denied. Downloads require first-party/blob origin and a native save dialog. No TLS bypass, remote debugging port or certificate-error override.
+Desktop: sandbox enabled globally/per window, no Node integration/preload/IPC exposed to remote pages, context isolation and web security enabled. Navigation stays on the exact HTTPS origin; external HTTPS/mail/tel links go to system handlers; new windows and webviews are blocked. Camera is first-party/video-only with OS and application consent; sanitized clipboard writes support copy-link buttons, while clipboard reads, microphone, geolocation and other permissions are denied. Downloads require first-party/blob origin and a native save dialog. No TLS bypass, remote debugging port or certificate-error override.
 
 Android: Android Browser Helper launches the verified TWA, handles back/navigation/lifecycle and falls back to a Custom Tab when trust/browser support is unavailable. Deep links accept only the exact production origin. No WebView JavaScript bridge, additional Android camera/storage permissions or bundled backend keys. Chrome permissions, file chooser, downloads, session persistence and online/offline states follow the production web application.
 

@@ -16,6 +16,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   desktop:
+    if: github.ref == 'refs/heads/main'
     strategy:
       fail-fast: false
       matrix:
@@ -77,6 +78,7 @@ jobs:
             apps/desktop/release/runtime-evidence/**
           if-no-files-found: error
   android:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -133,6 +135,7 @@ jobs:
         if: always()
         run: rm -f "$ANDROID_KEYSTORE_PATH"
   publish:
+    if: github.ref == 'refs/heads/main'
     needs: [desktop, android]
     runs-on: ubuntu-latest
     permissions:

@@ -27,6 +27,7 @@ function configureSession() {
   ses.setPermissionCheckHandler((_contents, permission, origin, details) => allowPermission(origin, permission, details));
   ses.setPermissionRequestHandler(async (contents, permission, callback, details) => {
     if (!allowPermission(contents.getURL(), permission, details)) return callback(false);
+    if (permission === 'clipboard-sanitized-write') return callback(true);
     if (process.platform === 'darwin' && !await systemPreferences.askForMediaAccess('camera')) return callback(false);
     const { response } = await dialog.showMessageBox(mainWindow, { type: 'question', buttons: ['Permitir', 'Cancelar'], defaultId: 1, cancelId: 1, message: 'Permitir a câmara para ler códigos QR?', detail: 'Apenas a BarberOS terá acesso enquanto esta funcionalidade estiver aberta.' });
     callback(response === 0);

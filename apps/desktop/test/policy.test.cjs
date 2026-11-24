@@ -11,6 +11,8 @@ test('external navigation rejects code execution and embedded credentials', () =
 });
 test('downloads are first-party and permissions exclude microphone/geolocation', () => {
   assert.equal(isDownloadUrl(`blob:${ORIGIN}/123`), true);
+  assert.equal(allowPermission(ORIGIN, 'clipboard-sanitized-write'), true);
+  assert.equal(allowPermission('https://evil.test', 'clipboard-sanitized-write'), false);
   assert.equal(isDownloadUrl('blob:https://evil.test/123'), false);
   assert.equal(allowPermission(ORIGIN, 'media', { mediaTypes: ['video'] }), true);
   assert.equal(allowPermission(ORIGIN, 'media', { mediaType: 'video' }), true);

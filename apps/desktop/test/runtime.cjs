@@ -20,6 +20,8 @@ const fs = require('node:fs/promises');
     assert.deepEqual(await page.evaluate(() => [typeof window.require, typeof window.process]), ['undefined', 'undefined']);
     const preferences = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].webContents.getLastWebPreferences());
     assert.equal(preferences.sandbox, true); assert.equal(preferences.contextIsolation, true); assert.equal(preferences.nodeIntegration, false); assert.equal(preferences.webSecurity, true);
+    assert.equal(await page.evaluate(async () => (await navigator.permissions.query({ name: 'clipboard-write' })).state), 'granted');
+    assert.equal(await page.evaluate(async () => (await navigator.permissions.query({ name: 'clipboard-read' })).state), 'denied');
     await page.screenshot({ path: path.join(output, '01-home.png'), fullPage: true });
     await page.goto('https://barber-os-orpin.vercel.app/entrar');
     await page.getByTestId('login-email-input').waitFor();
@@ -66,7 +68,7 @@ const fs = require('node:fs/promises');
     await page.locator('h1').first().waitFor({ timeout: 60000 });
     await network.send('Network.setBypassServiceWorker', { bypass: false });
     assert.deepEqual(failures, [], 'No renderer exceptions');
-    await fs.writeFile(path.join(output, 'result.json'), JSON.stringify({ passed: true, platform: process.platform, testedAt: new Date().toISOString(), checks: ['packaged-launch', 'production-home', 'sandbox-isolation', 'backend-login-rejection', 'real-shop-catalog', 'booking-route', 'offline-recovery'], rendererErrors: failures }, null, 2));
+    await fs.writeFile(path.join(output, 'result.json'), JSON.stringify({ passed: true, platform: process.platform, testedAt: new Date().toISOString(), checks: ['packaged-launch', 'production-home', 'sandbox-isolation', 'clipboard-write-without-read', 'backend-login-rejection', 'real-shop-catalog', 'booking-route', 'offline-recovery'], rendererErrors: failures }, null, 2));
     console.log('PASS | packaged BarberOS production runtime, isolation and offline recovery');
   } catch (error) {
     const page = app.windows()[0];

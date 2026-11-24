@@ -10,6 +10,8 @@ function isDownloadUrl(value) {
   return isAppUrl(value) || (value.startsWith('blob:') && isAppUrl(value.slice(5)));
 }
 function allowPermission(origin, permission, details = {}) {
-  return isAppUrl(origin) && permission === 'media' && (details.mediaType === 'video' || (details.mediaTypes?.length === 1 && details.mediaTypes[0] === 'video'));
+  if (!isAppUrl(origin)) return false;
+  if (permission === 'clipboard-sanitized-write') return true;
+  return permission === 'media' && (details.mediaType === 'video' || (details.mediaTypes?.length === 1 && details.mediaTypes[0] === 'video'));
 }
 module.exports = { ORIGIN, isAppUrl, isExternalUrl, isDownloadUrl, allowPermission };
