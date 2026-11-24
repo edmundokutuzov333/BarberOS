@@ -233,13 +233,14 @@ jobs:
         env:
           BARBEROS_COMPOSITION_BROWSER: "1"
         run: npx playwright test tests/e2e/booking-composition-browser.spec.mjs --config=playwright.config.mjs --project=chromium --workers=1 --retries=0
-      - name: Verify persisted composition and qualified barber
+      - name: Verify persisted composition and qualified barber (four viewport sizes)
         run: |
           docker exec -i "supabase_db_$BARBEROS_LOCAL_PROJECT_ID" psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
           do $check$
           begin
-            if (select count(*) from public.appointments a join public.barbershops s on s.id=a.barbershop_id join public.barbers b on b.id=a.barber_id where s.slug='composition-browser-qa' and b.display_name='Barbeiro Qualificado QA' and a.price_cents=38000 and a.duration_min=60 and a.ends_at=a.starts_at+interval '60 minutes' and jsonb_array_length(a.service_components)=2 and a.source='online')<>1 then
+            if (select count(*) from public.appointments a join public.barbershops s on s.id=a.barbershop_id join public.barbers b on b.id=a.barber_id where s.slug='composition-browser-qa' and b.display_name='Barbeiro Qualificado QA' and a.price_cents=38000 and a.duration_min=60 and a.ends_at=a.starts_at+interval '60 minutes' and jsonb_array_length(a.service_components)=2 and a.source='online')<>4 then
               raise exception 'BROWSER_COMPOSITION_PERSISTENCE_FAILED';
             end if;
+            if (select count(*) from public.appointments a join public.barbershops s on s.id=a.barbershop_id where s.slug='composition-browser-qa' and a.source='manual' and a.price_cents=38000 and a.duration_min=60)<>1 then raise exception 'MANUAL_BROWSER_PERSISTENCE_FAILED'; end if;
           end $check$;
           SQL
