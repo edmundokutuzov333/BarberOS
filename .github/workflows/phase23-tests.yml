@@ -179,9 +179,10 @@ jobs:
         run: pip install "psycopg[binary]==3.2.12"
       - name: Verify test database safety guard
         run: python scripts/test_database_safety_contract.py
-      - name: Run database suite
+      - name: Run database suite with provider contracts explicitly deferred
         env:
           BARBEROS_TEST_ALLOW_MUTATION: '1'
+          BARBEROS_TEST_PAYMENT_PROVIDERS: '0'
         run: python scripts/test_database_phase23.py
       - name: Booking concurrency
         env:

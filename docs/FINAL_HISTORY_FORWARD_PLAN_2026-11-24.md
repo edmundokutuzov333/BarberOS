@@ -77,3 +77,20 @@ idempotence, then runs behavior and two-session tests. It no longer patches the
 database with separate unshipped candidates. Repository validation does not prove
 cloud deployment. SQL rollout, the membership UI correction and actual
 staging/browser acceptance remain required.
+
+## Staging rollout and regression correction
+
+The versioned migration was applied in staging and all nine synthetic boundary
+suites passed there. Production rollout remains pending. The primary CI reset,
+security and concurrency job passed; the auxiliary Phase 23 suite exposed an old
+test that inspected audit_logs while still using the owner role. Production's
+existing policy already denies that direct access. Its persistence assertion now
+uses the fixture inspector after the authenticated CRM actions, preserving the
+browser denial. All 30 non-provider legacy suites then pass against the isolated
+restored database with this exact versioned migration. Provider-domain suites are
+explicitly deferred, not counted as passed.
+
+The no-network restore target was actually restored from the encrypted archive
+after candidate testing. Schema equality, all 70 rowsets and three local Vault
+records passed again, before reapplying the versioned migration for legacy
+acceptance. This verifies a local rollback/recovery procedure, not cloud DR.

@@ -28,6 +28,17 @@ Não existem testes mutáveis contra produção.
 
 ## CI
 
+Provider-domain SQL suites `payments_phase16.sql` and `payments_e2e_phase16.sql`
+are explicitly deferred by default while M-Pesa/e-Mola APIs/testing authorization
+are pending. The runner still checks their transaction-safety structure, but does
+not execute them or count them as passed. Enabling them later requires the
+deliberate `BARBEROS_TEST_PAYMENT_PROVIDERS=1` opt-in; the current workflow sets 0.
+Cash/manual shop-ledger and stock contracts do not contact external providers.
+
+After the authorization reconciliation, the CRM suite inspects the audit log as
+the fixture inspector. Owner-facing RPCs are exercised as authenticated users;
+the audit table itself remains unavailable to browser roles.
+
 `.github/workflows/ci.yml` applies the full migration chain to an isolated local database and runs the pgTAP-compatible checks in `platform_access_security.test.sql` and `platform_core_contracts.test.sql`. These cover account recovery policy, audit-table access, booking concurrency, browser-role privileges, idempotency and public query indexes.
 
 The legacy SQL acceptance files that depend on real shop, appointment, customer or payment fixtures remain in the dedicated-database workflow. They must not be treated as passed when `BARBEROS_TEST_DATABASE_URL` is absent; no production mutations are used to compensate for missing staging credentials.

@@ -379,6 +379,9 @@ begin
     end if;
   end if;
 
+  -- Audit storage is intentionally not browser-readable. Inspect persistence
+  -- with the fixture inspector after the authenticated CRM operations above.
+  reset role;
   if not exists (
     select 1
     from public.audit_logs

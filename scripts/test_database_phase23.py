@@ -11,7 +11,7 @@ from database_safety import require_isolated_test_database
 ROOT = Path(__file__).resolve().parents[1]
 TESTS = ROOT / "supabase" / "tests"
 
-FILES = [
+ALL_FILES = [
     "migration_phase2.sql","security_phase1.sql","domain_integrity_phase3.sql","availability_phase4.sql",
     "booking_phase5.sql","appointment_token_phase6.sql","public_barbershop_phase7.sql","booking_wizard_phase8.sql",
     "agenda_phase9.sql","realtime_phase10.sql","manual_booking_phase11.sql","customer_crm_phase12.sql",
@@ -22,6 +22,16 @@ FILES = [
     "shop_public_catalog_phase3.sql","shop_order_atomic_phase4.sql","shop_order_operations_phase5.sql",
     "shop_catalog_phase7.sql","shop_phase7_pilot_day.sql","shop_order_payments_phase8.sql",
 ]
+
+# Provider-domain execution is explicitly deferred until APIs and authorization
+# for M-Pesa/e-Mola testing are supplied. Static transaction-safety checks below
+# still inspect these files. Deferred contracts are never reported as passed.
+PAYMENT_PROVIDER_FILES = {"payments_phase16.sql", "payments_e2e_phase16.sql"}
+provider_tests_enabled = os.getenv("BARBEROS_TEST_PAYMENT_PROVIDERS") == "1"
+FILES = [name for name in ALL_FILES if provider_tests_enabled or name not in PAYMENT_PROVIDER_FILES]
+deferred = [name for name in ALL_FILES if name not in FILES]
+if deferred:
+    print("DEFERRED pending payment APIs/authorization: " + ", ".join(deferred))
 
 database_url = require_isolated_test_database(os.getenv("BARBEROS_TEST_DATABASE_URL"))
 
@@ -53,7 +63,7 @@ def strip_sql_comments(sql: str) -> str:
     sql = re.sub(r"/\*[\s\S]*?\*/", "", sql)
     return re.sub(r"--[^\n]*", "", sql)
 
-for filename in FILES:
+for filename in ALL_FILES:
     path = TESTS / filename
     if not path.exists(): raise SystemExit(f"MISSING_TEST_FILE: {filename}")
     sql = path.read_text(encoding="utf-8")
@@ -78,14 +88,7 @@ for filename in FILES:
         raise SystemExit(f"SAFETY_ABORT_TRANSACTION_GUARD: {filename}")
 
 def execute_sql_script(conn: psycopg.Connection, path: Path) -> None:
-    """Execute a complete SQL file, including PL/pgSQL DO blocks and multiple statements.
-
-    ClientCursor uses the simple query protocol. psycopg's regular cursor parses
-    semicolons in a multi-statement SQL file as separate commands, which can
-    split a dollar-quoted DO block and produce a syntax error at '
-print(f"Phase 23 database suite: {len(FILES)}/{len(FILES)} contracts executed.")
-.
-    """
+    """Execute each complete SQL script, including DO blocks, with ClientCursor."""
     sql = path.read_text(encoding="utf-8")
     try:
         with ClientCursor(conn) as cursor:
@@ -116,4 +119,4 @@ with psycopg.connect(database_url, autocommit=True) as conn:
             execute_sql_script(conn, TESTS / "phase23_fixture_cleanup.sql")
             print("PASS phase23_fixture_cleanup.sql")
 
-print(f"Phase 23 database suite: {len(FILES)}/{len(FILES)} contracts executed.")
+print(f"Phase 23 database suite: {len(FILES)} contracts executed; {len(deferred)} provider contracts deferred.")
