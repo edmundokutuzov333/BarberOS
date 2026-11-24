@@ -8,7 +8,7 @@ begin
   select count(*) into before_pay from public.payments;
   select count(*) into before_orders from public.shop_order_payments;
   select count(*) into before_appointments from public.appointments;
-  select value into gate from public.platform_settings where key='payments';
+  select value into gate from public.platform_settings ps where ps.key='payments';
   insert into auth.users(id,aud,role,email) values(a,'authenticated','authenticated',a||'@sim.invalid'),(b,'authenticated','authenticated',b||'@sim.invalid');
   insert into public.profiles(id,full_name,is_platform_admin,password_change_required) values(a,'Simulator fixture',true,false),(b,'Other fixture',true,false)
     on conflict(id) do update set is_platform_admin=true,password_change_required=false;
@@ -68,7 +68,7 @@ begin
   if not denied then raise exception 'FAIL non-admin'; end if;
   if before_pay<>(select count(*) from public.payments) or before_orders<>(select count(*) from public.shop_order_payments)
     or before_appointments<>(select count(*) from public.appointments)
-    or gate is distinct from (select value from public.platform_settings where key='payments') then raise exception 'FAIL live isolation'; end if;
+    or gate is distinct from (select value from public.platform_settings ps where ps.key='payments') then raise exception 'FAIL live isolation'; end if;
   raise notice 'PASS payment simulator: nine scenarios, four purposes, idempotency, refund, replay, actor isolation, live isolation';
 end $$;
 rollback;
