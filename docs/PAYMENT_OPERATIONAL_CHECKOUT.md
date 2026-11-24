@@ -3,8 +3,12 @@
 The existing admin laboratory remains independent. This checkout additionally
 links to real QA booking, delivered-order and assigned-plan rows. Production
 payments stay disabled. The SQL enrollment table starts empty in all deployments.
-Only the explicitly enrolled staging shop `shop-phase8-preview-qa` is configured
-for testing. The UI requires the staging project URL and the lab build flag.
+Staging now opts in to automatic enrollment for all existing and newly created
+shops through `private.payment_simulator_settings.auto_enroll_shops`. Migration
+`20261124160619_payment_checkout_auto_enrollment.sql` defaults this setting to
+false in every fresh environment. Enable it only in isolated QA with no real
+customer data. Enrollment does not enable deposits or modify shop pricing.
+The UI requires the staging project URL and the lab build flag.
 
 - Booking wizard displays a simulated deposit; the normal booking engine creates
   a pending hold. Customer management token authorizes checkout via the existing
@@ -13,7 +17,7 @@ for testing. The UI requires the staging project URL and the lab build flag.
 - Service balance is payable after completion, less confirmed deposit and prior
   simulated settlements. Product balance is limited to delivered quantity less
   existing settlements. No live payments or inventory movements are inserted.
-- Admin > Planos shows the enrolled QA shop's assigned active plan and calendar
+- Admin > Planos lets platform administrators choose an enrolled QA shop and shows its assigned active plan and calendar
   month's amount. A successful test settles that period in the QA ledger, not a
   commercial invoice or automated recurring debit.
 - Payment attempts and events are separate private tables; RPC authorization,
@@ -32,3 +36,13 @@ Staff: authorized owner/manager of the enrolled shop can review QA receipts in
 `/app/pagamentos` and `/app/loja/pagamentos`; the former also includes the
 monthly plan checkout. Platform admins retain access from Admin > Planos.
 The staff read API never returns the customer manage token.
+
+## Environment safety
+
+Automatic enrollment is enabled in staging only. Turning off `auto_enroll_shops`
+stops future automatic enrollment but preserves existing explicit enrollments.
+Turning off `enabled` blocks simulated checkout. Do not enroll production shops:
+QA enrollment suppresses outbound notifications and can update QA appointment
+state. Production M-Pesa activation requires verified provider credentials and a
+separate commercial rollout. The SQL regression exercises backfill, future shops,
+idempotency, default-deny and the kill switch within a rolled-back transaction.
