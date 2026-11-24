@@ -107,9 +107,10 @@ jobs:
         shell: bash
         run: |
           DB_CONTAINER="supabase_db_$BARBEROS_LOCAL_PROJECT_ID"
-          # db reset already applied this version. Reapply its exact published
-          # SQL to prove idempotence, rather than patching CI with unshipped code.
-          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/migrations/20261124044009_reconcile_application_authorization.sql
+          # Prove historical migration reapplication succeeds without persisting
+          # old CREATE OR REPLACE definitions over newer forward migrations.
+          # All following acceptance tests run against the actual latest schema.
+          { printf 'begin;\n'; cat supabase/migrations/20261124044009_reconcile_application_authorization.sql; printf '\nrollback;\n'; } | docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/password_rotation_boundary.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/membership_boundary.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/review_public_contract_boundary.sql
