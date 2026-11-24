@@ -13,7 +13,7 @@
 - Native source: `apps/desktop`, `apps/android`, `scripts/native`, workflow `native-release.yml`.
 - The native matrix runs from main when native files change, and can be dispatched manually. Web-only changes use the existing deployment workflow and do not need a binary release.
 - Version `1.0.<native workflow run_number>` and Android monotonically increasing versionCode use the same run counter. Do not replace this workflow with one whose counter restarts; preserve versionCode continuity.
-- Release tag points to the exact main SHA, desktop includes `src/release.json`, all downloadable binaries have SHA-256 checksums. Releases publish only when the complete matrix passes. Never replace existing release assets to hide failed validation; issue a new main commit/release.
+- Release tag points to the exact main SHA, desktop includes `src/release.json`, all downloadable binaries have SHA-256 checksums. Releases publish only when the complete matrix passes; binaries first upload to a private draft, remote sizes/digests are checked, then publication is atomic. Superseded native builds are cancelled in favour of the latest main commit. Never replace existing release assets to hide failed validation; issue a new main commit/release.
 - Node 22, JDK21, Gradle9.9.2 / AGP9.5.2 / Android SDK37, npm lockfile, pinned Electron/builder/Playwright/sharp, Gradle wrapper checksum and fixed Android plugin/browser-helper versions. Native signing timestamps/SDK tools make byte-identical rebuilds a separate concern from reproducible dependency/build inputs.
 
 ## Environments and secrets

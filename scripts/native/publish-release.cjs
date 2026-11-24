@@ -18,4 +18,21 @@ const sums = assets.map(file => `${crypto.createHash('sha256').update(fs.readFil
 const checksumFile = path.join(directory, 'SHA256SUMS.txt'); fs.writeFileSync(checksumFile, sums);
 const notesFile = path.join(directory, 'release-notes.md');
 fs.writeFileSync(notesFile, `BarberOS ${version}\n\nSource main: ${sha}\n\nProduction: https://barber-os-orpin.vercel.app\n\nThe online interface follows production deployments from main. Native binary changes are versioned separately. macOS builds are ad-hoc signed test distributions, not Apple-notarized. Windows builds are test distributions without Authenticode signing. Android APK uses the stable release key linked to the production domain. The Android AAB is intended for future Play Console submission, not direct installation.\n\nChecks: desktop packaged production runtime on both macOS architectures and Windows; Android lint, release signature and live domain verification. See workflow artifacts for evidence.\n`);
-execFileSync('gh', ['release', 'create', `native-v${version}`, '--target', sha, '--title', `BarberOS ${version} — macOS, Windows e Android`, '--notes-file', notesFile, ...assets, checksumFile], { stdio: 'inherit' });
+const tag = `native-v${version}`;
+const repository = process.env.GITHUB_REPOSITORY || 'edmundokutuzov333/BarberOS';
+function existingRelease() {
+  try { return JSON.parse(execFileSync('gh', ['api', `repos/${repository}/releases/tags/${tag}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })); }
+  catch (error) { if (String(error.stderr).includes('404')) return null; throw error; }
+}
+let release = existingRelease();
+if (release && (!release.draft || release.target_commitish !== sha)) throw new Error('Release already published or source differs; published versions are immutable');
+if (!release) execFileSync('gh', ['release', 'create', tag, '--draft', '--target', sha, '--title', `BarberOS ${version} — macOS, Windows e Android`, '--notes-file', notesFile], { stdio: 'inherit' });
+// Cancellation or upload failures leave an unpublished draft, never a partially visible release.
+execFileSync('gh', ['release', 'upload', tag, ...assets, checksumFile, '--clobber'], { stdio: 'inherit' });
+release = existingRelease();
+for (const file of [...assets, checksumFile]) {
+  const asset = release.assets.find(value => value.name === path.basename(file));
+  const digest = crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  if (!asset || asset.state !== 'uploaded' || asset.size !== fs.statSync(file).size || (asset.digest && asset.digest !== `sha256:${digest}`)) throw new Error(`Remote artifact verification failed: ${path.basename(file)}`);
+}
+execFileSync('gh', ['release', 'edit', tag, '--draft=false', '--latest'], { stdio: 'inherit' });
