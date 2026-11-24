@@ -28,7 +28,7 @@ function existingRelease() {
 }
 let release = existingRelease();
 if (release && (!release.draft || release.target_commitish !== sha)) throw new Error('Release already published or source differs; published versions are immutable');
-if (!release) execFileSync('gh', ['release', 'create', tag, '--draft', '--target', sha, '--title', `BarberOS ${version} — macOS, Windows e Android`, '--notes-file', notesFile], { stdio: 'inherit' });
+if (!release) throw new Error('Reserved draft missing; refuse late creation against a moving default branch');
 // Cancellation or upload failures leave an unpublished draft, never a partially visible release.
 execFileSync('gh', ['release', 'upload', tag, ...assets, checksumFile, '--clobber'], { stdio: 'inherit' });
 release = existingRelease();
@@ -38,4 +38,4 @@ for (const file of [...assets, checksumFile]) {
   const digest = crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
   if (!asset || asset.state !== 'uploaded' || asset.size !== fs.statSync(file).size || (asset.digest && asset.digest !== `sha256:${digest}`)) throw new Error(`Remote artifact verification failed: ${path.basename(file)}`);
 }
-execFileSync('gh', ['release', 'edit', tag, '--draft=false', '--latest'], { stdio: 'inherit' });
+execFileSync('gh', ['release', 'edit', tag, '--notes-file', notesFile, '--draft=false', '--latest'], { stdio: 'inherit' });

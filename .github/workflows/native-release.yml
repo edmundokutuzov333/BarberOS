@@ -15,7 +15,23 @@ concurrency:
   group: barberos-native-release
   cancel-in-progress: true
 jobs:
+  reserve:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      source_sha: ${{ steps.source.outputs.source_sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reserve immutable main snapshot before platform builds
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NATIVE_VERSION: 1.0.${{ github.run_number }}
+        run: node scripts/native/reserve-release.cjs
   desktop:
+    needs: reserve
     if: github.ref == 'refs/heads/main'
     strategy:
       fail-fast: false
@@ -35,9 +51,11 @@ jobs:
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       NATIVE_VERSION: 1.0.${{ github.run_number }}
-      GITHUB_SHA: ${{ github.sha }}
+      GITHUB_SHA: ${{ needs.reserve.outputs.source_sha }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.reserve.outputs.source_sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -78,10 +96,12 @@ jobs:
             apps/desktop/release/runtime-evidence/**
           if-no-files-found: error
   android:
+    needs: reserve
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
+      GITHUB_SHA: ${{ needs.reserve.outputs.source_sha }}
       NATIVE_VERSION: 1.0.${{ github.run_number }}
       ANDROID_VERSION_CODE: ${{ github.run_number }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -89,6 +109,8 @@ jobs:
       ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/apps/android/barberos-release.jks
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.reserve.outputs.source_sha }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -136,12 +158,14 @@ jobs:
         run: rm -f "$ANDROID_KEYSTORE_PATH"
   publish:
     if: github.ref == 'refs/heads/main'
-    needs: [desktop, android]
+    needs: [reserve, desktop, android]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.reserve.outputs.source_sha }}
       - uses: actions/download-artifact@v4
         with:
           path: native-artifacts
@@ -149,5 +173,6 @@ jobs:
       - name: Publish immutable release with source provenance and checksums
         env:
           GH_TOKEN: ${{ github.token }}
+          GITHUB_SHA: ${{ needs.reserve.outputs.source_sha }}
           NATIVE_VERSION: 1.0.${{ github.run_number }}
         run: node scripts/native/publish-release.cjs
