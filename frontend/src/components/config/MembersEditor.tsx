@@ -27,6 +27,7 @@ export function MembersEditor() {
 
 function MemberForm({ shopId, userId }: { shopId: string; userId: string }) {
   const qc = useQueryClient();
+  const { refresh } = useShop();
   const q = useMembers(shopId);
   const [email, setEmail] = useState('');
   const [newRole, setNewRole] = useState<MemberRole>('barber');
@@ -43,7 +44,7 @@ function MemberForm({ shopId, userId }: { shopId: string; userId: string }) {
   const invalidate = async () => {
     await Promise.all([
       qc.invalidateQueries({ queryKey: ['members', shopId] }),
-      qc.invalidateQueries({ queryKey: ['memberships'] }),
+      refresh(),
     ]);
   };
   const add = useMutation({

@@ -1,0 +1,5 @@
+# Live role boundary remediation
+
+Forward migration and UI changes are staged on a dedicated branch. The migration preserves revoked public helper EXECUTE grants and changes RLS predicates to private helpers. Commerce reads are operator-only for authenticated users; the public catalogue remains available via the sanitized public RPC. The order queue adds tenant-local assignee names and IDs, not emails. Account linking stays in the owner-only path of save_barber; manager operational edits preserve the existing identity. Membership removal detaches the login, not the historical professional. The private workspace uses a separate QueryClient per user, platform privileges, tenant and role. Existing membership queries revalidate on focus/reconnect and periodically.
+
+Release gates: fresh migration-chain CI, transactional role test, staging receipts, authenticated browser journeys, production migration sequencing before frontend rollout. Provider payments remain disabled. Do not publish or assign a real owner to an unowned tenant without verified business ownership; do not silently bind existing professionals to accounts.

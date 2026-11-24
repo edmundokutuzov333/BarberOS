@@ -113,6 +113,7 @@ jobs:
           { printf 'begin;\n'; cat supabase/migrations/20261124044009_reconcile_application_authorization.sql; printf '\nrollback;\n'; } | docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/password_rotation_boundary.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/membership_boundary.sql
+          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/live_role_boundaries.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/review_public_contract_boundary.sql
           DOCKER_HOST=unix:///var/run/docker.sock node scripts/test-membership-concurrency.mjs "$DB_CONTAINER"
       - name: Run pgTAP security and core platform contracts

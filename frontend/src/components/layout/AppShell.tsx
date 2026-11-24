@@ -132,11 +132,13 @@ export function AnimatedOutlet() {
 
 export function AppShell() {
   const { shop, role, loading, error, refresh } = useShop();
+  const { profile } = useAuth();
   const { pathname } = useLocation();
   const desktop = useMediaQuery('(min-width: 768px)');
 
   if (loading) return <FullSkeleton />;
   if (error) return <main className="min-h-screen p-6 grid place-items-center" data-testid="shop-state-error"><ErrorState message="Não foi possível carregar as suas barbearias. Tente novamente." onRetry={() => { void refresh(); }} /></main>;
+  if (!shop && profile?.is_platform_admin) return <Navigate to="/admin" replace />;
   if (!shop && pathname !== '/app/onboarding') return <Navigate to="/app/onboarding" replace />;
 
   const shopSchemaAvailable = typeof (shop as unknown as { shop_enabled?: unknown } | null)?.shop_enabled === 'boolean';
