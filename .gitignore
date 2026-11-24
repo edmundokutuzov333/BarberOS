@@ -44,3 +44,6 @@ apps/android/local.properties
 *.p12
 *.mobileprovision
 frontend/public/native-release.json
+
+# Generated native location binding
+apps/desktop/native/build/

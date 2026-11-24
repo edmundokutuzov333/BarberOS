@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowUpRight, LocateFixed, MapPin, Scissors, Search, Star, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
+import { getCurrentPosition, type CurrentPosition } from '@/lib/native-location';
 import { Page } from '@/components/layout/Page';
 import { Brand } from '@/components/ui/Brand';
 import { ErrorState, Skeleton } from '@/components/ui/States';
@@ -41,12 +42,11 @@ function ShopCard({ shop, distance }: { shop: PublicDirectoryShop; distance: num
 function ShopDirectory({ onScan }: { onScan: () => void }) {
   const query = usePublicBarbershops();
   const [search, setSearch] = useState('');
-  const [location, setLocation] = useState<GeolocationCoordinates | null>(null);
+  const [location, setLocation] = useState<CurrentPosition | null>(null);
   const [locationState, setLocationState] = useState<'idle' | 'loading' | 'ready' | 'denied'>('idle');
   const findNearby = () => {
-    if (!navigator.geolocation) { setLocationState('denied'); return; }
     setLocationState('loading');
-    navigator.geolocation.getCurrentPosition((position) => { setLocation(position.coords); setLocationState('ready'); }, () => setLocationState('denied'), { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 });
+    void getCurrentPosition().then((position) => { setLocation(position); setLocationState('ready'); }).catch(() => setLocationState('denied'));
   };
   const shops = useMemo(() => {
     const term = search.trim().toLocaleLowerCase('pt');

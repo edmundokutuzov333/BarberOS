@@ -21,8 +21,10 @@ fs.writeFileSync(notesFile, `BarberOS ${version}\n\nSource main: ${sha}\n\nProdu
 const tag = `native-v${version}`;
 const repository = process.env.GITHUB_REPOSITORY || 'edmundokutuzov333/BarberOS';
 function existingRelease() {
-  try { return JSON.parse(execFileSync('gh', ['api', `repos/${repository}/releases/tags/${tag}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })); }
-  catch (error) { if (String(error.stderr).includes('404')) return null; throw error; }
+  // GitHub's tag endpoint returns 404 for an unpublished draft. The authenticated
+  // release listing includes drafts and is therefore the source for recovery.
+  const pages = JSON.parse(execFileSync('gh', ['api', '--paginate', '--slurp', `repos/${repository}/releases?per_page=100`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }));
+  return pages.flat().find(value => value.tag_name === tag) || null;
 }
 let release = existingRelease();
 if (release && (!release.draft || release.target_commitish !== sha)) throw new Error('Release already published or source differs; published versions are immutable');
@@ -30,6 +32,7 @@ if (!release) execFileSync('gh', ['release', 'create', tag, '--draft', '--target
 // Cancellation or upload failures leave an unpublished draft, never a partially visible release.
 execFileSync('gh', ['release', 'upload', tag, ...assets, checksumFile, '--clobber'], { stdio: 'inherit' });
 release = existingRelease();
+if (!release) throw new Error('Uploaded draft could not be retrieved');
 for (const file of [...assets, checksumFile]) {
   const asset = release.assets.find(value => value.name === path.basename(file));
   const digest = crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');

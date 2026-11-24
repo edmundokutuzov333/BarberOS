@@ -2,6 +2,7 @@
 const { app, BrowserWindow, Menu, dialog, shell, session, systemPreferences } = require('electron');
 const path = require('node:path');
 const { autoUpdater } = require('electron-updater');
+const { registerLocation } = require('./location.cjs');
 const { ORIGIN, isAppUrl, isExternalUrl, isDownloadUrl, allowPermission } = require('./policy.cjs');
 let mainWindow;
 let quitting = false;
@@ -16,7 +17,7 @@ else {
   app.on('before-quit', () => { quitting = true; });
   app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
   app.on('activate', () => { if (!app.isReady()) return; if (!mainWindow) createWindow(); else mainWindow.show(); });
-  app.whenReady().then(() => { configureSession(); createWindow(); configureMenu(); });
+  app.whenReady().then(() => { registerLocation(() => mainWindow); configureSession(); createWindow(); configureMenu(); });
 }
 function openExternal(url) {
   if (isExternalUrl(url)) shell.openExternal(url).catch(() => dialog.showErrorBox('Não foi possível abrir a ligação', 'Verifique se existe uma aplicação compatível instalada.'));
@@ -39,7 +40,7 @@ function configureSession() {
   });
 }
 function createWindow() {
-  mainWindow = new BrowserWindow({ width: 1280, height: 860, minWidth: 390, minHeight: 600, show: false, backgroundColor: '#090909', title: 'BarberOS', autoHideMenuBar: process.platform === 'win32', webPreferences: { partition: 'persist:barberos-production', nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true, allowRunningInsecureContent: false, spellcheck: true, devTools: !app.isPackaged } });
+  mainWindow = new BrowserWindow({ width: 1280, height: 860, minWidth: 390, minHeight: 600, show: false, backgroundColor: '#090909', title: 'BarberOS', autoHideMenuBar: process.platform === 'win32', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), partition: 'persist:barberos-production', nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true, allowRunningInsecureContent: false, spellcheck: true, devTools: !app.isPackaged } });
   const contents = mainWindow.webContents;
   contents.setWindowOpenHandler(({ url }) => { if (isAppUrl(url)) mainWindow.loadURL(url).catch(showOffline); else openExternal(url); return { action: 'deny' }; });
   const protectNavigation = (event, url) => {

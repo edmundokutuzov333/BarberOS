@@ -73,7 +73,7 @@
     "preview": "vite preview",
     "lint": "eslint src --max-warnings 0",
     "typecheck": "tsc --noEmit",
-    "test": "yarn test:unit:phase23 && yarn test:components:phase23 && yarn test:contracts:phase23 && yarn test:unit:phase24 && yarn test:contracts:phase24 && yarn test:contracts:phase25 && yarn test:contracts:gmail && yarn test:contracts:calendar && yarn test:contracts:shop-demo",
+    "test": "yarn test:unit:phase23 && yarn test:components:phase23 && yarn test:contracts:phase23 && yarn test:unit:phase24 && yarn test:contracts:phase24 && yarn test:contracts:phase25 && yarn test:contracts:gmail && yarn test:contracts:calendar && yarn test:contracts:shop-demo && yarn test:native-location",
     "a11y:phase21": "node ../scripts/a11y-phase21.mjs",
     "test:unit:phase23": "node tests/unit/phase23-domain.mjs",
     "test:components:phase23": "node tests/components/phase23-components.mjs",
@@ -90,7 +90,8 @@
     "test:e2e:smoke": "playwright test tests/e2e/local-smoke.spec.mjs",
     "test:e2e": "playwright test",
     "test:e2e:gmail": "BARBEROS_E2E_NO_PREVIEW=1 VITE_SUPABASE_URL=https://gmail-fixture.supabase.co VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_fixture playwright test tests/e2e/gmail-ui.spec.mjs --workers=1",
-    "test:e2e:payment-simulator": "BARBEROS_E2E_NO_PREVIEW=1 VITE_SUPABASE_URL=https://payment-fixture.supabase.co VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_fixture playwright test tests/e2e/payment-simulator.spec.mjs --workers=1"
+    "test:e2e:payment-simulator": "BARBEROS_E2E_NO_PREVIEW=1 VITE_SUPABASE_URL=https://payment-fixture.supabase.co VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_fixture playwright test tests/e2e/payment-simulator.spec.mjs --workers=1",
+    "test:native-location": "node tests/unit/native-location.mjs"
   },
   "browserslist": {
     "production": [

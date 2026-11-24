@@ -12,8 +12,9 @@
     "test": "node --test test/*.test.cjs",
     "dist": "electron-builder --publish never",
     "pack": "electron-builder --dir --publish never",
-    "postinstall": "node node_modules/electron/install.js",
-    "test:runtime": "node test/runtime.cjs"
+    "postinstall": "node node_modules/electron/install.js && node scripts/build-native.cjs",
+    "test:runtime": "node test/runtime.cjs",
+    "build:native": "node scripts/build-native.cjs"
   },
   "dependencies": {
     "electron-updater": "6.8.11"
@@ -22,7 +23,8 @@
     "electron": "45.4.1",
     "electron-builder": "26.18.0",
     "sharp": "0.35.5",
-    "playwright-core": "1.64.1"
+    "playwright-core": "1.64.1",
+    "node-gyp": "13.1.0"
   },
   "build": {
     "appId": "app.barberos.desktop",
@@ -35,7 +37,8 @@
     "files": [
       "src/**/*",
       "package.json",
-      "!**/._*"
+      "!**/._*",
+      "native/build/Release/*.node"
     ],
     "afterPack": "build/macos-icon.cjs",
     "publish": [
@@ -55,7 +58,8 @@
       ],
       "extendInfo": {
         "CFBundleIconName": "AppIcon",
-        "NSCameraUsageDescription": "Ler c\u00f3digos QR de marca\u00e7\u00f5es na BarberOS."
+        "NSCameraUsageDescription": "Ler c\u00f3digos QR de marca\u00e7\u00f5es na BarberOS.",
+        "NSLocationUsageDescription": "Ordenar barbearias pr\u00f3ximas usando a localiza\u00e7\u00e3o apenas quando pedir."
       },
       "identity": "-"
     },
@@ -94,7 +98,10 @@
       "uninstallerIcon": "build/icon.ico",
       "allowElevation": false
     },
-    "artifactName": "BarberOS-${version}-${os}-${arch}.${ext}"
+    "artifactName": "BarberOS-${version}-${os}-${arch}.${ext}",
+    "asarUnpack": [
+      "native/build/Release/*.node"
+    ]
   },
   "overrides": {
     "minimatch": "11.0.1"
