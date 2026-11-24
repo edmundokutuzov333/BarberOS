@@ -2811,6 +2811,18 @@ export type Database = {
         Args: { p_id: string; p_shop: string }
         Returns: boolean
       }
+      deliver_shop_order_item: {
+        Args: {
+          p_barbershop_id: string
+          p_expected_delivered_qty: number
+          p_item_id: string
+          p_note?: string
+          p_operation_key: string
+          p_order_id: string
+          p_quantity: number
+        }
+        Returns: Json
+      }
       duplicate_shop_product: {
         Args: { p_barbershop_id: string; p_product_id: string }
         Returns: string
@@ -3493,6 +3505,16 @@ export type Database = {
       }
       get_shop_order_queue: {
         Args: { p_barbershop_id: string; p_status?: string }
+        Returns: Json
+      }
+      get_shop_order_workspace: {
+        Args: {
+          p_barbershop_id: string
+          p_day?: string
+          p_limit?: number
+          p_offset?: number
+          p_status?: string
+        }
         Returns: Json
       }
       get_shop_phase6_report: {

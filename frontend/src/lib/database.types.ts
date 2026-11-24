@@ -32,6 +32,8 @@ export const nullableRpcArguments = {
   cancel_appointment_by_token: ['p_reason'],
   submit_review_by_token: ['p_comment'],
   restore_shop_order_item_operation: ['p_note'],
+  get_shop_order_workspace: ['p_status', 'p_day'],
+  deliver_shop_order_item: ['p_note'],
   create_barbershop: ['p_phone', 'p_whatsapp'],
 } as const satisfies Partial<{
   [Name in keyof GeneratedFunctions]: readonly (keyof GeneratedFunctions[Name]['Args'])[];

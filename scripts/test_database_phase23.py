@@ -19,7 +19,7 @@ ALL_FILES = [
     "payments_e2e_phase16.sql","reviews_phase17.sql","reports_phase18.sql","admin_phase19.sql",
     "phase22_permissions.sql","phase23_contract.sql","phase23_behavior.sql",
     "shop_domain_phase1.sql","shop_catalog_phase2.sql","shop_catalog_rules_phase2.sql",
-    "shop_public_catalog_phase3.sql","shop_order_atomic_phase4.sql","shop_order_operations_phase5.sql",
+    "shop_public_catalog_phase3.sql","shop_order_atomic_phase4.sql","shop_order_operations_phase5.sql","shop_order_workspace.sql",
     "shop_catalog_phase7.sql","shop_phase7_pilot_day.sql","shop_order_payments_phase8.sql",
 ]
 
