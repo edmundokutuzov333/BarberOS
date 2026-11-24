@@ -1,0 +1,34 @@
+import { test, expect } from '@playwright/test';
+
+test('real browser composition books through Edge and PostgreSQL', async ({ page }) => {
+  test.skip(process.env.BARBEROS_COMPOSITION_BROWSER !== '1', 'Requires isolated local Supabase and fixture');
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/barbearia/composition-browser-qa/marcar');
+  await page.getByTestId('booking-step-service').getByRole('button', { name: /Corte QA/ }).click();
+  await page.getByTestId('booking-step-haircut').getByRole('button', { name: /Fade QA/ }).click();
+  await page.getByTestId('booking-addons').getByRole('button', { name: /Lavagem QA/ }).click();
+  await expect(page.getByTestId('booking-addon-summary')).toContainText('Lavagem QA');
+  await expect(page.getByTestId('booking-summary')).toContainText('380 MT');
+  await expect(page.getByTestId('booking-summary')).toContainText('60 min');
+  await page.getByTestId('booking-next').click();
+  await expect(page.getByTestId('booking-step-barber')).toContainText('Barbeiro Qualificado QA');
+  await expect(page.getByTestId('booking-step-barber')).not.toContainText('Barbeiro Sem Complemento QA');
+  await page.getByTestId('booking-barber-any').click();
+  await page.getByTestId('booking-step-date').getByRole('option').filter({ hasText: /\d+ vagas?/ }).first().click();
+  await page.getByTestId('booking-step-time').getByRole('option').first().click();
+  if (!await page.getByTestId('booking-step-customer').isVisible()) await page.getByTestId('booking-next').click();
+  await page.getByLabel('Nome', { exact: true }).fill('Cliente Composition QA');
+  await page.getByLabel('Telefone', { exact: true }).fill('840000039');
+  const responsePromise=page.waitForResponse(r=>r.url().includes('/functions/v1/booking-create') && r.request().method()==='POST');
+  await page.getByTestId('booking-submit').click();
+  const response=await responsePromise;
+  expect(response.status()).toBe(200);
+  const request=response.request().postDataJSON();
+  expect(request.p_addon_ids).toHaveLength(1);
+  expect(request.p_expected_price).toBe(38000);
+  expect(request.p_expected_duration).toBe(60);
+  expect((await response.json()).ok).toBe(true);
+  await expect(page).toHaveURL(/\/marcacao\/[0-9a-f-]+/);
+  expect(errors).toEqual([]);
+});

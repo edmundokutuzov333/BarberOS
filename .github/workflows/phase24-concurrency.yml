@@ -9,6 +9,8 @@ on:
       - "frontend/tests/unit/phase24-concurrency.mjs"
       - "frontend/tests/components/phase24-concurrency-contracts.mjs"
       - "frontend/tests/e2e/phase24-http-concurrency.spec.mjs"
+      - "frontend/tests/e2e/booking-composition-browser.spec.mjs"
+      - "supabase/tests/booking_composition_browser_setup.sql"
       - "frontend/playwright.http.config.mjs"
       - "supabase/tests/shop_order_concurrency_setup_phase4.sql"
       - "supabase/tests/shop_order_concurrency_call_a_phase4.sql"
@@ -33,6 +35,8 @@ on:
       - "frontend/tests/unit/phase24-concurrency.mjs"
       - "frontend/tests/components/phase24-concurrency-contracts.mjs"
       - "frontend/tests/e2e/phase24-http-concurrency.spec.mjs"
+      - "frontend/tests/e2e/booking-composition-browser.spec.mjs"
+      - "supabase/tests/booking_composition_browser_setup.sql"
       - "frontend/playwright.http.config.mjs"
       - "supabase/tests/shop_order_concurrency_setup_phase4.sql"
       - "supabase/tests/shop_order_concurrency_call_a_phase4.sql"
@@ -176,7 +180,7 @@ jobs:
           set +a
           cat > "$RUNNER_TEMP/phase24-functions.env" <<'ENV'
           RATE_LIMIT_SALT=phase24-local-ci-only-rate-limit-salt
-          ALLOWED_ORIGINS=http://127.0.0.1:54321
+          ALLOWED_ORIGINS=http://127.0.0.1:54321,http://127.0.0.1:4173
           ENV
           echo "VITE_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
           echo "VITE_SUPABASE_PUBLISHABLE_KEY=$ANON_KEY" >> "$GITHUB_ENV"
@@ -216,3 +220,26 @@ jobs:
       - name: Run HTTP concurrency acceptance against isolated local functions
         working-directory: frontend
         run: npx playwright test tests/e2e/phase24-http-concurrency.spec.mjs --config=playwright.http.config.mjs
+
+      - name: Prepare real composition browser fixture in isolated database
+        run: |
+          test -n "$BARBEROS_LOCAL_PROJECT_ID"
+          docker exec -i "supabase_db_$BARBEROS_LOCAL_PROJECT_ID" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/booking_composition_browser_setup.sql
+      - name: Build actual frontend against isolated Supabase
+        working-directory: frontend
+        run: corepack yarn build
+      - name: Verify customer composition through browser, Edge and PostgreSQL
+        working-directory: frontend
+        env:
+          BARBEROS_COMPOSITION_BROWSER: "1"
+        run: npx playwright test tests/e2e/booking-composition-browser.spec.mjs --config=playwright.config.mjs --project=chromium --workers=1 --retries=0
+      - name: Verify persisted composition and qualified barber
+        run: |
+          docker exec -i "supabase_db_$BARBEROS_LOCAL_PROJECT_ID" psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          do $check$
+          begin
+            if (select count(*) from public.appointments a join public.barbershops s on s.id=a.barbershop_id join public.barbers b on b.id=a.barber_id where s.slug='composition-browser-qa' and b.display_name='Barbeiro Qualificado QA' and a.price_cents=38000 and a.duration_min=60 and a.ends_at=a.starts_at+interval '60 minutes' and jsonb_array_length(a.service_components)=2 and a.source='online')<>1 then
+              raise exception 'BROWSER_COMPOSITION_PERSISTENCE_FAILED';
+            end if;
+          end $check$;
+          SQL
