@@ -1,0 +1,101 @@
+{
+  "name": "barberos-desktop",
+  "productName": "BarberOS",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BarberOS \u2014 gest\u00e3o e marca\u00e7\u00f5es ligadas \u00e0 plataforma oficial",
+  "author": "BarberOS",
+  "main": "src/main.cjs",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.cjs",
+    "dist": "electron-builder --publish never",
+    "pack": "electron-builder --dir --publish never",
+    "postinstall": "node node_modules/electron/install.js",
+    "test:runtime": "node test/runtime.cjs"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11"
+  },
+  "devDependencies": {
+    "electron": "45.4.1",
+    "electron-builder": "26.18.0",
+    "sharp": "0.35.5",
+    "playwright-core": "1.64.1"
+  },
+  "build": {
+    "appId": "app.barberos.desktop",
+    "productName": "BarberOS",
+    "asar": true,
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "!**/._*"
+    ],
+    "afterPack": "build/macos-icon.cjs",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "edmundokutuzov333",
+        "repo": "BarberOS",
+        "releaseType": "release"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.business",
+      "icon": "build/icon.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "extendInfo": {
+        "CFBundleIconName": "AppIcon",
+        "NSCameraUsageDescription": "Ler c\u00f3digos QR de marca\u00e7\u00f5es na BarberOS."
+      },
+      "identity": "-"
+    },
+    "dmg": {
+      "title": "Instalar BarberOS",
+      "icon": "build/icon.icns",
+      "contents": [
+        {
+          "x": 130,
+          "y": 150,
+          "type": "file"
+        },
+        {
+          "x": 410,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "BarberOS-${version}-Windows-${arch}-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "BarberOS",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
+    },
+    "artifactName": "BarberOS-${version}-${os}-${arch}.${ext}"
+  },
+  "overrides": {
+    "minimatch": "11.0.1"
+  }
+}

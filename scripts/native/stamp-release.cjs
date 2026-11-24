@@ -1,0 +1,11 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const version = process.env.NATIVE_VERSION;
+const commit = process.env.GITHUB_SHA;
+if (!/^\d+\.\d+\.\d+$/.test(version || '') || !/^[a-f0-9]{40}$/.test(commit || '')) throw new Error('Release needs a semantic version and exact main source commit');
+const root = path.resolve(__dirname, '../..');
+const target = path.join(root, 'apps/desktop/package.json');
+const pkg = JSON.parse(fs.readFileSync(target)); pkg.version = version;
+fs.writeFileSync(target, JSON.stringify(pkg, null, 2) + '\n');
+fs.writeFileSync(path.join(root, 'apps/desktop/src/release.json'), JSON.stringify({ version, sourceCommit: commit, channel: 'production', origin: 'https://barber-os-orpin.vercel.app', backend: 'alseiinjzwjdiwtvkdzy' }, null, 2) + '\n');

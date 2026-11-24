@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.barberos.mobile",
+      "sha256_cert_fingerprints": [
+        "32:3E:66:ED:8F:04:99:87:92:6B:69:CF:AF:A0:FA:D1:58:FD:61:C8:89:79:23:43:1D:D9:D9:B2:39:4E:03:3B"
+      ]
+    }
+  }
+]

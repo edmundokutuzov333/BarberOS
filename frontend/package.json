@@ -69,7 +69,7 @@
   },
   "scripts": {
     "start": "vite",
-    "build": "vite build",
+    "build": "node ../scripts/native/write-web-release.mjs && vite build",
     "preview": "vite preview",
     "lint": "eslint src --max-warnings 0",
     "typecheck": "tsc --noEmit",

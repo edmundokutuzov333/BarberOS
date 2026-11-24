@@ -10,7 +10,7 @@ export default defineConfig({
     manifest: {
       name: 'BarberOS', short_name: 'BarberOS', start_url: '/', scope: '/', display: 'standalone',
       background_color: '#090909', theme_color: '#090909', lang: 'pt-MZ',
-      icons: [{ src: '/barberos-icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }],
+      icons: [{ src: '/native-icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' }, { src: '/native-icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }, { src: '/barberos-icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
     },
     workbox: {
       navigateFallback: '/index.html',
