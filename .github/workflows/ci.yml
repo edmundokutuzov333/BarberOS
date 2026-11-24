@@ -153,6 +153,8 @@ jobs:
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/platform_admin_boundary.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/tenant_immutability_boundary.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/notification_channel_boundary.sql
+      - name: Real authenticated simulator HTTP and concurrent requests (local only)
+        run: node scripts/test-payment-simulator-http.mjs
       - name: Run Phase 4 two-session stock reservation race
         shell: bash
         run: |
