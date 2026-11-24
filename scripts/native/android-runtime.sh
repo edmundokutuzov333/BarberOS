@@ -16,8 +16,10 @@ adb install -r "$apk"
 adb shell pm verify-app-links --re-verify app.barberos.mobile
 adb shell am start -W -n app.barberos.mobile/.LauncherActivity
 for attempt in $(seq 1 18); do
-  adb shell uiautomator dump /sdcard/barberos-ui.xml >/dev/null
-  adb pull /sdcard/barberos-ui.xml "$evidence/window.xml" >/dev/null
+  if ! adb shell uiautomator dump /sdcard/barberos-ui.xml >/dev/null || ! adb pull /sdcard/barberos-ui.xml "$evidence/window.xml" >/dev/null; then
+    sleep 2
+    continue
+  fi
   if python3 - "$evidence/window.xml" <<'PY'
 import sys,xml.etree.ElementTree as E
 root=E.parse(sys.argv[1]).getroot()
