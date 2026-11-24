@@ -20,11 +20,23 @@ const tests = [
     assert.match(operation, /SHOP_ORDER_ASSIGNEE_NOT_MEMBER/);
     assert.match(operation, /public\.is_member\(p_barbershop_id,/);
   }],
-  ['Booking Wizard uses six-step flow and backend contracts', () => {
+  ['Booking Wizard uses adaptive style flow and duration-aware backend contracts', () => {
     const source = read('src/pages/BookingWizard.tsx');
-    assert.match(source, /STEP_LABELS = \['Serviço', 'Corte', 'Barbeiro', 'Data', 'Hora', 'Dados'\]/);
+    assert.match(source, /STEP_LABELS = \['Serviço', 'Estilo', 'Barbeiro', 'Data', 'Hora', 'Dados'\]/);
     assert.match(source, /useAvailableDays\(/);
     assert.match(source, /useAvailableSlots\(/);
+    assert.match(source, /styleMatchesService\(item, serviceId\)/);
+    assert.match(source, /boundedStep === 2 && !hasStyleStep \? 3/);
+    assert.match(source, /haircutId: haircut\?\.id \?\? null/);
+    assert.match(source, /effectiveOffer\(service, haircut\)/);
+    assert.match(source, /available \|\| day\.is_open/);
+    const availability = read('src/features/availability/api.ts');
+    assert.match(availability, /get_offer_available_slots/);
+    assert.match(availability, /get_offer_available_days/);
+    assert.match(availability, /barberId, date, haircutId/);
+    const manual = read('src/features/booking/ManualBookingModal.tsx');
+    assert.match(manual, /styleMatchesService\(haircut, serviceId\)/);
+    assert.match(manual, /haircutId: selectedStyle\?\.id \?\? null/);
     assert.match(source, /useBookAppointment\(/);
     assert.match(source, /SLOT_TAKEN/);
     assert.match(source, /booking-summary/);
