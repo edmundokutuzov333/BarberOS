@@ -24,7 +24,7 @@ export default function PaymentSimulator(){
 }
 function SimulatorWorkspace({actor}:{actor:string}){
   const qc=useQueryClient();
-  const availability=useQuery({queryKey:['payment-simulator',actor,'availability'],queryFn:simulatorAvailability,retry:false});
+  const availability=useQuery({queryKey:['payment-simulator',actor,'availability'],queryFn:simulatorAvailability,retry:false,staleTime:0,refetchOnMount:'always',refetchOnWindowFocus:'always'});
   const history=useQuery({queryKey:['payment-simulator',actor,'list'],queryFn:listSimulations,enabled:availability.data?.enabled===true,retry:false});
   const [shop,setShop]=useState('');
   const [purpose,setPurpose]=useState<Purpose>('deposit');
@@ -40,8 +40,10 @@ function SimulatorWorkspace({actor}:{actor:string}){
     onError:(error,command)=>{setMessage(simulationError(error));setRetryCommand(command);},
     onSettled:()=>{locked.current=false;},
   });
-  const run=latest?.id===selected?latest:history.data?.runs.find(r=>r.id===selected);
-  const shopId=shop||history.data?.shops[0]?.id||'';
+  const cachedRun=history.data?.runs.find(r=>r.id===selected);
+  // Server history wins when another tab has appended newer events.
+  const run=latest?.id===selected&&(!cachedRun||latest.events.length>cachedRun.events.length)?latest:cachedRun;
+  const shopId=history.data?.shops.some(s=>s.id===shop)?shop:history.data?.shops[0]?.id||'';
   const minor=amountToMinor(amount);
   const busy=mutate.isPending;
   const submit=(command:Command)=>{if(locked.current)return;locked.current=true;setMessage('');mutate.mutate(command);};

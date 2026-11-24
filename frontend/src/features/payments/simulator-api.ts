@@ -9,14 +9,14 @@ export type Purpose = keyof typeof purposes;
 export type Scenario = keyof typeof scenarios;
 export type Action = 'confirm' | 'reconcile' | 'refund' | 'replay';
 const status = z.enum(['pending','paid','failed','refunded']);
-const eventSchema = z.object({ id:z.string(), type:z.enum(['create','confirm','reconcile','refund','replay']), before:z.enum(['none','pending','paid','failed','refunded']), after:status, outcome:z.string(), created_at:z.string() });
+const eventSchema = z.object({ id:z.string(), type:z.enum(['create','confirm','reconcile','refund','replay']), before:z.enum(['none','pending','paid','failed','refunded']), after:status, outcome:z.string(), created_at:z.string().datetime({offset:true}) });
 const runSchema = z.object({
   id:z.string().uuid(), shop_id:z.string().uuid(), purpose:z.enum(['deposit','service','product','subscription']),
   scenario:z.enum(['success','insufficient_funds','cancelled','invalid_number','pending','timeout','duplicate_callback','late_success','provider_error']),
   amount_minor:z.number().int().min(1).max(2500000), status, outcome:z.string(),
   entitlement:z.enum(['waiting','confirmed','rejected','refund_required','reversed']),
   reference:z.string(), provider:z.literal('mpesa'), currency:z.literal('MZN'), real_money:z.literal(false),
-  created_at:z.string(), updated_at:z.string(), events:z.array(eventSchema),
+  created_at:z.string().datetime({offset:true}), updated_at:z.string().datetime({offset:true}), events:z.array(eventSchema).min(1).max(100),
 });
 export type Run = z.infer<typeof runSchema>;
 const listSchema = z.object({ shops:z.array(z.object({id:z.string().uuid(),name:z.string()})), runs:z.array(runSchema) });

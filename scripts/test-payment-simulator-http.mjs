@@ -30,7 +30,7 @@ async function fixture(admin){
  const signed=await request('/auth/v1/token?grant_type=password',{email,password},config.ANON_KEY);
  assert.equal(signed.status,200,'Local fixture sign-in failed');
  assert.ok(signed.result?.access_token,'No local session');
- return {id,token:signed.result.access_token};
+ return {id,token:signed.result.access_token,email,password};
 }
 async function call(token,action,payload={}){
  return request('/functions/v1/payment-simulator',{action,payload},token);
@@ -73,6 +73,10 @@ try{
  const replay=ok(await call(actor.token,'replay',{run_id:run.id,request_id:randomUUID()}));
  assert.equal(replay.status,'refunded');assert.equal(replay.events.at(-1).outcome,'DUPLICATE_IGNORED');
  const listed=ok(await call(actor.token,'list'));assert.equal(listed.runs.length,1);assert.equal(listed.runs[0].id,run.id);
+ if(process.env.BARBEROS_SIMULATOR_BROWSER==='1'){
+  const {certifyPaymentBrowser}=await import('../frontend/tests/payment-simulator-real-browser.mjs');
+  await certifyPaymentBrowser({apiUrl:root,anonKey:config.ANON_KEY,actor,nonadmin,shop,readRun:id=>JSON.parse(sql("select jsonb_build_object('status',r.status,'amount_minor',r.amount_minor,'purpose',r.purpose,'entitlement',r.simulated_entitlement,'event_count',(select count(*) from private.payment_simulator_events e where e.run_id=r.id)) from private.payment_simulator_runs r where r.id="+uuid(id)+';'))});
+ }
  const after=sql("select (select count(*) from public.payments)||':'||(select count(*) from public.shop_order_payments)||':'||(select count(*) from public.appointments)||':'||(select value::text from public.platform_settings where key='payments');");
  assert.equal(after,before,'Operational data changed during simulator acceptance');
  console.log('PASS | Real local authenticated Edge HTTP, PostgreSQL, concurrent idempotency, authorization, reconciliation and live isolation');

@@ -4,7 +4,7 @@ import { browserCors, preflight } from "../_shared/http.ts";
 
 Deno.serve(async (req) => {
   const configuredOrigins = Deno.env.get("ALLOWED_ORIGINS") ?? "";
-  const isStaging = Deno.env.get("SUPABASE_URL") === "https://asikuyxaapcmayptimxi.supabase.co";
+  const isStaging = Deno.env.get("SUPABASE_URL")?.replace(/\/+$/, "") === "https://asikuyxaapcmayptimxi.supabase.co";
   const cors = browserCors(req, configuredOrigins + (isStaging ? ",https://barberos-payment-lab.vercel.app" : ""));
   const respond = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
     status, headers: { ...cors, "content-type": "application/json", "cache-control": "no-store" },
