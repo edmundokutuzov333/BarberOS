@@ -66,8 +66,10 @@ jobs:
         run: deno test supabase/functions/resend-webhook/signature_test.ts
       - name: Test HTTP boundary and booking error contracts
         run: deno test supabase/functions/_shared/http_test.ts supabase/functions/_shared/account_test.ts supabase/functions/booking-create/contract.test.ts supabase/functions/health/configuration_test.ts
-      - name: Typecheck Gmail and signed webhook runtime
-        run: deno check --node-modules-dir=auto supabase/functions/admin-credential-manager/index.ts supabase/functions/gmail-integration/index.ts supabase/functions/resend-webhook/index.ts supabase/functions/notify-dispatch/index.ts
+      - name: Typecheck integrations and signed webhook runtime
+        run: deno check --node-modules-dir=auto supabase/functions/admin-credential-manager/index.ts supabase/functions/gmail-integration/index.ts supabase/functions/google-calendar/index.ts supabase/functions/resend-webhook/index.ts supabase/functions/notify-dispatch/index.ts
+      - name: Test Calendar provider deadlines and idempotent event writes
+        run: deno test supabase/functions/google-calendar/provider_test.ts
       - name: Test notification delivery failure transitions
         run: deno test supabase/functions/notify-dispatch/delivery_test.ts
       - name: Test Gmail reply recipients and conversation headers

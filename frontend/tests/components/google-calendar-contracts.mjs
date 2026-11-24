@@ -6,6 +6,7 @@ const root = process.cwd();
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 const edge = read('../supabase/functions/google-calendar/index.ts');
 const config = read('../supabase/config.toml');
+const provider = read('../supabase/functions/google-calendar/provider.ts');
 const page = read('src/pages/AppointmentManage.tsx');
 const api = read('src/features/appointments/google-calendar.ts');
 const privacy = read('src/pages/Legal.tsx');
@@ -33,10 +34,10 @@ const tests = [
     assert.match(edge, /reminders: \{ useDefault: true \}/);
   }],
   ['Calendar tokens are not persisted and event identifiers prevent duplicate events', () => {
-    assert.match(edge, /const GOOGLE_TOKEN = "https:\/\/oauth2\.googleapis\.com\/token"/);
+    assert.match(provider, /const GOOGLE_TOKEN = "https:\/\/oauth2\.googleapis\.com\/token"/);
     assert.match(edge, /createOrUpdateEvent/);
-    assert.match(edge, /method: "PATCH"/);
-    assert.match(edge, /const \{ id: immutableEventId, \.\.\.patchBody \} = body/);
+    assert.match(provider, /method: "PATCH"/);
+    assert.match(provider, /const \{ id: immutableEventId, \.\.\.patchBody \} = event/);
     assert.match(edge, /barberos-google-calendar:/);
     assert.doesNotMatch(edge, /refresh_token_ciphertext|from\("google_calendar_connections"\)/);
   }],

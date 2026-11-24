@@ -44,6 +44,10 @@ A secret pode ser gerada localmente com `openssl rand -hex 32`. Configurar os va
 - O âmbito OAuth `calendar.events.owned` permite tecnicamente ver, criar, alterar e apagar eventos dos calendários que o cliente possui. O código do BarberOS usa a autorização apenas para criar ou actualizar o evento determinístico desta marcação e não chama endpoints de leitura dos restantes eventos.
 - O ID de evento é determinístico por marcação para evitar duplicados em repetições do callback.
 - Os eventos usam visibilidade privada e lembretes predefinidos da conta Google.
+- As chamadas à Google têm um prazo de dez segundos, incluindo a leitura da resposta. Falhas de rede e respostas inválidas devolvem o erro de domínio existente, sem expor credenciais.
+- Uma resposta HTTP de sucesso só confirma a operação se devolver o ID esperado e um evento confirmado ou provisório. Um conflito actualiza apenas esse mesmo evento, sem repetir convites nem o campo de ID imutável.
+
+Os testes de transporte e os limites da sua certificação estão em `CALENDAR_PROVIDER_BOUNDARY_2026-11-24.md`. Configurar OAuth e criar/verificar um evento real continuam obrigatórios.
 
 ## Validação de lançamento
 

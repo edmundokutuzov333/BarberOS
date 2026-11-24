@@ -8,10 +8,10 @@ import {
   sha256Hex,
 } from "../_shared/guard.ts";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { CalendarError } from "./errors.ts";
+import { exchangeCode, createOrUpdateEvent, type CalendarEvent } from "./provider.ts";
 
 const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
-const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
-const GOOGLE_EVENTS = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
 const GOOGLE_SCOPE = "https://www.googleapis.com/auth/calendar.events.owned";
 const TOKEN_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const STATE_TTL_MS = 10 * 60 * 1000;
@@ -21,21 +21,6 @@ const KNOWN_APP_ORIGINS = new Set([
   "https://barber-os-kutuzov.vercel.app",
   "https://barber-os-git-main-kutuzov.vercel.app",
 ]);
-
-type ErrCode =
-  | "GOOGLE_CALENDAR_NOT_CONFIGURED"
-  | "GOOGLE_CALENDAR_INVALID_REQUEST"
-  | "GOOGLE_CALENDAR_APPOINTMENT_NOT_FOUND"
-  | "GOOGLE_CALENDAR_APPOINTMENT_NOT_ACTIVE"
-  | "GOOGLE_CALENDAR_RATE_LIMITED"
-  | "GOOGLE_CALENDAR_PROVIDER_FAILED"
-  | "GOOGLE_CALENDAR_STATE_INVALID";
-
-class CalendarError extends Error {
-  constructor(readonly code: ErrCode, readonly status = 500) {
-    super(code);
-  }
-}
 
 type Appointment = {
   shop_name: string;
@@ -137,7 +122,7 @@ function b64url(bytes: Uint8Array): string {
   return btoa(raw).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function fromB64url(input: string): Uint8Array {
+function fromB64url(input: string): Uint8Array<ArrayBuffer> {
   const base64 = input.replace(/-/g, "+").replace(/_/g, "/");
   const raw = atob(base64 + "=".repeat((4 - base64.length % 4) % 4));
   return Uint8Array.from(raw, (character) => character.charCodeAt(0));
@@ -264,33 +249,13 @@ async function authorize(req: Request, body: Record<string, unknown>): Promise<R
   return json(req, { ok: true, authorization_url: authorizationUrl.toString() });
 }
 
-async function exchangeCode(code: string) {
-  const settings = config();
-  const response = await fetch(GOOGLE_TOKEN, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      code,
-      client_id: settings.clientId,
-      client_secret: settings.clientSecret,
-      redirect_uri: settings.redirectUri,
-      grant_type: "authorization_code",
-    }),
-  });
-  const result: unknown = await response.json().catch(() => ({}));
-  if (!response.ok || !isObject(result) || typeof result.access_token !== "string") {
-    throw new CalendarError("GOOGLE_CALENDAR_PROVIDER_FAILED", 502);
-  }
-  return result.access_token;
-}
-
 async function eventId(token: string): Promise<string> {
   // Google event IDs accept lowercase hexadecimal characters; deterministic IDs
   // prevent duplicate events if a callback is retried or the client repeats the action.
   return "b" + await sha256Hex("barberos-google-calendar:" + token);
 }
 
-function eventBody(appointment: Appointment, token: string, id: string) {
+function eventBody(appointment: Appointment, token: string, id: string): CalendarEvent {
   const bookingUrl = new URL("/marcacao/" + token, appBaseUrl()).toString();
   const description = [
     "Serviço: " + appointment.service_name,
@@ -311,33 +276,6 @@ function eventBody(appointment: Appointment, token: string, id: string) {
     visibility: "private",
     source: { title: "BarberOS", url: bookingUrl },
   };
-}
-
-async function createOrUpdateEvent(accessToken: string, appointment: Appointment, token: string): Promise<"added" | "updated"> {
-  const id = await eventId(token);
-  const body = eventBody(appointment, token, id);
-  const headers = {
-    authorization: "Bearer " + accessToken,
-    "content-type": "application/json",
-  };
-  const insert = await fetch(GOOGLE_EVENTS + "?sendUpdates=none", {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-  });
-  if (insert.ok) return "added";
-  if (insert.status === 409) {
-    // The event ID is immutable after insertion, so omit it from the PATCH body.
-    const { id: immutableEventId, ...patchBody } = body;
-    if (immutableEventId !== id) throw new CalendarError("GOOGLE_CALENDAR_PROVIDER_FAILED", 502);
-    const update = await fetch(GOOGLE_EVENTS + "/" + encodeURIComponent(id), {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify(patchBody),
-    });
-    if (update.ok) return "updated";
-  }
-  throw new CalendarError("GOOGLE_CALENDAR_PROVIDER_FAILED", 502);
 }
 
 async function callback(req: Request): Promise<Response> {
@@ -361,8 +299,8 @@ async function callback(req: Request): Promise<Response> {
     const admin = adminClient();
     const appointment = await appointmentFor(admin, state.token);
     assertActiveAppointment(appointment);
-    const accessToken = await exchangeCode(code);
-    const result = await createOrUpdateEvent(accessToken, appointment, state.token);
+    const accessToken = await exchangeCode(code, config());
+    const result = await createOrUpdateEvent(accessToken, eventBody(appointment, state.token, await eventId(state.token)));
     return redirectTo(landing(state.token, result));
   } catch (error) {
     const reason = error instanceof CalendarError && error.code === "GOOGLE_CALENDAR_APPOINTMENT_NOT_ACTIVE"
