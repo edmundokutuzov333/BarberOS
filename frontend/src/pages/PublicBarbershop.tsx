@@ -8,7 +8,7 @@ import { formatMT, humanError } from '@/lib/utils';
 import { useScopedTheme } from '@/themes';
 import { usePublicBarbershop, type PublicBarber, type PublicHaircut, type PublicService, type PublicWorkingHour } from '@/features/public-shop/api';
 import { HaircutPhoto } from '@/components/HaircutPhoto';
-import { bookingPath, effectiveOffer, styleMatchesService } from '@/features/booking/offer';
+import { barberCanStyle, bookingPath, effectiveOffer, groupServices, styleMatchesService } from '@/features/booking/offer';
 import { BARBER_FALLBACK_PHOTOS, BARBERSHOP_FALLBACK_PHOTOS, SERVICE_FALLBACK_PHOTOS, PhotoWithFallback } from '@/components/PhotoWithFallback';
 
 const WEEKDAYS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
@@ -263,7 +263,7 @@ export default function PublicBarbershop() {
                             <div className="perf-deferred">
                             <Panel title="Serviços" aside={<span className="t-label text-ink-mid">{services.length}</span>}>
                               {services.length ? (
-                                <div className="grid sm:grid-cols-2 gap-3">{services.map((service) => <ServiceCard key={service.id} service={service} shopSlug={shop.slug} bookable={barbers.some((barber) => barber.service_ids.includes(service.id))} />)}</div>
+                                <div className="space-y-5">{groupServices(services).map((group) => <section key={JSON.stringify([group.category, group.subcategory])} className="space-y-2"><h3 className="t-card text-ink-hi">{group.category} <span className="t-label text-ink-mid">· {group.subcategory}</span></h3><div className="grid sm:grid-cols-2 gap-3">{group.services.map((service) => <ServiceCard key={service.id} service={service} shopSlug={shop.slug} bookable={barbers.some((barber) => barber.service_ids.includes(service.id))} />)}</div></section>)}</div>
                               ) : <EmptyState title="Ainda sem serviços publicados" body="A barbearia ainda não disponibilizou serviços para marcação online." />}
                             </Panel>
                             </div>
@@ -273,17 +273,14 @@ export default function PublicBarbershop() {
                               {haircuts.length ? (
                                 <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
                                   {haircuts.map((cut: PublicHaircut) => {
-                                    const parent = services.find((service) => styleMatchesService(cut, service.id));
-                                    const offer = parent ? effectiveOffer(parent, cut) : undefined;
-                                    const bookable = parent && barbers.some((barber) => barber.service_ids.includes(parent.id));
+                                    const parents = services.filter((service) => styleMatchesService(cut, service.id));
                                     return (
                                     <article key={cut.id} className="rounded-3xl border border-white/10 bg-white/5 overflow-hidden">
                                       <HaircutPhoto name={cut.name} photoUrl={cut.photo_url} alt={`Exemplo do corte ${cut.name}`} className="w-full aspect-[4/3] object-cover" />
                                       <div className="p-4">
                                         <h3 className="t-card text-ink-hi">{cut.name}</h3>
                                         {cut.description && <p className="t-body text-ink-mid mt-1.5">{cut.description}</p>}
-                                        {offer && <p className="t-label text-accent-soft mt-3">{formatMT(offer.price_cents)} · {offer.duration_min} min</p>}
-                                        {parent && bookable ? <Link className="inline-flex mt-3 text-sm text-accent-soft underline underline-offset-4" to={bookingPath(shop.slug, parent.id, cut.id)}>Marcar este estilo</Link> : <p className="t-label text-ink-mid mt-3">{parent ? 'Sem profissional disponível' : 'Referência visual · não reservável online'}</p>}
+                                        {parents.length ? <div className="space-y-2 mt-3">{parents.map((parent) => { const offer = effectiveOffer(parent, cut); const bookable = barbers.some((barber) => barber.service_ids.includes(parent.id) && barberCanStyle(barber.id, cut)); return <div key={parent.id} className="border-t border-white/10 pt-2"><p className="t-label text-ink-hi">{parent.name} · {formatMT(offer.price_cents)} · {offer.duration_min} min</p>{bookable ? <Link className="inline-flex text-sm text-accent-soft underline underline-offset-4" to={bookingPath(shop.slug, parent.id, cut.id)}>Marcar este estilo</Link> : <p className="t-label text-ink-mid">Sem profissional disponível</p>}</div>; })}</div> : <p className="t-label text-ink-mid mt-3">Referência visual · não reservável online</p>}
                                       </div>
                                     </article>
                                   ); })}

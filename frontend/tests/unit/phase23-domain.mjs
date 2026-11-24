@@ -19,6 +19,13 @@ async function main() {
         assert.deepEqual(offers.effectiveOffer(base, { ...variant, price_cents: 0, duration_min: null }), { ...base, price_cents: 0 });
         assert.deepEqual(offers.effectiveOffer(base, { ...variant, service_id: null }), base);
         assert.equal(offers.styleMatchesService({ ...variant, duration_min: 2 }, 'service'), false);
+        const secondary = { ...variant, additional_offers: [{ service_id: 'other', price_cents: 65000, duration_min: null }], skill_restricted: true, skill_barber_ids: ['trained'] };
+        assert.equal(offers.styleMatchesService(secondary, 'other'), true);
+        assert.deepEqual(offers.effectiveOffer({ ...base, id: 'other' }, secondary), { ...base, id: 'other', price_cents: 65000 });
+        assert.equal(offers.barberCanStyle('trained', secondary), true);
+        assert.equal(offers.barberCanStyle('other', secondary), false);
+        assert.equal(offers.barberCanStyle('trained', { ...secondary, skill_barber_ids: [] }), false);
+        assert.equal(offers.groupServices([{ ...base, category: 'Cabelo', subcategory: 'Corte' }, { ...base, id: 'other', category: 'Barba' }]).length, 2);
         assert.equal(offers.bookingPath('shop', 'service', 'style'), '/barbearia/shop/marcar?service=service&step=3&haircut=style');
       }],
       ['formatMT formats Metical cents', () => {

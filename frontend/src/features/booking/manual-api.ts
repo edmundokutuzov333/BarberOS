@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Database } from '@/lib/database.types';
 import { supabase } from '@/lib/supabase';
 import { normalizeMozPhone } from '@/features/booking/api';
+import type { StyleOffer } from '@/features/booking/offer';
 
 export type ManualService = Pick<
   Database['public']['Tables']['services']['Row'],
@@ -10,8 +11,8 @@ export type ManualService = Pick<
 
 export type ManualHaircut = Pick<
   Database['public']['Tables']['haircuts']['Row'],
-  'id' | 'name' | 'service_id' | 'price_cents' | 'duration_min'
->;
+  'id' | 'name' | 'service_id' | 'price_cents' | 'duration_min' | 'skill_restricted'
+> & { additional_offers: StyleOffer[]; skill_barber_ids: string[] };
 
 export type ManualBarber = Pick<
   Database['public']['Tables']['barbers']['Row'],
@@ -34,7 +35,7 @@ export async function getManualBookingCatalog(shopId: string) {
       .order('name'),
     supabase
       .from('haircuts')
-      .select('id,name,service_id,price_cents,duration_min')
+      .select('id,name,service_id,price_cents,duration_min,skill_restricted,haircut_service_offers(service_id,price_cents,duration_min),haircut_barber_skills(barber_id)')
       .eq('barbershop_id', shopId)
       .eq('is_active', true)
       .order('sort_order')
@@ -54,7 +55,7 @@ export async function getManualBookingCatalog(shopId: string) {
 
   return {
     services: (services.data ?? []) as ManualService[],
-    haircuts: (haircuts.data ?? []) as unknown as ManualHaircut[],
+    haircuts: (haircuts.data ?? []).map((haircut) => ({ ...haircut, additional_offers: haircut.haircut_service_offers ?? [], skill_barber_ids: (haircut.haircut_barber_skills ?? []).map((skill) => skill.barber_id) })) as ManualHaircut[],
     barbers: (barbers.data ?? []) as unknown as ManualBarber[],
   };
 }

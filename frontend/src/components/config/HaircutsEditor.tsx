@@ -13,6 +13,10 @@ import { Skeleton, EmptyState, ErrorState } from '@/components/ui/States';
 import { useServices } from './ServicesEditor';
 import { getDefaultHaircutPhoto, isDefaultHaircutPhoto } from '@/lib/default-haircut-photos';
 import { HaircutPhoto } from '@/components/HaircutPhoto';
+import type { StyleOffer } from '@/features/booking/offer';
+
+type CatalogHaircut = Haircut & { haircut_service_offers: StyleOffer[]; haircut_barber_skills: { barber_id: string }[] };
+type ExtraForm = { service_id: string; price: string; duration: string };
 
 const empty = { name: '', description: '', service_id: '', price: '', duration: '', photo_url: null as string | null };
 
@@ -20,9 +24,9 @@ export function useHaircuts(shopId: string) {
   return useQuery({
     queryKey: ['haircuts', shopId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('haircuts').select('*').eq('barbershop_id', shopId).order('sort_order').order('name');
+      const { data, error } = await supabase.from('haircuts').select('*,haircut_service_offers(service_id,price_cents,duration_min),haircut_barber_skills(barber_id)').eq('barbershop_id', shopId).order('sort_order').order('name');
       if (error) throw error;
-      return data as Haircut[];
+      return data as CatalogHaircut[];
     },
   });
 }
@@ -32,11 +36,18 @@ export function HaircutsEditor() {
   const qc = useQueryClient();
   const q = useHaircuts(shop!.id);
   const services = useServices(shop!.id);
-  const [editing, setEditing] = useState<Haircut | null | 'new'>(null);
+  const [editing, setEditing] = useState<CatalogHaircut | null | 'new'>(null);
+  const [extra, setExtra] = useState<ExtraForm[]>([]);
+  const [restricted, setRestricted] = useState(false);
+  const [skills, setSkills] = useState<string[]>([]);
+  const barbers = useQuery({ queryKey: ['haircut-skill-barbers', shop!.id], queryFn: async () => { const { data, error } = await supabase.from('barbers').select('id,display_name,is_active').eq('barbershop_id', shop!.id).order('display_name'); if (error) throw error; return data; } });
   const [form, setForm] = useState(empty);
   const key = ['haircuts', shop!.id];
 
-  const open = (h: Haircut | 'new') => {
+  const open = (h: CatalogHaircut | 'new') => {
+    setExtra(h === 'new' ? [] : h.haircut_service_offers.map((o) => ({ service_id: o.service_id, price: o.price_cents == null ? '' : String(o.price_cents / 100), duration: o.duration_min == null ? '' : String(o.duration_min) })));
+    setRestricted(h !== 'new' && h.skill_restricted);
+    setSkills(h === 'new' ? [] : h.haircut_barber_skills.map((k) => k.barber_id));
     setForm(h === 'new' ? empty : { name: h.name, description: h.description ?? '', service_id: h.service_id ?? '', price: h.price_cents != null ? String(h.price_cents / 100) : '', duration: h.duration_min != null ? String(h.duration_min) : '', photo_url: h.photo_url });
     setEditing(h);
   };
@@ -56,12 +67,12 @@ export function HaircutsEditor() {
       if (duration !== null && (!Number.isInteger(duration) || duration < 5 || duration > 480)) throw new Error('Duração entre 5 e 480 minutos.');
       if (!form.service_id && (price !== null || duration !== null)) throw new Error('Associe um serviço para definir preço ou duração; uma referência visual não é reservável.');
       const row = { name: form.name.trim(), description: form.description.trim() || null, service_id: form.service_id || null, price_cents: price, duration_min: duration, photo_url: form.photo_url };
-      const r = editing === 'new'
-        ? await supabase.from('haircuts').insert({ ...row, barbershop_id: shop!.id, sort_order: q.data?.length ?? 0 })
-        : await supabase.from('haircuts').update(row).eq('id', (editing as Haircut).id);
+      const offers = extra.map((item) => { const p = item.price.trim() === '' ? null : Math.round(Number(item.price.replace(',', '.')) * 100); const d = item.duration.trim() === '' ? null : Number(item.duration); if (!item.service_id || item.service_id === form.service_id || (p !== null && (!Number.isSafeInteger(p) || p < 0)) || (d !== null && (!Number.isInteger(d) || d < 5 || d > 480))) throw new Error('Verifique os serviços adicionais, preços e durações.'); return { service_id: item.service_id, price_cents: p, duration_min: d }; });
+      if (new Set(offers.map((item) => item.service_id)).size !== offers.length) throw new Error('Não repita serviços adicionais.');
+      const r = await supabase.rpc('save_haircut_configuration', { p_shop: shop!.id, p_haircut: editing === 'new' ? null : (editing as Haircut).id, p_entry: { ...row, skill_restricted: restricted }, p_offers: offers, p_skill_barbers: skills });
       if (r.error) throw r.error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: key }); setEditing(null); toast.success('Corte guardado'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: key }); qc.invalidateQueries({ queryKey: ['public-barbershop'] }); qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }); qc.invalidateQueries({ queryKey: ['availability'] }); setEditing(null); toast.success('Corte guardado'); },
     onError: (e) => toast.error(e instanceof Error && !e.message.includes('_') ? e.message : humanError(e)),
   });
   const toggle = useMutation({
@@ -118,7 +129,7 @@ export function HaircutsEditor() {
               <div className="p-3 flex items-center gap-2">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-normal truncate">{h.name}</p>
-                  <p className="t-label text-ink-mid truncate">{h.service_id ? ([h.duration_min && `${h.duration_min} min`, h.price_cents != null && formatMT(h.price_cents)].filter(Boolean).join(' · ') || 'Segue o serviço') : 'Referência visual · associe um serviço'}</p>
+                  <p className="t-label text-ink-mid truncate">{h.service_id || h.haircut_service_offers.length ? ([h.duration_min && `${h.duration_min} min`, h.price_cents != null && formatMT(h.price_cents)].filter(Boolean).join(' · ') || 'Segue o serviço') : 'Referência visual · associe um serviço'}</p>
                 </div>
                 <Switch testId={`haircut-toggle-${h.id}`} checked={h.is_active} onCheckedChange={() => toggle.mutate(h)} />
               </div>
@@ -136,18 +147,29 @@ export function HaircutsEditor() {
             </div>
             <div className="space-y-3">
               <Field data-testid="haircut-name-input" label="Nome" name="hc_name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex.: Low fade" autoFocus />
-              <Select data-testid="haircut-service-select" label="Serviço associado" value={form.service_id} onChange={(e) => setForm({ ...form, service_id: e.target.value })}>
-                <option value="">Referência visual (não reservável)</option>
+              <Select data-testid="haircut-service-select" label="Serviço principal" value={form.service_id} onChange={(e) => setForm({ ...form, service_id: e.target.value })}>
+                <option value="">Sem serviço principal</option>
                 {services.data?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </Select>
             </div>
           </div>
           <Textarea data-testid="haircut-description-input" label="Descrição" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Uma frase que ajude o cliente a reconhecer o corte." />
-          <p className="t-label text-ink-mid">Preço e duração opcionais substituem os do serviço associado. Deixe em branco para herdar. Sem associação, o estilo serve apenas de referência visual.</p>
+          <p className="t-label text-ink-mid">Preço e duração opcionais substituem os do serviço principal. Deixe em branco para herdar. Serviços adicionais têm os seus próprios valores. Sem qualquer associação, o estilo é apenas visual.</p>
           <div className="grid grid-cols-2 gap-3">
             <Field data-testid="haircut-price-input" label="Preço (MT), opcional" name="hc_price" inputMode="decimal" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="Segue o serviço" />
             <Field data-testid="haircut-duration-input" label="Duração (min), opcional" name="hc_duration" inputMode="numeric" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} placeholder="Segue o serviço" />
           </div>
+          <fieldset className="space-y-3 border-t border-white/10 pt-3">
+            <legend className="t-label text-ink-mid">Outras ofertas comerciais</legend>
+            {extra.map((item, index) => <div key={index} className="rounded-xl border border-white/10 p-3 space-y-2"><Select label="Serviço adicional" value={item.service_id} onChange={(e) => setExtra((rows) => rows.map((r, i) => i === index ? { ...r, service_id: e.target.value } : r))}><option value="">Escolher serviço</option>{services.data?.filter((svc) => svc.id !== form.service_id && (svc.id === item.service_id || !extra.some((r) => r.service_id === svc.id))).map((svc) => <option key={svc.id} value={svc.id}>{svc.name}</option>)}</Select><div className="grid grid-cols-2 gap-2"><Field label="Preço (MT)" name={'extra_price_'+index} value={item.price} placeholder="Herdar" inputMode="decimal" onChange={(e) => setExtra((rows) => rows.map((r,i) => i === index ? { ...r, price:e.target.value } : r))}/><Field label="Duração (min)" name={'extra_duration_'+index} value={item.duration} placeholder="Herdar" inputMode="numeric" onChange={(e) => setExtra((rows) => rows.map((r,i) => i === index ? { ...r, duration:e.target.value } : r))}/></div><Button type="button" variant="ghost" size="sm" onClick={() => setExtra((rows) => rows.filter((_,i) => i !== index))}>Remover oferta</Button></div>)}
+            <Button data-testid="haircut-add-offer" type="button" variant="secondary" size="sm" disabled={extra.length >= 50 || !services.data?.some((svc) => svc.id !== form.service_id && !extra.some((r) => r.service_id === svc.id))} onClick={() => setExtra((rows) => [...rows,{service_id:'',price:'',duration:''}])}>Adicionar serviço compatível</Button>
+          </fieldset>
+          <fieldset className="space-y-3 border-t border-white/10 pt-3">
+            <legend className="t-label text-ink-mid">Competências específicas</legend>
+            <Switch testId="haircut-restrict-skills" checked={restricted} onCheckedChange={setRestricted} label="Apenas profissionais autorizados para este estilo"/>
+            <p className="t-label text-ink-mid">{restricted ? 'Seleccione quem executa este estilo. Sem profissionais seleccionados, não será reservável.' : 'Herda as competências do serviço. Não presume certificação individual.'}</p>
+            {restricted && (barbers.isLoading ? <Skeleton className="h-16"/> : barbers.error ? <ErrorState message={humanError(barbers.error)} onRetry={() => barbers.refetch()}/> : <div className="space-y-2">{barbers.data?.map((b) => <label key={b.id} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={skills.includes(b.id)} onChange={(e) => setSkills((ids) => e.target.checked ? [...ids,b.id] : ids.filter((id) => id !== b.id))}/>{b.display_name}{!b.is_active && ' (inactivo)'}</label>)}</div>)}
+          </fieldset>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={() => setEditing(null)}>Cancelar</Button>
             <Button data-testid="haircut-save-btn" type="submit" loading={save.isPending}>Guardar</Button>

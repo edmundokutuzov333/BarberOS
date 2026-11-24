@@ -9,7 +9,7 @@ import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States'
 import { formatMT, humanError } from '@/lib/utils';
 import { buildWhatsAppLink } from '@/lib/calendar';
 import { normalizeMozPhone } from '@/features/booking/api';
-import { effectiveOffer, styleMatchesService } from '@/features/booking/offer';
+import { barberCanStyle, effectiveOffer, styleMatchesService } from '@/features/booking/offer';
 import { useAvailableDays, useAvailableSlots } from '@/features/availability/api';
 import {
   useBookManualAppointment,
@@ -208,15 +208,15 @@ export default function ManualBookingModal({
 
   const catalog = catalogQuery.data;
   const service = catalog?.services.find((item) => item.id === serviceId);
-  const eligibleBarbers = useMemo(
-    () => catalog?.barbers.filter((barber) => barber.barber_services.some((row) => row.service_id === serviceId)) ?? [],
-    [catalog?.barbers, serviceId],
-  );
   const eligibleHaircuts = useMemo(
-    () => catalog?.haircuts.filter((haircut) => styleMatchesService(haircut, serviceId)) ?? [],
-    [catalog?.haircuts, serviceId],
+    () => catalog?.haircuts.filter((haircut) => styleMatchesService(haircut, serviceId) && catalog.barbers.some((barber) => barber.barber_services.some((row) => row.service_id === serviceId) && barberCanStyle(barber.id, haircut))) ?? [],
+    [catalog?.haircuts, catalog?.barbers, serviceId],
   );
   const selectedStyle = eligibleHaircuts.find((item) => item.id === haircutId);
+  const eligibleBarbers = useMemo(
+    () => catalog?.barbers.filter((barber) => barber.barber_services.some((row) => row.service_id === serviceId) && barberCanStyle(barber.id, selectedStyle)) ?? [],
+    [catalog?.barbers, serviceId, selectedStyle],
+  );
   const offer = service ? effectiveOffer(service, selectedStyle) : undefined;
   const ownBarber = role === 'barber' ? eligibleBarbers.find((barber) => barber.user_id === user?.id) : undefined;
   const selectedBarberId = role === 'barber'
@@ -272,7 +272,8 @@ export default function ManualBookingModal({
 
   const submit = async () => {
     const nextErrors: Record<string, string> = {};
-    if (!service) nextErrors.service = 'Escolhe um serviço.';
+    if (!service || !eligibleBarbers.length) nextErrors.service = 'Escolhe um serviço com profissional elegível.';
+    if (haircutId && !selectedStyle) nextErrors.service = 'O estilo deixou de estar disponível.';
     if (role === 'barber' && !ownBarber) nextErrors.barber = 'O teu perfil de barbeiro não está ligado a esta loja.';
     if (!start || !slotsQuery.data?.some((slot) => slot.slot_start === start)) nextErrors.start = 'Escolhe um horário disponível.';
     if (!form.name.trim() || form.name.trim().length < 2 || form.name.trim().length > 120) nextErrors.name = 'Escreve um nome válido.';
@@ -367,7 +368,7 @@ export default function ManualBookingModal({
                     className="field appearance-none"
                   >
                     <option value="">Sem corte específico</option>
-                    {eligibleHaircuts.map((item: ManualHaircut) => <option key={item.id} value={item.id}>{item.name} · {formatMT(item.price_cents ?? service.price_cents)} · {item.duration_min ?? service.duration_min} min</option>)}
+                    {eligibleHaircuts.map((item: ManualHaircut) => <option key={item.id} value={item.id}>{item.name} · {formatMT(effectiveOffer(service, item).price_cents)} · {effectiveOffer(service, item).duration_min} min</option>)}
                   </select>
                 </label>}
 

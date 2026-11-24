@@ -9,6 +9,7 @@ type GeneratedFunctions = GeneratedDatabase['public']['Functions'];
 // reviewed wire contract separate from the unmodified generated schema.
 export const nullableRpcArguments = {
   save_barber: ['p_barber_id', 'p_bio', 'p_photo_url', 'p_user_id'],
+  save_haircut_configuration: ['p_haircut'],
   save_schedule_override: ['p_barber_id', 'p_opens_at', 'p_closes_at', 'p_note', 'p_id'],
   transition_appointment: ['p_reason'],
   reschedule_appointment_by_operator: ['p_new_barber_id'],

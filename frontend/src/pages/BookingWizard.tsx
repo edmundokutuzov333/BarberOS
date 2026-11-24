@@ -11,7 +11,7 @@ import { buildWhatsAppLink } from '@/lib/calendar';
 import { formatMT, humanError } from '@/lib/utils';
 import { useAvailableDays, useAvailableSlots } from '@/features/availability/api';
 import { normalizeMozPhone, useBookAppointment } from '@/features/booking/api';
-import { effectiveOffer, styleMatchesService } from '@/features/booking/offer';
+import { barberCanStyle, effectiveOffer, groupServices, styleMatchesService } from '@/features/booking/offer';
 import { HaircutPhoto } from '@/components/HaircutPhoto';
 import { rememberLocalBooking } from '@/lib/shop-link';
 import { WaitlistJoinPanel } from '@/features/waitlist/WaitlistJoinPanel';
@@ -306,16 +306,16 @@ export default function BookingWizard() {
 
   const service = data?.services.find((item) => item.id === serviceId);
   const eligibleHaircuts = useMemo(
-    () => data?.haircuts.filter((item) => styleMatchesService(item, serviceId)) ?? [],
-    [data?.haircuts, serviceId],
+    () => data?.haircuts.filter((item) => styleMatchesService(item, serviceId) && data.barbers.some((barber) => Boolean(serviceId && barber.service_ids.includes(serviceId) && barberCanStyle(barber.id, item)))) ?? [],
+    [data?.haircuts, data?.barbers, serviceId],
   );
   const haircut = eligibleHaircuts.find((item) => item.id === haircutId);
   const offer = service ? effectiveOffer(service, haircut) : undefined;
   const hasStyleStep = !service || eligibleHaircuts.length > 0;
   const visibleStepLabels = hasStyleStep ? stepLabels : stepLabels.filter((_, index) => index !== 1);
   const eligibleBarbers = useMemo(
-    () => data?.barbers.filter((barber) => Boolean(serviceId && barber.service_ids.includes(serviceId))) ?? [],
-    [data?.barbers, serviceId],
+    () => data?.barbers.filter((barber) => Boolean(serviceId && barber.service_ids.includes(serviceId) && barberCanStyle(barber.id, haircut))) ?? [],
+    [data?.barbers, serviceId, haircut],
   );
   const barber = eligibleBarbers.find((item) => item.id === barberParam);
   const selectedBarberId = barberParam === 'any' ? null : barber?.id ?? null;
@@ -406,7 +406,7 @@ export default function BookingWizard() {
   const setStep = (step: number) => updateSearchParams(searchParams, setSearchParams, { step: String(step) });
 
   const chooseService = (id: string) => updateSearchParams(searchParams, setSearchParams, {
-    service: id, haircut: null, barber: 'any', date: null, start: null, step: data.haircuts.some((item) => styleMatchesService(item, id)) ? '2' : '3',
+    service: id, haircut: null, barber: 'any', date: null, start: null, step: data.haircuts.some((item) => styleMatchesService(item, id) && data.barbers.some((barber) => barber.service_ids.includes(id) && barberCanStyle(barber.id, item))) ? '2' : '3',
   });
 
   const chooseHaircut = (id: string | null) => updateSearchParams(searchParams, setSearchParams, {
@@ -618,8 +618,8 @@ export default function BookingWizard() {
             {showServiceStep && (
               <Panel title="Escolha o serviço" testId="booking-step-service">
                 {data.services.length ? (
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {data.services.map((item) => {
+                  <div className="space-y-5">
+                    {groupServices(data.services).map((group) => <section key={JSON.stringify([group.category, group.subcategory])} className="space-y-2"><h3 className="t-card text-ink-hi">{group.category} <span className="t-label text-ink-mid">· {group.subcategory}</span></h3><div className="grid sm:grid-cols-2 gap-3">{group.services.map((item) => {
                       const bookable = data.barbers.some((barberItem) => barberItem.service_ids.includes(item.id));
                       return (
                         <ChoiceCard
@@ -637,7 +637,7 @@ export default function BookingWizard() {
                           imageFallbackSources={SERVICE_FALLBACK_PHOTOS}
                         />
                       );
-                    })}
+                    })}</div></section>)}
                   </div>
                 ) : (
                   <EmptyState title="Marcação online indisponível" body="Esta barbearia ainda não publicou serviços activos." />

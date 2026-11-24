@@ -29,6 +29,9 @@ const tests = [
     assert.match(source, /boundedStep === 2 && !hasStyleStep \? 3/);
     assert.match(source, /haircutId: haircut\?\.id \?\? null/);
     assert.match(source, /effectiveOffer\(service, haircut\)/);
+    assert.match(source, /barberCanStyle\(barber.id, haircut\)/);
+    assert.match(source, /groupServices\(data.services\)/);
+    assert.match(read('src/components/config/HaircutsEditor.tsx'), /save_haircut_configuration/);
     assert.match(source, /available \|\| day\.is_open/);
     const availability = read('src/features/availability/api.ts');
     assert.match(availability, /get_offer_available_slots/);

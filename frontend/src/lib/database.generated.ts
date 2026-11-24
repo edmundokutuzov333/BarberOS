@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
@@ -729,6 +729,92 @@ export type Database = {
           },
         ]
       }
+      haircut_barber_skills: {
+        Row: {
+          barber_id: string
+          barbershop_id: string
+          haircut_id: string
+        }
+        Insert: {
+          barber_id: string
+          barbershop_id: string
+          haircut_id: string
+        }
+        Update: {
+          barber_id?: string
+          barbershop_id?: string
+          haircut_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "haircut_barber_skills_barber_id_barbershop_id_fkey"
+            columns: ["barber_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+          {
+            foreignKeyName: "haircut_barber_skills_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "haircut_barber_skills_haircut_id_barbershop_id_fkey"
+            columns: ["haircut_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "haircuts"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+        ]
+      }
+      haircut_service_offers: {
+        Row: {
+          barbershop_id: string
+          duration_min: number | null
+          haircut_id: string
+          price_cents: number | null
+          service_id: string
+        }
+        Insert: {
+          barbershop_id: string
+          duration_min?: number | null
+          haircut_id: string
+          price_cents?: number | null
+          service_id: string
+        }
+        Update: {
+          barbershop_id?: string
+          duration_min?: number | null
+          haircut_id?: string
+          price_cents?: number | null
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "haircut_service_offers_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "haircut_service_offers_haircut_id_barbershop_id_fkey"
+            columns: ["haircut_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "haircuts"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+          {
+            foreignKeyName: "haircut_service_offers_service_id_barbershop_id_fkey"
+            columns: ["service_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+        ]
+      }
       haircuts: {
         Row: {
           barbershop_id: string
@@ -740,6 +826,7 @@ export type Database = {
           photo_url: string | null
           price_cents: number | null
           service_id: string | null
+          skill_restricted: boolean
           sort_order: number
         }
         Insert: {
@@ -752,6 +839,7 @@ export type Database = {
           photo_url?: string | null
           price_cents?: number | null
           service_id?: string | null
+          skill_restricted?: boolean
           sort_order?: number
         }
         Update: {
@@ -764,6 +852,7 @@ export type Database = {
           photo_url?: string | null
           price_cents?: number | null
           service_id?: string | null
+          skill_restricted?: boolean
           sort_order?: number
         }
         Relationships: [
@@ -1386,6 +1475,7 @@ export type Database = {
       services: {
         Row: {
           barbershop_id: string
+          category: string
           duration_min: number
           id: string
           is_active: boolean
@@ -1394,9 +1484,11 @@ export type Database = {
           price_cents: number
           requires_deposit: boolean
           sort_order: number
+          subcategory: string
         }
         Insert: {
           barbershop_id: string
+          category?: string
           duration_min: number
           id?: string
           is_active?: boolean
@@ -1405,9 +1497,11 @@ export type Database = {
           price_cents: number
           requires_deposit?: boolean
           sort_order?: number
+          subcategory?: string
         }
         Update: {
           barbershop_id?: string
+          category?: string
           duration_min?: number
           id?: string
           is_active?: boolean
@@ -1416,6 +1510,7 @@ export type Database = {
           price_cents?: number
           requires_deposit?: boolean
           sort_order?: number
+          subcategory?: string
         }
         Relationships: [
           {
@@ -2426,22 +2521,38 @@ export type Database = {
           price_cents: number
         }[]
       }
-      admin_update_support_ticket: {
-        Args: {
-          p_assigned_to?: string
-          p_clear_assignee?: boolean
-          p_priority?: Database["public"]["Enums"]["support_ticket_priority"]
-          p_status?: Database["public"]["Enums"]["support_ticket_status"]
-          p_ticket: string
-        }
-        Returns: {
-          assigned_to: string
-          id: string
-          priority: Database["public"]["Enums"]["support_ticket_priority"]
-          status: Database["public"]["Enums"]["support_ticket_status"]
-          updated_at: string
-        }[]
-      }
+      admin_update_support_ticket:
+        | {
+            Args: {
+              p_assigned_to?: string
+              p_priority?: Database["public"]["Enums"]["support_ticket_priority"]
+              p_status?: Database["public"]["Enums"]["support_ticket_status"]
+              p_ticket: string
+            }
+            Returns: {
+              assigned_to: string
+              id: string
+              priority: Database["public"]["Enums"]["support_ticket_priority"]
+              status: Database["public"]["Enums"]["support_ticket_status"]
+              updated_at: string
+            }[]
+          }
+        | {
+            Args: {
+              p_assigned_to?: string
+              p_clear_assignee?: boolean
+              p_priority?: Database["public"]["Enums"]["support_ticket_priority"]
+              p_status?: Database["public"]["Enums"]["support_ticket_status"]
+              p_ticket: string
+            }
+            Returns: {
+              assigned_to: string
+              id: string
+              priority: Database["public"]["Enums"]["support_ticket_priority"]
+              status: Database["public"]["Enums"]["support_ticket_status"]
+              updated_at: string
+            }[]
+          }
       book_appointment: {
         Args: {
           p_barber_id: string
@@ -3580,6 +3691,16 @@ export type Database = {
           p_shop: string
           p_user_id: string
           p_years_experience: number
+        }
+        Returns: string
+      }
+      save_haircut_configuration: {
+        Args: {
+          p_entry: Json
+          p_haircut: string
+          p_offers: Json
+          p_shop: string
+          p_skill_barbers: string[]
         }
         Returns: string
       }
