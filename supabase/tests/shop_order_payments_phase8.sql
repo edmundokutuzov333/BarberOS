@@ -1,4 +1,7 @@
 begin;
+-- Isolated SQL payment-domain fixture only; rolled back, no provider requests.
+insert into public.platform_settings(key,value) values('payments','{"enabled":true}'::jsonb) on conflict(key) do update set value=excluded.value;
+
 do $shop_order_payments_phase8$
 declare
  v_actor uuid:=gen_random_uuid();v_shop uuid;v_barber uuid;v_service uuid;v_customer uuid;v_appointment uuid;v_order uuid;v_product uuid;v_variant uuid;v_item uuid;

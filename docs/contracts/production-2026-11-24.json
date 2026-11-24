@@ -433,7 +433,7 @@
       "name": "book_appointment_with_shop_order_idempotent",
       "returns": "TABLE(appointment_id uuid, manage_token uuid, deposit_cents integer, needs_payment boolean, shop_order_status shop_order_status, shop_order_item_count integer, shop_subtotal_minor bigint)",
       "anon_execute": false,
-      "definition_md5": "e75f0413835fc3f58ab43bb2948bbff1",
+      "definition_md5": "49a8618050df06cfb3e69a58c6e8f60d",
       "input_arguments": [
         "p_idempotency_key",
         "p_slug",
@@ -944,7 +944,7 @@
       "name": "get_public_payment_methods",
       "returns": "TABLE(payment_providers payment_provider[])",
       "anon_execute": true,
-      "definition_md5": "feb808aedcd2dfcb32c2c5a3f6cf10b5",
+      "definition_md5": "929ee6a13fd6064c8fb64432b0d55765",
       "input_arguments": [
         "p_slug"
       ],
@@ -956,7 +956,7 @@
       "name": "get_public_shop_catalog",
       "returns": "jsonb",
       "anon_execute": true,
-      "definition_md5": "59272524f2be501fd466a87f272e6204",
+      "definition_md5": "1d4cb0e1398c43e15442d34b05940a3c",
       "input_arguments": [
         "p_slug"
       ],
@@ -1211,7 +1211,7 @@
       "name": "init_payment_from_token",
       "returns": "TABLE(payment_id uuid, provider payment_provider, provider_ref text, amount_cents integer, msisdn text, hold_expires_at timestamp with time zone, reused boolean)",
       "anon_execute": false,
-      "definition_md5": "249bdf0e4a7c9d61f2d499e6e799e543",
+      "definition_md5": "0d08e750820e4fc3164f5ea2a155c184",
       "input_arguments": [
         "p_token",
         "p_provider",
@@ -1221,6 +1221,18 @@
       "identity_arguments": "p_token uuid, p_provider payment_provider, p_msisdn text, p_idempotency_key uuid",
       "authenticated_execute": false,
       "required_argument_count": 4
+    },
+    {
+      "name": "install_shop_reference_catalog",
+      "returns": "jsonb",
+      "anon_execute": false,
+      "definition_md5": "747156eedd55e1acc572f4af3b2beb9a",
+      "input_arguments": [
+        "p_barbershop_id"
+      ],
+      "identity_arguments": "p_barbershop_id uuid",
+      "authenticated_execute": true,
+      "required_argument_count": 1
     },
     {
       "name": "is_member",
@@ -1475,7 +1487,7 @@
       "name": "record_shop_order_payment",
       "returns": "jsonb",
       "anon_execute": false,
-      "definition_md5": "1ee151afd4d65d8ad1d98c862ddc7d01",
+      "definition_md5": "8a0342c6da95815aaff922ec8cb58351",
       "input_arguments": [
         "p_barbershop_id",
         "p_order_id",
@@ -1846,7 +1858,7 @@
       "name": "verify_shop_catalog_product",
       "returns": "jsonb",
       "anon_execute": false,
-      "definition_md5": "1914390fe449322689bdddaa8b3571c0",
+      "definition_md5": "6632aadfd9865cc516db241b74d7b8a2",
       "input_arguments": [
         "p_barbershop_id",
         "p_product_id",
@@ -1957,5 +1969,6 @@
       "bundle_sha256": "b9d7087cac62b61dddb31411fb34b8d6f82b70419332fefaa2dcd9c934ce2b1d"
     }
   ],
-  "catalog_capture": "2026-11-24, after transactional catalog migration; live PostgreSQL metadata"
+  "catalog_capture": "2026-11-24, after transactional catalog migration; live PostgreSQL metadata",
+  "store_launch_capture": "2026-11-24 after reference catalog and payment gate"
 }

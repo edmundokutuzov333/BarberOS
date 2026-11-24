@@ -1888,6 +1888,8 @@ export type Database = {
         Row: {
           barbershop_id: string
           brand: string | null
+          catalog_reference_key: string | null
+          catalog_verification_mode: string
           catalog_verification_note: string | null
           catalog_verified_at: string | null
           catalog_verified_by: string | null
@@ -1907,6 +1909,7 @@ export type Database = {
           name: string
           order_options: Json
           product_kind: Database["public"]["Enums"]["shop_product_kind"]
+          requires_confirmation: boolean
           sort_order: number
           track_stock: boolean
           updated_at: string
@@ -1915,6 +1918,8 @@ export type Database = {
         Insert: {
           barbershop_id: string
           brand?: string | null
+          catalog_reference_key?: string | null
+          catalog_verification_mode?: string
           catalog_verification_note?: string | null
           catalog_verified_at?: string | null
           catalog_verified_by?: string | null
@@ -1934,6 +1939,7 @@ export type Database = {
           name: string
           order_options?: Json
           product_kind?: Database["public"]["Enums"]["shop_product_kind"]
+          requires_confirmation?: boolean
           sort_order?: number
           track_stock?: boolean
           updated_at?: string
@@ -1942,6 +1948,8 @@ export type Database = {
         Update: {
           barbershop_id?: string
           brand?: string | null
+          catalog_reference_key?: string | null
+          catalog_verification_mode?: string
           catalog_verification_note?: string | null
           catalog_verified_at?: string | null
           catalog_verified_by?: string | null
@@ -1961,6 +1969,7 @@ export type Database = {
           name?: string
           order_options?: Json
           product_kind?: Database["public"]["Enums"]["shop_product_kind"]
+          requires_confirmation?: boolean
           sort_order?: number
           track_stock?: boolean
           updated_at?: string
@@ -3312,6 +3321,10 @@ export type Database = {
           provider_ref: string
           reused: boolean
         }[]
+      }
+      install_shop_reference_catalog: {
+        Args: { p_barbershop_id: string }
+        Returns: Json
       }
       is_member: {
         Args: {

@@ -1,4 +1,7 @@
 begin;
+-- Isolated SQL payment-domain fixture only; rolled back, no provider requests.
+insert into public.platform_settings(key,value) values('payments','{"enabled":true}'::jsonb) on conflict(key) do update set value=excluded.value;
+
 
 do $$
 declare

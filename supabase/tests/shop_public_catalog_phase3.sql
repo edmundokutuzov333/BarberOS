@@ -46,6 +46,7 @@ begin
 
   perform set_config('request.jwt.claim.role', 'service_role', true);
   update public.barbershops set shop_enabled = true where id in (v_shop, v_other_shop);
+  update public.barbershops set shop_enabled = false where id=v_disabled_shop;
 
   insert into public.shop_product_categories(barbershop_id, name, is_active)
   values (v_shop, 'Bebidas QA', true) returning id into v_category;

@@ -1,3 +1,5 @@
+import { PAYMENTS_AVAILABLE } from '@/features/payments/availability';
+import { PaymentsUnavailableNotice } from '@/features/payments/PaymentsUnavailableNotice';
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Copy, LockKeyhole, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
@@ -275,7 +277,7 @@ function AccountCard({
   );
 }
 
-export default function PaymentSettingsForm() {
+function PaymentSettingsFormWorkspace() {
   const { shop } = useShop();
   const query = usePaymentAccounts(shop?.id);
   const accounts = useMemo(() => {
@@ -315,3 +317,5 @@ export default function PaymentSettingsForm() {
     </div>
   );
 }
+
+export default function PaymentSettingsForm(){return PAYMENTS_AVAILABLE?<PaymentSettingsFormWorkspace/>:<PaymentsUnavailableNotice/>}

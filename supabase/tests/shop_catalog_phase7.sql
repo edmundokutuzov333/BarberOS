@@ -30,7 +30,7 @@ begin
  if not exists(select 1 from public.shop_products where id=v_product and is_active) then raise exception 'FAIL: verified product could not be published'; end if;
  v_result:=public.get_shop_phase7_catalog_readiness(v_shop);
  if not coalesce((v_result->>'catalog_ready')::boolean,false) then raise exception 'FAIL: valid catalogue not ready: %',v_result; end if;
- if coalesce((v_result->>'shop_enabled')::boolean,true) then raise exception 'FAIL: verification enabled public rollout'; end if;
+ if not coalesce((v_result->>'shop_enabled')::boolean,false) then raise exception 'FAIL: store default is not enabled'; end if;
 
  update public.shop_products set name='Produto QA alterado' where id=v_product and barbershop_id=v_shop;
  if exists(select 1 from public.shop_products where id=v_product and (is_active or catalog_verified_at is not null or catalog_verified_by is not null))
@@ -45,7 +45,7 @@ begin
  select read_by,read_at into v_read_by,v_read_at from public.shop_notification_events where id=v_notification;
  if v_read_by is distinct from v_actor or v_read_at is null then raise exception 'FAIL: acknowledgement actor/time missing'; end if;
  if has_table_privilege('authenticated','public.shop_notification_events','UPDATE') then raise exception 'FAIL: direct update privilege still granted'; end if;
- raise notice 'PASS | Phase 7: tenant-scoped product approval, provenance, publish guard, invalidation, feature flag remains off, RPC-only alert acknowledgement.';
+ raise notice 'PASS | Phase 7: tenant-scoped product approval, provenance, publish guard, invalidation, store remains enabled by default, RPC-only alert acknowledgement.';
 end;
 $shop_catalog_phase7$;
 rollback;

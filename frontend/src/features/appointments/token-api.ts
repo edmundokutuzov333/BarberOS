@@ -121,7 +121,7 @@ export function useShopOrderByToken(token?: string) {
   return useQuery({
     queryKey: ['shop-order-token', token],
     queryFn: () => getShopOrderByToken(token!),
-    enabled: Boolean(token) && import.meta.env.VITE_SHOP_PUBLIC_CATALOG_ENABLED === 'true',
+    enabled: Boolean(token),
     staleTime: 15_000,
     retry: false,
   });

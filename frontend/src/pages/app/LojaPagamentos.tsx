@@ -1,3 +1,5 @@
+import { PAYMENTS_AVAILABLE } from '@/features/payments/availability';
+import { PaymentsUnavailableNotice } from '@/features/payments/PaymentsUnavailableNotice';
 import { useRef, useState } from 'react';
 import { Banknote, RefreshCw, ShieldCheck } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -16,7 +18,7 @@ type Method = 'cash'|'pos'|'mpesa'|'emola'|'bank_transfer'|'other';
 const methods:{value:Method;label:string}[]=[{value:'cash',label:'Numerário'},{value:'pos',label:'POS'},{value:'mpesa',label:'M-Pesa'},{value:'emola',label:'e-Mola'},{value:'bank_transfer',label:'Transferência bancária'},{value:'other',label:'Outro'}];
 const stamp=(v:string)=>new Intl.DateTimeFormat('pt-PT',{dateStyle:'medium',timeStyle:'short',timeZone:'Africa/Maputo'}).format(new Date(v));
 
-export default function LojaPagamentos(){
+function LojaPagamentosWorkspace(){
  const {shop,role}=useShop();const qc=useQueryClient();
  const [amounts,setAmounts]=useState<Record<string,string>>({});
  const [selectedMethods,setSelectedMethods]=useState<Record<string,Method>>({});
@@ -71,3 +73,5 @@ export default function LojaPagamentos(){
    </Panel>)}</div>}
  </Page>;
 }
+
+export default function LojaPagamentos(){return PAYMENTS_AVAILABLE?<LojaPagamentosWorkspace/>:<Page title="Pagamentos da loja"><PaymentsUnavailableNotice/></Page>}

@@ -60,6 +60,8 @@ type Product = {
   order_options: string[];
   product_kind: "consume_here" | "takeaway" | "both";
   track_stock: boolean;
+  catalog_verification_mode?: "operator" | "reference_online";
+  requires_confirmation?: boolean;
   is_active: boolean;
   sort_order: number;
   created_at: string;
@@ -430,14 +432,12 @@ function CatalogWorkspace() {
             .update(row)
             .eq("id", variantEdit.id)
             .eq("barbershop_id", shop!.id)
-        : await supabase
-            .from("shop_product_variants")
-            .insert({
-              ...row,
-              product_id: variantProduct,
-              barbershop_id: shop!.id,
-              attributes: {},
-            });
+        : await supabase.from("shop_product_variants").insert({
+            ...row,
+            product_id: variantProduct,
+            barbershop_id: shop!.id,
+            attributes: {},
+          });
       if (r.error) throw r.error;
     },
     onSuccess: async () => {
@@ -690,6 +690,12 @@ function CatalogWorkspace() {
                             {p.is_active ? "Publicado" : "Rascunho"}
                           </span>
                         </div>
+                        {p.catalog_verification_mode === "reference_online" && (
+                          <p className="t-label text-ink-mid mt-2">
+                            Catálogo inicial com origem documentada ·
+                            disponibilidade por confirmar
+                          </p>
+                        )}
                         <p className="t-label text-ink-mid mt-1">
                           {p.brand ? p.brand + " · " : ""}
                           {catName[p.category_id ?? ""] ??
@@ -703,7 +709,9 @@ function CatalogWorkspace() {
                         <p className="t-body text-ink-mid mt-2">
                           {vs.length} variantes ·{" "}
                           {vs.filter((v) => v.is_active).length} activas ·{" "}
-                          {vs.reduce((n, v) => n + v.stock_on_hand, 0)} unidades
+                          {p.track_stock
+                            ? `${vs.reduce((n, v) => n + v.stock_on_hand, 0)} unidades`
+                            : "disponibilidade por confirmar"}
                         </p>
                         <div className="flex flex-wrap gap-2 mt-2">
                           {vs.map((v) => (
@@ -1242,8 +1250,11 @@ function CatalogWorkspace() {
                     <div className="min-w-0 flex-1">
                       <p>{v.label}</p>
                       <p className="t-label text-ink-mid">
-                        {formatMT(v.price_minor)} · stock {v.stock_on_hand} ·{" "}
-                        {v.sku || "Sem SKU"}
+                        {formatMT(v.price_minor)} · stock{" "}
+                        {productEdit?.track_stock
+                          ? v.stock_on_hand
+                          : "por confirmar"}{" "}
+                        · {v.sku || "Sem SKU"}
                       </p>
                     </div>
                     <Switch
@@ -1370,7 +1381,7 @@ function CatalogWorkspace() {
               <img
                 src={preview.image_url}
                 alt={preview.image_alt || preview.name}
-                className="aspect-[4/3] w-full rounded-xl object-cover"
+                className="aspect-[4/3] w-full rounded-xl object-contain"
               />
             ) : (
               <div className="aspect-[4/3] grid place-items-center bg-white/5">

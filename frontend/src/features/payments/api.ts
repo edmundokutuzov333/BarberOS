@@ -1,3 +1,4 @@
+import { PAYMENTS_AVAILABLE, requirePaymentsAvailable } from './availability';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Database } from '@/lib/database.types';
 import { supabase } from '@/lib/supabase';
@@ -81,11 +82,13 @@ export async function getPaymentAccounts(shop: string): Promise<PaymentAccount[]
 }
 
 export async function configurePaymentProvider(input: ConfigurePaymentProviderInput) {
+  requirePaymentsAvailable();
   const data = await invokeFunction<{ ok: true; account: unknown }>('payments-configure', input);
   return data.account;
 }
 
 export async function initiatePayment(input: InitiatePaymentInput): Promise<PaymentInitiation> {
+  requirePaymentsAvailable();
   return invokeFunction<PaymentInitiation>('payments-initiate', {
     ...input,
     idempotency_key: input.idempotency_key ?? crypto.randomUUID(),
@@ -149,7 +152,7 @@ export function usePaymentStatus(token?: string, enabled = true) {
   return useQuery({
     queryKey: ['payment-status', token],
     queryFn: () => getPaymentStatus(token!),
-    enabled: Boolean(token && enabled),
+    enabled: PAYMENTS_AVAILABLE && Boolean(token && enabled),
     staleTime: 0,
     refetchInterval: (query) => query.state.data?.status === 'pending' ? 5_000 : false,
     retry: false,

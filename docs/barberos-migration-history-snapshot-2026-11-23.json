@@ -150,12 +150,14 @@
     "20261026170000_shop_order_payment_ledger_phase7.sql",
     "20261026180000_shop_payment_queue_partial_delivery_fix.sql",
     "20261026190000_resend_email_event_fk_index.sql",
-    "20261124063655_store_catalog_atomic_management.sql"
+    "20261124063655_store_catalog_atomic_management.sql",
+    "20261124070136_store_reference_catalog_provisioning.sql",
+    "20261124071304_payments_unavailable_for_store_launch.sql"
   ],
   "projects": {
     "production": {
       "ref": "alseiinjzwjdiwtvkdzy",
-      "migration_count": 149,
+      "migration_count": 151,
       "migrations": [
         {
           "version": "20260918132000",
@@ -752,12 +754,20 @@
         {
           "version": "20261124065614",
           "name": "store_catalog_atomic_management"
+        },
+        {
+          "version": "20261124072814",
+          "name": "store_reference_catalog_provisioning"
+        },
+        {
+          "version": "20261124072818",
+          "name": "payments_unavailable_for_store_launch"
         }
       ]
     },
     "staging": {
       "ref": "asikuyxaapcmayptimxi",
-      "migration_count": 137,
+      "migration_count": 139,
       "migrations": [
         {
           "version": "20261019132753",
@@ -1306,6 +1316,14 @@
         {
           "version": "20261124064607",
           "name": "store_catalog_atomic_management"
+        },
+        {
+          "version": "20261124072337",
+          "name": "store_reference_catalog_provisioning"
+        },
+        {
+          "version": "20261124072341",
+          "name": "payments_unavailable_for_store_launch"
         }
       ]
     }
@@ -1631,5 +1649,6 @@
     }
   },
   "last_refreshed_on": "2026-11-24",
-  "catalog_atomic_management_capture": "2026-11-24; production 20261124065614, staging 20261124064607; actual generated history, no version rewrites"
+  "catalog_atomic_management_capture": "2026-11-24; production 20261124065614, staging 20261124064607; actual generated history, no version rewrites",
+  "store_launch_capture": "2026-11-24; actual source/provisioning/payment-gate histories; no remote history rewritten"
 }

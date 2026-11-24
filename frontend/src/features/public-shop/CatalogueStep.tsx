@@ -1,22 +1,53 @@
-import { useMemo, useState } from 'react';
-import { Minus, Package, Plus, Search, ShoppingBag } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
-import { formatMT, humanError } from '@/lib/utils';
-import type { PublicShopCatalog, PublicShopProduct, PublicShopVariant } from '@/features/public-shop/catalog';
+import { useMemo, useRef, useState } from "react";
+import { Minus, Package, Plus, Search, ShoppingBag, X } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import {
+  EmptyState,
+  ErrorState,
+  Panel,
+  Skeleton,
+} from "@/components/ui/States";
+import { formatMT, humanError } from "@/lib/utils";
+import type {
+  PublicShopCatalog,
+  PublicShopProduct,
+  PublicShopVariant,
+} from "@/features/public-shop/catalog";
 
-export type ShopCart = Record<string, { qty: number; options: string[]; fulfilmentMode: 'consume_here' | 'takeaway' }>;
-
+export type ShopCart = Record<
+  string,
+  {
+    qty: number;
+    options: string[];
+    fulfilmentMode: "consume_here" | "takeaway";
+  }
+>;
 
 function ProductImage({ src, alt }: { src: string | null; alt: string }) {
   const [failed, setFailed] = useState(false);
-  const frame = "grid h-20 w-20 shrink-0 place-items-center rounded-xl bg-white/5 text-ink-mid sm:h-24 sm:w-24";
+  const frame =
+    "grid h-20 w-20 shrink-0 place-items-center rounded-xl bg-white/5 text-ink-mid sm:h-24 sm:w-24";
   if (!src || failed) {
-    return <div role="img" aria-label={`Fotografia indisponível: ${alt}`} className={frame}><Package size={24} /></div>;
+    return (
+      <div
+        role="img"
+        aria-label={`Fotografia indisponível: ${alt}`}
+        className={frame}
+      >
+        <Package size={24} />
+      </div>
+    );
   }
-  return <img src={src} alt={alt} loading="lazy" decoding="async"
-    onError={() => setFailed(true)}
-    className="h-20 w-20 shrink-0 rounded-xl object-cover bg-white/5 sm:h-24 sm:w-24" />;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailed(true)}
+      className="h-20 w-20 shrink-0 rounded-xl object-contain bg-white/5 sm:h-24 sm:w-24"
+    />
+  );
 }
 
 type Props = {
@@ -25,70 +56,213 @@ type Props = {
   loading?: boolean;
   error?: unknown;
   onRetry: () => void;
-  onQuantityChange: (product: PublicShopProduct, variant: PublicShopVariant, delta: number) => void;
+  onQuantityChange: (
+    product: PublicShopProduct,
+    variant: PublicShopVariant,
+    delta: number,
+  ) => void;
   onOptionChange: (variantId: string, option: string, checked: boolean) => void;
-  onFulfilmentModeChange: (variantId: string, mode: 'consume_here' | 'takeaway') => void;
+  onFulfilmentModeChange: (
+    variantId: string,
+    mode: "consume_here" | "takeaway",
+  ) => void;
   onContinueWithoutProducts: () => void;
 };
 
 export function ShopCatalogueStep({
-  catalog, cart, loading = false, error, onRetry,
-  onQuantityChange, onOptionChange, onFulfilmentModeChange, onContinueWithoutProducts,
+  catalog,
+  cart,
+  loading = false,
+  error,
+  onRetry,
+  onQuantityChange,
+  onOptionChange,
+  onFulfilmentModeChange,
+  onContinueWithoutProducts,
 }: Props) {
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('all');
+  const searchInput = useRef<HTMLInputElement>(null);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("all");
   const products = catalog.products;
   const hasUncategorised = products.some((product) => !product.category_id);
-  const categories = useMemo(() => [
-    { id: 'all', name: 'Todos' },
-    ...catalog.categories.map(({ id, name }) => ({ id, name })),
-    ...(hasUncategorised ? [{ id: 'other', name: 'Outros' }] : []),
-  ], [catalog.categories, hasUncategorised]);
+  const categories = useMemo(
+    () => [
+      { id: "all", name: "Todos" },
+      ...catalog.categories.map(({ id, name }) => ({ id, name })),
+      ...(hasUncategorised ? [{ id: "other", name: "Outros" }] : []),
+    ],
+    [catalog.categories, hasUncategorised],
+  );
   const filteredProducts = useMemo(() => {
-    const needle = search.trim().toLocaleLowerCase('pt-PT');
+    const needle = search.trim().toLocaleLowerCase("pt-PT");
     return products.filter((product) => {
-      const matchesCategory = category === 'all'
-        || (category === 'other' ? !product.category_id : product.category_id === category);
-      const searchable = [product.name, product.brand ?? '', product.description ?? '', ...product.variants.map((variant) => variant.label)]
-        .join(' ').toLocaleLowerCase('pt-PT');
+      const matchesCategory =
+        category === "all" ||
+        (category === "other"
+          ? !product.category_id
+          : product.category_id === category);
+      const searchable = [
+        product.name,
+        product.brand ?? "",
+        product.description ?? "",
+        ...product.variants.map((variant) => variant.label),
+      ]
+        .join(" ")
+        .toLocaleLowerCase("pt-PT");
       return matchesCategory && (!needle || searchable.includes(needle));
     });
   }, [products, search, category]);
-  const selectedLines = useMemo(() => products.flatMap((product) => product.variants.flatMap((variant) => {
-    const selected = cart[variant.id];
-    return selected?.qty > 0 ? [{ product, variant, qty: selected.qty, options: selected.options, fulfilmentMode: selected.fulfilmentMode }] : [];
-  })), [products, cart]);
-  const totalQuantity = selectedLines.reduce((total, line) => total + line.qty, 0);
-  const subtotal = selectedLines.reduce((total, line) => total + line.qty * line.variant.price_minor, 0);
+  const selectedLines = useMemo(
+    () =>
+      products.flatMap((product) =>
+        product.variants.flatMap((variant) => {
+          const selected = cart[variant.id];
+          return selected?.qty > 0
+            ? [
+                {
+                  product,
+                  variant,
+                  qty: selected.qty,
+                  options: selected.options,
+                  fulfilmentMode: selected.fulfilmentMode,
+                },
+              ]
+            : [];
+        }),
+      ),
+    [products, cart],
+  );
+  const totalQuantity = selectedLines.reduce(
+    (total, line) => total + line.qty,
+    0,
+  );
+  const subtotal = selectedLines.reduce(
+    (total, line) => total + line.qty * line.variant.price_minor,
+    0,
+  );
 
   return (
-    <Panel title="O que gostaria de ter à sua espera?" testId="booking-step-shop">
+    <Panel
+      title="O que gostaria de ter à sua espera?"
+      testId="booking-step-shop"
+    >
       <div className="space-y-5">
         <div>
-          <p className="t-body text-ink-mid">Escolha bebidas, snacks ou produtos. É opcional.</p>
-          <p className="t-label text-ink-mid mt-2">A sua selecção será validada com a marcação. O pedido de produtos não é um pagamento; a equipa confirma a disponibilidade e a preparação.</p>
+          <p className="t-body text-ink-mid">
+            Escolha bebidas, snacks ou produtos. É opcional.
+          </p>
+          <p className="t-label text-ink-mid mt-2">
+            A sua selecção será validada com a marcação. O pedido de produtos
+            não é um pagamento; a equipa confirma a disponibilidade e a
+            preparação.
+          </p>
+        </div>
+        <div className="flex justify-start">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onContinueWithoutProducts}
+          >
+            Continuar sem produtos
+          </Button>
         </div>
         <div className="space-y-2">
-          <label htmlFor="public-shop-search" className="t-label text-ink-mid">Pesquisar produtos</label>
+          <label htmlFor="public-shop-search" className="t-label text-ink-mid">
+            Pesquisar produtos
+          </label>
           <div className="relative">
-            <Search size={17} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid" />
-            <input id="public-shop-search" type="search" autoComplete="off" value={search}
-              onChange={(event) => setSearch(event.target.value)} placeholder="Nome, marca ou formato"
-              className="min-h-11 w-full rounded-xl border border-white/10 bg-black/20 pl-10 pr-3 text-sm text-ink-hi placeholder:text-ink-lo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
-              data-testid="public-shop-search" />
+            <Search
+              size={17}
+              aria-hidden="true"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid"
+            />
+            <input
+              ref={searchInput}
+              id="public-shop-search"
+              type="search"
+              autoComplete="off"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Nome, marca ou formato"
+              className="[&::-webkit-search-cancel-button]:appearance-none min-h-11 w-full rounded-xl border border-white/10 bg-black/20 pl-10 pr-12 text-sm text-ink-hi placeholder:text-ink-lo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
+              data-testid="public-shop-search"
+            />
+            {search && (
+              <button
+                type="button"
+                aria-label="Limpar pesquisa de produtos"
+                className="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-ink-mid focus-visible:ring-2 focus-visible:ring-accent-soft"
+                onClick={() => {
+                  setSearch("");
+                  searchInput.current?.focus();
+                }}
+              >
+                <X size={17} />
+              </button>
+            )}
           </div>
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Categorias de produtos" data-testid="public-shop-categories">
+        <div
+          className="flex gap-2 overflow-x-auto pb-1"
+          role="group"
+          aria-label="Categorias de produtos"
+          data-testid="public-shop-categories"
+        >
           {categories.map((item) => (
-            <button key={item.id} type="button" aria-pressed={category === item.id} onClick={() => setCategory(item.id)}
-              className={'min-h-10 shrink-0 rounded-full border px-4 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft ' + (category === item.id ? 'border-accent-soft bg-accent-soft/15 text-ink-hi' : 'border-white/10 text-ink-mid hover:bg-white/5')}>
+            <button
+              key={item.id}
+              type="button"
+              aria-pressed={category === item.id}
+              onClick={() => setCategory(item.id)}
+              className={
+                "min-h-10 shrink-0 rounded-full border px-4 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft " +
+                (category === item.id
+                  ? "border-accent-soft bg-accent-soft/15 text-ink-hi"
+                  : "border-white/10 text-ink-mid hover:bg-white/5")
+              }
+            >
               {item.name}
             </button>
           ))}
         </div>
+        <div
+          className="sticky top-2 z-10 rounded-2xl border border-white/10 bg-black/90 p-4 shadow-xl backdrop-blur-xl lg:static"
+          data-testid="public-shop-summary"
+          aria-live="polite"
+        >
+          <div className="flex items-center gap-3">
+            <ShoppingBag
+              size={18}
+              aria-hidden="true"
+              className="text-accent-soft"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="t-body text-ink-hi">
+                {totalQuantity}{" "}
+                {totalQuantity === 1
+                  ? "artigo seleccionado"
+                  : "artigos seleccionados"}
+              </p>
+              <p className="t-label text-ink-mid mt-1">Subtotal dos produtos</p>
+            </div>
+            <p className="t-card tabular-nums text-ink-hi">
+              {formatMT(subtotal)}
+            </p>
+          </div>
+          <p className="hidden lg:block t-label text-ink-mid mt-2">
+            Este subtotal é separado do preço do serviço; não é uma cobrança nem
+            um pedido confirmado.
+          </p>
+        </div>
         {loading ? (
-          <div aria-busy="true" aria-label="A carregar o catálogo" data-testid="public-shop-loading" className="space-y-3">
-            <Skeleton className="h-32" lines={5} /><Skeleton className="h-32" lines={5} />
+          <div
+            aria-busy="true"
+            aria-label="A carregar o catálogo"
+            data-testid="public-shop-loading"
+            className="space-y-3"
+          >
+            <Skeleton className="h-32" lines={5} />
+            <Skeleton className="h-32" lines={5} />
           </div>
         ) : error ? (
           <div data-testid="public-shop-error">
@@ -96,86 +270,232 @@ export function ShopCatalogueStep({
           </div>
         ) : products.length === 0 ? (
           <div data-testid="public-shop-empty">
-            <EmptyState title="Esta barbearia ainda não tem produtos disponíveis para pedido." body="Pode continuar com a marcação." />
+            <EmptyState
+              title="Esta barbearia ainda não tem produtos disponíveis para pedido."
+              body="Pode continuar com a marcação."
+            />
           </div>
         ) : filteredProducts.length === 0 ? (
           <div data-testid="public-shop-no-results">
-            <EmptyState title="Nenhum produto encontrado" body="Experimente outro nome ou escolha uma categoria diferente." />
+            <EmptyState
+              title="Nenhum produto encontrado"
+              body="Experimente outro nome ou escolha uma categoria diferente."
+            />
           </div>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2" data-testid="public-shop-products">
+          <div
+            className="grid gap-3 md:grid-cols-2"
+            data-testid="public-shop-products"
+          >
             {filteredProducts.map((product) => (
-              <article key={product.id} className="min-w-0 rounded-2xl border border-white/10 bg-white/[.025] p-3 sm:p-4" data-testid={'public-shop-product-' + product.id}>
+              <article
+                key={product.id}
+                className="min-w-0 rounded-2xl border border-white/10 bg-white/[.025] p-3 sm:p-4"
+                data-testid={"public-shop-product-" + product.id}
+              >
                 <div className="flex gap-3">
-                  <ProductImage src={product.image_url} alt={product.image_alt || product.name} />
+                  <ProductImage
+                    key={product.image_url ?? product.id}
+                    src={product.image_url}
+                    alt={product.image_alt || product.name}
+                  />
                   <div className="min-w-0 flex-1">
-                    {product.brand && <p className="t-label text-ink-mid">{product.brand}</p>}
-                    <h3 className="font-medium text-ink-hi break-words">{product.name}</h3>
-                    {product.description && <p className="t-body text-ink-mid mt-1 line-clamp-3">{product.description}</p>}
-                    <p className="t-label text-ink-mid mt-1">{product.category_id ? catalog.categories.find((item) => item.id === product.category_id)?.name ?? 'Produto' : 'Outros'}</p>
+                    {product.brand && (
+                      <p className="t-label text-ink-mid">{product.brand}</p>
+                    )}
+                    <h3 className="font-medium text-ink-hi break-words">
+                      {product.name}
+                    </h3>
+                    {product.description && (
+                      <p className="t-body text-ink-mid mt-1 line-clamp-3">
+                        {product.description}
+                      </p>
+                    )}
+                    <p className="t-label text-ink-mid mt-1">
+                      {product.category_id
+                        ? (catalog.categories.find(
+                            (item) => item.id === product.category_id,
+                          )?.name ?? "Produto")
+                        : "Outros"}
+                    </p>
                   </div>
                 </div>
                 <div className="mt-4 space-y-3">
                   {product.variants.map((variant) => {
-                    const selected = cart[variant.id] ?? { qty: 0, options: [], fulfilmentMode: product.product_kind === 'takeaway' ? 'takeaway' as const : 'consume_here' as const };
+                    const selected = cart[variant.id] ?? {
+                      qty: 0,
+                      options: [],
+                      fulfilmentMode:
+                        product.product_kind === "takeaway"
+                          ? ("takeaway" as const)
+                          : ("consume_here" as const),
+                    };
                     const selectedOptions = new Set(selected.options);
                     return (
-                      <div key={variant.id} className="rounded-xl border border-white/10 p-3" data-testid={'public-shop-variant-' + variant.id}>
+                      <div
+                        key={variant.id}
+                        className="rounded-xl border border-white/10 p-3"
+                        data-testid={"public-shop-variant-" + variant.id}
+                      >
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="t-body text-ink-hi">{variant.label}</p>
-                            {variant.unit_label !== 'unidade' && <p className="t-label text-ink-mid">{variant.unit_label}</p>}
-                            <p className="t-card text-ink-hi mt-1">{formatMT(variant.price_minor)}</p>
-                            {!variant.available && <p className="t-label text-st-noshow mt-1" role="status">Indisponível neste momento</p>}
+                            <p className="t-body text-ink-hi">
+                              {variant.label}
+                            </p>
+                            {variant.unit_label !== "unidade" && (
+                              <p className="t-label text-ink-mid">
+                                {variant.unit_label}
+                              </p>
+                            )}
+                            <p className="t-card text-ink-hi mt-1">
+                              {formatMT(variant.price_minor)}
+                            </p>
+                            {variant.available &&
+                              variant.attributes.requires_confirmation ===
+                                true && (
+                                <p className="t-label text-ink-mid mt-1">
+                                  Disponibilidade por confirmar pela barbearia
+                                </p>
+                              )}
+                            {!variant.available && (
+                              <p
+                                className="t-label text-st-noshow mt-1"
+                                role="status"
+                              >
+                                Indisponível neste momento
+                              </p>
+                            )}
                           </div>
                           {variant.available && (
                             <div className="inline-flex shrink-0 items-center gap-2">
-                              <button type="button" aria-label={'Diminuir ' + product.name + ' ' + variant.label} disabled={selected.qty === 0}
-                                onClick={() => onQuantityChange(product, variant, -1)}
-                                className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-ink-hi disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"><Minus size={16} /></button>
-                              <output aria-live="polite" aria-label={'Quantidade seleccionada de ' + product.name + ' ' + variant.label} className="min-w-5 text-center tabular-nums">{selected.qty}</output>
-                              <button type="button" aria-label={'Adicionar ' + product.name + ' ' + variant.label} disabled={selected.qty >= 100}
-                                onClick={() => onQuantityChange(product, variant, 1)}
-                                className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-ink-hi disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"><Plus size={16} /></button>
+                              <button
+                                type="button"
+                                aria-label={
+                                  "Diminuir " +
+                                  product.name +
+                                  " " +
+                                  variant.label
+                                }
+                                disabled={selected.qty === 0}
+                                onClick={() =>
+                                  onQuantityChange(product, variant, -1)
+                                }
+                                className="scroll-mt-40 grid h-10 w-10 place-items-center rounded-full border border-white/10 text-ink-hi disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
+                              >
+                                <Minus size={16} />
+                              </button>
+                              <output
+                                aria-live="polite"
+                                aria-label={
+                                  "Quantidade seleccionada de " +
+                                  product.name +
+                                  " " +
+                                  variant.label
+                                }
+                                className="min-w-5 text-center tabular-nums"
+                              >
+                                {selected.qty}
+                              </output>
+                              <button
+                                type="button"
+                                aria-label={
+                                  "Adicionar " +
+                                  product.name +
+                                  " " +
+                                  variant.label
+                                }
+                                disabled={selected.qty >= 100}
+                                onClick={() =>
+                                  onQuantityChange(product, variant, 1)
+                                }
+                                className="scroll-mt-40 grid h-10 w-10 place-items-center rounded-full border border-white/10 text-ink-hi disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
+                              >
+                                <Plus size={16} />
+                              </button>
                             </div>
                           )}
                         </div>
-                        {selected.qty > 0 && product.product_kind === 'both' && (
-                          <fieldset className="mt-3 border-t border-white/10 pt-3" data-testid={'public-shop-fulfilment-' + variant.id}>
-                            <legend className="t-label text-ink-mid mb-2">Como pretende o artigo?</legend>
-                            <div className="flex flex-wrap gap-4">
-                              <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm text-ink-mid">
-                                <input type="radio" name={'fulfilment-' + variant.id} value="consume_here"
-                                  checked={selected.fulfilmentMode === 'consume_here'}
-                                  onChange={() => onFulfilmentModeChange(variant.id, 'consume_here')}
-                                  className="h-4 w-4 accent-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft" />
-                                Consumir na barbearia
-                              </label>
-                              <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm text-ink-mid">
-                                <input type="radio" name={'fulfilment-' + variant.id} value="takeaway"
-                                  checked={selected.fulfilmentMode === 'takeaway'}
-                                  onChange={() => onFulfilmentModeChange(variant.id, 'takeaway')}
-                                  className="h-4 w-4 accent-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft" />
-                                Levar consigo
-                              </label>
-                            </div>
-                          </fieldset>
-                        )}
-                        {selected.qty > 0 && product.order_options.length > 0 && (
-                          <fieldset className="mt-3 border-t border-white/10 pt-3">
-                            <legend className="t-label text-ink-mid mb-2">Preferências (opcional)</legend>
-                            <div className="flex flex-wrap gap-x-4 gap-y-2">
-                              {product.order_options.map((option) => (
-                                <label key={option} className="inline-flex min-h-8 cursor-pointer items-center gap-2 text-sm text-ink-mid">
-                                  <input type="checkbox" checked={selectedOptions.has(option)}
-                                    onChange={(event) => onOptionChange(variant.id, option, event.target.checked)}
-                                    className="h-4 w-4 accent-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft" />
-                                  {option}
+                        {selected.qty > 0 &&
+                          product.product_kind === "both" && (
+                            <fieldset
+                              className="mt-3 border-t border-white/10 pt-3"
+                              data-testid={
+                                "public-shop-fulfilment-" + variant.id
+                              }
+                            >
+                              <legend className="t-label text-ink-mid mb-2">
+                                Como pretende o artigo?
+                              </legend>
+                              <div className="flex flex-wrap gap-4">
+                                <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm text-ink-mid">
+                                  <input
+                                    type="radio"
+                                    name={"fulfilment-" + variant.id}
+                                    value="consume_here"
+                                    checked={
+                                      selected.fulfilmentMode === "consume_here"
+                                    }
+                                    onChange={() =>
+                                      onFulfilmentModeChange(
+                                        variant.id,
+                                        "consume_here",
+                                      )
+                                    }
+                                    className="h-4 w-4 accent-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
+                                  />
+                                  Consumir na barbearia
                                 </label>
-                              ))}
-                            </div>
-                          </fieldset>
-                        )}
+                                <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm text-ink-mid">
+                                  <input
+                                    type="radio"
+                                    name={"fulfilment-" + variant.id}
+                                    value="takeaway"
+                                    checked={
+                                      selected.fulfilmentMode === "takeaway"
+                                    }
+                                    onChange={() =>
+                                      onFulfilmentModeChange(
+                                        variant.id,
+                                        "takeaway",
+                                      )
+                                    }
+                                    className="h-4 w-4 accent-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
+                                  />
+                                  Levar consigo
+                                </label>
+                              </div>
+                            </fieldset>
+                          )}
+                        {selected.qty > 0 &&
+                          product.order_options.length > 0 && (
+                            <fieldset className="mt-3 border-t border-white/10 pt-3">
+                              <legend className="t-label text-ink-mid mb-2">
+                                Preferências (opcional)
+                              </legend>
+                              <div className="flex flex-wrap gap-x-4 gap-y-2">
+                                {product.order_options.map((option) => (
+                                  <label
+                                    key={option}
+                                    className="inline-flex min-h-8 cursor-pointer items-center gap-2 text-sm text-ink-mid"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedOptions.has(option)}
+                                      onChange={(event) =>
+                                        onOptionChange(
+                                          variant.id,
+                                          option,
+                                          event.target.checked,
+                                        )
+                                      }
+                                      className="h-4 w-4 accent-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
+                                    />
+                                    {option}
+                                  </label>
+                                ))}
+                              </div>
+                            </fieldset>
+                          )}
                       </div>
                     );
                   })}
@@ -184,20 +504,6 @@ export function ShopCatalogueStep({
             ))}
           </div>
         )}
-        <div className="sticky bottom-20 z-10 rounded-2xl border border-white/10 bg-black/90 p-4 shadow-xl backdrop-blur-xl lg:static" data-testid="public-shop-summary" aria-live="polite">
-          <div className="flex items-center gap-3">
-            <ShoppingBag size={18} aria-hidden="true" className="text-accent-soft" />
-            <div className="min-w-0 flex-1">
-              <p className="t-body text-ink-hi">{totalQuantity} {totalQuantity === 1 ? 'artigo seleccionado' : 'artigos seleccionados'}</p>
-              <p className="t-label text-ink-mid mt-1">Subtotal dos produtos</p>
-            </div>
-            <p className="t-card tabular-nums text-ink-hi">{formatMT(subtotal)}</p>
-          </div>
-          <p className="t-label text-ink-mid mt-2">Este subtotal é separado do preço do serviço; não é uma cobrança nem um pedido confirmado.</p>
-        </div>
-        <div className="flex justify-start">
-          <Button type="button" variant="secondary" onClick={onContinueWithoutProducts}>Continuar sem produtos</Button>
-        </div>
       </div>
     </Panel>
   );

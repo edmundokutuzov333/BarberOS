@@ -154,6 +154,7 @@ const ERRORS: Record<string, string> = {
 };
 
 export function humanError(e: unknown): string {
+  if(e && typeof e==='object' && 'message' in e && String(e.message).includes('PAYMENTS_UNAVAILABLE'))return 'Os pagamentos estão temporariamente indisponíveis.';
   const code = e && typeof e === 'object' && 'code' in e
     ? String((e as { code?: unknown }).code ?? '')
     : '';

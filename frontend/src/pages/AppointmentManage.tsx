@@ -1,3 +1,5 @@
+import { PAYMENTS_AVAILABLE } from '@/features/payments/availability';
+import { PaymentsUnavailableNotice } from '@/features/payments/PaymentsUnavailableNotice';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { CalendarPlus, CheckCircle2, Clock3, CreditCard, Download, MapPin, MessageCircle, Scissors, ShieldCheck, Smartphone, UserRound, XCircle, Star } from 'lucide-react';
@@ -272,7 +274,8 @@ export default function AppointmentManage() {
             </section>
           )}
 
-          {canActions && data.deposit_status === 'awaiting' && data.deposit_cents > 0 && (
+          {canActions && data.deposit_status === 'awaiting' && data.deposit_cents > 0 && !PAYMENTS_AVAILABLE && <div className="mt-7"><PaymentsUnavailableNotice/></div>}
+          {PAYMENTS_AVAILABLE && canActions && data.deposit_status === 'awaiting' && data.deposit_cents > 0 && (
             <div className="mt-7 rounded-3xl border border-accent/25 bg-accent/10 p-5 sm:p-6" data-testid="payment-section">
               <div className="flex items-start gap-3">
                 <CreditCard className="text-accent-soft mt-0.5 shrink-0" size={20} />

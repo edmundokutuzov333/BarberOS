@@ -1,3 +1,4 @@
+import { PAYMENTS_AVAILABLE } from '@/features/payments/availability';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check, Clock3, Mail, MessageCircle, Scissors, UserRound } from 'lucide-react';
@@ -81,7 +82,7 @@ function validEmail(value: string): boolean {
 }
 
 function getDepositCents(service: PublicService, shop: { deposit_enabled: boolean; deposit_mode: 'percent' | 'fixed'; deposit_value: number }): number {
-  if (!shop.deposit_enabled || !service.requires_deposit) return 0;
+  if (!PAYMENTS_AVAILABLE || !shop.deposit_enabled || !service.requires_deposit) return 0;
   if (shop.deposit_mode === 'fixed') return shop.deposit_value;
   return Math.round(service.price_cents * shop.deposit_value / 100);
 }

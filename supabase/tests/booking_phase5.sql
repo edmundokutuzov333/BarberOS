@@ -1,3 +1,6 @@
+begin;
+-- Isolated SQL payment-domain fixture only; rolled back, no provider requests.
+insert into public.platform_settings(key,value) values('payments','{"enabled":true}'::jsonb) on conflict(key) do update set value=excluded.value;
 -- BarberOS Phase 5: Booking Engine 2.0 acceptance suite
 -- All writes are enclosed in rollback-only blocks. No fixtures persist.
 
@@ -357,3 +360,5 @@ begin
   raise notice 'PASS | Phase 5 Booking Engine 2.0';
 end
 $$;
+
+rollback;

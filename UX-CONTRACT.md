@@ -100,3 +100,12 @@ selection, validation, provider failure, confirmation, focus, accessibility and
 viewport overflow. Separate controlled production receipts prove actual OAuth,
 read/send/reply and token refresh. Fixture success does not certify Google public
 verification, staging credentials, other screens or real mobile hardware.
+
+## Store selection summary
+
+The optional skip action precedes the product search. On narrow screens the
+product summary sticks above the product list; it never floats over quantity
+controls at the bottom. Quantity controls reserve top scroll margin for keyboard
+focus. The booking layout retains its separate sticky desktop summary for service
+and product subtotals. Unknown physical availability is explicitly labelled and
+creates a needs_confirmation order, with no invented inventory reservation.

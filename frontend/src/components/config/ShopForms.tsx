@@ -1,3 +1,5 @@
+import { PAYMENTS_AVAILABLE } from '@/features/payments/availability';
+import { PaymentsUnavailableNotice } from '@/features/payments/PaymentsUnavailableNotice';
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -209,7 +211,7 @@ export function RulesForm({ onDone }: { onDone?: () => void }) {
   );
 }
 
-export function DepositForm() {
+function DepositFormWorkspace() {
   const { shop } = useShop();
   const s = shop!;
   const [f, setF] = useState({ enabled: s.deposit_enabled, mode: s.deposit_mode, value: String(s.deposit_mode === 'fixed' ? s.deposit_value / 100 : s.deposit_value), hold: String(s.deposit_hold_min) });
@@ -235,3 +237,4 @@ export function DepositForm() {
     </form>
   );
 }
+export function DepositForm(){return PAYMENTS_AVAILABLE?<DepositFormWorkspace/>:<PaymentsUnavailableNotice/>}

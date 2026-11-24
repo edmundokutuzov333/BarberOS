@@ -1,3 +1,5 @@
+import { PAYMENTS_AVAILABLE } from '@/features/payments/availability';
+import { PaymentsUnavailableNotice } from '@/features/payments/PaymentsUnavailableNotice';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { CreditCard, ExternalLink, RefreshCw, ShieldCheck, WalletCards } from 'lucide-react';
@@ -37,7 +39,7 @@ function maskedPhone(phone: string): string {
 
 export default function Pagamentos() {
   const { shop, role } = useShop();
-  const canConfigure = role === 'owner';
+  const canConfigure = PAYMENTS_AVAILABLE && role === 'owner';
   const [status, setStatus] = React.useState<PaymentRow['status'] | null>(null);
   const accounts = usePaymentAccounts(shop?.id);
   const metrics = usePaymentMetrics(shop?.id);
@@ -56,7 +58,7 @@ export default function Pagamentos() {
         </Link>
       ) : undefined}
     >
-      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
+      <>{!PAYMENTS_AVAILABLE&&<div className="mb-5"><PaymentsUnavailableNotice/></div>}</><div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
         <MetricCard
           label="Pendentes"
           value={metrics.isLoading ? null : String(metrics.data?.pending_count ?? 0)}

@@ -1,6 +1,9 @@
 -- BarberOS | E2E operacional integrado | pedido, entrega parcial, stock e pagamentos.
 -- Fixtures isoladas, sem providers reais, com ROLLBACK obrigatório. Não é prova de piloto humano.
 begin;
+-- Isolated SQL payment-domain fixture only; rolled back, no provider requests.
+insert into public.platform_settings(key,value) values('payments','{"enabled":true}'::jsonb) on conflict(key) do update set value=excluded.value;
+
 do $shop_operational_lifecycle_e2e$
 declare
  v_actor uuid:=gen_random_uuid(); v_shop uuid; v_barber uuid; v_service uuid; v_customer uuid;
