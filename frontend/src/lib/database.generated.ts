@@ -3415,6 +3415,16 @@ export type Database = {
           waitlist_entry_id: string
         }[]
       }
+      publish_shop_catalog_product: {
+        Args: {
+          p_barbershop_id: string
+          p_expected_updated_at: string
+          p_product_id: string
+          p_publish: boolean
+          p_verification_note?: string
+        }
+        Returns: Json
+      }
       rate_limit_consume: {
         Args: { p_bucket: string; p_limit: number; p_window_seconds: number }
         Returns: {
@@ -3545,6 +3555,15 @@ export type Database = {
           p_shop: string
         }
         Returns: string
+      }
+      save_shop_catalog_product: {
+        Args: {
+          p_barbershop_id: string
+          p_expected_updated_at?: string
+          p_payload: Json
+          p_product_id: string
+        }
+        Returns: Json
       }
       scheduler_secret_valid: {
         Args: { p_candidate: string }

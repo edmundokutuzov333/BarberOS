@@ -79,5 +79,12 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_fixture
         run: corepack yarn playwright test tests/e2e/members-ui.spec.mjs --workers=1
 
+      - name: Catalog atomic save, publication and tenant-switch regressions
+        env:
+          BARBEROS_E2E_NO_PREVIEW: '1'
+          VITE_SUPABASE_URL: https://catalog-fixture.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_fixture
+        run: corepack yarn playwright test tests/e2e/shop-catalog-ui.spec.mjs --workers=1
+
       - name: Production asset budget
         run: corepack yarn perf:budget

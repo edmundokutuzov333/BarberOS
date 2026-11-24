@@ -149,12 +149,13 @@
     "20261026160000_shop_catalog_reference_pilot_phase7.sql",
     "20261026170000_shop_order_payment_ledger_phase7.sql",
     "20261026180000_shop_payment_queue_partial_delivery_fix.sql",
-    "20261026190000_resend_email_event_fk_index.sql"
+    "20261026190000_resend_email_event_fk_index.sql",
+    "20261124063655_store_catalog_atomic_management.sql"
   ],
   "projects": {
     "production": {
       "ref": "alseiinjzwjdiwtvkdzy",
-      "migration_count": 148,
+      "migration_count": 149,
       "migrations": [
         {
           "version": "20260918132000",
@@ -747,12 +748,16 @@
         {
           "version": "20261124050130",
           "name": "reconcile_application_authorization"
+        },
+        {
+          "version": "20261124065614",
+          "name": "store_catalog_atomic_management"
         }
       ]
     },
     "staging": {
       "ref": "asikuyxaapcmayptimxi",
-      "migration_count": 136,
+      "migration_count": 137,
       "migrations": [
         {
           "version": "20261019132753",
@@ -1297,6 +1302,10 @@
         {
           "version": "20261124044806",
           "name": "reconcile_application_authorization"
+        },
+        {
+          "version": "20261124064607",
+          "name": "store_catalog_atomic_management"
         }
       ]
     }
@@ -1621,5 +1630,6 @@
       }
     }
   },
-  "last_refreshed_on": "2026-11-24"
+  "last_refreshed_on": "2026-11-24",
+  "catalog_atomic_management_capture": "2026-11-24; production 20261124065614, staging 20261124064607; actual generated history, no version rewrites"
 }
