@@ -19,9 +19,16 @@
     {
       "name": "payment-simulator",
       "status": "ACTIVE",
-      "version": 3,
+      "version": 4,
       "verify_jwt": true,
-      "bundle_sha256": "76a0335db6710e0a183ad555fc993b89f97708332e2b455f586c3d5c5bfab323"
+      "bundle_sha256": "23c7c71fe2070a97a735c06b225028a3929e83446cdd0bc1646eb9f7211542d8"
     }
-  ]
+  ],
+  "operational_checkout": {
+    "migration": "20261124150000_payment_operational_checkout.sql",
+    "remote_version": "20261124144935",
+    "qa_shop": "shop-phase8-preview-qa",
+    "token_gateway_version": 4,
+    "booking_create_version": 8
+  }
 }
