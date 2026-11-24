@@ -22,6 +22,7 @@ jobs:
     timeout-minutes: 20
     env:
       GH_TOKEN: ${{ github.token }}
+      NATIVE_BASELINE_SHA256: f51d453d29ba5bc5b01cdf80ed14b5879e16162618660719a8fecb763f4c6719
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

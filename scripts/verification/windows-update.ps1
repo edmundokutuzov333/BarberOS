@@ -18,6 +18,7 @@ gh release download "native-v$fromVersion" --repo $repository --pattern "BarberO
 if ($LASTEXITCODE -ne 0) { throw 'Previous immutable release download failed' }
 $installer = Join-Path $download "BarberOS-$fromVersion-Windows-x64-Setup.exe"
 $oldHash = (Get-FileHash -Algorithm SHA256 $installer).Hash.ToLower()
+if ($env:NATIVE_BASELINE_SHA256 -notmatch '^[a-f0-9]{64}$' -or $oldHash -ne $env:NATIVE_BASELINE_SHA256) { throw 'Immutable baseline differs from its versioned digest' }
 $expected = Get-Content (Join-Path $download SHA256SUMS.txt) | Where-Object { $_.EndsWith("  BarberOS-$fromVersion-Windows-x64-Setup.exe") }
 if (!$expected -or !$expected.StartsWith("$oldHash  ")) { throw 'Previous installer checksum mismatch' }
 $destination = Join-Path $env:RUNNER_TEMP 'BarberOS-upgrade-installed'
