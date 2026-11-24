@@ -8,7 +8,7 @@ import {chromium,devices,expect} from '@playwright/test';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const origin='http://127.0.0.1:4173';
-export async function certifyPaymentBrowser({apiUrl,anonKey,actor,nonadmin,shop,readRun}){
+export async function certifyPaymentBrowser({apiUrl,anonKey,actor,nonadmin,shop,readRun,operational}){
   assert.match(process.env.BARBEROS_LOCAL_PROJECT_ID??'',/^barberos_ci_[0-9]+_[0-9]+$/);
   assert.equal(new URL(apiUrl).hostname,'127.0.0.1');
   // Browser receives only the local anon key. Credentials are ephemeral fixtures.
@@ -88,6 +88,56 @@ export async function certifyPaymentBrowser({apiUrl,anonKey,actor,nonadmin,shop,
         await expect(page.getByTestId('login-page')).toBeVisible({timeout:20000});
         console.log('PASS | real browser '+device+': login, actual admin route, M-Pesa simulator Edge, PostgreSQL, reload, refund, replay, logout');
       }finally{await ctx.close();}
+    }
+    if(operational){
+      const customer=await browser.newContext({...devices['Pixel 7'],viewport:{width:360,height:780},serviceWorkers:'block'});
+      try{
+        const page=await customer.newPage();
+        const errors=[];page.on('pageerror',e=>errors.push(e.message));
+        await page.goto(origin+'/marcacao/'+operational.token);
+        const lab=page.getByTestId('operational-checkout');
+        await expect(lab).toBeVisible({timeout:20000});
+        async function pay(name,amount,purpose,scenario='success'){
+          await lab.getByLabel('Cenário de teste').selectOption(scenario);
+          const quote=lab.getByRole('button',{name,exact:true});
+          await expect(quote).toBeEnabled({timeout:20000});await quote.click();
+          const row=lab.locator('section').filter({hasText:purpose+' ·'});
+          const pending=row.filter({hasText:'Pendente'}).first();
+          await expect(pending).toBeVisible({timeout:20000});
+          await pending.getByRole('button',{name:'Simular resposta M-Pesa'}).click();
+          if(scenario==='timeout'){await expect(pending.getByText(/Tempo de resposta excedido/).first()).toBeVisible({timeout:20000});await pending.getByRole('button',{name:'Reconciliar'}).click();}
+          await expect(row.filter({hasText:'Pago (teste)'}).first()).toBeVisible({timeout:20000});
+          assert.equal(operational.readSettlement(purpose).amount,amount);
+          assert.equal(operational.readSettlement(purpose).status,'paid');
+        }
+        await pay('Pagar sinal da marcação',2000,'deposit','timeout');
+        assert.equal(operational.readAppointment(),'confirmed:paid');
+        operational.completeAndDeliver();
+        await page.reload();await expect(lab).toBeVisible({timeout:20000});
+        await pay('Pagar serviço concluído',8000,'service');
+        await pay('Pagar artigos entregues',3000,'product','duplicate_callback');
+        await expect(lab.getByRole('button',{name:'Pagar artigos entregues',exact:true})).toBeDisabled({timeout:20000});
+        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),'Operational mobile overflow');
+        assert.deepEqual(errors,[]);
+        console.log('PASS | real customer mobile checkout: actual booking Edge, deposit, reconciliation, completed service balance, partially delivered products');
+      }finally{await customer.close();}
+      const admin=await browser.newContext({viewport:{width:1440,height:900},serviceWorkers:'block'});
+      try{
+        const page=await admin.newPage();await signIn(page,actor);
+        await expect(page.getByRole('button',{name:'Abrir laboratório'})).toBeVisible({timeout:20000});
+        await page.goto(origin+'/admin/planos');
+        const lab=page.getByTestId('operational-checkout');
+        await expect(lab).toBeVisible({timeout:20000});
+        await lab.getByRole('button',{name:'Pagar qa checkout plan',exact:true}).click();
+        await lab.getByRole('button',{name:'Simular resposta M-Pesa'}).click();
+        await expect(lab.getByText('1 500 MT · Pago (teste)',{exact:true})).toBeVisible({timeout:20000});
+        assert.equal(operational.readSettlement('subscription').amount,150000);
+        assert.equal(operational.readSettlement('subscription').status,'paid');
+        await expect(lab.getByRole('button',{name:'Pagar qa checkout plan',exact:true})).toBeDisabled({timeout:20000});
+        await page.getByTestId('admin-sign-out').click();
+        await expect(page.getByTestId('login-page')).toBeVisible({timeout:20000});
+        console.log('PASS | real admin subscription checkout and monthly duplicate prevention');
+      }finally{await admin.close();}
     }
   }finally{
     await browser?.close();

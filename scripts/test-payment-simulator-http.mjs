@@ -21,6 +21,9 @@ async function request(path,body,token,method='POST'){
 }
 const users=[];
 const shop=randomUUID();
+const checkoutShop='f86dc636-68ed-40ba-8a42-ce64fa0806d1';
+const checkoutPlan=randomUUID(), checkoutBookingKey=randomUUID();
+let checkoutFixture=false;
 async function fixture(admin){
  const email='simulator-'+randomUUID()+'@example.com',password=randomBytes(24).toString('hex');
  const created=await request('/auth/v1/admin/users',{email,password,email_confirm:true},config.SERVICE_ROLE_KEY);
@@ -83,9 +86,35 @@ try{
  assert.equal(replay.status,'refunded');assert.equal(replay.events.at(-1).outcome,'DUPLICATE_IGNORED');
  const listed=ok(await call(actor.token,'list'));assert.equal(listed.runs.length,1);assert.equal(listed.runs[0].id,run.id);
  if(process.env.BARBEROS_SIMULATOR_BROWSER==='1'){
+  // Real booking Edge creates the hold. Staff progression and partial delivery
+  // are fixtures in this disposable database, not commercial mutations.
+  const svc=randomUUID(),barber=randomUUID(),product=randomUUID(),variant=randomUUID(),ord=randomUUID();
+  sql("insert into public.plans(id,code,name,price_cents,max_barbers,features,is_active) values("+uuid(checkoutPlan)+",'checkout-"+checkoutPlan+"','QA checkout plan',150000,5,'{}',true);");
+  checkoutFixture=true;
+  sql("insert into public.barbershops(id,slug,name,status,plan_id) values("+uuid(checkoutShop)+",'shop-phase8-preview-qa','Operational QA fixture','active',"+uuid(checkoutPlan)+");");
+  sql("insert into private.payment_checkout_test_shops(shop_id) values("+uuid(checkoutShop)+"); update public.barbershops set deposit_enabled=true,deposit_value=20 where id="+uuid(checkoutShop)+";");
+  sql("insert into public.services(id,barbershop_id,name,price_cents,duration_min,is_active,requires_deposit) values("+uuid(svc)+","+uuid(checkoutShop)+",'QA service',10000,30,true,true); insert into public.barbers(id,barbershop_id,display_name,is_active) values("+uuid(barber)+","+uuid(checkoutShop)+",'QA barber',true); insert into public.barber_services(barber_id,service_id) values("+uuid(barber)+","+uuid(svc)+"); insert into public.working_hours(barbershop_id,barber_id,weekday,opens_at,closes_at,is_closed) select "+uuid(checkoutShop)+","+uuid(barber)+",n,time '09:00',time '12:00',false from generate_series(0,6)n;");
+  const start=sql("select min(slot_start) from public.get_composed_available_slots('shop-phase8-preview-qa',"+uuid(svc)+","+uuid(barber)+",(now() at time zone 'Africa/Maputo')::date+3,null,'{}'::uuid[]);");
+  assert.ok(start,'QA booking must expose a slot');
+  const booking=await request('/functions/v1/booking-create',{idempotency_key:checkoutBookingKey,p_slug:'shop-phase8-preview-qa',p_service_id:svc,p_haircut_id:null,p_barber_id:barber,p_start:new Date(start).toISOString(),p_name:'Checkout QA fixture',p_phone:'840000018',p_email:null,p_shop_items:[],p_addon_ids:[],p_expected_price:10000,p_expected_duration:30},config.ANON_KEY);
+  assert.equal(booking.status,200,'Real booking Edge failed: '+(booking.result?.error??'unknown'));
+  assert.equal(booking.result.booking.deposit_cents,2000);assert.equal(booking.result.booking.needs_payment,true);
+  const token=booking.result.booking.manage_token;
+  const appointment=sql("select id from public.appointments where manage_token="+uuid(token)+";");
+  const operational={
+   token,
+   readAppointment:()=>sql("select status::text||':'||deposit_status::text from public.appointments where id="+uuid(appointment)+";"),
+   completeAndDeliver:()=>{
+    sql("update public.appointments set status='completed',completed_at=now() where id="+uuid(appointment)+";");
+    sql("insert into public.shop_products(id,barbershop_id,name,product_kind,track_stock,is_active) values("+uuid(product)+","+uuid(checkoutShop)+",'QA product','takeaway',false,false); insert into public.shop_product_variants(id,barbershop_id,product_id,label,unit_label,price_minor,is_active) values("+uuid(variant)+","+uuid(checkoutShop)+","+uuid(product)+",'QA','unidade',1000,true); insert into public.appointment_product_orders(id,barbershop_id,appointment_id,status) values("+uuid(ord)+","+uuid(checkoutShop)+","+uuid(appointment)+",'partially_delivered'); insert into public.appointment_product_order_items(barbershop_id,order_id,product_id,variant_id,product_name_snapshot,variant_snapshot,unit_price_snapshot,qty,delivered_qty,options,line_total_snapshot,status) values("+uuid(checkoutShop)+","+uuid(ord)+","+uuid(product)+","+uuid(variant)+",'QA product','QA',1000,4,3,'{}',4000,'partially_delivered');");
+   },
+   readSettlement:(purpose)=>JSON.parse(sql("select jsonb_build_object('amount',amount_minor,'status',status,'outcome',outcome) from private.payment_checkout_runs where shop_id="+uuid(checkoutShop)+" and purpose='"+purpose+"' order by created_at desc limit 1;")),
+  };
+  assert.equal(operational.readAppointment(),'pending:awaiting');
   const {certifyPaymentBrowser}=await import('../frontend/tests/payment-simulator-real-browser.mjs');
-  await certifyPaymentBrowser({apiUrl:root,anonKey:config.ANON_KEY,actor,nonadmin,shop,readRun:id=>JSON.parse(sql("select jsonb_build_object('status',r.status,'amount_minor',r.amount_minor,'purpose',r.purpose,'entitlement',r.simulated_entitlement,'event_count',(select count(*) from private.payment_simulator_events e where e.run_id=r.id)) from private.payment_simulator_runs r where r.id="+uuid(id)+';'))});
+  await certifyPaymentBrowser({apiUrl:root,anonKey:config.ANON_KEY,actor,nonadmin,shop,operational,readRun:id=>JSON.parse(sql("select jsonb_build_object('status',r.status,'amount_minor',r.amount_minor,'purpose',r.purpose,'entitlement',r.simulated_entitlement,'event_count',(select count(*) from private.payment_simulator_events e where e.run_id=r.id)) from private.payment_simulator_runs r where r.id="+uuid(id)+';'))});
  }
+ if(checkoutFixture){sql('delete from public.booking_idempotency where key='+uuid(checkoutBookingKey)+'; delete from public.barbershops where id='+uuid(checkoutShop)+'; delete from public.plans where id='+uuid(checkoutPlan)+';');checkoutFixture=false;}
  // Re-check authoritative permissions using the same still-valid JWT.
  sql("update public.profiles set password_change_required=true where id="+uuid(other.id)+";");
  assert.equal((await call(other.token,'list')).status,403);
@@ -110,6 +139,7 @@ try{
  assert.equal(after,before,'Operational data changed during simulator acceptance');
  console.log('PASS | Real local authenticated Edge HTTP, PostgreSQL, concurrent idempotency, authorization, reconciliation and live isolation');
 }finally{
+ if(checkoutFixture)sql('delete from public.booking_idempotency where key='+uuid(checkoutBookingKey)+'; delete from public.barbershops where id='+uuid(checkoutShop)+'; delete from public.plans where id='+uuid(checkoutPlan)+';');
  if(previousGate==='f')sql('update private.payment_simulator_settings set enabled=false where singleton;');
  sql('delete from public.barbershops where id='+uuid(shop)+';');
  for(const id of users)await request('/auth/v1/admin/users/'+id,undefined,config.SERVICE_ROLE_KEY,'DELETE');
