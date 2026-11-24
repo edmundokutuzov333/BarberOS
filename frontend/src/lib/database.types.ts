@@ -15,6 +15,8 @@ export const nullableRpcArguments = {
   get_available_slots_week: ['p_barber_id'],
   get_available_slots: ['p_barber_id'],
   get_available_days: ['p_barber_id'],
+  get_offer_available_days: ['p_barber_id', 'p_haircut_id'],
+  get_offer_available_slots: ['p_barber_id', 'p_haircut_id'],
   book_appointment: ['p_haircut_id', 'p_barber_id', 'p_email'],
   book_appointment_manual: ['p_haircut_id', 'p_barber_id', 'p_email', 'p_internal_note'],
   get_customers: ['p_search'],

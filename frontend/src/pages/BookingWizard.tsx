@@ -11,6 +11,7 @@ import { buildWhatsAppLink } from '@/lib/calendar';
 import { formatMT, humanError } from '@/lib/utils';
 import { useAvailableDays, useAvailableSlots } from '@/features/availability/api';
 import { normalizeMozPhone, useBookAppointment } from '@/features/booking/api';
+import { effectiveOffer, styleMatchesService } from '@/features/booking/offer';
 import { HaircutPhoto } from '@/components/HaircutPhoto';
 import { rememberLocalBooking } from '@/lib/shop-link';
 import { WaitlistJoinPanel } from '@/features/waitlist/WaitlistJoinPanel';
@@ -23,7 +24,7 @@ import {
 import { usePublicShopCatalog, type PublicShopProduct, type PublicShopVariant } from '@/features/public-shop/catalog';
 import { ShopCatalogueStep, type ShopCart } from '@/features/public-shop/CatalogueStep';
 
-const STEP_LABELS = ['Serviço', 'Corte', 'Barbeiro', 'Data', 'Hora', 'Dados'];
+const STEP_LABELS = ['Serviço', 'Estilo', 'Barbeiro', 'Data', 'Hora', 'Dados'];
 
 type SelectedShopLine = {
   product: PublicShopProduct;
@@ -111,7 +112,7 @@ function StepHeader({ currentStep, shopName, shopSlug, stepLabels }: { currentSt
         <span className="t-label text-ink-mid">{currentStep} de {stepLabels.length}</span>
       </div>
       <nav aria-label="Progresso da marcação" className="mt-5">
-        <ol className={'grid gap-1.5 ' + (stepLabels.length === 7 ? 'grid-cols-7' : 'grid-cols-6')}>
+        <ol className={'grid gap-1.5 ' + (stepLabels.length === 7 ? 'grid-cols-7' : stepLabels.length === 6 ? 'grid-cols-6' : 'grid-cols-5')}>
           {stepLabels.map((label, index) => {
             const step = index + 1;
             const active = step === currentStep;
@@ -231,7 +232,7 @@ function Summary({
     <Panel title="Resumo" testId="booking-summary">
       <div className="space-y-3">
         <div className="flex gap-3"><Scissors size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Serviço</p><p className="t-body text-ink-hi mt-0.5">{service?.name ?? 'Por escolher'}</p></div></div>
-        <div className="flex gap-3"><Scissors size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Corte</p><p className="t-body text-ink-hi mt-0.5">{haircut?.name ?? 'Sem preferência'}</p></div></div>
+        {haircut && <div className="flex gap-3"><Scissors size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Estilo</p><p className="t-body text-ink-hi mt-0.5">{haircut.name}</p></div></div>}
         <div className="flex gap-3"><UserRound size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Barbeiro</p><p className="t-body text-ink-hi mt-0.5">{barber?.display_name ?? 'Qualquer barbeiro'}</p></div></div>
         <div className="flex gap-3"><Clock3 size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Data e hora</p><p className="t-body text-ink-hi mt-0.5">{date ? formatDate(date, timezone, { day: 'numeric', month: 'long', year: 'numeric' }) : 'Por escolher'}{start ? ' · ' + formatTime(start, timezone) : ''}</p></div></div>
         {service && (
@@ -304,16 +305,19 @@ export default function BookingWizard() {
   const shopSubtotal = shopLines.reduce((total, line) => total + line.qty * line.variant.price_minor, 0);
 
   const service = data?.services.find((item) => item.id === serviceId);
-  const haircut = data?.haircuts.find((item) => item.id === haircutId);
   const eligibleHaircuts = useMemo(
-    () => data?.haircuts.filter((item) => !item.service_id || item.service_id === serviceId) ?? [],
+    () => data?.haircuts.filter((item) => styleMatchesService(item, serviceId)) ?? [],
     [data?.haircuts, serviceId],
   );
+  const haircut = eligibleHaircuts.find((item) => item.id === haircutId);
+  const offer = service ? effectiveOffer(service, haircut) : undefined;
+  const hasStyleStep = !service || eligibleHaircuts.length > 0;
+  const visibleStepLabels = hasStyleStep ? stepLabels : stepLabels.filter((_, index) => index !== 1);
   const eligibleBarbers = useMemo(
     () => data?.barbers.filter((barber) => Boolean(serviceId && barber.service_ids.includes(serviceId))) ?? [],
     [data?.barbers, serviceId],
   );
-  const barber = data?.barbers.find((item) => item.id === barberParam);
+  const barber = eligibleBarbers.find((item) => item.id === barberParam);
   const selectedBarberId = barberParam === 'any' ? null : barber?.id ?? null;
   const selectableService = service && eligibleBarbers.length ? service : undefined;
 
@@ -322,6 +326,7 @@ export default function BookingWizard() {
   const daysQuery = useAvailableDays({
     slug,
     serviceId: service?.id,
+    haircutId: haircut?.id ?? null,
     barberId: selectedBarberId,
     from: today ?? undefined,
     to: maxDate ?? undefined,
@@ -329,6 +334,7 @@ export default function BookingWizard() {
   const slotsQuery = useAvailableSlots({
     slug,
     serviceId: service?.id,
+    haircutId: haircut?.id ?? null,
     barberId: selectedBarberId,
     date: date ?? undefined,
   });
@@ -387,22 +393,24 @@ export default function BookingWizard() {
         <div className="w-full max-w-lg"><ErrorState message={humanError(query.error ?? new Error('BARBERSHOP_NOT_FOUND'))} onRetry={() => query.refetch()} /></div></div>;
   }
 
-  const effectiveStep = !selectableService ? 1 : Math.min(currentStep, start ? customerStep : date ? 5 : 4);
-  const depositCents = service ? getDepositCents(service, data.shop) : 0;
-  const depositConfigValid = !service || depositCents <= service.price_cents;
+  const boundedStep = !selectableService ? 1 : Math.min(currentStep, start ? customerStep : date ? 5 : 4);
+  const effectiveStep = boundedStep === 2 && !hasStyleStep ? 3 : boundedStep;
+  const visibleStep = !hasStyleStep && effectiveStep > 2 ? effectiveStep - 1 : effectiveStep;
+  const depositCents = offer ? getDepositCents(offer, data.shop) : 0;
+  const depositConfigValid = !offer || depositCents <= offer.price_cents;
   const canBook = Boolean(
-    !shopCatalogQuery.isLoading && selectableService && start && (barberParam === 'any' || barber) && depositConfigValid &&
+    !shopCatalogQuery.isLoading && selectableService && start && (!haircutId || haircut) && slotsQuery.isSuccess && slotsQuery.data.some((slot) => slot.slot_start === start) && (barberParam === 'any' || barber) && depositConfigValid &&
     shopLines.length <= 20,
   );
 
   const setStep = (step: number) => updateSearchParams(searchParams, setSearchParams, { step: String(step) });
 
   const chooseService = (id: string) => updateSearchParams(searchParams, setSearchParams, {
-    service: id, haircut: null, barber: 'any', date: null, start: null, step: '2',
+    service: id, haircut: null, barber: 'any', date: null, start: null, step: data.haircuts.some((item) => styleMatchesService(item, id)) ? '2' : '3',
   });
 
   const chooseHaircut = (id: string | null) => updateSearchParams(searchParams, setSearchParams, {
-    haircut: id, step: '3',
+    haircut: id, date: null, start: null, step: '3',
   });
 
   const chooseBarber = (id: string | null) => updateSearchParams(searchParams, setSearchParams, {
@@ -469,7 +477,7 @@ export default function BookingWizard() {
   };
 
   const goBack = () => {
-    const previous = effectiveStep - 1;
+    const previous = effectiveStep === 3 && !hasStyleStep ? 1 : effectiveStep - 1;
     if (previous < 1) {
       navigate(`/barbearia/${slug ?? ''}`);
       return;
@@ -601,7 +609,7 @@ export default function BookingWizard() {
     <div className="barber-shell min-h-screen">
       
       <header className="max-w-6xl mx-auto px-5 sm:px-8 py-5">
-        <StepHeader currentStep={effectiveStep} shopName={data.shop.name} shopSlug={data.shop.slug} stepLabels={stepLabels} />
+        <StepHeader currentStep={visibleStep} shopName={data.shop.name} shopSlug={data.shop.slug} stepLabels={visibleStepLabels} />
       </header>
 
       <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-28 lg:pb-16">
@@ -638,7 +646,7 @@ export default function BookingWizard() {
             )}
 
             {showHaircutStep && service && (
-              <Panel title="Escolha o corte" testId="booking-step-haircut">
+              <Panel title="Personalize o seu estilo" testId="booking-step-haircut">
                 {eligibleHaircuts.length ? (
                   <div className="space-y-3">
                     <ChoiceCard
@@ -654,7 +662,7 @@ export default function BookingWizard() {
                           key={item.id}
                           title={item.name}
                           body={item.description}
-                          meta={item.price_cents != null ? formatMT(item.price_cents) : item.duration_min != null ? item.duration_min + ' min' : undefined}
+                          meta={formatMT(effectiveOffer(service, item).price_cents) + ' · ' + effectiveOffer(service, item).duration_min + ' min'}
                           imageName={item.name}
                           imageUrl={item.photo_url}
                           imageAlt={`Fotografia de referência para ${item.name}`}
@@ -697,25 +705,26 @@ export default function BookingWizard() {
                   <ErrorState message={humanError(daysQuery.error)} onRetry={() => daysQuery.refetch()} />
                 ) : daysQuery.data?.length ? (
                   <div>
-                    <p className="t-body text-ink-mid mb-4">Escolha um dia com vagas reais. Dias sem slots permanecem desactivados.</p>
+                    <p className="t-body text-ink-mid mb-4">Escolha um dia com vagas ou entre na lista de espera nos dias abertos sem horários.</p>
                     <div className="grid grid-cols-4 sm:grid-cols-7 gap-2" role="listbox" aria-label="Dias disponíveis">
                       {daysQuery.data.map((day) => {
                         const active = day.day === date;
                         const available = day.slots_count > 0;
+                        const selectable = available || day.is_open;
                         return (
                           <button
                             key={day.day}
                             type="button"
                             role="option"
                             aria-selected={active}
-                            aria-disabled={!available}
-                            disabled={!available}
+                            aria-disabled={!selectable}
+                            disabled={!selectable}
                             onClick={() => chooseDate(day.day)}
-                            className={`rounded-2xl border px-2 py-3 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft ${active ? 'border-accent-soft bg-accent-soft/15' : available ? 'border-white/10 bg-white/5 hover:bg-white/[.07]' : 'border-white/5 bg-white/[.02] opacity-45'}`}
+                            className={`rounded-2xl border px-2 py-3 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft ${active ? 'border-accent-soft bg-accent-soft/15' : selectable ? 'border-white/10 bg-white/5 hover:bg-white/[.07]' : 'border-white/5 bg-white/[.02] opacity-45'}`}
                           >
                             <span className="t-label text-ink-mid block">{WEEKDAYS_SHORT[new Date(day.day + 'T00:00:00Z').getUTCDay()]}</span>
                             <span className="block text-lg text-ink-hi mt-1">{day.day.slice(8, 10)}</span>
-                            <span className="t-label text-ink-mid block mt-1">{available ? day.slots_count + (day.slots_count === 1 ? ' vaga' : ' vagas') : 'Sem vagas'}</span>
+                            <span className="t-label text-ink-mid block mt-1">{available ? day.slots_count + (day.slots_count === 1 ? ' vaga' : ' vagas') : day.is_open ? 'Lista de espera' : 'Fechado'}</span>
                           </button>
                         );
                       })}
@@ -855,14 +864,14 @@ export default function BookingWizard() {
               className="sr-only"
               aria-live="polite"
             >
-              Passo {effectiveStep}: {stepLabels[effectiveStep - 1]}
+              Passo {visibleStep}: {visibleStepLabels[visibleStep - 1]}
             </div>
           </section>
 
           <aside className="lg:sticky lg:top-6">
             <Summary
               shopName={data.shop.name}
-              service={selectableService}
+              service={selectableService ? offer : undefined}
               haircut={haircut}
               barber={barber}
               date={date}

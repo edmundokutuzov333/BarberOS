@@ -7,7 +7,20 @@ async function main() {
     const utils = await server.ssrLoadModule('/src/lib/utils.ts');
     const calendar = await server.ssrLoadModule('/src/lib/calendar.ts');
     const permissions = await server.ssrLoadModule('/src/lib/permissions.ts');
+    const offers = await server.ssrLoadModule('/src/features/booking/offer.ts');
     const tests = [
+      ['booking offer resolves linked variants only, preserving zero price and inheritance', () => {
+        const base = { id: 'service', price_cents: 25000, duration_min: 30 };
+        const variant = { id: 'style', service_id: 'service', price_cents: 45000, duration_min: 60 };
+        assert.equal(offers.styleMatchesService(variant, 'service'), true);
+        assert.equal(offers.styleMatchesService({ ...variant, service_id: null }, 'service'), false);
+        assert.equal(offers.styleMatchesService(variant, 'other'), false);
+        assert.deepEqual(offers.effectiveOffer(base, variant), { ...base, price_cents: 45000, duration_min: 60 });
+        assert.deepEqual(offers.effectiveOffer(base, { ...variant, price_cents: 0, duration_min: null }), { ...base, price_cents: 0 });
+        assert.deepEqual(offers.effectiveOffer(base, { ...variant, service_id: null }), base);
+        assert.equal(offers.styleMatchesService({ ...variant, duration_min: 2 }, 'service'), false);
+        assert.equal(offers.bookingPath('shop', 'service', 'style'), '/barbearia/shop/marcar?service=service&step=3&haircut=style');
+      }],
       ['formatMT formats Metical cents', () => {
         assert.equal(utils.formatMT(0), '0 MT');
         assert.equal(utils.formatMT(500), '5 MT');

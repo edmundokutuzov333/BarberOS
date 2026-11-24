@@ -10,7 +10,7 @@ export type ManualService = Pick<
 
 export type ManualHaircut = Pick<
   Database['public']['Tables']['haircuts']['Row'],
-  'id' | 'name' | 'service_id'
+  'id' | 'name' | 'service_id' | 'price_cents' | 'duration_min'
 >;
 
 export type ManualBarber = Pick<
@@ -34,7 +34,7 @@ export async function getManualBookingCatalog(shopId: string) {
       .order('name'),
     supabase
       .from('haircuts')
-      .select('id,name,service_id')
+      .select('id,name,service_id,price_cents,duration_min')
       .eq('barbershop_id', shopId)
       .eq('is_active', true)
       .order('sort_order')

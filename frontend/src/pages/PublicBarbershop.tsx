@@ -8,6 +8,7 @@ import { formatMT, humanError } from '@/lib/utils';
 import { useScopedTheme } from '@/themes';
 import { usePublicBarbershop, type PublicBarber, type PublicHaircut, type PublicService, type PublicWorkingHour } from '@/features/public-shop/api';
 import { HaircutPhoto } from '@/components/HaircutPhoto';
+import { bookingPath, effectiveOffer, styleMatchesService } from '@/features/booking/offer';
 import { BARBER_FALLBACK_PHOTOS, BARBERSHOP_FALLBACK_PHOTOS, SERVICE_FALLBACK_PHOTOS, PhotoWithFallback } from '@/components/PhotoWithFallback';
 
 const WEEKDAYS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
@@ -31,7 +32,7 @@ function fallbackShopName(slug?: string): string {
   return label ? label.replace(/\b\w/g, (letter) => letter.toUpperCase()) : 'Barbearia';
 }
 
-function ServiceCard({ service }: { service: PublicService }) {
+function ServiceCard({ service, shopSlug, bookable }: { service: PublicService; shopSlug: string; bookable: boolean }) {
   return (
     <article className="rounded-3xl border border-white/10 bg-white/5 overflow-hidden h-full">
       <PhotoWithFallback src={service.photo_url} fallbackSources={SERVICE_FALLBACK_PHOTOS} alt={`Fotografia de referência para ${service.name}`} className="w-full aspect-[16/9] object-cover" loading="lazy" decoding="async" />
@@ -43,7 +44,7 @@ function ServiceCard({ service }: { service: PublicService }) {
           </div>
           <p className="t-card text-accent-soft whitespace-nowrap">{formatMT(service.price_cents)}</p>
         </div>
-        {service.requires_deposit && <p className="t-label text-ink-mid mt-4">Sinal aplicável neste serviço.</p>}
+        {bookable ? <Link className="inline-flex mt-4 text-sm text-accent-soft underline underline-offset-4" to={bookingPath(shopSlug, service.id)}>Marcar este serviço</Link> : <p className="t-label text-ink-mid mt-4">Sem profissional disponível</p>}
       </div>
     </article>
   );
@@ -262,7 +263,7 @@ export default function PublicBarbershop() {
                             <div className="perf-deferred">
                             <Panel title="Serviços" aside={<span className="t-label text-ink-mid">{services.length}</span>}>
                               {services.length ? (
-                                <div className="grid sm:grid-cols-2 gap-3">{services.map((service) => <ServiceCard key={service.id} service={service} />)}</div>
+                                <div className="grid sm:grid-cols-2 gap-3">{services.map((service) => <ServiceCard key={service.id} service={service} shopSlug={shop.slug} bookable={barbers.some((barber) => barber.service_ids.includes(service.id))} />)}</div>
                               ) : <EmptyState title="Ainda sem serviços publicados" body="A barbearia ainda não disponibilizou serviços para marcação online." />}
                             </Panel>
                             </div>
@@ -271,16 +272,21 @@ export default function PublicBarbershop() {
                             <Panel title="Cortes" aside={<span className="t-label text-ink-mid">{haircuts.length}</span>}>
                               {haircuts.length ? (
                                 <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                                  {haircuts.map((cut: PublicHaircut) => (
+                                  {haircuts.map((cut: PublicHaircut) => {
+                                    const parent = services.find((service) => styleMatchesService(cut, service.id));
+                                    const offer = parent ? effectiveOffer(parent, cut) : undefined;
+                                    const bookable = parent && barbers.some((barber) => barber.service_ids.includes(parent.id));
+                                    return (
                                     <article key={cut.id} className="rounded-3xl border border-white/10 bg-white/5 overflow-hidden">
                                       <HaircutPhoto name={cut.name} photoUrl={cut.photo_url} alt={`Exemplo do corte ${cut.name}`} className="w-full aspect-[4/3] object-cover" />
                                       <div className="p-4">
                                         <h3 className="t-card text-ink-hi">{cut.name}</h3>
                                         {cut.description && <p className="t-body text-ink-mid mt-1.5">{cut.description}</p>}
-                                        {(cut.price_cents != null || cut.duration_min != null) && <p className="t-label text-accent-soft mt-3">{cut.price_cents != null ? formatMT(cut.price_cents) : ''}{cut.price_cents != null && cut.duration_min != null ? ' · ' : ''}{cut.duration_min != null ? cut.duration_min + ' min' : ''}</p>}
+                                        {offer && <p className="t-label text-accent-soft mt-3">{formatMT(offer.price_cents)} · {offer.duration_min} min</p>}
+                                        {parent && bookable ? <Link className="inline-flex mt-3 text-sm text-accent-soft underline underline-offset-4" to={bookingPath(shop.slug, parent.id, cut.id)}>Marcar este estilo</Link> : <p className="t-label text-ink-mid mt-3">{parent ? 'Sem profissional disponível' : 'Referência visual · não reservável online'}</p>}
                                       </div>
                                     </article>
-                                  ))}
+                                  ); })}
                                 </div>
                               ) : <EmptyState title="Ainda sem cortes publicados" body="Os cortes configurados pela barbearia aparecerão aqui." />}
                             </Panel>

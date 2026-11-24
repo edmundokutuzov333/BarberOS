@@ -52,6 +52,9 @@ export function HaircutsEditor() {
       if (form.name.trim().length < 2) throw new Error('INVALID_NAME');
       const price = form.price ? Math.round(parseFloat(form.price.replace(',', '.')) * 100) : null;
       const duration = form.duration ? parseInt(form.duration, 10) : null;
+      if (price !== null && (!Number.isInteger(price) || price < 0)) throw new Error('Preço inválido.');
+      if (duration !== null && (!Number.isInteger(duration) || duration < 5 || duration > 480)) throw new Error('Duração entre 5 e 480 minutos.');
+      if (!form.service_id && (price !== null || duration !== null)) throw new Error('Associe um serviço para definir preço ou duração; uma referência visual não é reservável.');
       const row = { name: form.name.trim(), description: form.description.trim() || null, service_id: form.service_id || null, price_cents: price, duration_min: duration, photo_url: form.photo_url };
       const r = editing === 'new'
         ? await supabase.from('haircuts').insert({ ...row, barbershop_id: shop!.id, sort_order: q.data?.length ?? 0 })
@@ -59,7 +62,7 @@ export function HaircutsEditor() {
       if (r.error) throw r.error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: key }); setEditing(null); toast.success('Corte guardado'); },
-    onError: (e) => toast.error(humanError(e)),
+    onError: (e) => toast.error(e instanceof Error && !e.message.includes('_') ? e.message : humanError(e)),
   });
   const toggle = useMutation({
     mutationFn: async (h: Haircut) => { const r = await supabase.from('haircuts').update({ is_active: !h.is_active }).eq('id', h.id); if (r.error) throw r.error; },
@@ -115,7 +118,7 @@ export function HaircutsEditor() {
               <div className="p-3 flex items-center gap-2">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-normal truncate">{h.name}</p>
-                  <p className="t-label text-ink-mid truncate">{[h.duration_min && `${h.duration_min} min`, h.price_cents != null && formatMT(h.price_cents)].filter(Boolean).join(' · ') || 'Segue o serviço'}</p>
+                  <p className="t-label text-ink-mid truncate">{h.service_id ? ([h.duration_min && `${h.duration_min} min`, h.price_cents != null && formatMT(h.price_cents)].filter(Boolean).join(' · ') || 'Segue o serviço') : 'Referência visual · associe um serviço'}</p>
                 </div>
                 <Switch testId={`haircut-toggle-${h.id}`} checked={h.is_active} onCheckedChange={() => toggle.mutate(h)} />
               </div>
@@ -134,12 +137,13 @@ export function HaircutsEditor() {
             <div className="space-y-3">
               <Field data-testid="haircut-name-input" label="Nome" name="hc_name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex.: Low fade" autoFocus />
               <Select data-testid="haircut-service-select" label="Serviço associado" value={form.service_id} onChange={(e) => setForm({ ...form, service_id: e.target.value })}>
-                <option value="">Sem serviço fixo</option>
+                <option value="">Referência visual (não reservável)</option>
                 {services.data?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </Select>
             </div>
           </div>
           <Textarea data-testid="haircut-description-input" label="Descrição" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Uma frase que ajude o cliente a reconhecer o corte." />
+          <p className="t-label text-ink-mid">Preço e duração opcionais substituem os do serviço associado. Deixe em branco para herdar. Sem associação, o estilo serve apenas de referência visual.</p>
           <div className="grid grid-cols-2 gap-3">
             <Field data-testid="haircut-price-input" label="Preço (MT), opcional" name="hc_price" inputMode="decimal" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="Segue o serviço" />
             <Field data-testid="haircut-duration-input" label="Duração (min), opcional" name="hc_duration" inputMode="numeric" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} placeholder="Segue o serviço" />

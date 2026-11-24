@@ -32,8 +32,11 @@ export async function getAvailableSlots(
   serviceId: string,
   barberId: string | null,
   date: string,
+  haircutId: string | null = null,
 ): Promise<AvailableSlot[]> {
-  const { data, error } = await supabase.rpc('get_available_slots', {
+  const { data, error } = haircutId
+    ? await supabase.rpc('get_offer_available_slots', { p_slug: slug, p_service_id: serviceId, p_barber_id: barberId, p_date: date, p_haircut_id: haircutId })
+    : await supabase.rpc('get_available_slots', {
     p_slug: slug,
     p_service_id: serviceId,
     p_barber_id: barberId,
@@ -50,8 +53,11 @@ export async function getAvailableDays(
   barberId: string | null,
   from: string,
   to: string,
+  haircutId: string | null = null,
 ): Promise<AvailableDay[]> {
-  const { data, error } = await supabase.rpc('get_available_days', {
+  const { data, error } = haircutId
+    ? await supabase.rpc('get_offer_available_days', { p_slug: slug, p_service_id: serviceId, p_barber_id: barberId, p_from: from, p_to: to, p_haircut_id: haircutId })
+    : await supabase.rpc('get_available_days', {
     p_slug: slug,
     p_service_id: serviceId,
     p_barber_id: barberId,
@@ -68,12 +74,13 @@ export function useAvailableSlots(params: {
   serviceId?: string;
   barberId?: string | null;
   date?: string;
+  haircutId?: string | null;
 }) {
-  const { slug, serviceId, barberId = null, date } = params;
+  const { slug, serviceId, barberId = null, date, haircutId = null } = params;
 
   return useQuery({
-    queryKey: ['availability', 'slots', slug, serviceId, barberId, date],
-    queryFn: () => getAvailableSlots(slug!, serviceId!, barberId, date!),
+    queryKey: ['availability', 'slots', slug, serviceId, barberId, date, haircutId],
+    queryFn: () => getAvailableSlots(slug!, serviceId!, barberId, date!, haircutId),
     enabled: Boolean(slug && serviceId && date),
     staleTime: 15_000,
     refetchInterval: 30_000,
@@ -86,12 +93,13 @@ export function useAvailableDays(params: {
   barberId?: string | null;
   from?: string;
   to?: string;
+  haircutId?: string | null;
 }) {
-  const { slug, serviceId, barberId = null, from, to } = params;
+  const { slug, serviceId, barberId = null, from, to, haircutId = null } = params;
 
   return useQuery({
-    queryKey: ['availability', 'days', slug, serviceId, barberId, from, to],
-    queryFn: () => getAvailableDays(slug!, serviceId!, barberId, from!, to!),
+    queryKey: ['availability', 'days', slug, serviceId, barberId, from, to, haircutId],
+    queryFn: () => getAvailableDays(slug!, serviceId!, barberId, from!, to!, haircutId),
     enabled: Boolean(slug && serviceId && from && to),
     staleTime: 30_000,
   });
