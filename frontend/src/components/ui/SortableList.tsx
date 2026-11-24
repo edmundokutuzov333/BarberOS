@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { humanError, cn } from '@/lib/utils';
+import { invalidateBookingCatalog } from '@/features/booking/catalog-cache';
 
 interface Sortable { id: string; sort_order: number }
 type ReorderRpc = 'reorder_services' | 'reorder_haircuts' | 'reorder_barbers';
@@ -25,7 +26,7 @@ export function SortableList<T extends Sortable>({ items, shopId, rpcName, query
       });
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey }),
+    onSuccess: () => invalidateBookingCatalog(qc, shopId),
     onError: (e) => {
       toast.error(humanError(e));
       setLocal(items);

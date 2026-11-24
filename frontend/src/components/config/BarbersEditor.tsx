@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { invalidateBookingCatalog } from '@/features/booking/catalog-cache';
 import { useShop } from '@/lib/shop';
 import { humanError } from '@/lib/utils';
 import type { Barber } from '@/lib/types';
@@ -61,16 +62,16 @@ export function BarbersEditor() {
       if (error) throw error;
       if (!barberId) throw new Error('BARBER_SAVE_FAILED');
     },
-    onSuccess: () => { Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['public-barbershop'] }), qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }), qc.invalidateQueries({ queryKey: ['availability'] }), qc.invalidateQueries({ queryKey: ['haircut-skill-barbers'] })]); setEditing(null); toast.success('Barbeiro guardado'); },
+    onSuccess: () => { invalidateBookingCatalog(qc, shop!.id, shop!.slug); setEditing(null); toast.success('Barbeiro guardado'); },
     onError: (e) => toast.error(humanError(e)),
   });
   const toggle = useMutation({
     mutationFn: async (b: Barber) => { const r = await supabase.from('barbers').update({ is_active: !b.is_active }).eq('id', b.id); if (r.error) throw r.error; },
-    onSuccess: () => Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['public-barbershop'] }), qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }), qc.invalidateQueries({ queryKey: ['availability'] }), qc.invalidateQueries({ queryKey: ['haircut-skill-barbers'] })]), onError: (e) => toast.error(humanError(e)),
+    onSuccess: () => invalidateBookingCatalog(qc, shop!.id, shop!.slug), onError: (e) => toast.error(humanError(e)),
   });
   const remove = useMutation({
     mutationFn: async (b: Barber) => { const r = await supabase.from('barbers').delete().eq('id', b.id); if (r.error) throw r.error; },
-    onSuccess: () => { Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['public-barbershop'] }), qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }), qc.invalidateQueries({ queryKey: ['availability'] }), qc.invalidateQueries({ queryKey: ['haircut-skill-barbers'] })]); toast.success('Barbeiro removido'); },
+    onSuccess: () => { invalidateBookingCatalog(qc, shop!.id, shop!.slug); toast.success('Barbeiro removido'); },
     onError: () => toast.error('Não dá para remover: já tem marcações. Desactiva-o em vez disso.'),
   });
   const toggleService = (id: string) => setForm((f) => ({ ...f, services: f.services.includes(id) ? f.services.filter((x) => x !== id) : [...f.services, id] }));

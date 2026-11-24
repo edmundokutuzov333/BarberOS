@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Pencil, Trash2, Sparkles, ArrowUp, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { invalidateBookingCatalog } from '@/features/booking/catalog-cache';
 import { useShop } from '@/lib/shop';
 import { formatMT, humanError } from '@/lib/utils';
 import type { Haircut } from '@/lib/types';
@@ -54,15 +55,15 @@ export function HaircutsEditor() {
 
   const seed = useMutation({
     mutationFn: async () => { const { data, error } = await supabase.rpc('seed_haircut_catalogue', { p_shop: shop!.id }); if (error) throw error; return data as number; },
-    onSuccess: (n) => { Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['public-barbershop'] }), qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }), qc.invalidateQueries({ queryKey: ['availability'] }), qc.invalidateQueries({ queryKey: ['haircut-skill-barbers'] })]); toast.success(n ? `${n} estilos adicionados ao catálogo` : 'O catálogo já tinha todos os estilos'); },
+    onSuccess: (n) => { invalidateBookingCatalog(qc, shop!.id, shop!.slug); toast.success(n ? `${n} estilos adicionados ao catálogo` : 'O catálogo já tinha todos os estilos'); },
     onError: (e) => toast.error(humanError(e)),
   });
 
   const save = useMutation({
     mutationFn: async () => {
       if (form.name.trim().length < 2) throw new Error('INVALID_NAME');
-      const price = form.price ? Math.round(Number(form.price.replace(',', '.')) * 100) : null;
-      const duration = form.duration ? Number(form.duration) : null;
+      const price = form.price.trim() ? Math.round(Number(form.price.replace(',', '.')) * 100) : null;
+      const duration = form.duration.trim() ? Number(form.duration) : null;
       if (price !== null && (!Number.isSafeInteger(price) || price < 0 || price > 2147483647)) throw new Error('Preço inválido.');
       if (duration !== null && (!Number.isInteger(duration) || duration < 5 || duration > 480)) throw new Error('Duração entre 5 e 480 minutos.');
       if (!form.service_id && (price !== null || duration !== null)) throw new Error('Associe um serviço para definir preço ou duração; uma referência visual não é reservável.');
@@ -72,16 +73,16 @@ export function HaircutsEditor() {
       const r = await supabase.rpc('save_haircut_configuration', { p_shop: shop!.id, p_haircut: editing === 'new' ? null : (editing as Haircut).id, p_entry: { ...row, skill_restricted: restricted }, p_offers: offers, p_skill_barbers: skills });
       if (r.error) throw r.error;
     },
-    onSuccess: () => { Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['public-barbershop'] }), qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }), qc.invalidateQueries({ queryKey: ['availability'] }), qc.invalidateQueries({ queryKey: ['haircut-skill-barbers'] })]); setEditing(null); toast.success('Corte guardado'); },
+    onSuccess: () => { invalidateBookingCatalog(qc, shop!.id, shop!.slug); setEditing(null); toast.success('Corte guardado'); },
     onError: (e) => toast.error(e instanceof Error && !e.message.includes('_') ? e.message : humanError(e)),
   });
   const toggle = useMutation({
     mutationFn: async (h: Haircut) => { const r = await supabase.from('haircuts').update({ is_active: !h.is_active }).eq('id', h.id); if (r.error) throw r.error; },
-    onSuccess: () => Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['public-barbershop'] }), qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }), qc.invalidateQueries({ queryKey: ['availability'] }), qc.invalidateQueries({ queryKey: ['haircut-skill-barbers'] })]), onError: (e) => toast.error(humanError(e)),
+    onSuccess: () => invalidateBookingCatalog(qc, shop!.id, shop!.slug), onError: (e) => toast.error(humanError(e)),
   });
   const remove = useMutation({
     mutationFn: async (h: Haircut) => { const r = await supabase.from('haircuts').delete().eq('id', h.id); if (r.error) throw r.error; },
-    onSuccess: () => { Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['public-barbershop'] }), qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }), qc.invalidateQueries({ queryKey: ['availability'] }), qc.invalidateQueries({ queryKey: ['haircut-skill-barbers'] })]); toast.success('Corte removido'); }, onError: (e) => toast.error(humanError(e)),
+    onSuccess: () => { invalidateBookingCatalog(qc, shop!.id, shop!.slug); toast.success('Corte removido'); }, onError: (e) => toast.error(humanError(e)),
   });
 
   const reorder = useMutation({
@@ -99,7 +100,7 @@ export function HaircutsEditor() {
       });
       if (error) throw error;
     },
-    onSuccess: () => Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['public-barbershop'] }), qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }), qc.invalidateQueries({ queryKey: ['availability'] }), qc.invalidateQueries({ queryKey: ['haircut-skill-barbers'] })]),
+    onSuccess: () => invalidateBookingCatalog(qc, shop!.id, shop!.slug),
     onError: (e) => toast.error(humanError(e)),
   });
 

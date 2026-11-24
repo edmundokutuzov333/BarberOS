@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { invalidateBookingCatalog } from '@/features/booking/catalog-cache';
 import { useShop } from '@/lib/shop';
 import { formatMT, humanError } from '@/lib/utils';
 import type { Service } from '@/lib/types';
@@ -54,17 +55,17 @@ export function ServicesEditor() {
       const r = await supabase.rpc('save_service_configuration', { p_shop: shop!.id, p_service: editing === 'new' ? null : (editing as Service).id, p_entry: row, p_addon_ids: addonIds });
       if (r.error) throw r.error;
     },
-    onSuccess: () => { Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['public-barbershop'] }), qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }), qc.invalidateQueries({ queryKey: ['availability'] }), qc.invalidateQueries({ queryKey: ['haircut-skill-barbers'] })]); setEditing(null); toast.success('Serviço guardado'); },
+    onSuccess: () => { invalidateBookingCatalog(qc, shop!.id, shop!.slug); setEditing(null); toast.success('Serviço guardado'); },
     onError: (e) => toast.error(e instanceof Error && !e.message.includes('_') ? e.message : humanError(e)),
   });
 
   const toggle = useMutation({
     mutationFn: async (s: Service) => { const r = await supabase.from('services').update({ is_active: !s.is_active }).eq('id', s.id); if (r.error) throw r.error; },
-    onSuccess: () => Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['public-barbershop'] }), qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }), qc.invalidateQueries({ queryKey: ['availability'] }), qc.invalidateQueries({ queryKey: ['haircut-skill-barbers'] })]), onError: (e) => toast.error(humanError(e)),
+    onSuccess: () => invalidateBookingCatalog(qc, shop!.id, shop!.slug), onError: (e) => toast.error(humanError(e)),
   });
   const remove = useMutation({
     mutationFn: async (s: Service) => { const r = await supabase.from('services').delete().eq('id', s.id); if (r.error) throw r.error; },
-    onSuccess: () => { Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['public-barbershop'] }), qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }), qc.invalidateQueries({ queryKey: ['availability'] }), qc.invalidateQueries({ queryKey: ['haircut-skill-barbers'] })]); toast.success('Serviço removido'); },
+    onSuccess: () => { invalidateBookingCatalog(qc, shop!.id, shop!.slug); toast.success('Serviço removido'); },
     onError: () => toast.error('Não dá para remover: já tem marcações. Desactiva-o em vez disso.'),
   });
 
