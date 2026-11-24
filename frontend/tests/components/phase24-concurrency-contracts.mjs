@@ -10,7 +10,12 @@ const tests = [
     const modal = read('src/components/ui/Primitives.tsx');
     const dialog = read('src/components/ui/dialog.jsx');
     const alertDialog = read('src/components/ui/alert-dialog.tsx');
-    for (const source of [modal, dialog, alertDialog]) {
+    assert.match(modal, /sm:inset-x-4 sm:top-4 sm:bottom-4 z-50 m-auto/);
+    assert.match(modal, /env\(safe-area-inset-top\)/);
+    assert.match(modal, /env\(safe-area-inset-bottom\)/);
+    assert.match(modal, /sm:max-h-\[calc\(100dvh-2rem\)\] overflow-y-auto/);
+    assert.doesNotMatch(modal, /translate-y-\[-50%\]/);
+    for (const source of [dialog, alertDialog]) {
       assert.match(source, /fixed inset-x-4 top-4 bottom-4 z-50 m-auto/);
       assert.match(source, /max-h-\[calc\(100dvh-2rem\)\] overflow-y-auto/);
       assert.doesNotMatch(source, /translate-y-\[-50%\]|slide-in-from-top-\[48%\]/);

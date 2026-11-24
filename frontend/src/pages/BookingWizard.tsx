@@ -351,7 +351,8 @@ export default function BookingWizard() {
   const bookMutation = useBookAppointment();
 
   useEffect(() => {
-    headingRef.current?.focus();
+    headingRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }, [currentStep]);
 
   useEffect(() => {

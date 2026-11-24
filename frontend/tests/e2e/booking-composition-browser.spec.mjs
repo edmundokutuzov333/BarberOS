@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-for (const width of [320, 390, 430, 1280]) test('real browser composition at '+width+'px through Edge and PostgreSQL', async ({ page }) => {
+for (const width of [320, 390, 430, 1280]) test('real browser composition at '+width+'px through Edge and PostgreSQL', async ({ page, isMobile }) => {
+  test.skip(isMobile !== (width<1024), 'Run each viewport on its matching browser device context');
   test.skip(process.env.BARBEROS_COMPOSITION_BROWSER !== '1', 'Requires isolated local Supabase and fixture');
   await page.setViewportSize({width,height:width===1280?900:740});
   const noOverflow = async () => expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'viewport overflow at '+width).toBe(true);
@@ -49,7 +50,8 @@ for (const width of [320, 390, 430, 1280]) test('real browser composition at '+w
   expect(errors).toEqual([]);
 });
 
-test('mobile owner edits category, add-ons and restricted secondary offers via actual Supabase', async ({page})=>{
+test('mobile owner edits category, add-ons and restricted secondary offers via actual Supabase', async ({page,isMobile})=>{
+ test.skip(!isMobile, 'Owner regression uses the mobile browser context');
  test.skip(process.env.BARBEROS_COMPOSITION_BROWSER !== '1','isolated local Supabase only');
  await page.setViewportSize({width:320,height:740});
  await page.goto('/entrar');
@@ -65,6 +67,10 @@ test('mobile owner edits category, add-ons and restricted secondary offers via a
  await expect(modal).toBeVisible();
  await modal.getByLabel('Categoria',{exact:true}).fill('Categoria QA');
  await modal.getByLabel('Subcategoria',{exact:true}).fill('Subcategoria QA');
+ const addon=modal.getByRole('checkbox',{name:/Lavagem QA/});
+ await expect(addon).toBeChecked();
+ await addon.uncheck();
+ await addon.check();
  await expect.poll(()=>modal.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
  const save=page.waitForResponse(r=>r.url().includes('/rpc/save_service_configuration') && r.request().method()==='POST');
  await modal.getByTestId('service-save-btn').click();
@@ -82,6 +88,8 @@ test('mobile owner edits category, add-ons and restricted secondary offers via a
  await select.selectOption(value);
  await style.locator('[name="extra_price_0"]').fill('100');
  await style.locator('[name="extra_duration_0"]').fill('20');
+ await expect(style.getByTestId('haircut-restrict-skills')).toHaveAttribute('aria-checked','true');
+ await expect(style.getByRole('checkbox',{name:'Barbeiro Qualificado QA'})).toBeChecked();
  const styleSave=page.waitForResponse(r=>r.url().includes('/rpc/save_haircut_configuration') && r.request().method()==='POST');
  await style.getByTestId('haircut-save-btn').click();
  expect((await styleSave).status()).toBe(200);
@@ -105,4 +113,34 @@ test('mobile owner edits category, add-ons and restricted secondary offers via a
  await manual.getByTestId('manual-booking-phone').fill('840000088');
  await manual.getByTestId('manual-booking-submit').click();
  await expect(page.getByTestId('manual-booking-success')).toBeVisible({timeout:15000});
+});
+
+test('composed HTTP quote rejection, collision and idempotency', async ({request,isMobile})=>{
+ test.skip(isMobile || process.env.BARBEROS_COMPOSITION_BROWSER !== '1','isolated local HTTP only');
+ const origin=process.env.VITE_SUPABASE_URL;
+ expect(new URL(origin).hostname).toMatch(/^(127\.0\.0\.1|localhost)$/);
+ const key=process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+ const headers={apikey:key,authorization:'Bearer '+key};
+ const rpc=async(name,data)=>{const r=await request.post(origin+'/rest/v1/rpc/'+name,{headers,data});expect(r.status()).toBe(200);return r.json();};
+ const catalog=await rpc('get_public_barbershop',{p_slug:'composition-browser-qa'});
+ const service=catalog.services.find(s=>s.name==='Corte QA'), addon=catalog.services.find(s=>s.name==='Lavagem QA'), cut=catalog.haircuts.find(h=>h.name==='Fade QA'), barber=catalog.barbers.find(b=>b.display_name==='Barbeiro Qualificado QA');
+ const date=new Date(Date.now()+3*86400000).toISOString().slice(0,10);
+ const slots=await rpc('get_composed_available_slots',{p_slug:'composition-browser-qa',p_service_id:service.id,p_barber_id:barber.id,p_date:date,p_haircut_id:cut.id,p_addon_ids:[addon.id]});
+ expect(slots.length).toBeGreaterThan(0);
+ const endpoint=origin+'/functions/v1/booking-create';
+ const common={p_slug:'composition-browser-qa',p_service_id:service.id,p_haircut_id:cut.id,p_barber_id:barber.id,p_start:slots[0].slot_start,p_shop_items:[],p_email:null,p_addon_ids:[addon.id],p_expected_price:38000,p_expected_duration:60};
+ const a={...common,p_name:'Collision QA A',p_phone:'+258840000081',idempotency_key:crypto.randomUUID()},b={...common,p_name:'Collision QA B',p_phone:'+258840000082',idempotency_key:crypto.randomUUID()};
+ const invalid=await request.post(endpoint,{headers,data:{...a,p_addon_ids:[addon.id,addon.id]}});
+ expect(invalid.status()).toBe(400);
+ const stale=await request.post(endpoint,{headers,data:{...a,p_expected_price:37999}});
+ expect(stale.status()).toBe(409);expect((await stale.json()).error).toBe('BOOKING_QUOTE_CHANGED');
+ const responses=await Promise.all([request.post(endpoint,{headers,data:a}),request.post(endpoint,{headers,data:b})]);
+ expect(responses.map(r=>r.status()).sort()).toEqual([200,409]);
+ const winner=responses.findIndex(r=>r.status()===200);
+ expect((await responses[1-winner].json()).error).toBe('SLOT_TAKEN');
+ const token=(await responses[winner].json()).booking.manage_token;
+ const replay=await request.post(endpoint,{headers,data:winner===0?a:b});
+ expect(replay.status()).toBe(200);expect((await replay.json()).booking.manage_token).toBe(token);
+ const reused=await request.post(endpoint,{headers,data:{...(winner===0?a:b),p_expected_price:38001}});
+ expect(reused.status()).toBe(409);expect((await reused.json()).error).toBe('IDEMPOTENCY_KEY_REUSED');
 });
