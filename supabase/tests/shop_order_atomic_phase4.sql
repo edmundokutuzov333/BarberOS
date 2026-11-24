@@ -4,6 +4,10 @@ begin;
 do $shop_order_atomic_phase4$
 declare
   v_actor uuid := gen_random_uuid();
+  v_addon uuid;
+  v_style uuid;
+  v_composed_key uuid := gen_random_uuid();
+  v_composed_failed_key uuid := gen_random_uuid();
   v_shop uuid;
   v_slug text;
   v_service uuid;
@@ -249,6 +253,38 @@ begin
      or has_function_privilege('anon','public.get_shop_order_by_manage_token(uuid)','EXECUTE') then
     raise exception 'FAIL: Phase 4 RPC privileges exceed contract';
   end if;
+
+  -- A composed reservation and stock order must be one transaction as well.
+  insert into public.services(barbershop_id,name,price_cents,duration_min,is_active)
+  values(v_shop,'Complemento Fase 4 QA',8000,15,true) returning id into v_addon;
+  insert into public.haircuts(barbershop_id,service_id,name,price_cents,duration_min,is_active,skill_restricted)
+  values(v_shop,v_service,'Estilo Fase 4 QA',15000,45,true,true) returning id into v_style;
+  insert into public.service_addons(barbershop_id,service_id,addon_service_id) values(v_shop,v_service,v_addon);
+  insert into public.haircut_barber_skills(barbershop_id,haircut_id,barber_id) values(v_shop,v_style,v_barber);
+  insert into public.barber_services(barber_id,service_id) values(v_barber,v_addon);
+  select min(slot_start) into v_start from public.get_composed_available_slots(v_slug,v_service,v_barber,v_day,v_style,array[v_addon]);
+  select * into v_result from public.book_composed_appointment_with_shop_order_idempotent(
+    v_composed_key,v_slug,v_service,v_style,v_barber,v_start,'Cliente composição com produto','840000066',null,
+    v_items,v_hash,array[v_addon],23000,60);
+  if v_result.shop_subtotal_minor<>2468 or v_result.shop_order_item_count<>1 then raise exception 'COMPOSED_PRODUCT_RESPONSE_FAILED'; end if;
+  v_appointment:=v_result.appointment_id;
+  if not exists(select 1 from public.appointments a where a.id=v_appointment and a.price_cents=23000 and a.duration_min=60 and jsonb_array_length(a.service_components)=2) then raise exception 'COMPOSED_PRODUCT_APPOINTMENT_FAILED'; end if;
+  select id into v_order from public.appointment_product_orders where appointment_id=v_appointment;
+  if not exists(select 1 from public.inventory_reservations where order_id=v_order and variant_id=v_variant and qty=2 and status='reserved') then raise exception 'COMPOSED_PRODUCT_RESERVATION_FAILED'; end if;
+  select * into v_retry from public.book_composed_appointment_with_shop_order_idempotent(
+    v_composed_key,v_slug,v_service,v_style,v_barber,v_start,'Cliente composição com produto','840000066',null,
+    v_items,v_hash,array[v_addon],23000,60);
+  if v_retry.appointment_id<>v_appointment or (select count(*) from public.appointment_product_orders where appointment_id=v_appointment)<>1 then raise exception 'COMPOSED_PRODUCT_DUPLICATE'; end if;
+  select min(slot_start) into v_second_start from public.get_composed_available_slots(v_slug,v_service,v_barber,v_day,v_style,array[v_addon]);
+  select count(*) into v_before from public.appointments where barbershop_id=v_shop;
+  begin
+    perform * from public.book_composed_appointment_with_shop_order_idempotent(v_composed_failed_key,v_slug,v_service,v_style,v_barber,v_second_start,'Composição sem stock','840000067',null,
+      jsonb_build_array(jsonb_build_object('variant_id',v_variant,'qty',4,'options','[]'::jsonb,'fulfilment_mode','consume_here')),repeat('d',64),array[v_addon],23000,60);
+    raise exception 'COMPOSED_PRODUCT_OVERRESERVATION_ACCEPTED';
+  exception when others then if sqlerrm<>'SHOP_STOCK_UNAVAILABLE' then raise; end if; end;
+  if (select count(*) from public.appointments where barbershop_id=v_shop)<>v_before or exists(select 1 from public.booking_idempotency where key=v_composed_failed_key) then raise exception 'COMPOSED_PRODUCT_ROLLBACK_FAILED'; end if;
+  update public.appointments set status='cancelled',cancel_reason='Composed rollback fixture' where id=v_appointment;
+  if not exists(select 1 from public.inventory_reservations where order_id=v_order and status='released') then raise exception 'COMPOSED_PRODUCT_RELEASE_FAILED'; end if;
 
   raise notice 'PASS | Phase 4 atomic booking/order, authoritative price, idempotency, stock reservation, cancellation and token read';
 end;
