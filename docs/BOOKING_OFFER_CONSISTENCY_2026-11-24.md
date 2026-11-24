@@ -43,3 +43,20 @@ a many-to-many per-service style offer catalog, per-style barber skill records,
 a configurable category hierarchy, multi-service add-ons or immutable quote
 negotiation. These require their own domain contracts and explicit merchant data;
 the current service-level qualification is not a proof of specific technique skill.
+
+## Production rollout receipt
+
+Three migrations applied unchanged via Supabase Management, with live versions:
+
+| Source | Staging | Production |
+|---|---|---|
+| booking_offer_consistency | 20261124092936 | 20261124093607 |
+| booking_offer_history_integrity | 20261124093406 | 20261124093612 |
+| booking_operator_reschedule_integrity | 20261124093436 | 20261124093617 |
+
+The same expanded transaction suite passed in production. All 16 existing appointment
+rows retained their original IDs, price, duration, start/end and haircut IDs;
+the aggregate snapshot MD5 was identical before and after. 63 of 66 active
+starter styles now have a valid explicit link. The remaining three Design freestyle
+references have no matching service and remain non-bookable until a merchant
+configures the service. No paid or customer-facing test was committed.

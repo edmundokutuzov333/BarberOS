@@ -2794,14 +2794,6 @@ export type Database = {
           slot_start: string
         }[]
       }
-      get_offer_available_days: {
-        Args: { p_slug: string; p_service_id: string; p_barber_id: string; p_from: string; p_to: string; p_haircut_id: string }
-        Returns: { day: string; is_open: boolean; slots_count: number }[]
-      }
-      get_offer_available_slots: {
-        Args: { p_slug: string; p_service_id: string; p_barber_id: string; p_date: string; p_haircut_id: string }
-        Returns: { barber_ids: string[]; slot_start: string }[]
-      }
       get_available_slots_week: {
         Args: {
           p_barber_id?: string
@@ -2934,6 +2926,34 @@ export type Database = {
           status: Database["public"]["Enums"]["notif_status"]
           template_key: string
           total_count: number
+        }[]
+      }
+      get_offer_available_days: {
+        Args: {
+          p_barber_id: string
+          p_from: string
+          p_haircut_id: string
+          p_service_id: string
+          p_slug: string
+          p_to: string
+        }
+        Returns: {
+          day: string
+          is_open: boolean
+          slots_count: number
+        }[]
+      }
+      get_offer_available_slots: {
+        Args: {
+          p_barber_id: string
+          p_date: string
+          p_haircut_id: string
+          p_service_id: string
+          p_slug: string
+        }
+        Returns: {
+          barber_ids: string[]
+          slot_start: string
         }[]
       }
       get_payment_accounts: {
@@ -3966,4 +3986,3 @@ export const Constants = {
     },
   },
 } as const
-

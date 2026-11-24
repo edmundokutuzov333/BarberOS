@@ -659,7 +659,7 @@
       "name": "get_appointment_by_token",
       "returns": "TABLE(shop_name text, shop_slug text, shop_phone text, shop_whatsapp text, shop_address text, shop_maps_url text, timezone text, cancellation_rule cancellation_rule, customer_name text, appointment_starts_at timestamp with time zone, appointment_ends_at timestamp with time zone, appointment_status appointment_status, deposit_status deposit_state, deposit_cents integer, service_name text, service_price_cents integer, service_duration_min integer, haircut_name text, barber_name text, barber_photo_url text, can_cancel boolean, can_reschedule boolean, action_deadline timestamp with time zone, hold_expires_at timestamp with time zone, payment_methods payment_provider[], latest_payment_status payment_state, latest_payment_failure_code text, latest_payment_failure_reason text, latest_payment_requires_refund boolean)",
       "anon_execute": false,
-      "definition_md5": "7fedaf4f345002ed2f364cf16e38d032",
+      "definition_md5": "c8d150699e19050fe3d2a9c56fc986ea",
       "input_arguments": [
         "p_token"
       ],
@@ -705,7 +705,7 @@
       "name": "get_available_slots",
       "returns": "TABLE(slot_start timestamp with time zone, barber_ids uuid[])",
       "anon_execute": true,
-      "definition_md5": "d9126abd42eb861cc2ad739ce8207016",
+      "definition_md5": "167f29dd81eed402dce8a999c020d28c",
       "input_arguments": [
         "p_slug",
         "p_service_id",
@@ -838,6 +838,39 @@
       "identity_arguments": "p_shop uuid, p_status text, p_channel text, p_limit integer, p_offset integer",
       "authenticated_execute": true,
       "required_argument_count": 1
+    },
+    {
+      "name": "get_offer_available_days",
+      "returns": "TABLE(day date, slots_count integer, is_open boolean)",
+      "anon_execute": true,
+      "definition_md5": "6ca67fddd1572106bfbf86dd11e2ca6d",
+      "input_arguments": [
+        "p_slug",
+        "p_service_id",
+        "p_barber_id",
+        "p_from",
+        "p_to",
+        "p_haircut_id"
+      ],
+      "identity_arguments": "p_slug text, p_service_id uuid, p_barber_id uuid, p_from date, p_to date, p_haircut_id uuid",
+      "authenticated_execute": true,
+      "required_argument_count": 6
+    },
+    {
+      "name": "get_offer_available_slots",
+      "returns": "TABLE(slot_start timestamp with time zone, barber_ids uuid[])",
+      "anon_execute": true,
+      "definition_md5": "8cd6cf3221fe00fd0620e7a982403dad",
+      "input_arguments": [
+        "p_slug",
+        "p_service_id",
+        "p_barber_id",
+        "p_date",
+        "p_haircut_id"
+      ],
+      "identity_arguments": "p_slug text, p_service_id uuid, p_barber_id uuid, p_date date, p_haircut_id uuid",
+      "authenticated_execute": true,
+      "required_argument_count": 5
     },
     {
       "name": "get_payment_accounts",
@@ -1043,7 +1076,7 @@
       "name": "get_reschedule_slots_by_token",
       "returns": "TABLE(slot_start timestamp with time zone)",
       "anon_execute": false,
-      "definition_md5": "d9e7b8abbbb9d0465e70008b2207c6b2",
+      "definition_md5": "92f4d963ddaa3f932ae9724e4270f031",
       "input_arguments": [
         "p_token",
         "p_date"
@@ -1189,7 +1222,7 @@
       "name": "get_waitlist_offer",
       "returns": "TABLE(status waitlist_status, can_claim boolean, customer_name text, service_name text, service_price_cents integer, service_duration_min integer, haircut_name text, barber_name text, slot_start timestamp with time zone, offer_expires_at timestamp with time zone, shop_name text, shop_slug text, shop_phone text, shop_whatsapp text, timezone text)",
       "anon_execute": false,
-      "definition_md5": "35e7985795e6a42f1bf32b685505f20f",
+      "definition_md5": "c3d25c4a9673f2fb6adcaeb813dad5d3",
       "input_arguments": [
         "p_token"
       ],
@@ -1261,7 +1294,7 @@
       "name": "join_waitlist",
       "returns": "TABLE(status waitlist_status, queued_at timestamp with time zone)",
       "anon_execute": true,
-      "definition_md5": "4856d2890adce7df4bcb27252bf08a8e",
+      "definition_md5": "3f95a19ad4d8f482c77d384e950d842b",
       "input_arguments": [
         "p_slug",
         "p_service_id",
@@ -1583,7 +1616,7 @@
       "name": "reschedule_appointment_by_operator",
       "returns": "TABLE(appointment_id uuid, new_starts_at timestamp with time zone, new_ends_at timestamp with time zone)",
       "anon_execute": false,
-      "definition_md5": "361ae0f44069367db8f61d1b6ec52890",
+      "definition_md5": "6570a17ea6c4277886b93a36135f9cda",
       "input_arguments": [
         "p_shop",
         "p_appointment",
@@ -1598,7 +1631,7 @@
       "name": "reschedule_appointment_by_token",
       "returns": "TABLE(new_starts_at timestamp with time zone, new_ends_at timestamp with time zone)",
       "anon_execute": false,
-      "definition_md5": "3d14018a2278f89f362251be4f6beba2",
+      "definition_md5": "88b7cfb3c44291145a5eaae4dc392425",
       "input_arguments": [
         "p_token",
         "p_new_start"
@@ -1705,7 +1738,7 @@
       "name": "seed_haircut_catalogue",
       "returns": "integer",
       "anon_execute": false,
-      "definition_md5": "4ffa9c08185e686a34100d8fcca80af8",
+      "definition_md5": "0af276a465925b8e730dab38d48e2ed9",
       "input_arguments": [
         "p_shop"
       ],
@@ -1970,5 +2003,6 @@
     }
   ],
   "catalog_capture": "2026-11-24, after transactional catalog migration; live PostgreSQL metadata",
-  "store_launch_capture": "2026-11-24 after reference catalog and payment gate"
+  "store_launch_capture": "2026-11-24 after reference catalog and payment gate",
+  "booking_offer_capture": "2026-11-24 — live PostgreSQL function metadata following three booking-offer migrations"
 }

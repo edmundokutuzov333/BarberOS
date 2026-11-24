@@ -153,12 +153,15 @@
     "20261124063655_store_catalog_atomic_management.sql",
     "20261124070136_store_reference_catalog_provisioning.sql",
     "20261124071304_payments_unavailable_for_store_launch.sql",
-    "20261124074322_store_reference_lookup_index.sql"
+    "20261124074322_store_reference_lookup_index.sql",
+    "20261124080000_booking_offer_consistency.sql",
+    "20261124080100_booking_offer_history_integrity.sql",
+    "20261124080200_booking_operator_reschedule_integrity.sql"
   ],
   "projects": {
     "production": {
       "ref": "alseiinjzwjdiwtvkdzy",
-      "migration_count": 152,
+      "migration_count": 155,
       "migrations": [
         {
           "version": "20260918132000",
@@ -767,12 +770,24 @@
         {
           "version": "20261124074354",
           "name": "store_reference_lookup_index"
+        },
+        {
+          "version": "20261124093607",
+          "name": "booking_offer_consistency"
+        },
+        {
+          "version": "20261124093612",
+          "name": "booking_offer_history_integrity"
+        },
+        {
+          "version": "20261124093617",
+          "name": "booking_operator_reschedule_integrity"
         }
       ]
     },
     "staging": {
       "ref": "asikuyxaapcmayptimxi",
-      "migration_count": 140,
+      "migration_count": 143,
       "migrations": [
         {
           "version": "20261019132753",
@@ -1333,6 +1348,18 @@
         {
           "version": "20261124074349",
           "name": "store_reference_lookup_index"
+        },
+        {
+          "version": "20261124092936",
+          "name": "booking_offer_consistency"
+        },
+        {
+          "version": "20261124093406",
+          "name": "booking_offer_history_integrity"
+        },
+        {
+          "version": "20261124093436",
+          "name": "booking_operator_reschedule_integrity"
         }
       ]
     }
@@ -1659,5 +1686,39 @@
   },
   "last_refreshed_on": "2026-11-24",
   "catalog_atomic_management_capture": "2026-11-24; production 20261124065614, staging 20261124064607; actual generated history, no version rewrites",
-  "store_launch_capture": "2026-11-24; actual source/provisioning/payment-gate histories; no remote history rewritten"
+  "store_launch_capture": "2026-11-24; actual source/provisioning/payment-gate histories; no remote history rewritten",
+  "booking_offer_capture": {
+    "source_commit": "561c361b271b149f7739d29cb9b0b7b7bc3b3985",
+    "applied": {
+      "production": [
+        {
+          "version": "20261124093607",
+          "name": "booking_offer_consistency"
+        },
+        {
+          "version": "20261124093612",
+          "name": "booking_offer_history_integrity"
+        },
+        {
+          "version": "20261124093617",
+          "name": "booking_operator_reschedule_integrity"
+        }
+      ],
+      "staging": [
+        {
+          "version": "20261124092936",
+          "name": "booking_offer_consistency"
+        },
+        {
+          "version": "20261124093406",
+          "name": "booking_offer_history_integrity"
+        },
+        {
+          "version": "20261124093436",
+          "name": "booking_operator_reschedule_integrity"
+        }
+      ]
+    },
+    "acceptance": "Transactional fixture suite passed in staging and production; production appointment snapshot unchanged (16 rows), 63 active linked styles, 3 gallery references."
+  }
 }

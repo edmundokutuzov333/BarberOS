@@ -1,5 +1,7 @@
 # BarberOS Booking Wizard
 
+> Updated 24 November 2026: [booking offer consistency](BOOKING_OFFER_CONSISTENCY_2026-11-24.md) supersedes the historical unconditional style selection and global catalog flag instructions below. Explicit compatible variants determine effective price and duration; irrelevant style screens are skipped, and open full days permit waitlist entry. Payments remain unavailable.
+
 ## Rota
 
 `/barbearia/:slug/marcar`
