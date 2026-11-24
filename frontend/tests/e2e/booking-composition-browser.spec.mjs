@@ -144,3 +144,34 @@ test('composed HTTP quote rejection, collision and idempotency', async ({request
  const reused=await request.post(endpoint,{headers,data:{...(winner===0?a:b),p_expected_price:38001}});
  expect(reused.status()).toBe(409);expect((await reused.json()).error).toBe('IDEMPOTENCY_KEY_REUSED');
 });
+
+test('owner mobile layout across main operations and short-height navigation', async ({page,isMobile})=>{
+ test.skip(!isMobile || process.env.BARBEROS_COMPOSITION_BROWSER !== '1','isolated mobile browser only');
+ test.setTimeout(120000);
+ await page.setViewportSize({width:320,height:740});
+ await page.goto('/entrar');
+ await page.getByTestId('login-email-input').fill('composition-owner@example.invalid');
+ await page.getByTestId('login-password-input').fill('LocalQA-Only-Password-271!');
+ await page.getByTestId('login-submit-btn').click();
+ await expect(page).toHaveURL(/\/app(?:\/|$)/,{timeout:20000});
+ const routes=[
+ ['/app','dashboard-page'],['/app/agenda','agenda-page'],['/app/marcacoes','marcacoes-page'],['/app/clientes','customers-page'],
+ ['/app/lista-espera','waitlist-page'],['/app/notificacoes','notifications-page'],['/app/avaliacoes','reviews-page'],['/app/relatorios','reports-page'],
+ ['/app/servicos','servicos-page'],['/app/cortes','cortes-page'],['/app/barbeiros','barbeiros-page'],['/app/horarios','horarios-page'],['/app/definicoes/perfil','definicoes-page']
+ ];
+ for(const [url,id] of routes){
+  await page.goto(url);
+  await expect(page.getByTestId(id),url).toBeVisible();
+  await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),{message:'overflow at '+url}).toBe(true);
+ }
+ await page.setViewportSize({width:390,height:360});
+ await page.getByTestId('dock-more').click();
+ const sheet=page.getByTestId('dock-more-sheet');
+ await expect(sheet).toBeVisible();
+ const bounds=await sheet.boundingBox();
+ expect(bounds.y).toBeGreaterThanOrEqual(0);
+ expect(bounds.y+bounds.height).toBeLessThanOrEqual(360);
+ await expect.poll(()=>sheet.evaluate(el=>getComputedStyle(el).overflowY)).toBe('auto');
+ await sheet.getByTestId('dock-sign-out').scrollIntoViewIfNeeded();
+ await expect(sheet.getByTestId('dock-sign-out')).toBeInViewport();
+});

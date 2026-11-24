@@ -65,11 +65,11 @@ export function Panel({ children, className, title, aside, testId }: { children:
     <section
       data-testid={testId}
       aria-labelledby={title ? titleId : undefined}
-      className={cn('glass p-5 sm:p-6', className)}
+      className={cn('glass min-w-0 p-4 sm:p-6', className)}
     >
       {(title || aside) && (
-        <header className="flex items-center justify-between gap-3 mb-4">
-          {title && <h2 id={titleId} className="t-card text-ink-hi">{title}</h2>}
+        <header className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          {title && <h2 id={titleId} className="t-card text-ink-hi min-w-0 break-words">{title}</h2>}
           {aside}
         </header>
       )}

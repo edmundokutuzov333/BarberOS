@@ -28,17 +28,17 @@ export function Page({ children, className, title, subtitle, actions, testId }: 
       data-testid={testId}
       {...v}
       transition={{ duration: 0.28, ease }}
-      className={cn('w-full', className)}
+      className={cn('w-full min-w-0', className)}
       aria-labelledby={title ? titleId : undefined}
       tabIndex={-1}
     >
       {(title || actions) && (
         <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-7 sm:mb-8">
           <div className="min-w-0">
-            {title && <h1 id={titleId} className="t-title text-ink-hi">{title}</h1>}
+            {title && <h1 id={titleId} className="t-title text-ink-hi break-words">{title}</h1>}
             {subtitle && <p className="t-body text-ink-mid mt-1.5 max-w-3xl">{subtitle}</p>}
           </div>
-          {actions && <div className="page-actions shrink-0">{actions}</div>}
+          {actions && <div className="page-actions min-w-0 sm:shrink-0">{actions}</div>}
         </header>
       )}
       {children}
