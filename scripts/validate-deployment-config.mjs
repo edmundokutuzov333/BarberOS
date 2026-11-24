@@ -86,6 +86,7 @@ if (!rollbackWorkflow.includes('vercel@latest rollback')) throw new Error('DEPLO
 
 const expectedFunctions = [
   'notify-dispatch',
+  'payment-simulator',
   'payments-configure',
   'payments-initiate',
   'payments-status',

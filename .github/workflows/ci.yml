@@ -68,7 +68,7 @@ jobs:
       - name: Test HTTP boundary and booking error contracts
         run: deno test supabase/functions/_shared/http_test.ts supabase/functions/_shared/account_test.ts supabase/functions/booking-create/contract.test.ts supabase/functions/health/configuration_test.ts
       - name: Typecheck integrations and signed webhook runtime
-        run: deno check --node-modules-dir=auto supabase/functions/admin-credential-manager/index.ts supabase/functions/gmail-integration/index.ts supabase/functions/google-calendar/index.ts supabase/functions/resend-webhook/index.ts supabase/functions/notify-dispatch/index.ts
+        run: deno check --node-modules-dir=auto supabase/functions/payment-simulator/index.ts supabase/functions/admin-credential-manager/index.ts supabase/functions/gmail-integration/index.ts supabase/functions/google-calendar/index.ts supabase/functions/resend-webhook/index.ts supabase/functions/notify-dispatch/index.ts
       - name: Test Calendar provider deadlines and idempotent event writes
         run: deno test supabase/functions/google-calendar/provider_test.ts
       - name: Test notification delivery failure transitions
@@ -135,6 +135,7 @@ jobs:
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/shop_catalog_atomic_management.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/shop_reference_catalog_provisioning.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/payments_unavailable_launch.sql
+          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/payment_simulator.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/shop_public_catalog_phase3.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/shop_order_atomic_phase4.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/shop_order_operations_phase5.sql

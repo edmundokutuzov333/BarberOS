@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.admin-credential-manager]
 verify_jwt = true
+
+[functions.payment-simulator]
+verify_jwt = true
