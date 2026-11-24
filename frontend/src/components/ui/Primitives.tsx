@@ -11,7 +11,7 @@ export function Modal({ open, onOpenChange, title, children, testId }: { open: b
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm" />
+        <Dialog.Overlay className="barberos-modal-viewport bg-black/65 backdrop-blur-sm">
         <Dialog.Content
           data-testid={testId}
           aria-describedby={undefined}
@@ -39,6 +39,7 @@ export function Modal({ open, onOpenChange, title, children, testId }: { open: b
           </div>
           <div data-testid="modal-scroll-body" className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 pb-4 sm:px-7 sm:pb-7">{children}</div>
         </Dialog.Content>
+        </Dialog.Overlay>
       </Dialog.Portal>
     </Dialog.Root>
   );

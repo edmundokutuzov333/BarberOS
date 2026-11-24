@@ -13,8 +13,11 @@ const tests = [
     const css = read('src/index.css');
     assert.match(modal, /barberos-modal/);
     assert.match(modal, /modal-scroll-body.*min-h-0.*overflow-y-auto/);
-    assert.match(css, /\.barberos-modal\s*\{[\s\S]*?position: fixed !important/);
-    assert.match(css, /max-height: calc\(100dvh - max\(\.5rem, env\(safe-area-inset-top\)\) - max\(\.5rem, env\(safe-area-inset-bottom\)\)\)/);
+    assert.match(modal, /Dialog\.Overlay className="barberos-modal-viewport/);
+    assert.match(css, /\.barberos-modal-viewport\s*\{[\s\S]*?position: fixed/);
+    assert.match(css, /grid-template-rows: minmax\(0, 1fr\)/);
+    assert.match(css, /\.barberos-modal\s*\{[\s\S]*?max-height: 100%/);
+    assert.match(css, /env\(safe-area-inset-top\)/);
     assert.doesNotMatch(modal, /translate-y-\[-50%\]/);
     for (const source of [dialog, alertDialog]) {
       assert.match(source, /fixed inset-x-4 top-4 bottom-4 z-50 m-auto/);

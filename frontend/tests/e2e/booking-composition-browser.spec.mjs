@@ -112,7 +112,12 @@ test('mobile owner edits category, add-ons and restricted secondary offers via a
  await expect.poll(()=>manual.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
  const body=manual.getByTestId('modal-scroll-body');
  await expect.poll(()=>body.evaluate(el=>el.scrollHeight>el.clientHeight)).toBe(true);
- await expect.poll(async()=>{const b=await manual.boundingBox();return !!b && b.y>=0 && b.y+b.height<=740;}).toBe(true);
+ const geometry=()=>manual.evaluate(el=>{
+   const r=el.getBoundingClientRect(), frame=el.parentElement.getBoundingClientRect(), v=window.visualViewport;
+   return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,frameTop:frame.top,frameBottom:frame.bottom,innerHeight,innerWidth,scrollY:window.scrollY,visualHeight:v?.height,visualTop:v?.offsetTop,computedHeight:getComputedStyle(el).height,maxHeight:getComputedStyle(el).maxHeight};
+ });
+ const g=await geometry(); console.log('MANUAL_MODAL_GEOMETRY',JSON.stringify(g));
+ await expect.poll(async()=>{const r=await geometry();return r.top>=r.frameTop-1 && r.bottom<=r.frameBottom+1 && r.top>=-1 && r.bottom<=r.innerHeight+1 && r.left>=-1 && r.right<=r.innerWidth+1;}).toBe(true);
  const slot=manual.getByTestId('manual-booking-slots').getByRole('button').first();
  await slot.click();
  await expect(slot).toHaveAttribute('aria-pressed','true');
