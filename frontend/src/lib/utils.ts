@@ -30,6 +30,9 @@ export function slugify(s: string): string {
 }
 
 const ERRORS: Record<string, string> = {
+  BARBER_ACCOUNT_LINK_RPC_REQUIRED: 'Associe a conta através do formulário do barbeiro.',
+  OWNER_REQUIRED: 'Esta operação exige o acesso do dono da barbearia.',
+
   SESSION_END_FAILED: 'Não foi possível terminar a sessão. Verifique a ligação e tente novamente.',
   LAST_OWNER: 'A barbearia precisa de manter pelo menos um dono. Adicione outro dono antes de alterar este acesso.',
   MEMBER_SELF_REMOVE: 'Não pode remover o seu próprio acesso.',

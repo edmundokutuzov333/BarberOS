@@ -21,17 +21,55 @@ insert into public.barbershop_members(barbershop_id,user_id,role) values
 (current_setting('barberos.qa.other')::uuid,current_setting('barberos.qa.outsider')::uuid,'owner');
 insert into public.barbers(id,barbershop_id,user_id,display_name)
 values(current_setting('barberos.qa.professional')::uuid,current_setting('barberos.qa.shop')::uuid,current_setting('barberos.qa.barber')::uuid,'QA professional');
+-- Explicit data prevents an empty fixture from making an authorization test pass.
+select set_config('barberos.qa.order',gen_random_uuid()::text,true);
+select set_config('barberos.qa.product',gen_random_uuid()::text,true);
+insert into public.shop_products(id,barbershop_id,name,is_active)
+values(current_setting('barberos.qa.product')::uuid,current_setting('barberos.qa.shop')::uuid,'Role fixture product',false);
+insert into public.shop_product_variants(barbershop_id,product_id,label,price_minor,is_active)
+values(current_setting('barberos.qa.shop')::uuid,current_setting('barberos.qa.product')::uuid,'Unit',1000,false);
+insert into public.shop_products(barbershop_id,name,is_active)
+values(current_setting('barberos.qa.other')::uuid,'Outside fixture product',false);
+do $fixture$
+declare v_service uuid; v_customer uuid; v_appointment uuid; s uuid:=current_setting('barberos.qa.shop')::uuid;
+begin
+  insert into public.services(barbershop_id,name,price_cents,duration_min,is_active)
+    values(s,'QA service',10000,30,true) returning id into v_service;
+  insert into public.customers(barbershop_id,name,phone)
+    values(s,'QA customer','+258841234567') returning id into v_customer;
+  insert into public.appointments(barbershop_id,barber_id,service_id,customer_id,starts_at,ends_at,duration_min,price_cents,status)
+    values(s,current_setting('barberos.qa.professional')::uuid,v_service,v_customer,now()+interval '10 days',now()+interval '10 days 30 minutes',30,10000,'confirmed')
+    returning id into v_appointment;
+  insert into public.appointment_product_orders(id,barbershop_id,appointment_id,status)
+    values(current_setting('barberos.qa.order')::uuid,s,v_appointment,'received');
+end;
+$fixture$;
 select set_config('request.jwt.claim.sub',current_setting('barberos.qa.manager'),true);
 set local role authenticated;
 do $manager$
 declare s uuid:=current_setting('barberos.qa.shop')::uuid; b uuid:=current_setting('barberos.qa.professional')::uuid;
 begin
-  perform count(*) from public.shop_products where barbershop_id=s;
+  if (select count(*) from public.shop_products where id=current_setting('barberos.qa.product')::uuid)<>1 then
+    raise exception 'MANAGER_CATALOG_NOT_VISIBLE';
+  end if;
   perform count(*) from public.shop_product_categories where barbershop_id=s;
   perform count(*) from public.shop_product_variants where barbershop_id=s;
   perform count(*) from public.inventory_movements where barbershop_id=s;
   perform count(*) from public.payments where barbershop_id=s;
-  perform public.get_shop_order_queue(s);
+  if not exists(
+    select 1 from jsonb_array_elements(public.get_shop_order_queue(s)) o
+      cross join lateral jsonb_array_elements(o->'assignees') a
+    where o->>'id'=current_setting('barberos.qa.order')
+      and a->>'user_id'=current_setting('barberos.qa.barber')
+      and not (a ? 'email')
+  ) then raise exception 'MANAGER_QUEUE_ASSIGNEE_MISSING_OR_EXPOSED'; end if;
+  if exists(select 1 from jsonb_array_elements(public.get_shop_order_queue(s)) o
+      cross join lateral jsonb_array_elements(o->'assignees') a
+      where a->>'user_id'=current_setting('barberos.qa.outsider') or a ? 'email')
+  then raise exception 'QUEUE_ASSIGNEE_DIRECTORY_LEAK'; end if;
+  perform public.update_shop_order_operation(s,current_setting('barberos.qa.order')::uuid,'assign',null,current_setting('barberos.qa.barber')::uuid);
+  if (select assigned_to from public.appointment_product_orders where id=current_setting('barberos.qa.order')::uuid)
+     is distinct from current_setting('barberos.qa.barber')::uuid then raise exception 'MANAGER_ASSIGNMENT_NOT_PERSISTED'; end if;
   begin
     perform public.save_barber(s,b,'QA professional',null,0,null,null,'{}'::uuid[]);
     raise exception 'MANAGER_ACCOUNT_UNLINK_ALLOWED';
@@ -69,6 +107,9 @@ set local role authenticated;
 do $owner$
 declare s uuid:=current_setting('barberos.qa.shop')::uuid; b uuid:=current_setting('barberos.qa.professional')::uuid; m uuid;
 begin
+  if (select count(*) from public.shop_products where id=current_setting('barberos.qa.product')::uuid)<>1 then
+    raise exception 'OWNER_CATALOG_NOT_VISIBLE';
+  end if;
   perform public.save_barber(s,b,'QA professional',null,0,null,current_setting('barberos.qa.barber')::uuid,'{}'::uuid[]);
   select id into strict m from public.list_members(s) where user_id=current_setting('barberos.qa.barber')::uuid;
   perform public.remove_barbershop_member(s,m);

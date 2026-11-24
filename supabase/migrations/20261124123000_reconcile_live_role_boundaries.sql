@@ -9,7 +9,7 @@ alter policy shop_notification_events_manager_read on public.shop_notification_e
 alter policy shop_operation_incident_events_manager_read on public.shop_operation_incident_events to authenticated using (private.is_member(barbershop_id, ARRAY['owner','manager']::public.app_role[]) OR private.is_platform_admin());
 alter policy shop_operation_incidents_manager_read on public.shop_operation_incidents to authenticated using (private.is_member(barbershop_id, ARRAY['owner','manager']::public.app_role[]) OR private.is_platform_admin());
 alter policy shop_order_operation_events_manager_read on public.shop_order_operation_events to authenticated using (private.is_member(barbershop_id, ARRAY['owner','manager']::public.app_role[]) OR private.is_platform_admin());
-alter policy shop_order_payments_manager_read on public.shop_order_payments to authenticated using (private.is_member(barbershop_id, ARRAY['owner','manager']::public.app_role[]) OR private.is_platform_admin());
+alter policy shop_order_payments_manager_read on public.shop_order_payments to authenticated using (private.is_member(barbershop_id, ARRAY['owner','manager']::public.app_role[]));
 alter policy appointment_product_order_items_member_read on public.appointment_product_order_items to authenticated using (
   (private.is_member(barbershop_id, ARRAY['owner','manager']::public.app_role[]) OR private.is_platform_admin()) and exists(select 1 from public.appointment_product_orders o
     where o.id=appointment_product_order_items.order_id and o.barbershop_id=appointment_product_order_items.barbershop_id)
