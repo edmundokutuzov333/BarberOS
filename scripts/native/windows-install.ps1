@@ -28,12 +28,14 @@ foreach ($link in @($startMenu, $desktop)) {
     $shortcut = $wsh.CreateShortcut($link)
     if ($shortcut.TargetPath -ne $executable) { throw "Invalid shortcut target: $link" }
 }
+Write-Output 'PASS | installed executable and both shortcuts match'
 New-Item -ItemType Directory -Force -Path apps/desktop/release/runtime-evidence | Out-Null
 Add-Type -AssemblyName System.Drawing
 $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($executable)
 if (!$icon) { throw 'Application ICO is missing from installed executable' }
 $icon.ToBitmap().Save((Join-Path $PWD 'apps/desktop/release/runtime-evidence/windows-icon.png'))
 $icon.Dispose()
+Write-Output 'PASS | installed application icon extracted; starting runtime acceptance'
 $env:BARBEROS_EXECUTABLE = $executable
 $env:BARBEROS_EVIDENCE = Join-Path $PWD 'apps/desktop/release/runtime-evidence'
 node apps/desktop/test/runtime.cjs
