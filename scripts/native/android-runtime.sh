@@ -4,14 +4,16 @@ apk="$PWD/apps/android/app/build/outputs/apk/release/app-release.apk"
 evidence="$PWD/apps/android/app/build/runtime-evidence"
 mkdir -p "$evidence"
 adb shell pm path com.android.chrome
+adb shell dumpsys package com.android.chrome | grep -m 1 versionName
 # These flags apply only to the disposable CI emulator, never a user's browser.
-adb shell 'echo "chrome --no-first-run --disable-fre --disable-default-browser-promo" > /data/local/tmp/chrome-command-line'
+adb shell 'echo "chrome --no-first-run --disable-fre --disable-default-browser-promo --enable-logging --v=1" > /data/local/tmp/chrome-command-line'
 adb shell am set-debug-app --persistent com.android.chrome
 adb logcat -c
-adb logcat -v threadtime AndroidRuntime:E chromium:E ActivityTaskManager:W TwaLauncher:D LauncherActivity:D '*:S' > "$evidence/startup-logcat.txt" &
+adb logcat -v threadtime > "$evidence/startup-logcat.txt" &
 logcat_pid=$!
 trap 'kill "$logcat_pid" 2>/dev/null || true' EXIT
 adb install -r "$apk"
+adb shell pm verify-app-links --re-verify app.barberos.mobile
 adb shell am start -W -n app.barberos.mobile/.LauncherActivity
 for attempt in $(seq 1 18); do
   adb shell uiautomator dump /sdcard/barberos-ui.xml >/dev/null
@@ -29,12 +31,14 @@ PY
   then
     adb exec-out screencap -p > "$evidence/android-home.png"
     adb shell dumpsys activity activities > "$evidence/activities.txt"
+    adb shell pm get-app-links app.barberos.mobile > "$evidence/domain-verification.txt"
     echo 'PASS | installed signed Android APK opened verified full-screen production runtime'
     exit 0
   fi
   sleep 5
 done
 adb exec-out screencap -p > "$evidence/android-failure.png"
+adb shell pm get-app-links app.barberos.mobile > "$evidence/domain-verification.txt"
 adb logcat -b crash -d > "$evidence/crashes.txt"
 adb shell dumpsys activity activities > "$evidence/activities.txt"
 adb logcat -d -t 1000 > "$evidence/logcat.txt"
