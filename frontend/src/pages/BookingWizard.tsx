@@ -109,7 +109,7 @@ function StepHeader({ currentStep, shopName, shopSlug, stepLabels }: { currentSt
           <Link to={`/barbearia/${shopSlug}`} className="t-label text-ink-mid hover:text-ink-hi transition-colors">{shopName}</Link>
           <p className="t-label text-accent-soft mt-1">Marcação online</p>
         </div>
-        <span className="t-label text-ink-mid">{currentStep} de {stepLabels.length}</span>
+        <span className="t-label text-ink-mid shrink-0">{currentStep} de {stepLabels.length}</span>
       </div>
       <nav aria-label="Progresso da marcação" className="mt-5">
         <ol className={'grid gap-1.5 ' + (stepLabels.length === 7 ? 'grid-cols-7' : stepLabels.length === 6 ? 'grid-cols-6' : 'grid-cols-5')}>
@@ -170,7 +170,7 @@ function ChoiceCard({
         ? <PhotoWithFallback src={imageUrl} fallbackSources={imageFallbackSources} alt={imageAlt ?? "Fotografia de referência para " + (imageName ?? title)} className="mb-4 w-full aspect-[16/9] rounded-2xl object-cover bg-[var(--surface-2)]" loading="lazy" decoding="async" />
         : <HaircutPhoto name={imageName ?? title} photoUrl={imageUrl} alt={imageAlt ?? "Fotografia de referência para " + (imageName ?? title)} className="mb-4 w-full aspect-[16/9] rounded-2xl object-cover bg-[var(--surface-2)]" />)}
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
+        <div className="min-w-0 break-words">
           <p className="t-card text-ink-hi">{title}</p>
           {body && <p className="t-body text-ink-mid mt-1.5">{body}</p>}
         </div>
@@ -235,7 +235,7 @@ function Summary({
       <div className="space-y-3">
         <div className="flex gap-3"><Scissors size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Serviço</p><p className="t-body text-ink-hi mt-0.5">{service?.name ?? 'Por escolher'}</p></div></div>
         {haircut && <div className="flex gap-3"><Scissors size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Estilo</p><p className="t-body text-ink-hi mt-0.5">{haircut.name}</p></div></div>}
-        {addons.length > 0 && <div className="border-t border-white/10 pt-3 space-y-2" data-testid="booking-addon-summary"><p className="t-label text-ink-mid">Complementos</p>{addons.map((item) => <div key={item.id} className="flex justify-between gap-2 t-body"><span>{item.name}</span><span className="text-ink-mid">{formatMT(item.price_cents)} · {item.duration_min} min</span></div>)}</div>}
+        {addons.length > 0 && <div className="border-t border-white/10 pt-3 space-y-2" data-testid="booking-addon-summary"><p className="t-label text-ink-mid">Complementos</p>{addons.map((item) => <div key={item.id} className="flex justify-between gap-2 t-body"><span className="min-w-0 break-words">{item.name}</span><span className="text-ink-mid shrink-0 text-right">{formatMT(item.price_cents)} · {item.duration_min} min</span></div>)}</div>}
         <div className="flex gap-3"><UserRound size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Barbeiro</p><p className="t-body text-ink-hi mt-0.5">{barber?.display_name ?? 'Qualquer barbeiro'}</p></div></div>
         <div className="flex gap-3"><Clock3 size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Data e hora</p><p className="t-body text-ink-hi mt-0.5">{date ? formatDate(date, timezone, { day: 'numeric', month: 'long', year: 'numeric' }) : 'Por escolher'}{start ? ' · ' + formatTime(start, timezone) : ''}</p></div></div>
         {service && (
@@ -317,7 +317,7 @@ export default function BookingWizard() {
   const haircut = eligibleHaircuts.find((item) => item.id === haircutId);
   const addonOptions = useMemo(() => data?.services.filter((item) => service?.addon_ids?.includes(item.id) && item.id !== service.id) ?? [], [data?.services, service]);
   const selectedAddons = useMemo(() => addonOptions.filter((item) => addonIds.includes(item.id)), [addonOptions, addonIds]);
-  const addonSelectionValid = addonIds.length <= 5 && addonIds.length === selectedAddons.length;
+  const addonSelectionValid = addonIds.length <= 5 && addonIds.length === selectedAddons.length && rawAddons.split(',').filter(Boolean).length === addonIds.length;
   const offer = service ? composeOffer(service, haircut, selectedAddons) : undefined;
   const hasStyleStep = !service || eligibleHaircuts.length > 0 || addonOptions.length > 0;
   const visibleStepLabels = hasStyleStep ? stepLabels.map((label, index) => index === 1 && addonOptions.length ? 'Personalizar' : label) : stepLabels.filter((_, index) => index !== 1);
@@ -641,7 +641,7 @@ export default function BookingWizard() {
         <StepHeader currentStep={visibleStep} shopName={data.shop.name} shopSlug={data.shop.slug} stepLabels={visibleStepLabels} />
       </header>
 
-      <main className="max-w-6xl mx-auto px-5 sm:px-8 pb-28 lg:pb-16">
+      <main className="max-w-6xl mx-auto px-4 sm:px-8 pb-[calc(10rem+env(safe-area-inset-bottom))] lg:pb-16">
         <div className="grid lg:grid-cols-[minmax(0,1fr)_22rem] gap-6 items-start">
           <section>
             {showServiceStep && (
@@ -918,8 +918,9 @@ export default function BookingWizard() {
         </div>
       </main>
 
-      <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-black/85 backdrop-blur-xl lg:static lg:bg-transparent lg:border-0">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 py-3 flex items-center justify-between gap-3">
+      <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-black/90 backdrop-blur-xl pb-[env(safe-area-inset-bottom)] lg:static lg:pb-0 lg:bg-transparent lg:border-0">
+        {offer && <div data-testid="booking-mobile-total" className="lg:hidden px-4 pt-2 flex items-center justify-between gap-2 text-sm"><span className="text-ink-mid">Total serviços</span><span className="font-medium tabular-nums text-ink-hi">{formatMT(offer.price_cents)} · {offer.duration_min} min</span></div>}
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-2 flex items-center justify-between gap-2">
           <Button type="button" variant="ghost" onClick={goBack} disabled={bookMutation.isPending} aria-label="Voltar um passo">
             <ArrowLeft size={16} />
             Voltar

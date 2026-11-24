@@ -36,7 +36,7 @@ export function AdminShell() {
           <span className="t-label text-ink-mid rounded-full border border-[var(--border-default)] px-2 py-1">Admin</span>
         </div>
 
-        <nav className="flex-1 px-3 py-3 space-y-1 flex md:flex-col overflow-x-auto no-scrollbar" aria-label="Navegação de administração">
+        <nav className="flex-1 px-3 py-3 gap-1 flex md:flex-col overflow-x-auto no-scrollbar" aria-label="Navegação de administração">
           {ADMIN_NAV.map((n) => {
             const isActive = active?.to === n.to;
             return (

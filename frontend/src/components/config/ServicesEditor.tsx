@@ -44,27 +44,27 @@ export function ServicesEditor() {
 
   const save = useMutation({
     mutationFn: async () => {
-      const price = Math.round(parseFloat(form.price.replace(',', '.')) * 100);
-      const duration = parseInt(form.duration, 10);
+      const price = Math.round(Number(form.price.replace(',', '.')) * 100);
+      const duration = Number(form.duration);
       if (form.name.trim().length < 2) throw new Error('INVALID_NAME');
-      if (!Number.isFinite(price) || price < 0) throw new Error('Preço inválido.');
-      if (!Number.isFinite(duration) || duration < 5 || duration > 480) throw new Error('Duração entre 5 e 480 minutos.');
+      if (!form.price.trim() || !Number.isSafeInteger(price) || price < 0 || price > 2147483647) throw new Error('Preço inválido.');
+      if (!Number.isInteger(duration) || duration < 5 || duration > 480) throw new Error('Duração entre 5 e 480 minutos.');
       if (!form.category.trim() || !form.subcategory.trim() || form.category.trim().length > 80 || form.subcategory.trim().length > 80) throw new Error('Indique categoria e subcategoria válidas.');
       const row = { category: form.category.trim(), subcategory: form.subcategory.trim(), name: form.name.trim(), price_cents: price, duration_min: duration, requires_deposit: form.requires_deposit, photo_url: form.photo_url };
       const r = await supabase.rpc('save_service_configuration', { p_shop: shop!.id, p_service: editing === 'new' ? null : (editing as Service).id, p_entry: row, p_addon_ids: addonIds });
       if (r.error) throw r.error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: key }); qc.invalidateQueries({ queryKey: ['public-barbershop'] }); qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }); qc.invalidateQueries({ queryKey: ['availability'] }); setEditing(null); toast.success('Serviço guardado'); },
+    onSuccess: () => { Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['public-barbershop'] }), qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }), qc.invalidateQueries({ queryKey: ['availability'] }), qc.invalidateQueries({ queryKey: ['haircut-skill-barbers'] })]); setEditing(null); toast.success('Serviço guardado'); },
     onError: (e) => toast.error(e instanceof Error && !e.message.includes('_') ? e.message : humanError(e)),
   });
 
   const toggle = useMutation({
     mutationFn: async (s: Service) => { const r = await supabase.from('services').update({ is_active: !s.is_active }).eq('id', s.id); if (r.error) throw r.error; },
-    onSuccess: () => qc.invalidateQueries({ queryKey: key }), onError: (e) => toast.error(humanError(e)),
+    onSuccess: () => Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['public-barbershop'] }), qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }), qc.invalidateQueries({ queryKey: ['availability'] }), qc.invalidateQueries({ queryKey: ['haircut-skill-barbers'] })]), onError: (e) => toast.error(humanError(e)),
   });
   const remove = useMutation({
     mutationFn: async (s: Service) => { const r = await supabase.from('services').delete().eq('id', s.id); if (r.error) throw r.error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: key }); toast.success('Serviço removido'); },
+    onSuccess: () => { Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['public-barbershop'] }), qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }), qc.invalidateQueries({ queryKey: ['availability'] }), qc.invalidateQueries({ queryKey: ['haircut-skill-barbers'] })]); toast.success('Serviço removido'); },
     onError: () => toast.error('Não dá para remover: já tem marcações. Desactiva-o em vez disso.'),
   });
 
@@ -98,7 +98,7 @@ export function ServicesEditor() {
             <Field data-testid="service-duration-input" label="Duração (min)" name="svc_duration" inputMode="numeric" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
           </div>
           <Switch testId="service-deposit-switch" checked={form.requires_deposit} onCheckedChange={(v) => setForm({ ...form, requires_deposit: v })} label="Exige sinal (se o sinal estiver activo nas definições)" />
-          <fieldset className="space-y-2 border-t border-white/10 pt-3"><legend className="t-label text-ink-mid">Complementos compatíveis</legend><p className="t-label text-ink-mid">O cliente pode juntar estes serviços na mesma visita. O preço e a duração são os do serviço complementar. O profissional tem de estar habilitado para todos.</p>{q.data?.filter((item) => editing === 'new' || item.id !== editing?.id).map((item) => <label key={item.id} className="flex gap-2 items-center text-sm"><input type="checkbox" checked={addonIds.includes(item.id)} onChange={(e) => setAddonIds((ids) => e.target.checked ? [...ids,item.id] : ids.filter((id) => id !== item.id))}/>{item.name} · {formatMT(item.price_cents)} · {item.duration_min} min{!item.is_active && ' (inactivo)'}</label>)}</fieldset>
+          <fieldset className="space-y-2 border-t border-white/10 pt-3"><legend className="t-label text-ink-mid">Complementos compatíveis</legend><p className="t-label text-ink-mid">O cliente pode juntar estes serviços na mesma visita. O preço e a duração são os do serviço complementar. O profissional tem de estar habilitado para todos.</p>{q.data?.filter((item) => editing === 'new' || item.id !== editing?.id).map((item) => <label key={item.id} className="flex min-h-11 gap-3 items-center text-sm break-words"><input className="h-5 w-5 shrink-0 accent-[var(--accent-soft)]" type="checkbox" checked={addonIds.includes(item.id)} onChange={(e) => setAddonIds((ids) => e.target.checked ? [...ids,item.id] : ids.filter((id) => id !== item.id))}/>{item.name} · {formatMT(item.price_cents)} · {item.duration_min} min{!item.is_active && ' (inactivo)'}</label>)}</fieldset>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={() => setEditing(null)}>Cancelar</Button>
             <Button data-testid="service-save-btn" type="submit" loading={save.isPending}>Guardar</Button>

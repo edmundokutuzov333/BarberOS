@@ -25,7 +25,7 @@ export function Modal({ open, onOpenChange, title, children, testId }: { open: b
               returnFocus.current.focus();
             }
           }}
-          className="!fixed inset-x-4 top-4 bottom-4 z-50 m-auto h-fit w-auto max-w-lg glass glass-2 p-6 sm:p-7 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain touch-pan-y no-scrollbar outline-none"
+          className="!fixed inset-x-2 top-[max(.5rem,env(safe-area-inset-top))] bottom-[max(.5rem,env(safe-area-inset-bottom))] sm:inset-x-4 sm:top-4 sm:bottom-4 z-50 m-auto h-fit w-auto max-w-lg glass glass-2 p-4 sm:p-7 max-h-[calc(100dvh-max(.5rem,env(safe-area-inset-top))-max(.5rem,env(safe-area-inset-bottom)))] sm:max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain touch-pan-y outline-none"
         >
           <div className="flex items-start justify-between gap-4 mb-5">
             <Dialog.Title className="t-title">{title}</Dialog.Title>
