@@ -1,5 +1,11 @@
 # Final historical-source review and forward plan
 
+> Superseding rollout result: the reviewed migration is now deployed in staging
+> and production; all nine cloud boundary suites passed and the strict history
+> mapping gate is clear. See [rollout acceptance](AUTHORIZATION_ROLLOUT_ACCEPTANCE_2026-11-24.md).
+> Pending statements below describe the pre-promotion checkpoint, not current
+> deployment status. This does not certify all phase exit criteria.
+
 Every captured remote migration now has a source/archive disposition. The nine
 remaining staging sources have also been fully reviewed and mapped to complete,
 fingerprinted forward SQL components. The history review is complete; their

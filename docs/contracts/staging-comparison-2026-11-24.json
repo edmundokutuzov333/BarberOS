@@ -1,9 +1,7 @@
 {
   "status": "CONTRACT_GAPS",
   "scope": "Static name and literal argument compatibility only; no runtime authorization, payload value, return, provider or E2E certification",
-  "missing_rpcs": [
-    "get_dashboard_snapshot"
-  ],
+  "missing_rpcs": [],
   "missing_tables": [],
   "missing_edges": [
     "admin-credential-manager",

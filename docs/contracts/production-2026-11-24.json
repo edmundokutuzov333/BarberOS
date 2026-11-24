@@ -168,7 +168,7 @@
       "name": "add_member_by_email",
       "returns": "uuid",
       "anon_execute": false,
-      "definition_md5": "8f8c25c88e21710295a3a288c9e1becb",
+      "definition_md5": "5e6cea55400dcb2b797c90f96fb5f9b0",
       "input_arguments": [
         "p_shop",
         "p_email",
@@ -518,7 +518,7 @@
       "name": "create_barbershop",
       "returns": "uuid",
       "anon_execute": false,
-      "definition_md5": "280d9565c13bb2d7c77d6b5a1395f894",
+      "definition_md5": "860e2453b8093a6ee69886c13564b3e7",
       "input_arguments": [
         "p_name",
         "p_slug",
@@ -1226,7 +1226,7 @@
       "name": "is_member",
       "returns": "boolean",
       "anon_execute": false,
-      "definition_md5": "11aa34c50dfc7914af5fb7b8ff5cab6f",
+      "definition_md5": "b83af1b3815761455b6e2c08b01ec29f",
       "input_arguments": [
         "p_shop",
         "p_roles"
@@ -1239,7 +1239,7 @@
       "name": "is_platform_admin",
       "returns": "boolean",
       "anon_execute": false,
-      "definition_md5": "f1b4cb195cb4c61787c8aab54f022cc2",
+      "definition_md5": "40954c769fc23d6a1795de4cdc048e0e",
       "input_arguments": null,
       "identity_arguments": "",
       "authenticated_execute": false,
@@ -1392,7 +1392,7 @@
       "name": "on_appointment_completed",
       "returns": "trigger",
       "anon_execute": false,
-      "definition_md5": "387cb5a820dad3fea3fa37ea3236ddae",
+      "definition_md5": "7306b9afd556b2abb80604f1126a14e8",
       "input_arguments": null,
       "identity_arguments": "",
       "authenticated_execute": false,
@@ -1489,7 +1489,7 @@
       "name": "remove_barbershop_member",
       "returns": "void",
       "anon_execute": false,
-      "definition_md5": "a71390f4191dcf5beb5c59de1e88f86c",
+      "definition_md5": "451238a3b1d9dc49e7af4265c4b368cb",
       "input_arguments": [
         "p_shop",
         "p_member"

@@ -1,5 +1,11 @@
 # Runtime and historical migration reconciliation
 
+> Superseding rollout result: the reviewed migration is now deployed in staging
+> and production; all nine cloud boundary suites passed and the strict history
+> mapping gate is clear. See [rollout acceptance](AUTHORIZATION_ROLLOUT_ACCEPTANCE_2026-11-24.md).
+> Pending statements below describe the pre-promotion checkpoint, not current
+> deployment status. This does not certify all phase exit criteria.
+
 ## Evidence and decisions
 
 The strict history gate remains NO-GO. Five source dispositions were resolved by

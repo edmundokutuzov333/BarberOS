@@ -168,7 +168,7 @@
       "name": "add_member_by_email",
       "returns": "uuid",
       "anon_execute": false,
-      "definition_md5": "8f8c25c88e21710295a3a288c9e1becb",
+      "definition_md5": "5e6cea55400dcb2b797c90f96fb5f9b0",
       "input_arguments": [
         "p_shop",
         "p_email",
@@ -533,7 +533,7 @@
       "name": "create_barbershop",
       "returns": "uuid",
       "anon_execute": false,
-      "definition_md5": "280d9565c13bb2d7c77d6b5a1395f894",
+      "definition_md5": "860e2453b8093a6ee69886c13564b3e7",
       "input_arguments": [
         "p_name",
         "p_slug",
@@ -683,6 +683,24 @@
       "required_argument_count": 1
     },
     {
+      "name": "get_appointments",
+      "returns": "TABLE(appointment_id uuid, barber_id uuid, barber_name text, customer_id uuid, customer_name text, customer_phone text, customer_email text, service_id uuid, service_name text, haircut_id uuid, haircut_name text, starts_at timestamp with time zone, ends_at timestamp with time zone, duration_min integer, price_cents integer, status appointment_status, deposit_status deposit_state, deposit_cents integer, hold_expires_at timestamp with time zone, source booking_source, total_count bigint)",
+      "anon_execute": false,
+      "definition_md5": "d62db172122ee476d8dad14cad63915c",
+      "input_arguments": [
+        "p_shop",
+        "p_from",
+        "p_to",
+        "p_status",
+        "p_search",
+        "p_limit",
+        "p_offset"
+      ],
+      "identity_arguments": "p_shop uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_status appointment_status, p_search text, p_limit integer, p_offset integer",
+      "authenticated_execute": true,
+      "required_argument_count": 3
+    },
+    {
       "name": "get_available_days",
       "returns": "TABLE(day date, slots_count integer, is_open boolean)",
       "anon_execute": true,
@@ -785,6 +803,18 @@
       "required_argument_count": 1
     },
     {
+      "name": "get_dashboard_snapshot",
+      "returns": "jsonb",
+      "anon_execute": false,
+      "definition_md5": "5ed43aee66b006c631c94b3ba75917a1",
+      "input_arguments": [
+        "p_shop"
+      ],
+      "identity_arguments": "p_shop uuid",
+      "authenticated_execute": true,
+      "required_argument_count": 1
+    },
+    {
       "name": "get_notification_automation_status",
       "returns": "TABLE(dispatcher_active boolean, dispatcher_last_run_at timestamp with time zone, dispatcher_last_run_status text, dispatcher_last_run_message text)",
       "anon_execute": false,
@@ -800,7 +830,7 @@
       "name": "get_notification_metrics",
       "returns": "TABLE(queued_count bigint, processing_count bigint, failed_count bigint, sent_today_count bigint, sent_7d_count bigint, delivery_rate_7d numeric)",
       "anon_execute": false,
-      "definition_md5": "6b5e26bdc79c840ef9d6c9052071735f",
+      "definition_md5": "9aae9f5f90519b9d3d89e8a42e839b6b",
       "input_arguments": [
         "p_shop"
       ],
@@ -917,7 +947,7 @@
       "name": "get_public_barbershop",
       "returns": "jsonb",
       "anon_execute": true,
-      "definition_md5": "92c9b26e2806f5bfd97089b574c9898d",
+      "definition_md5": "4bb9864344b33fcf8b08101d35249993",
       "input_arguments": [
         "p_slug"
       ],
@@ -1039,9 +1069,9 @@
     },
     {
       "name": "get_review_by_token",
-      "returns": "TABLE(shop_name text, shop_slug text, timezone text, customer_name text, appointment_status appointment_status, appointment_completed_at timestamp with time zone, service_name text, haircut_name text, barber_name text, barber_photo_url text, available_at timestamp with time zone, review_id uuid, rating integer, comment text, review_is_published boolean, review_created_at timestamp with time zone, can_submit boolean)",
+      "returns": "TABLE(shop_name text, shop_slug text, timezone text, customer_name text, appointment_status appointment_status, appointment_completed_at timestamp with time zone, service_name text, haircut_name text, barber_name text, barber_photo_url text, available_at timestamp with time zone, has_review boolean, rating integer, comment text, review_is_published boolean, review_created_at timestamp with time zone, can_submit boolean)",
       "anon_execute": false,
-      "definition_md5": "e0abc9dc240fa741503245d124d46cce",
+      "definition_md5": "2f3a78f7a569de985e1aaa2aa8e5dcfe",
       "input_arguments": [
         "p_token"
       ],
@@ -1211,7 +1241,7 @@
       "name": "is_member",
       "returns": "boolean",
       "anon_execute": false,
-      "definition_md5": "83f261f976353b33d28af630237b8a2e",
+      "definition_md5": "b83af1b3815761455b6e2c08b01ec29f",
       "input_arguments": [
         "p_shop",
         "p_roles"
@@ -1224,7 +1254,7 @@
       "name": "is_platform_admin",
       "returns": "boolean",
       "anon_execute": false,
-      "definition_md5": "f1b4cb195cb4c61787c8aab54f022cc2",
+      "definition_md5": "40954c769fc23d6a1795de4cdc048e0e",
       "input_arguments": null,
       "identity_arguments": "",
       "authenticated_execute": false,
@@ -1255,7 +1285,7 @@
       "name": "list_members",
       "returns": "TABLE(id uuid, user_id uuid, role app_role, full_name text, email text, created_at timestamp with time zone)",
       "anon_execute": false,
-      "definition_md5": "3fe1230bd7f3343e75cb225a25cd74af",
+      "definition_md5": "934dfe6fe1d5b0e0c982c995551265cd",
       "input_arguments": [
         "p_shop"
       ],
@@ -1377,7 +1407,7 @@
       "name": "on_appointment_completed",
       "returns": "trigger",
       "anon_execute": false,
-      "definition_md5": "6cd2eb81141c501b23a297a1952db5da",
+      "definition_md5": "7306b9afd556b2abb80604f1126a14e8",
       "input_arguments": null,
       "identity_arguments": "",
       "authenticated_execute": false,
@@ -1469,6 +1499,19 @@
       "identity_arguments": "p_after interval",
       "authenticated_execute": false,
       "required_argument_count": 0
+    },
+    {
+      "name": "remove_barbershop_member",
+      "returns": "void",
+      "anon_execute": false,
+      "definition_md5": "451238a3b1d9dc49e7af4265c4b368cb",
+      "input_arguments": [
+        "p_shop",
+        "p_member"
+      ],
+      "identity_arguments": "p_shop uuid, p_member uuid",
+      "authenticated_execute": true,
+      "required_argument_count": 2
     },
     {
       "name": "reorder_barbers",
@@ -1690,7 +1733,7 @@
       "name": "submit_review_by_token",
       "returns": "TABLE(review_id uuid, rating integer, comment text, created_at timestamp with time zone)",
       "anon_execute": false,
-      "definition_md5": "08582b6c37513d47e8750862784a09ed",
+      "definition_md5": "b8a7af4d435cd46784f18961e952d860",
       "input_arguments": [
         "p_token",
         "p_rating",
