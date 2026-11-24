@@ -1,6 +1,6 @@
 begin;
 do $test$
-declare sh uuid; foreign_shop uuid; svc uuid; alt uuid; addon uuid; foreign_svc uuid; cut uuid; barber uuid; other_barber uuid; owner_id uuid:=gen_random_uuid(); booking record; replay record; manual record; offered record; claimed record; d date:=(now() at time zone 'Africa/Maputo')::date+3; start_at timestamptz; slug text:='composition-test-'||left(gen_random_uuid()::text,8); k uuid:=gen_random_uuid(); payload jsonb; hash text:=repeat('a',64);
+declare extra_id uuid; extra_ids uuid[]:='{}'; outsider uuid:=gen_random_uuid(); invalid_ids uuid[]; sh uuid; foreign_shop uuid; svc uuid; alt uuid; addon uuid; foreign_svc uuid; cut uuid; barber uuid; other_barber uuid; owner_id uuid:=gen_random_uuid(); booking record; replay record; manual record; offered record; claimed record; d date:=(now() at time zone 'Africa/Maputo')::date+3; start_at timestamptz; slug text:='composition-test-'||left(gen_random_uuid()::text,8); k uuid:=gen_random_uuid(); payload jsonb; hash text:=repeat('a',64);
 begin
  insert into public.barbershops(slug,name,status,timezone,min_lead_time_min,max_advance_days,slot_interval_min) values(slug,'Composition fixture','active','Africa/Maputo',30,30,15) returning id into sh;
  insert into public.barbershops(slug,name,status,timezone) values(slug||'-foreign','Foreign fixture','active','Africa/Maputo') returning id into foreign_shop;
@@ -22,6 +22,36 @@ begin
  begin perform public.save_service_configuration(sh,svc,jsonb_build_object('name','Invalid','price_cents',1,'duration_min',30,'category','Cabelo','subcategory','Cortes'),array[foreign_svc]); raise exception 'CROSS_TENANT_ADDON_ACCEPTED'; exception when others then if sqlerrm<>'TENANT_RELATION_MISMATCH' then raise; end if; end;
  begin perform public.save_haircut_configuration(sh,cut,jsonb_build_object('name','Invalid','service_id',foreign_svc),'[]'::jsonb,'{}'::uuid[]); raise exception 'CROSS_TENANT_STYLE_ACCEPTED'; exception when others then if sqlerrm<>'TENANT_RELATION_MISMATCH' then raise; end if; end;
  reset role;
+ -- Stress boundaries: no partial writes, cross-tenant reads, qualification and malformed input.
+ insert into auth.users(id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values(outsider,'authenticated','authenticated',outsider::text||'@example.invalid','',now(),'{"provider":"email","providers":["email"]}','{}',now(),now());
+ insert into public.barbershop_members(barbershop_id,user_id,role) values(foreign_shop,outsider,'owner');
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',outsider::text,'role','authenticated')::text,true);
+ set local role authenticated;
+ if exists(select 1 from public.service_addons where barbershop_id=sh) or exists(select 1 from public.haircut_service_offers where barbershop_id=sh) or exists(select 1 from public.haircut_barber_skills where barbershop_id=sh) then raise exception 'RELATION_RLS_LEAK'; end if;
+ begin perform public.save_service_configuration(sh,svc,jsonb_build_object('name','Unauthorized','price_cents',1,'duration_min',30,'category','Cabelo','subcategory','Cortes'),array[addon]); raise exception 'UNAUTHORIZED_WRITE'; exception when others then if sqlerrm<>'FORBIDDEN' then raise; end if; end;
+ reset role;
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',owner_id::text,'role','authenticated')::text,true);
+ foreach invalid_ids slice 1 in array array[array[svc],array[foreign_svc],array[gen_random_uuid()],array[null::uuid]] loop
+   begin perform * from private.resolve_booking_composition(sh,svc,cut,invalid_ids); raise exception 'INVALID_ADDON_ACCEPTED'; exception when others then if sqlerrm<>'INVALID_BOOKING_OFFER' then raise; end if; end;
+ end loop;
+ for n in 1..6 loop
+   insert into public.services(barbershop_id,name,price_cents,duration_min,is_active) values(sh,'Stress add-on '||n,1000,10,true) returning id into extra_id;
+   insert into public.service_addons(barbershop_id,service_id,addon_service_id) values(sh,svc,extra_id);
+   insert into public.barber_services(barber_id,service_id) values(barber,extra_id);
+   extra_ids:=array_append(extra_ids,extra_id);
+ end loop;
+ if not exists(select 1 from private.resolve_booking_composition(sh,svc,cut,extra_ids[1:5]) where price_cents=35000 and duration_min=95 and jsonb_array_length(components)=6) then raise exception 'FIVE_ADDONS_FAILED'; end if;
+ begin perform * from private.resolve_booking_composition(sh,svc,cut,extra_ids); raise exception 'SIX_ADDONS_ACCEPTED'; exception when others then if sqlerrm<>'INVALID_BOOKING_OFFER' then raise; end if; end;
+ update public.services set duration_min=480 where id=extra_ids[1];
+ begin perform * from private.resolve_booking_composition(sh,svc,cut,extra_ids[1:1]); raise exception 'OVERLONG_COMPOSITION_ACCEPTED'; exception when others then if sqlerrm<>'INVALID_BOOKING_OFFER' then raise; end if; end;
+ update public.services set duration_min=10,is_active=false where id=extra_ids[1];
+ begin perform * from private.resolve_booking_composition(sh,svc,cut,extra_ids[1:1]); raise exception 'INACTIVE_ADDON_ACCEPTED'; exception when others then if sqlerrm<>'INVALID_BOOKING_OFFER' then raise; end if; end;
+ update public.haircuts set skill_restricted=true where id=cut;
+ delete from public.haircut_barber_skills where haircut_id=cut;
+ if exists(select 1 from public.get_composed_available_slots(slug,svc,null,d,cut,array[addon])) then raise exception 'EMPTY_SKILL_SET_AVAILABLE'; end if;
+ insert into public.haircut_barber_skills(barbershop_id,haircut_id,barber_id) values(sh,cut,barber);
+ delete from public.service_addons where service_id=svc and addon_service_id=any(extra_ids);
+ delete from public.services where id=any(extra_ids);
  if not exists(select 1 from private.resolve_booking_offer(sh,alt,cut) where price_cents=65000 and duration_min=60) then raise exception 'SECONDARY_PRICE_NOT_RESOLVED'; end if;
  if not exists(select 1 from private.resolve_booking_composition(sh,svc,cut,array[addon]) where price_cents=38000 and duration_min=60 and jsonb_array_length(components)=2) then raise exception 'COMPOSITION_NOT_RESOLVED'; end if;
  begin perform * from private.resolve_booking_composition(sh,svc,cut,array[addon,addon]); raise exception 'DUPLICATE_ADDON_ACCEPTED'; exception when others then if sqlerrm<>'INVALID_BOOKING_OFFER' then raise; end if; end;
