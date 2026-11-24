@@ -4,8 +4,6 @@ import { supabase } from '@/lib/supabase';
 import { scenarios } from './simulator-api';
 const checkoutUrl=String(import.meta.env.VITE_SUPABASE_URL??'');
 export const operationalSimulatorEnabled=import.meta.env.VITE_PAYMENT_SIMULATOR_ENABLED==='true' && (/^https:\/\/asikuyxaapcmayptimxi\.supabase\.co\/?$/.test(checkoutUrl)||/^http:\/\/127\.0\.0\.1:\d+\/?$/.test(checkoutUrl));
-export const qaCheckoutSlug='shop-phase8-preview-qa';
-export const qaCheckoutShop='f86dc636-68ed-40ba-8a42-ce64fa0806d1';
 const purpose=z.enum(['deposit','service','product','subscription']);
 const state=z.enum(['pending','paid','failed','refunded']);
 const run=z.object({id:z.string().uuid(),purpose,reference:z.string(),amount_minor:z.number().int().positive(),status:state,outcome:z.string(),scenario:z.string(),real_money:z.literal(false),created_at:z.string(),events:z.array(z.object({action:z.string(),status:state,outcome:z.string(),created_at:z.string()}))});
