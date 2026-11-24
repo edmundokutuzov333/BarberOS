@@ -1843,6 +1843,13 @@
   ],
   "edges": [
     {
+      "name": "admin-credential-manager",
+      "status": "ACTIVE",
+      "version": 1,
+      "verify_jwt": true,
+      "bundle_sha256": "d95ad9aac719dbb12191efccd5bde4e7788f84c3e4a2cb4ba0935eccd2768c3c"
+    },
+    {
       "name": "booking-create",
       "status": "ACTIVE",
       "version": 6,
@@ -1857,11 +1864,11 @@
       "bundle_sha256": "72335aaba8998203450c9dfbb4bd28e3989ff403fd6af400d10b8c891a75d244"
     },
     {
-      "name": "resend-webhook",
+      "name": "health",
       "status": "ACTIVE",
-      "version": 1,
+      "version": 2,
       "verify_jwt": false,
-      "bundle_sha256": "edb81e81ba10d7e53364f0be50cc11d17b0a0e2feeab12235b0c6598886fce9e"
+      "bundle_sha256": "a96c4824e923269210b0424e0f9097da40d61cb4e3420b18ec95065cb8146474"
     },
     {
       "name": "notify-dispatch",
@@ -1871,18 +1878,18 @@
       "bundle_sha256": "abf4d31ab33055a48a745dde3baa8c28b7e4bdef58dd988a68f510fa95c0c6d7"
     },
     {
+      "name": "resend-webhook",
+      "status": "ACTIVE",
+      "version": 1,
+      "verify_jwt": false,
+      "bundle_sha256": "edb81e81ba10d7e53364f0be50cc11d17b0a0e2feeab12235b0c6598886fce9e"
+    },
+    {
       "name": "token-gateway",
       "status": "ACTIVE",
       "version": 3,
       "verify_jwt": false,
       "bundle_sha256": "8cd979407ecc274b2fdd082816281598e5b58b22a9f0f651a6314a0da4f17ce1"
-    },
-    {
-      "name": "health",
-      "status": "ACTIVE",
-      "version": 2,
-      "verify_jwt": false,
-      "bundle_sha256": "a96c4824e923269210b0424e0f9097da40d61cb4e3420b18ec95065cb8146474"
     }
   ]
 }

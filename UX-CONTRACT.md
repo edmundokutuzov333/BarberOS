@@ -80,6 +80,20 @@ See `docs/MEMBERSHIP_UI_ACCEPTANCE_2026-11-24.md` and
 
 ## Gmail verification scope
 
+## Account verification lifecycle
+
+AuthProvider owns session/profile loading, cancellation, runtime validation and
+background verification. AccountStateError reuses canonical ErrorState/Button for
+app, admin and recovery retry/sign-out. Invalid or missing account state never
+mounts private content or starts tenant reads. A membership-query failure has a
+separate retry and never means an empty shop list. Same-account verification
+preserves an open form; account changes establish a fresh profile cache boundary.
+Logout failure stays recoverable and is never presented as successful termination.
+See `docs/ACCOUNT_LIFECYCLE_ACCEPTANCE_2026-11-24.md` and the actual-router recovery
+browser suite. Existing password-form validation ownership remains explicit debt.
+
+## Gmail browser evidence
+
 The Gmail fixture runs the actual page, controls, query hooks and client with only
 tenant context and external HTTP replaced. Desktop/mobile browser scenarios cover
 selection, validation, provider failure, confirmation, focus, accessibility and

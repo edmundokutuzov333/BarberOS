@@ -4,7 +4,8 @@ import { useAuth } from '@/lib/auth';
 import { useShop } from '@/lib/shop';
 import { Sidebar } from './Sidebar';
 import { MobileDock } from './MobileDock';
-import { Skeleton } from '@/components/ui/States';
+import { Skeleton, ErrorState } from '@/components/ui/States';
+import { AccountStateError } from '@/components/ui/AccountStateError';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { SkipLink } from '@/components/ui/SkipLink';
 import { canAccessAppRoute } from '@/lib/permissions';
@@ -63,21 +64,23 @@ function RoleDenied({ pathname }: { pathname: string }) {
 }
 
 export function RequireAuth() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, error } = useAuth();
   const loc = useLocation();
-  if (loading || (user && !profile)) return <FullSkeleton />;
+  if (loading) return <FullSkeleton />;
+  if (error || (user && !profile)) return <AccountStateError />;
   if (!user) return <Navigate to="/entrar" state={{ from: loc.pathname }} replace />;
   if (profile?.password_change_required) return <Navigate to="/alterar-palavra-passe" state={{ from: loc.pathname }} replace />;
   return <Outlet />;
 }
 
 export function RequireAdmin() {
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut, error } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const returnTo = location.pathname + location.search;
 
   if (loading) return <FullSkeleton />;
+  if (error || (user && !profile)) return <AccountStateError />;
   if (!user) return <Navigate to="/entrar" state={{ from: returnTo }} replace />;
   if (profile?.password_change_required) {
     return <Navigate to="/alterar-palavra-passe" state={{ from: returnTo }} replace />;
@@ -102,7 +105,7 @@ export function RequireAdmin() {
             <button
               type="button"
               data-testid="platform-admin-switch-account"
-              onClick={() => void signOut().then(() => navigate('/entrar', { state: { from: returnTo }, replace: true }))}
+              onClick={() => void signOut().then(signedOut => { if (signedOut) navigate('/entrar', { state: { from: returnTo }, replace: true }); })}
               className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-accent-soft px-4 text-sm font-medium text-accent-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
             >
               Terminar sessão e trocar de conta
@@ -128,11 +131,12 @@ export function AnimatedOutlet() {
 }
 
 export function AppShell() {
-  const { shop, role, loading } = useShop();
+  const { shop, role, loading, error, refresh } = useShop();
   const { pathname } = useLocation();
   const desktop = useMediaQuery('(min-width: 768px)');
 
   if (loading) return <FullSkeleton />;
+  if (error) return <main className="min-h-screen p-6 grid place-items-center" data-testid="shop-state-error"><ErrorState message="Não foi possível carregar as suas barbearias. Tente novamente." onRetry={() => { void refresh(); }} /></main>;
   if (!shop && pathname !== '/app/onboarding') return <Navigate to="/app/onboarding" replace />;
 
   const shopSchemaAvailable = typeof (shop as unknown as { shop_enabled?: unknown } | null)?.shop_enabled === 'boolean';

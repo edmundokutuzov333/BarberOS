@@ -4,7 +4,6 @@
   "missing_rpcs": [],
   "missing_tables": [],
   "missing_edges": [
-    "admin-credential-manager",
     "google-calendar",
     "payments-configure",
     "payments-initiate",

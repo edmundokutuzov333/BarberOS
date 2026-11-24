@@ -18,6 +18,7 @@ interface ShopState {
   role: Role | null;
   shops: Membership[];
   loading: boolean;
+  error: Error | null;
   setShopId: (id: string) => void;
   refresh: () => Promise<unknown>;
 }
@@ -27,19 +28,22 @@ const Ctx = createContext<ShopState>({
   role: null,
   shops: [],
   loading: true,
+  error: null,
   setShopId: () => {},
   refresh: async () => {},
 });
 const KEY = 'barberos.shop';
 
 export function ShopProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, profile, loading: accountLoading, error: accountError } = useAuth();
   const qc = useQueryClient();
   const [shopId, setId] = useState<string | null>(() => localStorage.getItem(KEY));
 
+  const enabled = !!user && !!profile && !profile.password_change_required && !accountLoading && !accountError;
   const q = useQuery({
     queryKey: ['memberships', user?.id],
-    enabled: !!user,
+    enabled,
+    retry: false,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('barbershop_members')
@@ -50,7 +54,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const shops = q.data ?? [];
+  const shops = useMemo(() => enabled ? q.data ?? [] : [], [enabled, q.data]);
   const current = useMemo(
     () => shops.find((m) => m.barbershops.id === shopId) ?? shops[0] ?? null,
     [shops, shopId],
@@ -69,7 +73,8 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         shop: current?.barbershops ?? null,
         role: current?.role ?? null,
         shops,
-        loading: !!user && q.isLoading,
+        loading: accountLoading || (enabled && q.isLoading),
+        error: enabled && q.isError ? new Error('SHOP_STATE_UNAVAILABLE') : null,
         setShopId,
         refresh: () => qc.invalidateQueries({ queryKey: ['memberships'] }),
       }}

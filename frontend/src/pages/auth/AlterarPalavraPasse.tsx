@@ -6,6 +6,7 @@ import { Field } from '@/components/ui/Field';
 import { supabase } from '@/lib/supabase';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { humanError } from '@/lib/utils';
+import { AccountStateError } from '@/components/ui/AccountStateError';
 
 export default function AlterarPalavraPasse() {
   // This recovery route is outside the private app layout. It needs its own
@@ -14,16 +15,17 @@ export default function AlterarPalavraPasse() {
 }
 
 function PasswordChangeForm() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, error } = useAuth();
   const location = useLocation();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  if (loading || (user && !profile)) {
+  if (loading) {
     return <main className="min-h-screen grid place-items-center p-6"><p className="t-body text-ink-mid">A verificar a conta…</p></main>;
   }
+  if (error || (user && !profile)) return <AccountStateError />;
   if (!user) return <Navigate to="/entrar" state={{ from: location.pathname }} replace />;
 
   const submit = async (event: FormEvent) => {

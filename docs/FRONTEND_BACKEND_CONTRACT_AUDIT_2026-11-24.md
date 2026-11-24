@@ -9,7 +9,7 @@ package exposes its native checker but not the expected JavaScript compiler API.
 The existing pinned Babel 7.29.7 parser was selected: it parses the actual TS/TSX
 syntax without installing dependencies or executing application modules.
 
-`inventory-frontend-contracts.mjs` reads all 165 frontend source files, resolves
+`inventory-frontend-contracts.mjs` reads all 166 frontend source files, resolves
 imported Supabase aliases, casts, local forwarding helpers and finite string unions,
 and separates RPCs, Edge calls, tables, Storage, Auth methods and route declarations.
 Unresolved expressions remain explicit. Route counts include index declarations
@@ -36,8 +36,9 @@ After the reviewed report/admin source deployments, staging now has all frontend
 methods pass the synthetic SQL boundary suite. All five report
 methods now pass the same synthetic SQL behavior test in local, stage and production.
 It is also missing
-admin-credential-manager, google-calendar and the three browser-facing payment
-functions. No payment provider was called or tested by this inventory.
+google-calendar and the three browser-facing payment functions. The administrative
+credential function now has the same bundle as production and passed live CORS/
+unsigned-request checks. No payment provider was called or tested by this inventory.
 
 The captured inventories and exact gap lists are in `docs/contracts/`. They contain
 structure, signatures, privilege flags and bundle hashes, not credentials or

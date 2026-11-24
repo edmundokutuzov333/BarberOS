@@ -30,6 +30,7 @@ export function slugify(s: string): string {
 }
 
 const ERRORS: Record<string, string> = {
+  SESSION_END_FAILED: 'Não foi possível terminar a sessão. Verifique a ligação e tente novamente.',
   LAST_OWNER: 'A barbearia precisa de manter pelo menos um dono. Adicione outro dono antes de alterar este acesso.',
   MEMBER_SELF_REMOVE: 'Não pode remover o seu próprio acesso.',
   FORBIDDEN: 'Não tem permissão para esta operação. Actualize a sessão e confirme o seu papel na barbearia.',

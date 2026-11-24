@@ -7,7 +7,7 @@ const user = { id: userId, aud: 'authenticated', role: 'authenticated', email: '
 const password = 'RecoveryFixture2026';
 
 async function account(page, { signedIn = true, forced = true } = {}) {
-  const state = { calls: [], failCompletion: false, tenantQueries: 0 };
+  const state = { calls: [], failCompletion: false, tenantQueries: 0, profileMode: 'valid', forced, failMemberships: false, failLogout: false, releaseProfile: null };
   if (signedIn) await page.addInitScript(({ user }) => {
     const expiry = Math.floor(Date.now() / 1000) + 3600;
     const encode = value => btoa(JSON.stringify(value)).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
@@ -20,8 +20,20 @@ async function account(page, { signedIn = true, forced = true } = {}) {
     const body = request.postData() ? request.postDataJSON() : null;
     state.calls.push({ path, method: request.method(), action: body?.action });
     const json = (data, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data) });
-    if (path === '/rest/v1/profiles') return json([{ id: userId, full_name: 'Recovery fixture', phone: null, avatar_url: null, is_platform_admin: false, created_at: user.created_at, password_change_required: forced }]);
-    if (path === '/rest/v1/barbershop_members') { state.tenantQueries++; return json([]); }
+    if (path === '/rest/v1/profiles') {
+      if (state.profileMode === 'hang') return new Promise(resolve => {
+        state.releaseProfile = () => route.abort('timedout').catch(() => {}).finally(resolve);
+      });
+      if (state.profileMode === 'unavailable') return json({code:'XX000',message:'Controlled profile failure'},503);
+      if (state.profileMode === 'missing') return json([]);
+      if (state.profileMode === 'invalid') return json([{id:userId,is_platform_admin:true,password_change_required:'false'}]);
+      if (state.profileMode === 'wrong-user') return json([{id:'22222222-2222-4222-8222-222222222222',full_name:'Other account',phone:null,avatar_url:null,is_platform_admin:true,created_at:user.created_at,password_change_required:false}]);
+      return json([{ id: userId, full_name: 'Recovery fixture', phone: null, avatar_url: null, is_platform_admin: false, created_at: user.created_at, password_change_required: state.forced }]);
+    }
+    if (path === '/rest/v1/barbershop_members') {
+      state.tenantQueries++;
+      return state.failMemberships ? json({code:'XX000',message:'Controlled membership failure'},503) : json([]);
+    }
     if (path === '/functions/v1/admin-credential-manager') {
       expect(body).toEqual({ action: 'complete_password_change', new_password: password });
       return state.failCompletion ? json({ ok: false, error: 'ACCOUNT_STATE_UNAVAILABLE', message: 'Não foi possível verificar a conta. Tente novamente.' }, 503) : json({ ok: true });
@@ -31,7 +43,7 @@ async function account(page, { signedIn = true, forced = true } = {}) {
       return json(user);
     }
     if (path === '/auth/v1/user') return json(user);
-    if (path === '/auth/v1/logout') return route.fulfill({ status: 204 });
+    if (path === '/auth/v1/logout') return state.failLogout ? json({message:'Controlled logout failure'},503) : route.fulfill({ status: 204 });
     return route.abort('blockedbyclient');
   });
   return state;
@@ -108,4 +120,100 @@ test('ordinary recovery updates only the authenticated user through Auth', async
   await expect(page).toHaveURL(/\/entrar$/);
   expect(state.calls.filter(x => x.path === '/auth/v1/user' && x.method === 'PUT')).toHaveLength(1);
   expect(state.calls.filter(x => x.action === 'complete_password_change')).toHaveLength(0);
+});
+
+for (const profileMode of ['unavailable','missing','invalid','wrong-user']) {
+  test(`account ${profileMode} fails closed with an explicit retry instead of an endless loader`,async({page})=>{
+    const state=await account(page);state.profileMode=profileMode;
+    await page.goto('/alterar-palavra-passe');
+    await expect(page.getByTestId('account-state-error')).toBeVisible();
+    await expect(page.getByTestId('save-new-password-btn')).toHaveCount(0);
+    await expect(page.getByText('A verificar a conta…')).toHaveCount(0);
+    state.profileMode='valid';await page.getByRole('button',{name:'Tentar de novo'}).click();
+    await expect(page.getByTestId('mandatory-password-change')).toBeVisible();
+    expect(state.tenantQueries).toBe(0);
+    expect(state.calls.filter(c=>c.method!=='GET')).toHaveLength(0);
+  });
+}
+
+test('private route profile failure never reaches tenant data or the onboarding form',async({page})=>{
+  const state=await account(page,{forced:false});state.profileMode='unavailable';
+  await page.goto('/app');
+  await expect(page.getByTestId('account-state-error')).toBeVisible();
+  expect(state.tenantQueries).toBe(0);
+  state.profileMode='valid';await page.getByRole('button',{name:'Tentar de novo'}).click();
+  await expect(page).toHaveURL(/\/app\/onboarding$/);
+  expect(state.tenantQueries).toBeGreaterThan(0);
+});
+
+test('admin route rejects invalid profile data before showing administration',async({page})=>{
+  const state=await account(page,{forced:false});state.profileMode='wrong-user';
+  await page.goto('/admin');
+  await expect(page.getByTestId('account-state-error')).toBeVisible();
+  await expect(page.getByTestId('platform-admin-access-denied')).toHaveCount(0);
+  expect(state.tenantQueries).toBe(0);
+  state.profileMode='valid';await page.getByRole('button',{name:'Tentar de novo'}).click();
+  await expect(page.getByTestId('platform-admin-access-denied')).toBeVisible();
+});
+
+test('membership failure is recoverable and cannot masquerade as an account without a shop',async({page})=>{
+  const state=await account(page,{forced:false});state.failMemberships=true;
+  await page.goto('/app');
+  await expect(page.getByTestId('shop-state-error')).toBeVisible();
+  await expect(page).toHaveURL(/\/app$/);
+  state.failMemberships=false;await page.getByRole('button',{name:'Tentar de novo'}).click();
+  await expect(page).toHaveURL(/\/app\/onboarding$/);
+});
+
+test('recovery account failure can terminate the session without submitting a password',async({page})=>{
+  const state=await account(page);state.profileMode='missing';
+  await page.goto('/alterar-palavra-passe');
+  await expect(page.getByTestId('account-state-error')).toBeVisible();
+  await page.getByRole('button',{name:'Terminar sessão',exact:true}).click();
+  await expect(page).toHaveURL(/\/entrar$/);
+  expect(state.calls.filter(x=>x.path==='/auth/v1/logout')).toHaveLength(1);
+  expect(state.calls.filter(x=>x.action==='complete_password_change')).toHaveLength(0);
+});
+
+test('background account verification preserves the draft, then enforces a newly required rotation',async({page})=>{
+  const state=await account(page,{forced:false});
+  await page.goto('/app/onboarding');
+  await page.getByTestId('onboarding-name-input').fill('Rascunho preservado');
+  const profileCalls=()=>state.calls.filter(c=>c.path==='/rest/v1/profiles').length;
+  let before=profileCalls();
+  await page.evaluate(()=>window.dispatchEvent(new Event('visibilitychange')));
+  await expect.poll(profileCalls).toBeGreaterThan(before);
+  await expect(page.getByTestId('onboarding-name-input')).toHaveValue('Rascunho preservado');
+  state.forced=true;before=profileCalls();
+  await page.evaluate(()=>window.dispatchEvent(new Event('visibilitychange')));
+  await expect.poll(profileCalls).toBeGreaterThan(before);
+  await expect(page).toHaveURL(/\/alterar-palavra-passe$/);
+  await expect(page.getByTestId('mandatory-password-change')).toBeVisible();
+  expect(state.calls.filter(c=>c.method!=='GET')).toHaveLength(0);
+});
+
+test('logout failure stays blocked, reports the error and allows another explicit attempt',async({page})=>{
+  const state=await account(page);state.profileMode='missing';state.failLogout=true;
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('/alterar-palavra-passe');
+  await expect(page.getByTestId('account-state-error')).toBeVisible();
+  await page.getByRole('button',{name:'Terminar sessão',exact:true}).click();
+  await expect(page.getByTestId('account-state-error')).toContainText('Não foi possível terminar a sessão');
+  await expect(page).toHaveURL(/\/alterar-palavra-passe$/);
+  state.failLogout=false;await page.getByRole('button',{name:'Terminar sessão',exact:true}).click();
+  await expect(page).toHaveURL(/\/entrar$/);
+  expect(errors).toEqual([]);
+});
+
+test('profile request timeout becomes a retryable state and never leaves a permanent loader',async({page})=>{
+  const state=await account(page);state.profileMode='hang';
+  try {
+    await page.goto('/alterar-palavra-passe');
+    await expect(page.getByTestId('account-state-error')).toBeVisible({timeout:15_000});
+    await expect(page.getByText('A verificar a conta…')).toHaveCount(0);
+    state.profileMode='valid';await state.releaseProfile?.();
+    await page.getByRole('button',{name:'Tentar de novo'}).click();
+    await expect(page.getByTestId('mandatory-password-change')).toBeVisible();
+    expect(state.tenantQueries).toBe(0);
+  } finally { await state.releaseProfile?.(); }
 });

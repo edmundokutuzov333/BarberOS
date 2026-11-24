@@ -1,6 +1,6 @@
 {
   "scope": "Static source inventory; presence is not runtime contract acceptance",
-  "source_files_parsed": 165,
+  "source_files_parsed": 166,
   "rpc_names": [
     "add_member_by_email",
     "admin_assign_barbershop_plan",
@@ -2020,15 +2020,15 @@
       "opaque_payload": false
     },
     {
-      "kind": "auth",
+      "kind": "table",
       "names": [
-        "getSession"
+        "profiles"
       ],
       "dynamic": false,
       "forwarding": false,
       "file": "frontend/src/lib/auth.tsx",
-      "line": 30,
-      "owner": null,
+      "line": 40,
+      "owner": "readProfile",
       "via": null,
       "payload_keys": [],
       "opaque_payload": false
@@ -2041,21 +2041,21 @@
       "dynamic": false,
       "forwarding": false,
       "file": "frontend/src/lib/auth.tsx",
-      "line": 34,
+      "line": 71,
       "owner": null,
       "via": null,
       "payload_keys": [],
       "opaque_payload": false
     },
     {
-      "kind": "table",
+      "kind": "auth",
       "names": [
-        "profiles"
+        "getSession"
       ],
       "dynamic": false,
       "forwarding": false,
       "file": "frontend/src/lib/auth.tsx",
-      "line": 47,
+      "line": 78,
       "owner": null,
       "via": null,
       "payload_keys": [],
@@ -2069,7 +2069,7 @@
       "dynamic": false,
       "forwarding": false,
       "file": "frontend/src/lib/auth.tsx",
-      "line": 63,
+      "line": 119,
       "owner": "signOut",
       "via": null,
       "payload_keys": [],
@@ -2083,7 +2083,7 @@
       "dynamic": false,
       "forwarding": false,
       "file": "frontend/src/lib/shop.tsx",
-      "line": 44,
+      "line": 48,
       "owner": null,
       "via": null,
       "payload_keys": [],
@@ -2760,7 +2760,7 @@
       "dynamic": false,
       "forwarding": false,
       "file": "frontend/src/pages/auth/AlterarPalavraPasse.tsx",
-      "line": 40,
+      "line": 42,
       "owner": "submit",
       "via": null,
       "payload_keys": [
@@ -2776,7 +2776,7 @@
       "dynamic": false,
       "forwarding": false,
       "file": "frontend/src/pages/auth/AlterarPalavraPasse.tsx",
-      "line": 53,
+      "line": 55,
       "owner": "submit",
       "via": null,
       "payload_keys": [],
@@ -2790,7 +2790,7 @@
       "dynamic": false,
       "forwarding": false,
       "file": "frontend/src/pages/auth/AlterarPalavraPasse.tsx",
-      "line": 60,
+      "line": 62,
       "owner": "submit",
       "via": null,
       "payload_keys": [],

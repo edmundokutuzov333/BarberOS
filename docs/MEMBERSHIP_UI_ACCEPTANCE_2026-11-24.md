@@ -57,3 +57,12 @@ The global premium audit still reports 61 findings; none is attributed to the ne
 editor/API. Existing barber CRUD dialogs and the order-queue member-assignment
 contract remain separate work. A fixture is not a real-device or live membership
 mutation receipt; production acceptance must still check the deployed browser.
+
+## Deployed read acceptance
+
+Commit 8c138e0a524a2e6904c84631d7c47c726295a966 passed all seven triggered
+GitHub workflows. The actual owner browser displayed the new labelled membership
+form and its real directory with no error state. It initially served the older
+service-worker shell; after the new worker activated, reload served
+index-BSszT-EQ.js and the new contract was confirmed. This read acceptance did not
+remove a real staff member or test an external provider.
