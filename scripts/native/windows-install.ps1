@@ -40,4 +40,6 @@ $env:BARBEROS_EXECUTABLE = $executable
 $env:BARBEROS_EVIDENCE = Join-Path $PWD 'apps/desktop/release/runtime-evidence'
 node apps/desktop/test/runtime.cjs
 if ($LASTEXITCODE -ne 0) { throw 'Installed Windows application failed runtime acceptance' }
+node apps/desktop/test/updater-runtime.cjs
+if ($LASTEXITCODE -ne 0) { throw 'Installed Windows updater policy failed acceptance' }
 Write-Output 'PASS | NSIS installation, desktop/Start Menu shortcuts and installed runtime'

@@ -67,7 +67,7 @@ async function checkUpdates() {
   try {
     updateCheck = autoUpdater.checkForUpdates();
     const result = await updateCheck;
-    if (!result || result.updateInfo.version === app.getVersion()) { await dialog.showMessageBox(mainWindow, { message: 'A aplicação está actualizada.', detail: 'A interface e as funcionalidades online acompanham automaticamente a versão publicada da main.' }); return; }
+    if (!result?.isUpdateAvailable) { await dialog.showMessageBox(mainWindow, { message: 'A aplicação está actualizada.', detail: 'A interface e as funcionalidades online acompanham automaticamente a versão publicada da main.' }); return; }
     const { response } = await dialog.showMessageBox(mainWindow, { buttons: ['Transferir', 'Mais tarde'], defaultId: 1, cancelId: 1, message: `BarberOS ${result.updateInfo.version} disponível` });
     if (response !== 0) return;
     await autoUpdater.downloadUpdate();
