@@ -15,7 +15,7 @@ else {
   app.on('second-instance', () => { if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.show(); mainWindow.focus(); } });
   app.on('before-quit', () => { quitting = true; });
   app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
-  app.on('activate', () => { if (!mainWindow) createWindow(); else mainWindow.show(); });
+  app.on('activate', () => { if (!app.isReady()) return; if (!mainWindow) createWindow(); else mainWindow.show(); });
   app.whenReady().then(() => { configureSession(); createWindow(); configureMenu(); });
 }
 function openExternal(url) {

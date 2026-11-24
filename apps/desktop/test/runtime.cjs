@@ -50,7 +50,7 @@ const fs = require('node:fs/promises');
     assert.equal(await page.locator('[data-testid^="public-shop-product-"]').count(), catalog.products.length);
     const photo = page.getByTestId('public-shop-product-' + catalog.products[0].id).locator('img').first();
     await photo.waitFor();
-    assert.equal(await photo.evaluate(image => image.complete && image.naturalWidth > 0), true);
+    assert.equal(await photo.evaluate(async image => { await image.decode(); return image.complete && image.naturalWidth > 0; }), true);
     await page.screenshot({ path: path.join(output, '04-booking-real-catalog.png'), fullPage: true });
     await page.context().route('https://barber-os-orpin.vercel.app/**', route => route.abort('internetdisconnected'));
     await app.evaluate(({ BrowserWindow }) => { BrowserWindow.getAllWindows()[0].webContents.loadURL('https://barber-os-orpin.vercel.app/').catch(() => {}); });

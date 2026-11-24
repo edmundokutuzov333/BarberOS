@@ -51,7 +51,15 @@ jobs:
         run: node scripts/native/stamp-release.cjs
       - run: npm run dist -- --${{ matrix.platform }} --${{ matrix.arch }}
         working-directory: apps/desktop
+      - name: Verify macOS drag-and-drop installer
+        if: matrix.platform == 'mac'
+        run: bash scripts/native/macos-installer.sh
+      - name: Verify Windows installation and shortcuts
+        if: matrix.platform == 'win'
+        shell: pwsh
+        run: ./scripts/native/windows-install.ps1
       - name: Exercise packaged application against production
+        if: matrix.platform == 'mac'
         env:
           BARBEROS_EXECUTABLE: ${{ matrix.platform == 'mac' && format('{0}/apps/desktop/release/mac{1}/BarberOS.app/Contents/MacOS/BarberOS', github.workspace, matrix.arch == 'arm64' && '-arm64' || '') || format('{0}/apps/desktop/release/win-unpacked/BarberOS.exe', github.workspace) }}
         run: node test/runtime.cjs
