@@ -1,6 +1,9 @@
 import { OperationalCheckout } from '@/features/payments/OperationalCheckout';
-import { operationalSimulatorEnabled,qaCheckoutShop } from '@/features/payments/operational-checkout-api';
+import { operationalSimulatorEnabled } from '@/features/payments/operational-checkout-api';
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { listSimulations } from '@/features/payments/simulator-api';
+import { useAuth } from '@/lib/auth';
 import type { Json } from '@/lib/database.types';
 import { CheckCircle2, Edit3, RefreshCw, Save, XCircle } from 'lucide-react';
 import { Page } from '@/components/layout/Page';
@@ -11,6 +14,10 @@ import { useAdminPlans, useUpdateAdminPlan, type AdminPlan } from '@/features/ad
 import { FeatureToggle } from '@/features/admin/AdminComponents';
 
 export default function AdminPlanos(){
+  const {user}=useAuth();
+  const [checkoutShop,setCheckoutShop]=useState('');
+  const checkoutShops=useQuery({queryKey:['qa-checkout-admin-shops',user?.id],queryFn:listSimulations,enabled:operationalSimulatorEnabled&&!!user,retry:false,staleTime:0,refetchOnWindowFocus:'always'});
+  const selectedCheckoutShop=checkoutShops.data?.shops.some(shop=>shop.id===checkoutShop)?checkoutShop:'';
   const q=useAdminPlans(); const mutation=useUpdateAdminPlan(); const [selected,setSelected]=useState<AdminPlan|null>(null);
   useEffect(()=>{if(!selected&&q.data?.[0])setSelected(q.data[0]);},[q.data,selected]);
   const save = async () => {
@@ -30,7 +37,12 @@ export default function AdminPlanos(){
     }
   };
   return <Page title="Planos" subtitle="Configuração comercial dos planos do BarberOS." actions={<Button variant="secondary" size="sm" onClick={()=>void q.refetch()} disabled={q.isFetching}><RefreshCw size={14} className={q.isFetching?'animate-spin':''}/>Actualizar</Button>}>
-    {operationalSimulatorEnabled&&<OperationalCheckout scope={{shopId:qaCheckoutShop}}/>}
+    {operationalSimulatorEnabled&&<Panel className="space-y-3">
+      <h2 className="t-card">Mensalidades de teste · M-Pesa</h2>
+      <p className="t-body text-ink-mid">Escolhe a barbearia. O servidor verifica se está autorizada para simulação; não há cobrança real.</p>
+      {checkoutShops.isPending?<p role="status">A carregar barbearias…</p>:checkoutShops.isError?<div role="alert"><p>Não foi possível consultar as barbearias de teste.</p><Button variant="secondary" onClick={()=>void checkoutShops.refetch()}>Actualizar</Button></div>:<label className="block"><span className="t-label text-ink-mid">Barbearia da mensalidade de teste</span><select className="field w-full mt-1" value={selectedCheckoutShop} onChange={event=>setCheckoutShop(event.target.value)}><option value="">Seleccionar barbearia</option>{checkoutShops.data?.shops.map(shop=><option key={shop.id} value={shop.id}>{shop.name}</option>)}</select></label>}
+      {selectedCheckoutShop&&<OperationalCheckout key={selectedCheckoutShop+user?.id} scope={{shopId:selectedCheckoutShop}} showDisabled/>}
+    </Panel>}
     {q.isLoading?<Skeleton className="h-72"/>:q.error?<ErrorState message={humanError(q.error)} onRetry={()=>void q.refetch()}/>:q.data?.length===0?<EmptyState title="Ainda não existem planos."/>:
     <div className="grid xl:grid-cols-[1fr_420px] gap-3">
       <Panel className="p-0 overflow-hidden"><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-sm"><thead><tr className="border-b border-white/10 t-label text-ink-lo text-left"><th className="px-5 py-3">Plano</th><th className="px-5 py-3">Preço</th><th className="px-5 py-3">Barbeiros</th><th className="px-5 py-3">Lojas</th><th className="px-5 py-3">Estado</th><th className="px-5 py-3"></th></tr></thead><tbody>{q.data?.map(p=><tr key={p.id} className="border-b border-white/5 last:border-0"><td className="px-5 py-4"><p className="text-ink-hi">{p.name}</p><p className="t-label text-ink-lo">{p.code}</p></td><td className="px-5 py-4 text-ink-hi">{formatMT(p.price_cents)}</td><td className="px-5 py-4">{p.max_barbers}</td><td className="px-5 py-4">{p.assigned_shops}</td><td className="px-5 py-4">{p.is_active?<span className="inline-flex items-center gap-1.5 text-st-completed t-label"><CheckCircle2 size={14}/>Activo</span>:<span className="inline-flex items-center gap-1.5 text-ink-lo t-label"><XCircle size={14}/>Inactivo</span>}</td><td className="px-5 py-4 text-right"><Button variant="ghost" size="sm" onClick={()=>setSelected({...p})}><Edit3 size={14}/>Editar</Button></td></tr>)}</tbody></table></div></Panel>
