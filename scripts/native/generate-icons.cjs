@@ -19,7 +19,7 @@ async function main() {
   for (const size of [16, 32, 128, 256, 512]) for (const scale of [1, 2]) await sharp(svg).resize(size * scale).png().toFile(path.join(iconset, `icon_${size}x${size}${scale === 2 ? '@2x' : ''}.png`));
   if (process.platform === 'darwin') execFileSync('iconutil', ['-c', 'icns', iconset, '-o', path.join(out, 'icon.icns')]);
   const composer = path.join(out, 'AppIcon.icon'); await fs.mkdir(path.join(composer, 'Assets'), { recursive: true });
-  await fs.writeFile(path.join(composer, 'Assets/mark.svg'), svg.toString().replace(/<rect[^>]+\/>/, ''));
+  await fs.writeFile(path.join(composer, 'Assets/mark.svg'), svg.toString().replace('<svg ', '<svg width="1024" height="1024" ').replace(/<rect[^>]+\/>/, ''));
   await fs.writeFile(path.join(composer, 'icon.json'), JSON.stringify({
     'color-space-for-untagged-svg-colors': 'display-p3',
     'fill-specializations': [{ value: { solid: 'gray:0.03529,1.00000' } }, { appearance: 'dark', value: 'system-dark' }, { appearance: 'tinted', value: 'system-dark' }],
