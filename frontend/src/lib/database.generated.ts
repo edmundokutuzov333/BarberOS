@@ -2384,6 +2384,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_team_invitation: { Args: { p_token: string }; Returns: Json }
       add_member_by_email: {
         Args: {
           p_email: string
@@ -2804,6 +2805,15 @@ export type Database = {
           p_order_id: string
           p_severity: string
           p_summary: string
+        }
+        Returns: Json
+      }
+      create_team_invitation: {
+        Args: {
+          p_barber?: string
+          p_email: string
+          p_role: Database["public"]["Enums"]["app_role"]
+          p_shop: string
         }
         Returns: Json
       }
@@ -3651,6 +3661,7 @@ export type Database = {
         Args: { p_barbershop_id: string; p_limit?: number; p_status?: string }
         Returns: Json
       }
+      list_team_invitations: { Args: { p_shop: string }; Returns: Json }
       mark_notification_failure: {
         Args: {
           p_error: string
@@ -3815,6 +3826,10 @@ export type Database = {
           notification_id: string
           status: Database["public"]["Enums"]["notif_status"]
         }[]
+      }
+      revoke_team_invitation: {
+        Args: { p_invite: string; p_shop: string }
+        Returns: boolean
       }
       save_barber: {
         Args: {

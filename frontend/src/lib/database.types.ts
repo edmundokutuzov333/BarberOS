@@ -8,6 +8,7 @@ type GeneratedFunctions = GeneratedDatabase['public']['Functions'];
 // (for example, no preferred barber or clearing an optional note). Keep this
 // reviewed wire contract separate from the unmodified generated schema.
 export const nullableRpcArguments = {
+  create_team_invitation: ['p_barber'],
   save_barber: ['p_barber_id', 'p_bio', 'p_photo_url', 'p_user_id'],
   save_haircut_configuration: ['p_haircut'],
   save_service_configuration: ['p_service'],
