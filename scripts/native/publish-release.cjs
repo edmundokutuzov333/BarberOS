@@ -4,7 +4,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const version = process.env.NATIVE_VERSION;
-const sha = process.env.GITHUB_SHA;
+const sha = process.env.BARBEROS_SOURCE_COMMIT || process.env.GITHUB_SHA;
 if (!/^\d+\.\d+\.\d+$/.test(version || '') || !/^[a-f0-9]{40}$/.test(sha || '')) throw new Error('Missing immutable source/version');
 const directory = path.resolve('native-artifacts');
 function walk(dir) { return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => entry.isDirectory() ? walk(path.join(dir, entry.name)) : [path.join(dir, entry.name)]); }

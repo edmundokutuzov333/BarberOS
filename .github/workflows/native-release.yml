@@ -51,7 +51,7 @@ jobs:
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       NATIVE_VERSION: 1.0.${{ github.run_number }}
-      GITHUB_SHA: ${{ needs.reserve.outputs.source_sha }}
+      BARBEROS_SOURCE_COMMIT: ${{ needs.reserve.outputs.source_sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
-      GITHUB_SHA: ${{ needs.reserve.outputs.source_sha }}
+      BARBEROS_SOURCE_COMMIT: ${{ needs.reserve.outputs.source_sha }}
       NATIVE_VERSION: 1.0.${{ github.run_number }}
       ANDROID_VERSION_CODE: ${{ github.run_number }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -173,6 +173,6 @@ jobs:
       - name: Publish immutable release with source provenance and checksums
         env:
           GH_TOKEN: ${{ github.token }}
-          GITHUB_SHA: ${{ needs.reserve.outputs.source_sha }}
+          BARBEROS_SOURCE_COMMIT: ${{ needs.reserve.outputs.source_sha }}
           NATIVE_VERSION: 1.0.${{ github.run_number }}
         run: node scripts/native/publish-release.cjs
