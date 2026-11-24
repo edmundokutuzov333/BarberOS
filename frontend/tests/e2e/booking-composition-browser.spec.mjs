@@ -170,9 +170,8 @@ test('owner mobile layout across main operations and short-height navigation', a
  await page.getByTestId('dock-more').click();
  const sheet=page.getByTestId('dock-more-sheet');
  await expect(sheet).toBeVisible();
- const bounds=await sheet.boundingBox();
- expect(bounds.y).toBeGreaterThanOrEqual(0);
- expect(bounds.y+bounds.height).toBeLessThanOrEqual(360);
+ await expect.poll(()=>sheet.evaluate(el=>getComputedStyle(el).position)).toBe('fixed');
+ await expect.poll(async()=>{const b=await sheet.boundingBox();return !!b && b.y>=0 && b.y+b.height<=360;}).toBe(true);
  await expect.poll(()=>sheet.evaluate(el=>getComputedStyle(el).overflowY)).toBe('auto');
  await sheet.getByTestId('dock-sign-out').scrollIntoViewIfNeeded();
  await expect(sheet.getByTestId('dock-sign-out')).toBeInViewport();

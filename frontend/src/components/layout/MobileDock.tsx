@@ -27,7 +27,7 @@ export function MobileDock() {
 
   useEffect(() => {
     if (!open) return;
-    closeRef.current?.focus();
+    closeRef.current?.focus({ preventScroll: true });
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false);
@@ -54,7 +54,7 @@ export function MobileDock() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: reduce ? 0 : 24 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-x-3 safe-dock-sheet z-40 glass glass-2 p-3 max-h-[calc(100dvh-7rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain touch-pan-y"
+            className="!fixed inset-x-3 safe-dock-sheet z-40 glass glass-2 p-3 max-h-[calc(100dvh-7rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain touch-pan-y"
             role="dialog"
             aria-modal="true"
             aria-labelledby="dock-more-title"
