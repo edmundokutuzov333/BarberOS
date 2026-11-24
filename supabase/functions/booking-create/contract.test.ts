@@ -1,5 +1,6 @@
 import {
   extractDomainCode,
+  isValidComposition,
   httpStatusForDomainCode,
   publicBookingMessage,
 } from "./contract.ts";
@@ -61,4 +62,14 @@ Deno.test("shop order validation errors are client errors", () => {
   for (const code of ["INVALID_SHOP_ORDER_ITEMS", "INVALID_SHOP_ORDER_QUANTITY", "INVALID_SHOP_ORDER_OPTIONS", "INVALID_SHOP_FULFILMENT_MODE"]) {
     if (httpStatusForDomainCode(code) !== 400) throw new Error(code + " must map to HTTP 400");
   }
+});
+
+Deno.test("composition requires valid unique add-ons and a bounded quote", () => {
+ const a="11111111-1111-4111-8111-111111111111", b="22222222-2222-4222-8222-222222222222";
+ const base={p_service_id:a,p_addon_ids:[b],p_expected_price:38000,p_expected_duration:60};
+ if (!isValidComposition(base) || !isValidComposition({p_service_id:a})) throw new Error("valid request rejected");
+ for (const input of [{...base,p_addon_ids:[a]},{...base,p_addon_ids:[b,b]},{...base,p_addon_ids:["bad"]},{...base,p_addon_ids:null},{...base,p_expected_price:undefined},{...base,p_expected_duration:481},{...base,p_expected_price:-1},{...base,p_expected_duration:4}]) {
+  if (isValidComposition(input)) throw new Error("invalid composition accepted");
+ }
+ if (httpStatusForDomainCode("BOOKING_QUOTE_CHANGED")!==409 || httpStatusForDomainCode("INVALID_BOOKING_OFFER")!==400) throw new Error("invalid error mapping");
 });

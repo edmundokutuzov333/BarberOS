@@ -676,6 +676,7 @@ export default function BookingWizard() {
 
             {showHaircutStep && service && (
               <Panel title={addonOptions.length ? 'Personalize a sua marcação' : 'Personalize o seu estilo'} testId="booking-step-haircut">
+                {bookingError && <div role="alert"><ErrorState message={bookingError} /></div>}
                 {eligibleHaircuts.length ? (
                   <div className="space-y-3">
                     <ChoiceCard

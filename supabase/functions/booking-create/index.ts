@@ -1,15 +1,14 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import {
   extractDomainCode,
+  isUuid,
+  isValidComposition,
   httpStatusForDomainCode,
   publicBookingMessage,
 } from "./contract.ts";
 import { adminClient, clientIp, consume, corsHeaders, rateLimitSalt, sha256Hex } from "../_shared/guard.ts";
 
-function isUuid(value: unknown): value is string {
-  return typeof value === "string"
-    && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
+
 
 type ShopOrderItemInput = {
   variant_id: string;
@@ -53,13 +52,7 @@ function isShopOrderItems(value: unknown): value is ShopOrderItemInput[] {
   return true;
 }
 
-function isValidComposition(body: Record<string, unknown>): boolean {
-  const addons = body.p_addon_ids ?? [];
-  if (!Array.isArray(addons) || addons.length > 5 || !addons.every(isUuid) || new Set(addons.map((id) => id.toLowerCase())).size !== addons.length || addons.some((id) => id.toLowerCase() === String(body.p_service_id).toLowerCase())) return false;
-  const quote = body.p_expected_price !== undefined || body.p_expected_duration !== undefined;
-  if (!quote) return addons.length === 0;
-  return Number.isInteger(body.p_expected_price) && Number(body.p_expected_price) >= 0 && Number(body.p_expected_price) <= 2147483647 && Number.isInteger(body.p_expected_duration) && Number(body.p_expected_duration) >= 5 && Number(body.p_expected_duration) <= 480;
-}
+
 
 function isValidPayload(value: unknown): value is BookingPayload {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
