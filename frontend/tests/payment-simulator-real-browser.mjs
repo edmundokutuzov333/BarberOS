@@ -93,10 +93,14 @@ export async function certifyPaymentBrowser({apiUrl,anonKey,actor,nonadmin,shop,
       const customer=await browser.newContext({...devices['Pixel 7'],viewport:{width:360,height:780},serviceWorkers:'block'});
       try{
         const page=await customer.newPage();
-        const errors=[];page.on('pageerror',e=>errors.push(e.message));
+        const errors=[],gatewayStatuses=[];page.on('pageerror',e=>errors.push(e.message));
+        page.on('response',r=>{if(r.url().endsWith('/functions/v1/token-gateway'))gatewayStatuses.push(r.status());});
         await page.goto(origin+'/marcacao/'+operational.token);
         const lab=page.getByTestId('operational-checkout');
-        await expect(lab).toBeVisible({timeout:20000});
+        try{await expect(lab).toBeVisible({timeout:20000});}catch(error){
+          const body=(await page.locator('body').innerText()).replaceAll(operational.token,'[REDACTED]').slice(0,700);
+          throw new Error('Customer checkout UI unavailable. Gateway statuses: '+gatewayStatuses.join(',')+'; body: '+body+'; runtime errors: '+errors.map(x=>x.replaceAll(operational.token,'[REDACTED]')).join(';'),{cause:error});
+        }
         async function pay(name,amount,purpose,scenario='success'){
           await lab.getByLabel('Cenário de teste').selectOption(scenario);
           const quote=lab.getByRole('button',{name,exact:true});

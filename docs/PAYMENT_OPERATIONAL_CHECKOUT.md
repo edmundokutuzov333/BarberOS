@@ -27,3 +27,8 @@ for testing. The UI requires the staging project URL and the lab build flag.
 Public test shop: https://barberos-payment-lab.vercel.app/barbearia/shop-phase8-preview-qa/marcar
 Admin subscriptions: https://barberos-payment-lab.vercel.app/admin/planos
 No production credentials or real customer data should be used.
+
+Staff: authorized owner/manager of the enrolled shop can review QA receipts in
+`/app/pagamentos` and `/app/loja/pagamentos`; the former also includes the
+monthly plan checkout. Platform admins retain access from Admin > Planos.
+The staff read API never returns the customer manage token.

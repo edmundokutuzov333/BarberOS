@@ -101,6 +101,14 @@ try{
   assert.equal(booking.result.booking.deposit_cents,2000);assert.equal(booking.result.booking.needs_payment,true);
   const token=booking.result.booking.manage_token;
   const appointment=sql("select id from public.appointments where manage_token="+uuid(token)+";");
+  // Assert the public token gateway itself before launching the real browser.
+  for(const action of ['appointment.get','shop_order.get','payment_simulator.checkout']){
+   const reply=await request('/functions/v1/token-gateway',{action,token,...(action==='payment_simulator.checkout'?{operation:'list',payload:{}}:{})},config.ANON_KEY);
+   assert.equal(reply.status,200,'Public gateway '+action+' failed: '+(reply.result?.error??'unknown'));
+   assert.equal(reply.result?.ok,true,'Gateway envelope '+action);
+   if(action==='appointment.get')assert.equal(reply.result.data?.[0]?.shop_slug,'shop-phase8-preview-qa');
+   if(action==='payment_simulator.checkout'){assert.equal(reply.result.data?.enabled,true);assert.equal(reply.result.data?.quotes?.[0]?.amount_minor,2000);}
+  }
   const operational={
    token,
    readAppointment:()=>sql("select status::text||':'||deposit_status::text from public.appointments where id="+uuid(appointment)+";"),

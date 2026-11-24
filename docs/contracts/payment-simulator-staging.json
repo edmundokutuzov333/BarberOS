@@ -19,9 +19,9 @@
     {
       "name": "payment-simulator",
       "status": "ACTIVE",
-      "version": 4,
+      "version": 5,
       "verify_jwt": true,
-      "bundle_sha256": "23c7c71fe2070a97a735c06b225028a3929e83446cdd0bc1646eb9f7211542d8"
+      "bundle_sha256": "6e45c9373b1c12901aa2fd9b6bbefa1f9e908e9246f5d9b76c53c36d436e055a"
     }
   ],
   "operational_checkout": {
