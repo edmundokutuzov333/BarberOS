@@ -194,7 +194,10 @@ test('the shared glass modal stays fixed within the viewport with long content',
   await page.getByRole('button',{name:'Abrir diálogo de teste',exact:true}).click();
   const modal=page.getByRole('dialog',{name:'Edição de teste'});
   await expect(modal).toBeVisible();
-  await expect(modal).toHaveCSS('position','fixed');
+  const viewport=modal.locator('..');
+  await expect(viewport).toHaveCSS('position','fixed');
+  await expect(modal).toHaveCSS('position','relative');
+  await expect.poll(()=>modal.getByTestId('modal-scroll-body').evaluate(el=>el.scrollHeight>el.clientHeight)).toBe(true);
   await expect.poll(()=>modal.evaluate(el=>{
     const r=el.getBoundingClientRect();return r.top>=0&&r.left>=0&&r.bottom<=innerHeight+1&&r.right<=innerWidth+1;
   })).toBe(true);

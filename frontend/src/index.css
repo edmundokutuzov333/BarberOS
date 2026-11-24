@@ -497,3 +497,38 @@ textarea.field{
 @media (max-width: 767px) {
   .barber-atmosphere--quiet .barber-atmosphere__slats--static { opacity: .16; }
 }
+
+/* Avoid iOS input focus zoom and preserve flexible field widths on touch devices. */
+@media (pointer: coarse) { .field { font-size:16px; min-width:0; } }
+fieldset { min-inline-size:0; }
+
+/* A fixed, definite viewport constrains the Radix dialog even when async
+   form sections change its intrinsic height. Only the inner body scrolls. */
+.barberos-modal-viewport {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  box-sizing: border-box;
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
+  padding: max(.5rem, env(safe-area-inset-top)) max(.5rem, env(safe-area-inset-right)) max(.5rem, env(safe-area-inset-bottom)) max(.5rem, env(safe-area-inset-left));
+  overflow: hidden;
+}
+.barberos-modal {
+  position: relative;
+  width: 100%;
+  max-width: 32rem;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+}
+@media (min-width:640px) {
+  .barberos-modal-viewport { padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left)); }
+}
+.barberos-modal > [data-testid="modal-scroll-body"] { scroll-behavior: auto; }

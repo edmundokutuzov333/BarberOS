@@ -27,7 +27,7 @@ export function MobileDock() {
 
   useEffect(() => {
     if (!open) return;
-    closeRef.current?.focus();
+    closeRef.current?.focus({ preventScroll: true });
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false);
@@ -54,7 +54,7 @@ export function MobileDock() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: reduce ? 0 : 24 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-x-4 safe-dock-sheet z-40 glass glass-2 p-3"
+            className="!fixed inset-x-3 safe-dock-sheet z-40 glass glass-2 p-3 max-h-[calc(100dvh-7rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain touch-pan-y"
             role="dialog"
             aria-modal="true"
             aria-labelledby="dock-more-title"
@@ -84,11 +84,11 @@ export function MobileDock() {
                     onClick={() => setOpen(false)}
                     aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                      'flex items-center gap-3 min-h-11 rounded-2xl px-3 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent-soft',
+                      'flex items-center gap-2 min-h-11 min-w-0 rounded-2xl px-2.5 text-sm break-words transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent-soft',
                       isActive ? 'bg-accent-soft text-accent-ink font-medium' : 'text-ink-mid hover:text-ink-hi hover:bg-[var(--surface-hover)]',
                     )}
                   >
-                    <item.icon size={17} className={isActive ? '' : 'opacity-60'} aria-hidden="true" />
+                    <item.icon size={17} className={cn('shrink-0', isActive ? '' : 'opacity-60')} aria-hidden="true" />
                     {item.label}
                   </NavLink>
                 );

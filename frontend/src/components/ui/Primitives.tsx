@@ -11,7 +11,7 @@ export function Modal({ open, onOpenChange, title, children, testId }: { open: b
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm" />
+        <Dialog.Overlay className="barberos-modal-viewport bg-black/65 backdrop-blur-sm">
         <Dialog.Content
           data-testid={testId}
           aria-describedby={undefined}
@@ -25,9 +25,9 @@ export function Modal({ open, onOpenChange, title, children, testId }: { open: b
               returnFocus.current.focus();
             }
           }}
-          className="!fixed inset-x-4 top-4 bottom-4 z-50 m-auto h-fit w-auto max-w-lg glass glass-2 p-6 sm:p-7 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain touch-pan-y no-scrollbar outline-none"
+          className="barberos-modal glass glass-2 z-50 flex flex-col min-w-0 outline-none"
         >
-          <div className="flex items-start justify-between gap-4 mb-5">
+          <div className="flex shrink-0 items-start justify-between gap-4 p-4 sm:px-7 sm:pt-7 sm:pb-4">
             <Dialog.Title className="t-title">{title}</Dialog.Title>
             <Dialog.Close
               data-testid="modal-close"
@@ -37,8 +37,9 @@ export function Modal({ open, onOpenChange, title, children, testId }: { open: b
               <X size={18} aria-hidden />
             </Dialog.Close>
           </div>
-          {children}
+          <div data-testid="modal-scroll-body" className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 pb-4 sm:px-7 sm:pb-7">{children}</div>
         </Dialog.Content>
+        </Dialog.Overlay>
       </Dialog.Portal>
     </Dialog.Root>
   );
@@ -62,18 +63,19 @@ export function Switch({ checked, onCheckedChange, label, testId }: { checked: b
 }
 
 export function Select({ label, className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement> & { label?: string }) {
-  const inputId = rest.id ?? rest.name;
+  const generatedId = useId();
+  const inputId = rest.id ?? rest.name ?? `select-${generatedId.replace(/:/g, '')}`;
   return (
-    <label className="block min-w-0" htmlFor={inputId}>
-      {label && <span className="t-label text-ink-mid mb-1.5 block">{label}</span>}
+    <div className="block min-w-0">
+      {label && <label htmlFor={inputId} className="t-label text-ink-mid mb-1.5 block">{label}</label>}
       <select
+        {...rest}
         id={inputId}
         className={cn('field appearance-none cursor-pointer', className)}
-        {...rest}
       >
         {children}
       </select>
-    </label>
+    </div>
   );
 }
 

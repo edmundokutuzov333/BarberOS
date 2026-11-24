@@ -210,15 +210,15 @@ export default function ManualBookingModal({
   const catalog = catalogQuery.data;
   const service = catalog?.services.find((item) => item.id === serviceId);
   const eligibleHaircuts = useMemo(
-    () => catalog?.haircuts.filter((haircut) => styleMatchesService(haircut, serviceId) && catalog.barbers.some((barber) => barber.barber_services.some((row) => row.service_id === serviceId) && barberCanStyle(barber.id, haircut))) ?? [],
-    [catalog?.haircuts, catalog?.barbers, serviceId],
+    () => catalog?.haircuts.filter((haircut) => styleMatchesService(haircut, serviceId) && catalog.barbers.some((barber) => (role !== 'barber' || barber.user_id === user?.id) && barber.barber_services.some((row) => row.service_id === serviceId) && barberCanStyle(barber.id, haircut))) ?? [],
+    [catalog?.haircuts, catalog?.barbers, serviceId, role, user?.id],
   );
   const selectedStyle = eligibleHaircuts.find((item) => item.id === haircutId);
   const addonOptions = useMemo(() => catalog?.services.filter((item) => service?.addon_ids?.includes(item.id) && item.id !== service.id) ?? [],[catalog?.services,service]);
   const selectedAddons = useMemo(() => addonOptions.filter((item) => addonIds.includes(item.id)),[addonOptions,addonIds]);
   const eligibleBarbers = useMemo(
-    () => catalog?.barbers.filter((barber) => barber.barber_services.some((row) => row.service_id === serviceId) && barberCanStyle(barber.id, selectedStyle) && addonIds.every((id) => barber.barber_services.some((row) => row.service_id === id))) ?? [],
-    [catalog?.barbers, serviceId, selectedStyle, addonIds],
+    () => catalog?.barbers.filter((barber) => (role !== 'barber' || barber.user_id === user?.id) && barber.barber_services.some((row) => row.service_id === serviceId) && barberCanStyle(barber.id, selectedStyle) && addonIds.every((id) => barber.barber_services.some((row) => row.service_id === id))) ?? [],
+    [catalog?.barbers, serviceId, selectedStyle, addonIds, role, user?.id],
   );
   const offer = service ? composeOffer(service, selectedStyle, selectedAddons) : undefined;
   const ownBarber = role === 'barber' ? eligibleBarbers.find((barber) => barber.user_id === user?.id) : undefined;
@@ -228,7 +228,7 @@ export default function ManualBookingModal({
 
   const daysQuery = useAvailableDays({
     slug: shop?.slug,
-    serviceId: service?.id,
+    serviceId: eligibleBarbers.length && offer && compositionFits(offer) && addonIds.length === selectedAddons.length ? service?.id : undefined,
     haircutId: selectedStyle?.id ?? null,
     addonIds,
     barberId: selectedBarberId,
@@ -237,7 +237,7 @@ export default function ManualBookingModal({
   });
   const slotsQuery = useAvailableSlots({
     slug: shop?.slug,
-    serviceId: service?.id,
+    serviceId: eligibleBarbers.length && offer && compositionFits(offer) && addonIds.length === selectedAddons.length ? service?.id : undefined,
     haircutId: selectedStyle?.id ?? null,
     addonIds,
     barberId: selectedBarberId,
@@ -255,7 +255,7 @@ export default function ManualBookingModal({
     setDate(today);
     setStart('');
     setForm({ name: '', phone: '', email: '', note: '' });
-  }, [open, role, today]);
+  }, [open, role, today, shop?.id]);
 
   useEffect(() => {
     if (open && role === 'barber' && ownBarber?.id && !barberId) {
@@ -336,7 +336,7 @@ export default function ManualBookingModal({
   }
 
   const hasServiceBarber = (item: ManualService) =>
-    catalog?.barbers.some((barber) => barber.barber_services.some((row) => row.service_id === item.id)) ?? false;
+    catalog?.barbers.some((barber) => (role !== 'barber' || barber.user_id === user?.id) && barber.barber_services.some((row) => row.service_id === item.id)) ?? false;
 
   return (
     <Modal open={open} onOpenChange={close} title="Nova marcação" testId="manual-booking-modal">
@@ -406,7 +406,7 @@ export default function ManualBookingModal({
                 )}
               </div>
 
-              {addonOptions.length > 0 && <fieldset className="space-y-2" data-testid="manual-booking-addons"><legend className="t-label text-ink-mid">Complementos opcionais</legend>{addonOptions.map((item) => { const chosen = addonIds.includes(item.id); const possible = addonIds.length < 5 && compositionFits(composeOffer(service, selectedStyle, [...selectedAddons,item])) && catalog?.barbers.some((b) => b.barber_services.some((r) => r.service_id === serviceId) && barberCanStyle(b.id, selectedStyle) && [...addonIds,item.id].every((id) => b.barber_services.some((r) => r.service_id === id))); return <label key={item.id} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={chosen} disabled={!chosen && !possible} onChange={() => { setAddonIds((ids) => chosen ? ids.filter((id) => id !== item.id) : [...ids,item.id].sort()); setBarberId('any'); setStart(''); }}/>{item.name} · +{formatMT(item.price_cents)} · +{item.duration_min} min</label>; })}</fieldset>}
+              {addonOptions.length > 0 && <fieldset className="space-y-2" data-testid="manual-booking-addons"><legend className="t-label text-ink-mid">Complementos opcionais</legend>{addonOptions.map((item) => { const chosen = addonIds.includes(item.id); const possible = addonIds.length < 5 && compositionFits(composeOffer(service, selectedStyle, [...selectedAddons,item])) && catalog?.barbers.some((b) => (role !== 'barber' || b.user_id === user?.id) && b.barber_services.some((r) => r.service_id === serviceId) && barberCanStyle(b.id, selectedStyle) && [...addonIds,item.id].every((id) => b.barber_services.some((r) => r.service_id === id))); return <label key={item.id} className="flex min-h-11 items-center gap-3 text-sm break-words"><input className="h-5 w-5 shrink-0 accent-[var(--accent-soft)]" type="checkbox" checked={chosen} disabled={!chosen && !possible} onChange={() => { setAddonIds((ids) => chosen ? ids.filter((id) => id !== item.id) : [...ids,item.id].sort()); setBarberId('any'); setStart(''); }}/>{item.name} · +{formatMT(item.price_cents)} · +{item.duration_min} min</label>; })}</fieldset>}
 
               <div className="grid lg:grid-cols-[14rem_1fr] gap-4">
                 <div>
@@ -438,7 +438,7 @@ export default function ManualBookingModal({
                           type="button"
                           aria-pressed={start === slot.slot_start}
                           onClick={() => { setStart(slot.slot_start); setErrors((current) => ({ ...current, start: '' })); }}
-                          className={'h-10 rounded-2xl border text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft ' +
+                          className={'min-h-11 rounded-2xl border text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft ' +
                             (start === slot.slot_start ? 'border-accent-soft bg-accent-soft/15 text-ink-hi' : 'border-white/10 bg-white/5 text-ink-mid hover:bg-white/[.07]')}
                         >
                           {formatTime(slot.slot_start, timezone)}
@@ -485,9 +485,9 @@ export default function ManualBookingModal({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between gap-3 pt-1">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
                 <p className="t-label text-ink-mid">A criação é feita pelo motor de booking e validada novamente no servidor.</p>
-                <Button data-testid="manual-booking-submit" onClick={() => void submit()} loading={bookingMutation.isPending} disabled={!service || !start}>
+                <Button data-testid="manual-booking-submit" onClick={() => void submit()} loading={bookingMutation.isPending} disabled={!service || !start || !offer || !compositionFits(offer) || !eligibleBarbers.length || (role === 'barber' && !ownBarber)}>
                   Criar marcação
                 </Button>
               </div>

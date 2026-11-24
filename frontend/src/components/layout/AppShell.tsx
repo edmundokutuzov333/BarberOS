@@ -155,7 +155,7 @@ export function AppShell() {
       
       <SkipLink />
       {desktop && <Sidebar />}
-      <main id="main-content" tabIndex={-1} aria-label="Conteúdo principal" className="flex-1 min-w-0 px-4 pt-5 pb-28 md:p-0 max-w-[1400px]">
+      <main id="main-content" tabIndex={-1} aria-label="Conteúdo principal" className="flex-1 min-w-0 px-4 pt-5 pb-[calc(7rem+env(safe-area-inset-bottom))] md:p-0 max-w-[1400px]">
         <AnimatedOutlet />
       </main>
       {!desktop && <MobileDock />}

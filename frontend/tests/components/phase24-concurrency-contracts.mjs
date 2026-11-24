@@ -10,7 +10,16 @@ const tests = [
     const modal = read('src/components/ui/Primitives.tsx');
     const dialog = read('src/components/ui/dialog.jsx');
     const alertDialog = read('src/components/ui/alert-dialog.tsx');
-    for (const source of [modal, dialog, alertDialog]) {
+    const css = read('src/index.css');
+    assert.match(modal, /barberos-modal/);
+    assert.match(modal, /modal-scroll-body.*min-h-0.*overflow-y-auto/);
+    assert.match(modal, /Dialog\.Overlay className="barberos-modal-viewport/);
+    assert.match(css, /\.barberos-modal-viewport\s*\{[\s\S]*?position: fixed/);
+    assert.match(css, /grid-template-rows: minmax\(0, 1fr\)/);
+    assert.match(css, /\.barberos-modal\s*\{[\s\S]*?max-height: 100%/);
+    assert.match(css, /env\(safe-area-inset-top\)/);
+    assert.doesNotMatch(modal, /translate-y-\[-50%\]/);
+    for (const source of [dialog, alertDialog]) {
       assert.match(source, /fixed inset-x-4 top-4 bottom-4 z-50 m-auto/);
       assert.match(source, /max-h-\[calc\(100dvh-2rem\)\] overflow-y-auto/);
       assert.doesNotMatch(source, /translate-y-\[-50%\]|slide-in-from-top-\[48%\]/);

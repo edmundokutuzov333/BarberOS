@@ -1,25 +1,41 @@
 import { test, expect } from '@playwright/test';
 
-test('real browser composition books through Edge and PostgreSQL', async ({ page }) => {
+for (const width of [320, 390, 430, 1280]) test('real browser composition at '+width+'px through Edge and PostgreSQL', async ({ page, isMobile }) => {
+  test.skip(isMobile !== (width<1024), 'Run each viewport on its matching browser device context');
   test.skip(process.env.BARBEROS_COMPOSITION_BROWSER !== '1', 'Requires isolated local Supabase and fixture');
+  await page.setViewportSize({width,height:width===1280?900:740});
+  const noOverflow = async () => expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'viewport overflow at '+width).toBe(true);
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/barbearia/composition-browser-qa/marcar');
   await page.getByTestId('booking-step-service').getByRole('button', { name: /Corte QA/ }).click();
   await page.getByTestId('booking-step-haircut').getByRole('button', { name: /Fade QA/ }).click();
-  await page.getByTestId('booking-addons').getByRole('button', { name: /Lavagem QA/ }).click();
+  const addon=page.getByTestId('booking-addons').getByRole('button', {name:/Lavagem QA/});
+  await addon.click();
+  await expect(addon).toHaveAttribute('aria-pressed','true');
+  await noOverflow();
+  if(width<1024) await expect(page.getByTestId('booking-mobile-total')).toContainText('380 MT · 60 min');
+  await addon.click();
+  await expect(page.getByTestId('booking-summary')).toContainText('300 MT');
+  await addon.click();
+  await page.reload();
+  await expect(addon).toHaveAttribute('aria-pressed','true');
+  await noOverflow();
   await expect(page.getByTestId('booking-addon-summary')).toContainText('Lavagem QA');
   await expect(page.getByTestId('booking-summary')).toContainText('380 MT');
   await expect(page.getByTestId('booking-summary')).toContainText('60 min');
   await page.getByTestId('booking-next').click();
   await expect(page.getByTestId('booking-step-barber')).toContainText('Barbeiro Qualificado QA');
   await expect(page.getByTestId('booking-step-barber')).not.toContainText('Barbeiro Sem Complemento QA');
+  await noOverflow();
   await page.getByTestId('booking-barber-any').click();
   await page.getByTestId('booking-step-date').getByRole('option').filter({ hasText: /\d+ vagas?/ }).first().click();
+  await noOverflow();
   await page.getByTestId('booking-step-time').getByRole('option').first().click();
   if (!await page.getByTestId('booking-step-customer').isVisible()) await page.getByTestId('booking-next').click();
   await page.getByLabel('Nome', { exact: true }).fill('Cliente Composition QA');
-  await page.getByLabel('Telefone', { exact: true }).fill('840000039');
+  await page.getByLabel('Telefone', { exact: true }).fill('84000'+String(width).padStart(4,'0'));
+  await noOverflow();
   const responsePromise=page.waitForResponse(r=>r.url().includes('/functions/v1/booking-create') && r.request().method()==='POST');
   await page.getByTestId('booking-submit').click();
   const response=await responsePromise;
@@ -30,5 +46,153 @@ test('real browser composition books through Edge and PostgreSQL', async ({ page
   expect(request.p_expected_duration).toBe(60);
   expect((await response.json()).ok).toBe(true);
   await expect(page).toHaveURL(/\/marcacao\/[0-9a-f-]+/);
+  await noOverflow();
   expect(errors).toEqual([]);
+});
+
+test('mobile owner edits category, add-ons and restricted secondary offers via actual Supabase', async ({page,isMobile})=>{
+ test.skip(!isMobile, 'Owner regression uses the mobile browser context');
+ test.skip(process.env.BARBEROS_COMPOSITION_BROWSER !== '1','isolated local Supabase only');
+ test.setTimeout(90000);
+ await page.setViewportSize({width:320,height:740});
+ await page.goto('/entrar');
+ await page.getByTestId('login-email-input').fill('composition-owner@example.invalid');
+ await page.getByTestId('login-password-input').fill('LocalQA-Only-Password-271!');
+ await page.getByTestId('login-submit-btn').click();
+ await expect(page).toHaveURL(/\/app(?:\/|$)/,{timeout:20000});
+ await page.goto('/app/servicos');
+ await expect(page.getByTestId('servicos-page')).toBeVisible();
+ const service=page.locator('[data-testid^="service-edit-"]').first();
+ await service.click();
+ const modal=page.getByTestId('service-modal');
+ await expect(modal).toBeVisible();
+ await modal.getByLabel('Categoria',{exact:true}).fill('Categoria QA');
+ await modal.getByLabel('Subcategoria',{exact:true}).fill('Subcategoria QA');
+ const addon=modal.getByRole('checkbox',{name:/Lavagem QA/});
+ await expect(addon).toBeChecked();
+ await addon.uncheck();
+ await addon.check();
+ await expect.poll(()=>modal.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+ const save=page.waitForResponse(r=>r.url().includes('/rpc/save_service_configuration') && r.request().method()==='POST');
+ await modal.getByTestId('service-save-btn').click();
+ expect((await save).status()).toBe(200);
+ await expect(modal).toHaveCount(0);
+ await expect(page.getByTestId('servicos-page')).toContainText('Categoria QA');
+ await page.goto('/app/cortes');
+ await page.locator('[data-testid^="haircut-edit-"]').first().click();
+ const style=page.getByTestId('haircut-modal');
+ await expect(style).toBeVisible();
+ await expect.poll(()=>style.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+ await style.getByTestId('haircut-add-offer').click();
+ const select=style.getByTestId('haircut-extra-service-0');
+ await expect(select).toHaveAccessibleName('Serviço adicional');
+ const value=await select.locator('option').nth(1).getAttribute('value');
+ await select.selectOption(value);
+ await style.locator('[name="extra_price_0"]').fill('100');
+ await style.locator('[name="extra_duration_0"]').fill('20');
+ await expect(style.getByTestId('haircut-restrict-skills')).toHaveAttribute('aria-checked','true');
+ await expect(style.getByRole('checkbox',{name:'Barbeiro Qualificado QA'})).toBeChecked();
+ const styleSave=page.waitForResponse(r=>r.url().includes('/rpc/save_haircut_configuration') && r.request().method()==='POST');
+ await style.getByTestId('haircut-save-btn').click();
+ expect((await styleSave).status()).toBe(200);
+ await expect(style).toHaveCount(0);
+ await page.reload();
+ await page.locator('[data-testid^="haircut-edit-"]').first().click();
+ await expect(page.getByTestId('haircut-modal').locator('[name="extra_price_0"]')).toHaveValue('100');
+ await expect(page.getByTestId('haircut-modal').locator('[name="extra_duration_0"]')).toHaveValue('20');
+ await page.getByTestId('haircut-modal').getByTestId('modal-close').click();
+ await page.goto('/app/agenda');
+ await page.getByRole('button',{name:'Nova marcação'}).click();
+ const manual=page.getByTestId('manual-booking-modal');
+ await manual.getByTestId('manual-booking-services').getByRole('button',{name:/Corte QA/}).click();
+ await manual.getByTestId('manual-booking-haircut').selectOption({label:'Fade QA · 300 MT · 45 min'});
+ await manual.getByTestId('manual-booking-addons').getByRole('checkbox',{name:/Lavagem QA/}).check();
+ await expect(manual).toContainText('380 MT');
+ await expect(manual.getByTestId('manual-booking-barber')).not.toContainText('Barbeiro Sem Complemento QA');
+ await expect.poll(()=>manual.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+ const body=manual.getByTestId('modal-scroll-body');
+ await expect.poll(()=>body.evaluate(el=>el.scrollHeight>el.clientHeight)).toBe(true);
+ const geometry=()=>manual.evaluate(el=>{
+   const r=el.getBoundingClientRect(), frame=el.parentElement.getBoundingClientRect(), v=window.visualViewport;
+   return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,frameTop:frame.top,frameBottom:frame.bottom,innerHeight,innerWidth,scrollY:window.scrollY,visualHeight:v?.height,visualWidth:v?.width,visualTop:v?.offsetTop,visualLeft:v?.offsetLeft,computedHeight:getComputedStyle(el).height,maxHeight:getComputedStyle(el).maxHeight};
+ });
+ const g=await geometry(); console.log('MANUAL_MODAL_GEOMETRY',JSON.stringify(g));
+ await expect.poll(async()=>{const r=await geometry();return r.top>=r.frameTop-1 && r.bottom<=r.frameBottom+1 && r.top>=(r.visualTop??0)-1 && r.bottom<=(r.visualTop??0)+(r.visualHeight??r.innerHeight)+1 && r.left>=(r.visualLeft??0)-1 && r.right<=(r.visualLeft??0)+(r.visualWidth??r.innerWidth)+1;}).toBe(true);
+ // Public tests consume today's earliest slots; select a deterministic future
+ // fixture date distinct from the composed HTTP race (today + 3 days).
+ const todayParts=new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Maputo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const parts=Object.fromEntries(todayParts.map(p=>[p.type,p.value]));
+ const fixtureDate=new Date(parts.year+'-'+parts.month+'-'+parts.day+'T00:00:00Z');
+ fixtureDate.setUTCDate(fixtureDate.getUTCDate()+7);
+ const selectedDate=fixtureDate.toISOString().slice(0,10);
+ await manual.getByTestId('manual-booking-date').fill(selectedDate);
+ await expect(manual.getByTestId('manual-booking-date')).toHaveValue(selectedDate);
+ const slot=manual.getByTestId('manual-booking-slots').getByRole('button').first();
+ await expect(slot,'A future fixture day must offer a composed 60-minute slot').toBeVisible({timeout:15000});
+ await slot.click();
+ await expect(slot).toHaveAttribute('aria-pressed','true');
+ await manual.getByTestId('manual-booking-name').fill('Cliente Manual QA');
+ await manual.getByTestId('manual-booking-phone').fill('840000088');
+ await manual.getByTestId('manual-booking-submit').click();
+ await expect(page.getByTestId('manual-booking-success')).toBeVisible({timeout:15000});
+});
+
+test('composed HTTP quote rejection, collision and idempotency', async ({request,isMobile})=>{
+ test.skip(isMobile || process.env.BARBEROS_COMPOSITION_BROWSER !== '1','isolated local HTTP only');
+ const origin=process.env.VITE_SUPABASE_URL;
+ expect(new URL(origin).hostname).toMatch(/^(127\.0\.0\.1|localhost)$/);
+ const key=process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+ const headers={apikey:key,authorization:'Bearer '+key};
+ const rpc=async(name,data)=>{const r=await request.post(origin+'/rest/v1/rpc/'+name,{headers,data});expect(r.status()).toBe(200);return r.json();};
+ const catalog=await rpc('get_public_barbershop',{p_slug:'composition-browser-qa'});
+ const service=catalog.services.find(s=>s.name==='Corte QA'), addon=catalog.services.find(s=>s.name==='Lavagem QA'), cut=catalog.haircuts.find(h=>h.name==='Fade QA'), barber=catalog.barbers.find(b=>b.display_name==='Barbeiro Qualificado QA');
+ const date=new Date(Date.now()+3*86400000).toISOString().slice(0,10);
+ const slots=await rpc('get_composed_available_slots',{p_slug:'composition-browser-qa',p_service_id:service.id,p_barber_id:barber.id,p_date:date,p_haircut_id:cut.id,p_addon_ids:[addon.id]});
+ expect(slots.length).toBeGreaterThan(0);
+ const endpoint=origin+'/functions/v1/booking-create';
+ const common={p_slug:'composition-browser-qa',p_service_id:service.id,p_haircut_id:cut.id,p_barber_id:barber.id,p_start:slots[0].slot_start,p_shop_items:[],p_email:null,p_addon_ids:[addon.id],p_expected_price:38000,p_expected_duration:60};
+ const a={...common,p_name:'Collision QA A',p_phone:'+258840000081',idempotency_key:crypto.randomUUID()},b={...common,p_name:'Collision QA B',p_phone:'+258840000082',idempotency_key:crypto.randomUUID()};
+ const invalid=await request.post(endpoint,{headers,data:{...a,p_addon_ids:[addon.id,addon.id]}});
+ expect(invalid.status()).toBe(400);
+ const stale=await request.post(endpoint,{headers,data:{...a,p_expected_price:37999}});
+ expect(stale.status()).toBe(409);expect((await stale.json()).error).toBe('BOOKING_QUOTE_CHANGED');
+ const responses=await Promise.all([request.post(endpoint,{headers,data:a}),request.post(endpoint,{headers,data:b})]);
+ expect(responses.map(r=>r.status()).sort()).toEqual([200,409]);
+ const winner=responses.findIndex(r=>r.status()===200);
+ expect((await responses[1-winner].json()).error).toBe('SLOT_TAKEN');
+ const token=(await responses[winner].json()).booking.manage_token;
+ const replay=await request.post(endpoint,{headers,data:winner===0?a:b});
+ expect(replay.status()).toBe(200);expect((await replay.json()).booking.manage_token).toBe(token);
+ const reused=await request.post(endpoint,{headers,data:{...(winner===0?a:b),p_expected_price:38001}});
+ expect(reused.status()).toBe(409);expect((await reused.json()).error).toBe('IDEMPOTENCY_KEY_REUSED');
+});
+
+test('owner mobile layout across main operations and short-height navigation', async ({page,isMobile})=>{
+ test.skip(!isMobile || process.env.BARBEROS_COMPOSITION_BROWSER !== '1','isolated mobile browser only');
+ test.setTimeout(120000);
+ await page.setViewportSize({width:320,height:740});
+ await page.goto('/entrar');
+ await page.getByTestId('login-email-input').fill('composition-owner@example.invalid');
+ await page.getByTestId('login-password-input').fill('LocalQA-Only-Password-271!');
+ await page.getByTestId('login-submit-btn').click();
+ await expect(page).toHaveURL(/\/app(?:\/|$)/,{timeout:20000});
+ const routes=[
+ ['/app','dashboard-page'],['/app/agenda','agenda-page'],['/app/marcacoes','marcacoes-page'],['/app/clientes','customers-page'],
+ ['/app/lista-espera','waitlist-page'],['/app/notificacoes','notifications-page'],['/app/avaliacoes','reviews-page'],['/app/relatorios','reports-page'],
+ ['/app/servicos','servicos-page'],['/app/cortes','cortes-page'],['/app/barbeiros','barbeiros-page'],['/app/horarios','horarios-page'],['/app/definicoes/perfil','definicoes-page']
+ ];
+ for(const [url,id] of routes){
+  await page.goto(url);
+  await expect(page.getByTestId(id),url).toBeVisible();
+  await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),{message:'overflow at '+url}).toBe(true);
+ }
+ await page.setViewportSize({width:390,height:360});
+ await page.getByTestId('dock-more').click();
+ const sheet=page.getByTestId('dock-more-sheet');
+ await expect(sheet).toBeVisible();
+ await expect.poll(()=>sheet.evaluate(el=>getComputedStyle(el).position)).toBe('fixed');
+ await expect.poll(async()=>{const b=await sheet.boundingBox();return !!b && b.y>=0 && b.y+b.height<=360;}).toBe(true);
+ await expect.poll(()=>sheet.evaluate(el=>getComputedStyle(el).overflowY)).toBe('auto');
+ await sheet.getByTestId('dock-sign-out').scrollIntoViewIfNeeded();
+ await expect(sheet.getByTestId('dock-sign-out')).toBeInViewport();
 });
