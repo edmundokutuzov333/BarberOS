@@ -125,7 +125,7 @@ begin
   from public.haircuts h
   where h.barbershop_id=v_shop
     and h.is_active
-    and (h.service_id=v_service or h.service_id is null)
+    and h.service_id=v_service
   order by (h.service_id is null),h.sort_order
   limit 1;
 
