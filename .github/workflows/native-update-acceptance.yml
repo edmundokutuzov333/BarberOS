@@ -11,12 +11,12 @@ on:
       - 'scripts/verification/windows-update.*'
 permissions:
   contents: read
-concurrency:
-  group: barberos-windows-update-acceptance
-  cancel-in-progress: true
 jobs:
   actual-upgrade:
     if: github.ref == 'refs/heads/main' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'))
+    concurrency:
+      group: barberos-windows-update-acceptance
+      cancel-in-progress: true
     runs-on: windows-2025
     timeout-minutes: 20
     env:
