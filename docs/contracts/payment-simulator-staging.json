@@ -1,0 +1,27 @@
+{
+  "environment": "staging",
+  "project_ref": "asikuyxaapcmayptimxi",
+  "captured_at": "2026-11-24",
+  "source_migration": "20261124140000_payment_simulator.sql",
+  "remote_migration_version": "20261124142017",
+  "functions": [
+    {
+      "name": "payment_simulator",
+      "input_arguments": [
+        "p_action",
+        "p_payload"
+      ],
+      "required_argument_count": 2,
+      "return_type": "jsonb"
+    }
+  ],
+  "edges": [
+    {
+      "name": "payment-simulator",
+      "status": "ACTIVE",
+      "version": 2,
+      "verify_jwt": true,
+      "bundle_sha256": "81227eefe8f36906854d0b672bfc2e792a98e03a95c4fc1f5c3ea3c8e90f02e6"
+    }
+  ]
+}

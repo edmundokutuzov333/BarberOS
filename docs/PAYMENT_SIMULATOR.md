@@ -35,3 +35,17 @@ late success (refund required instead of granting simulated entitlement).
 The simulator uses a private ledger and simulated entitlement; the real booking
 and store checkout remain gated. Production remains disabled by default.
 No subscription billing contract or actual provider authentication is implied.
+
+## Staging release evidence (2026-11-24)
+- Versioned source migration `20261124140000_payment_simulator.sql` applied through
+  Supabase management API; remote migration version `20261124142017`. Do not
+  repair the ledger by rewriting timestamps. Capture: `docs/contracts/payment-simulator-staging.json`.
+- Edge version 2 ACTIVE, JWT verification enabled; staging ledger enabled while
+  global live payments remain disabled. Production database unchanged.
+- Separate Vercel project `barberos-payment-lab` uses only staging public URL and
+  publishable key. Access: https://barberos-payment-lab.vercel.app/admin/pagamentos
+  (Vercel access protection and eligible staging admin login required).
+- SQL acceptance executed in staging and rolled back. Mobile browser acceptance
+  uses a controlled HTTP fixture, not authenticated live HTTP. The staging
+  project had no eligible admin at verification; live authenticated browser
+  certification requires legitimate staging account provisioning.
