@@ -21,7 +21,8 @@ async function request(path,body,token,method='POST'){
 }
 const users=[];
 const shop=randomUUID();
-const checkoutShop='f86dc636-68ed-40ba-8a42-ce64fa0806d1';
+const checkoutShop=randomUUID();
+const checkoutSlug='checkout-ci-'+checkoutShop;
 const checkoutPlan=randomUUID(), checkoutBookingKey=randomUUID();
 let checkoutFixture=false;
 async function fixture(admin){
@@ -91,12 +92,12 @@ try{
   const svc=randomUUID(),barber=randomUUID(),product=randomUUID(),variant=randomUUID(),ord=randomUUID();
   sql("insert into public.plans(id,code,name,price_cents,max_barbers,features,is_active) values("+uuid(checkoutPlan)+",'checkout-"+checkoutPlan+"','QA checkout plan',150000,5,'{}',true);");
   checkoutFixture=true;
-  sql("insert into public.barbershops(id,slug,name,status,plan_id) values("+uuid(checkoutShop)+",'shop-phase8-preview-qa','Operational QA fixture','active',"+uuid(checkoutPlan)+");");
+  sql("insert into public.barbershops(id,slug,name,status,plan_id) values("+uuid(checkoutShop)+",'"+checkoutSlug+"','Operational QA fixture','active',"+uuid(checkoutPlan)+");");
   sql("insert into private.payment_checkout_test_shops(shop_id) values("+uuid(checkoutShop)+"); update public.barbershops set deposit_enabled=true,deposit_value=20 where id="+uuid(checkoutShop)+";");
   sql("insert into public.services(id,barbershop_id,name,price_cents,duration_min,is_active,requires_deposit) values("+uuid(svc)+","+uuid(checkoutShop)+",'QA service',10000,30,true,true); insert into public.barbers(id,barbershop_id,display_name,is_active) values("+uuid(barber)+","+uuid(checkoutShop)+",'QA barber',true); insert into public.barber_services(barber_id,service_id) values("+uuid(barber)+","+uuid(svc)+"); insert into public.working_hours(barbershop_id,barber_id,weekday,opens_at,closes_at,is_closed) select "+uuid(checkoutShop)+","+uuid(barber)+",n,time '09:00',time '12:00',false from generate_series(0,6)n;");
-  const start=sql("select min(slot_start) from public.get_composed_available_slots('shop-phase8-preview-qa',"+uuid(svc)+","+uuid(barber)+",(now() at time zone 'Africa/Maputo')::date+3,null,'{}'::uuid[]);");
+  const start=sql("select min(slot_start) from public.get_composed_available_slots('"+checkoutSlug+"',"+uuid(svc)+","+uuid(barber)+",(now() at time zone 'Africa/Maputo')::date+3,null,'{}'::uuid[]);");
   assert.ok(start,'QA booking must expose a slot');
-  const booking=await request('/functions/v1/booking-create',{idempotency_key:checkoutBookingKey,p_slug:'shop-phase8-preview-qa',p_service_id:svc,p_haircut_id:null,p_barber_id:barber,p_start:new Date(start).toISOString(),p_name:'Checkout QA fixture',p_phone:'840000018',p_email:null,p_shop_items:[],p_addon_ids:[],p_expected_price:10000,p_expected_duration:30},config.ANON_KEY);
+  const booking=await request('/functions/v1/booking-create',{idempotency_key:checkoutBookingKey,p_slug:checkoutSlug,p_service_id:svc,p_haircut_id:null,p_barber_id:barber,p_start:new Date(start).toISOString(),p_name:'Checkout QA fixture',p_phone:'840000018',p_email:null,p_shop_items:[],p_addon_ids:[],p_expected_price:10000,p_expected_duration:30},config.ANON_KEY);
   assert.equal(booking.status,200,'Real booking Edge failed: '+(booking.result?.error??'unknown'));
   assert.equal(booking.result.booking.deposit_cents,2000);assert.equal(booking.result.booking.needs_payment,true);
   const token=booking.result.booking.manage_token;
@@ -106,7 +107,7 @@ try{
    const reply=await request('/functions/v1/token-gateway',{action,token,...(action==='payment_simulator.checkout'?{operation:'list',payload:{}}:{})},config.ANON_KEY);
    assert.equal(reply.status,200,'Public gateway '+action+' failed: '+(reply.result?.error??'unknown'));
    assert.equal(reply.result?.ok,true,'Gateway envelope '+action);
-   if(action==='appointment.get')assert.equal(reply.result.data?.[0]?.shop_slug,'shop-phase8-preview-qa');
+   if(action==='appointment.get')assert.equal(reply.result.data?.[0]?.shop_slug,checkoutSlug);
    if(action==='payment_simulator.checkout'){assert.equal(reply.result.data?.enabled,true);assert.equal(reply.result.data?.quotes?.[0]?.amount_minor,2000);}
   }
   const operational={
