@@ -52,6 +52,13 @@ begin
   where n.nspname='private'
     and p.proname='book_appointment_core';
 
+  if position('private.book_composed_appointment_core' in lower(v_core_def)) = 0 then
+    raise exception 'PHASE24_COMPOSED_CORE_DELEGATION_MISSING';
+  end if;
+  select count(*),min(pg_get_functiondef(p.oid)) into v_count,v_core_def
+  from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+  where n.nspname='private' and p.proname='book_composed_appointment_core';
+  if v_count<>1 then raise exception 'PHASE24_COMPOSED_CORE_AMBIGUOUS:%',v_count; end if;
   if position('pg_advisory_xact_lock' in v_core_def) = 0 then
     raise exception 'PHASE24_ADVISORY_LOCK_MISSING';
   end if;
