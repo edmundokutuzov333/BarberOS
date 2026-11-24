@@ -24,7 +24,7 @@ const http = require('node:http');
     app = await _electron.launch({ executablePath, args: [`--user-data-dir=${profile}`], timeout: 60000 });
     await app.firstWindow({ timeout: 60000 });
     const current = await app.evaluate(({ app }) => app.getVersion());
-    await app.evaluate(({ dialog }, url => {
+    await app.evaluate(({ dialog }, url) => {
       const updater = process.mainModule.require('electron-updater').autoUpdater;
       updater.setFeedURL({ provider: 'generic', url });
       updater.logger = { info() {}, debug() {}, warn() {}, error() {} };

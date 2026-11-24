@@ -1,5 +1,8 @@
 name: BarberOS Windows Update Acceptance
 on:
+  workflow_run:
+    workflows: ['BarberOS Native Releases']
+    types: [completed]
   workflow_dispatch:
   push:
     branches: [main]
@@ -13,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   actual-upgrade:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'))
     runs-on: windows-2025
     timeout-minutes: 20
     env:
