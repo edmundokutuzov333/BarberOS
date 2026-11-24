@@ -72,5 +72,12 @@ jobs:
       - name: Gmail browser recovery, tenant isolation and accessibility regressions
         run: corepack yarn test:e2e:gmail
 
+      - name: Team membership RPC, confirmation and tenant-switch regressions
+        env:
+          BARBEROS_E2E_NO_PREVIEW: '1'
+          VITE_SUPABASE_URL: https://members-fixture.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_fixture
+        run: corepack yarn playwright test tests/e2e/members-ui.spec.mjs --workers=1
+
       - name: Production asset budget
         run: corepack yarn perf:budget

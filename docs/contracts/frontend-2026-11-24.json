@@ -1,6 +1,6 @@
 {
   "scope": "Static source inventory; presence is not runtime contract acceptance",
-  "source_files_parsed": 164,
+  "source_files_parsed": 165,
   "rpc_names": [
     "add_member_by_email",
     "admin_assign_barbershop_plan",
@@ -60,6 +60,7 @@
     "mark_shop_notification_read",
     "record_shop_inventory_movement",
     "record_shop_order_payment",
+    "remove_barbershop_member",
     "reorder_barbers",
     "reorder_haircuts",
     "reorder_services",
@@ -497,26 +498,10 @@
       "dynamic": false,
       "forwarding": false,
       "file": "frontend/src/components/config/BarbersEditor.tsx",
-      "line": 23,
+      "line": 24,
       "owner": null,
       "via": null,
       "payload_keys": [],
-      "opaque_payload": false
-    },
-    {
-      "kind": "rpc",
-      "names": [
-        "list_members"
-      ],
-      "dynamic": false,
-      "forwarding": false,
-      "file": "frontend/src/components/config/BarbersEditor.tsx",
-      "line": 33,
-      "owner": null,
-      "via": null,
-      "payload_keys": [
-        "p_shop"
-      ],
       "opaque_payload": false
     },
     {
@@ -527,7 +512,7 @@
       "dynamic": false,
       "forwarding": false,
       "file": "frontend/src/components/config/BarbersEditor.tsx",
-      "line": 57,
+      "line": 51,
       "owner": null,
       "via": null,
       "payload_keys": [
@@ -550,7 +535,7 @@
       "dynamic": false,
       "forwarding": false,
       "file": "frontend/src/components/config/BarbersEditor.tsx",
-      "line": 74,
+      "line": 68,
       "owner": null,
       "via": null,
       "payload_keys": [],
@@ -564,7 +549,7 @@
       "dynamic": false,
       "forwarding": false,
       "file": "frontend/src/components/config/BarbersEditor.tsx",
-      "line": 78,
+      "line": 72,
       "owner": null,
       "via": null,
       "payload_keys": [],
@@ -756,38 +741,6 @@
       "forwarding": false,
       "file": "frontend/src/components/config/HoursEditor.tsx",
       "line": 129,
-      "owner": null,
-      "via": null,
-      "payload_keys": [],
-      "opaque_payload": false
-    },
-    {
-      "kind": "rpc",
-      "names": [
-        "add_member_by_email"
-      ],
-      "dynamic": false,
-      "forwarding": false,
-      "file": "frontend/src/components/config/MembersEditor.tsx",
-      "line": 27,
-      "owner": null,
-      "via": null,
-      "payload_keys": [
-        "p_email",
-        "p_role",
-        "p_shop"
-      ],
-      "opaque_payload": false
-    },
-    {
-      "kind": "table",
-      "names": [
-        "barbershop_members"
-      ],
-      "dynamic": false,
-      "forwarding": false,
-      "file": "frontend/src/components/config/MembersEditor.tsx",
-      "line": 32,
       "owner": null,
       "via": null,
       "payload_keys": [],
@@ -1580,6 +1533,57 @@
       "via": null,
       "payload_keys": [
         "body"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "list_members"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/members/api.ts",
+      "line": 23,
+      "owner": "listMembers",
+      "via": null,
+      "payload_keys": [
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "add_member_by_email"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/members/api.ts",
+      "line": 29,
+      "owner": "addMember",
+      "via": null,
+      "payload_keys": [
+        "p_email",
+        "p_role",
+        "p_shop"
+      ],
+      "opaque_payload": false
+    },
+    {
+      "kind": "rpc",
+      "names": [
+        "remove_barbershop_member"
+      ],
+      "dynamic": false,
+      "forwarding": false,
+      "file": "frontend/src/features/members/api.ts",
+      "line": 37,
+      "owner": "removeMember",
+      "via": null,
+      "payload_keys": [
+        "p_member",
+        "p_shop"
       ],
       "opaque_payload": false
     },

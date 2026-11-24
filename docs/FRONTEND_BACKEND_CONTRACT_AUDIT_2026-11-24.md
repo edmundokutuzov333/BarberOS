@@ -9,7 +9,7 @@ package exposes its native checker but not the expected JavaScript compiler API.
 The existing pinned Babel 7.29.7 parser was selected: it parses the actual TS/TSX
 syntax without installing dependencies or executing application modules.
 
-`inventory-frontend-contracts.mjs` reads all 164 frontend source files, resolves
+`inventory-frontend-contracts.mjs` reads all 165 frontend source files, resolves
 imported Supabase aliases, casts, local forwarding helpers and finite string unions,
 and separates RPCs, Edge calls, tables, Storage, Auth methods and route declarations.
 Unresolved expressions remain explicit. Route counts include index declarations
@@ -26,14 +26,13 @@ overloads, inactive endpoints and incomplete inventory. All pass.
 
 ## Captured result
 
-Source uses 75 distinct RPC names, eight Edge Function names and 15 direct database
+Source uses 76 distinct RPC names, eight Edge Function names and 15 direct database
 tables. Production has all of them. No unknown or missing required argument was
 found in the literal payloads. Eight call sites pass opaque objects and need their
 own runtime/typed contract acceptance. Presence and shape are not proof of
 payload-value validation, permissions, return values, pagination or E2E behavior.
 
-After the reviewed report/admin source deployments, staging is missing one frontend
-RPC: the dashboard snapshot. All 14 administration names are present; 13 non-payment
+After the reviewed report/admin source deployments, staging now has all frontend RPC names, including the dashboard snapshot. All 14 administration names are present; 13 non-payment
 methods pass the synthetic SQL boundary suite. All five report
 methods now pass the same synthetic SQL behavior test in local, stage and production.
 It is also missing
@@ -51,7 +50,7 @@ an explicit failing report until the missing backend is reconciled.
 It excludes extension-owned functions and filters argument modes to input,
 input/output and variadic parameters. Edge status/bundle hashes are captured
 separately from the management API. The latest capture has production 118/staging
-116 public functions and the same 40 public table names; shared names do not imply
+119 public functions and the same 40 public table names; shared names do not imply
 equivalent policies, columns or behavior.
 
 ## Reproduction

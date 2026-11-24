@@ -5,7 +5,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { useShop } from '@/lib/shop';
 import { humanError } from '@/lib/utils';
-import type { Barber, Member } from '@/lib/types';
+import type { Barber } from '@/lib/types';
+import { useMembers } from '@/features/members/api';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { Modal, Switch, Select, Textarea, ImageUpload, Chip } from '@/components/ui/Primitives';
@@ -27,19 +28,12 @@ export function useBarbers(shopId: string) {
   });
 }
 
-export function useMembers(shopId: string) {
-  return useQuery({
-    queryKey: ['members', shopId],
-    queryFn: async () => { const { data, error } = await supabase.rpc('list_members', { p_shop: shopId }); if (error) throw error; return data as Member[]; },
-  });
-}
-
 export function BarbersEditor() {
-  const { shop } = useShop();
+  const { shop, role } = useShop();
   const qc = useQueryClient();
   const q = useBarbers(shop!.id);
   const services = useServices(shop!.id);
-  const members = useMembers(shop!.id);
+  const members = useMembers(shop!.id, role === 'owner');
   const [editing, setEditing] = useState<Barber | null | 'new'>(null);
   const [form, setForm] = useState(empty);
   const key = ['barbers', shop!.id];
@@ -113,10 +107,12 @@ export function BarbersEditor() {
             </div>
           </div>
           <Textarea data-testid="barber-bio-input" label="Bio curta" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Especialidades, estilo, o que os clientes dizem." />
-          <Select data-testid="barber-user-select" label="Conta ligada (para o barbeiro ver a sua agenda)" value={form.user_id} onChange={(e) => setForm({ ...form, user_id: e.target.value })}>
+          {role === 'owner' ? <Select disabled={members.isLoading || !!members.error} data-testid="barber-user-select" label="Conta ligada (para o barbeiro ver a sua agenda)" value={form.user_id} onChange={(e) => setForm({ ...form, user_id: e.target.value })}>
             <option value="">Sem conta</option>
+            {form.user_id && !members.data?.some((m) => m.user_id === form.user_id) && <option value={form.user_id}>Conta actualmente ligada</option>}
             {members.data?.map((m) => <option key={m.user_id} value={m.user_id}>{m.full_name ?? m.email} · {m.email}</option>)}
-          </Select>
+          </Select> : <p className="t-label text-ink-mid">A ligação de contas é gerida pelo dono. A conta actualmente ligada será mantida.</p>}
+          {role === 'owner' && members.error && <ErrorState message={humanError(members.error)} onRetry={() => members.refetch()} />}
           <div>
             <span className="t-label text-ink-mid mb-2 block">Serviços que faz</span>
             {services.data?.length ? (

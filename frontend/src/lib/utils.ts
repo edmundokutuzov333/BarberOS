@@ -30,6 +30,11 @@ export function slugify(s: string): string {
 }
 
 const ERRORS: Record<string, string> = {
+  LAST_OWNER: 'A barbearia precisa de manter pelo menos um dono. Adicione outro dono antes de alterar este acesso.',
+  MEMBER_SELF_REMOVE: 'Não pode remover o seu próprio acesso.',
+  FORBIDDEN: 'Não tem permissão para esta operação. Actualize a sessão e confirme o seu papel na barbearia.',
+  USER_NOT_FOUND: 'Não há conta com esse email. A pessoa precisa de se registar primeiro.',
+  MEMBERS_RESPONSE_INVALID: 'A resposta da equipa não é válida. Actualize a lista e tente novamente.',
   PASSWORD_CHANGE_REQUIRED: 'Defina a nova palavra-passe antes de continuar.',
   ACCOUNT_STATE_UNAVAILABLE: 'Não foi possível verificar o estado da conta. Aguarde e tente novamente.',
   SLOT_TAKEN: 'Este horário acabou de ser ocupado. Escolha outro horário.',

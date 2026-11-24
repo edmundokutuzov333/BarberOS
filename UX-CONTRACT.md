@@ -65,6 +65,21 @@ shows the connect panel. This does not erase messages from the provider.
 
 ## Verification scope
 
+## Team access lifecycle
+
+The existing Field, native Select, Button, Sonner and AlertDialog also own team
+access controls. The members feature API owns owner-only directory validation and
+list/add/remove RPC calls. A manager does not request the owner directory from
+barber configuration. Last-owner and self-removal policy remains server-owned.
+Removal initially focuses Cancel; pending requests block closure/repetition;
+failure preserves the dialog and retry; success returns focus to a surviving
+control. Email validation is associated with its field. Tenant/account changes
+discard old drafts and dialogs; late responses cannot overwrite the new context.
+See `docs/MEMBERSHIP_UI_ACCEPTANCE_2026-11-24.md` and
+`frontend/tests/e2e/members-ui.spec.mjs` for evidence and remaining limits.
+
+## Gmail verification scope
+
 The Gmail fixture runs the actual page, controls, query hooks and client with only
 tenant context and external HTTP replaced. Desktop/mobile browser scenarios cover
 selection, validation, provider failure, confirmation, focus, accessibility and
