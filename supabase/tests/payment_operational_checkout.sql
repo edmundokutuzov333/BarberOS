@@ -58,6 +58,13 @@ begin
  r:=public.payment_checkout_admin(shop,'confirm',jsonb_build_object('run_id',r->>'id','request_id',gen_random_uuid()));
  if r->>'status'<>'paid' or public.payment_checkout_admin(shop,'list','{}')->'quotes'->0->>'amount_minor'<>'0' then raise exception 'FAIL monthly settlement';end if;
  if public.payment_checkout_admin(other_shop,'list','{}')->>'enabled'<>'false' then raise exception 'FAIL allowlist';end if;
+ if jsonb_array_length(public.payment_checkout_staff(shop)->'runs')<>5 then raise exception 'FAIL staff history';end if;
+ insert into public.barbershop_members(barbershop_id,user_id,role) values(shop,actor,'manager');
+ update public.profiles set is_platform_admin=false where id=actor;
+ if public.payment_checkout_admin(shop,'list','{}')->>'enabled'<>'true' then raise exception 'FAIL manager subscription access';end if;
+ if public.payment_checkout_staff(shop)->>'enabled'<>'true' then raise exception 'FAIL manager history access';end if;
+ failed:=false;begin perform public.payment_checkout_staff(other_shop);exception when others then if sqlerrm='PLATFORM_ADMIN_REQUIRED' then failed:=true;else raise;end if;end;
+ if not failed then raise exception 'FAIL cross tenant staff access';end if;
  if has_function_privilege('anon','public.payment_checkout_by_token(uuid,text,jsonb)','EXECUTE') or has_function_privilege('authenticated','public.payment_checkout_by_token(uuid,text,jsonb)','EXECUTE') or has_table_privilege('authenticated','private.payment_checkout_runs','SELECT') then raise exception 'FAIL grants';end if;
  if (select count(*) from public.payments)<>live_pay or (select count(*) from public.shop_order_payments)<>live_store or private.payments_available() then raise exception 'FAIL operational revenue isolation';end if;
  raise notice 'PASS operational QA checkout: deposit hold, service net, delivered products, late refund, callback, monthly plan, idempotency and live isolation';

@@ -1,3 +1,4 @@
+import { StaffCheckout } from '@/features/payments/StaffCheckout';
 import { PAYMENTS_AVAILABLE } from '@/features/payments/availability';
 import { PaymentsUnavailableNotice } from '@/features/payments/PaymentsUnavailableNotice';
 import { useRef, useState } from 'react';
@@ -74,4 +75,4 @@ function LojaPagamentosWorkspace(){
  </Page>;
 }
 
-export default function LojaPagamentos(){return PAYMENTS_AVAILABLE?<LojaPagamentosWorkspace/>:<Page title="Pagamentos da loja"><PaymentsUnavailableNotice/></Page>}
+export default function LojaPagamentos(){return PAYMENTS_AVAILABLE?<LojaPagamentosWorkspace/>:<Page title="Pagamentos da loja"><PaymentsUnavailableNotice/><StaffCheckout productsOnly/></Page>}

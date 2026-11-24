@@ -24,3 +24,6 @@ async function call(scope:CheckoutScope,operation:string,payload:object){
 }
 export async function getCheckout(scope:CheckoutScope){return view.parse(await call(scope,'list',{}));}
 export async function executeCheckout(scope:CheckoutScope,command:CheckoutCommand){return run.parse(await call(scope,command.operation,command.payload));}
+
+const staffView=z.object({enabled:z.boolean(),runs:z.array(run.extend({appointment_id:z.string().uuid().nullable(),order_id:z.string().uuid().nullable(),billing_period:z.string().nullable()}))});
+export async function getStaffCheckout(shopId:string){return staffView.parse(await call({shopId},'staff_list',{}));}

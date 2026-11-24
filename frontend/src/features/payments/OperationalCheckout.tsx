@@ -2,13 +2,15 @@ import { useRef,useState } from 'react';
 import { useQuery,useMutation,useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/States';
+import { useAuth } from '@/lib/auth';
 import { formatMT } from '@/lib/utils';
 import { scenarios,simulationError } from './simulator-api';
 import { executeCheckout,getCheckout,type CheckoutScope,type CheckoutCommand,type CheckoutPurpose,type CheckoutRun,type CheckoutView } from './operational-checkout-api';
 const labels={pending:'Pendente',paid:'Pago (teste)',failed:'Falhado',refunded:'Reembolsado (teste)'};
 const outcome:Record<string,string>={REQUESTED:'A aguardar resposta',CONFIRMED:'Pagamento confirmado',PENDING:'Pendente',TIMEOUT:'Tempo de resposta excedido',RECONCILED:'Confirmado por reconciliação',LATE_SUCCESS:'Reembolso necessário — sem liquidação',REFUNDED:'Reembolso concluído',DUPLICATE_IGNORED:'Callback duplicado ignorado',INSUFFICIENT_FUNDS:'Saldo insuficiente',CANCELLED:'Cancelado',INVALID_NUMBER:'Número inválido',PROVIDER_ERROR:'Falha da operadora',PROVIDER_REJECTED:'Operadora rejeitou'};
 export function OperationalCheckout({scope,onChanged}:{scope:CheckoutScope,onChanged?:()=>void}){
- const qc=useQueryClient(),key=['operational-payment-simulator','token' in scope?scope.token:scope.shopId];
+ const {user}=useAuth();
+ const qc=useQueryClient(),key=['operational-payment-simulator','token' in scope?scope.token:scope.shopId,'token' in scope?'customer':user?.id];
  const q=useQuery({queryKey:key,queryFn:()=>getCheckout(scope),retry:false,staleTime:0,refetchOnWindowFocus:'always'});
  const [scenario,setScenario]=useState<keyof typeof scenarios>('success');
  const [selected,setSelected]=useState<string|null>(null),[retry,setRetry]=useState<CheckoutCommand|null>(null),[message,setMessage]=useState('');

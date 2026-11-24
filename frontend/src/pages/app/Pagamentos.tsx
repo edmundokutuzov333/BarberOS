@@ -1,3 +1,4 @@
+import { StaffCheckout } from '@/features/payments/StaffCheckout';
 import { PAYMENTS_AVAILABLE } from '@/features/payments/availability';
 import { PaymentsUnavailableNotice } from '@/features/payments/PaymentsUnavailableNotice';
 import React from 'react';
@@ -58,7 +59,7 @@ export default function Pagamentos() {
         </Link>
       ) : undefined}
     >
-      <>{!PAYMENTS_AVAILABLE&&<div className="mb-5"><PaymentsUnavailableNotice/></div>}</><div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
+      <>{!PAYMENTS_AVAILABLE&&<div className="mb-5 space-y-4"><PaymentsUnavailableNotice/><StaffCheckout/></div>}</><div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
         <MetricCard
           label="Pendentes"
           value={metrics.isLoading ? null : String(metrics.data?.pending_count ?? 0)}
