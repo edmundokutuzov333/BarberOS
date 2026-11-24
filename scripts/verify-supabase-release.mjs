@@ -9,6 +9,57 @@ const names = fs.readdirSync(migrationDir).filter((n) => n.endsWith('.sql')).sor
 
 if (!names.length) throw new Error('SUPABASE_MIGRATION_DIRECTORY_EMPTY');
 
+// Parse actual dollar-quoted strings, not the opening delimiter before an
+// INSERT/UPDATE in a LANGUAGE SQL body. Ignore ordinary strings and comments.
+function hasMissingDollarQuoteTerminator(sql) {
+  let i = 0;
+  while (i < sql.length) {
+    if (sql.startsWith('--', i)) {
+      const end = sql.indexOf('\n', i + 2);
+      i = end < 0 ? sql.length : end + 1;
+      continue;
+    }
+    if (sql.startsWith('/*', i)) {
+      let depth = 1;
+      i += 2;
+      while (i < sql.length && depth) {
+        if (sql.startsWith('/*', i)) { depth++; i += 2; }
+        else if (sql.startsWith('*/', i)) { depth--; i += 2; }
+        else i++;
+      }
+      continue;
+    }
+    if (sql[i] === "'" || sql[i] === '"') {
+      const quote = sql[i];
+      const escaped = quote === "'" && /[eE]/.test(sql[i - 1] ?? '') && !/[\w$]/.test(sql[i - 2] ?? '');
+      i++;
+      while (i < sql.length) {
+        if (escaped && sql[i] === '\\') { i += 2; continue; }
+        if (sql[i] === quote) {
+          if (sql[i + 1] === quote) { i += 2; continue; }
+          i++;
+          break;
+        }
+        i++;
+      }
+      continue;
+    }
+    if (sql[i] === '$' && !/[\w$]/.test(sql[i - 1] ?? '')) {
+      const tag = sql.slice(i).match(/^\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$/)?.[0];
+      if (tag) {
+        const close = sql.indexOf(tag, i + tag.length);
+        if (close < 0) return true;
+        const after = close + tag.length;
+        if (/^\s*\n\s*(?:revoke|grant|create|alter|comment|insert|update|delete|drop)\b/i.test(sql.slice(after))) return true;
+        i = after;
+        continue;
+      }
+    }
+    i++;
+  }
+  return false;
+}
+
 let previous = '';
 for (const name of names) {
   const version = name.split('_', 1)[0];
@@ -17,7 +68,7 @@ for (const name of names) {
   previous = version;
   const content = fs.readFileSync(path.join(migrationDir, name), 'utf8');
   if (/^\s*undefined\s*$/m.test(content)) throw new Error('SUPABASE_MIGRATION_LITERAL_UNDEFINED:' + name);
-  if (/(?:\$(?:function|fn|block|body)\$|\$\$)\s*\n\s*(?:revoke|grant|create|alter|comment|insert|update|delete|drop)\b/i.test(content)) {
+  if (hasMissingDollarQuoteTerminator(content)) {
     throw new Error('SUPABASE_MIGRATION_MISSING_DOLLAR_QUOTE_TERMINATOR:' + name);
   }
   if (/\bCOMMIT\s*;/i.test(content) || /\bROLLBACK\s*;/i.test(content)) {
