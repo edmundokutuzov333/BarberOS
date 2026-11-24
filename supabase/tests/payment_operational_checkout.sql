@@ -1,0 +1,65 @@
+begin;
+do $$
+declare
+ actor uuid:=gen_random_uuid(); shop uuid; other_shop uuid; barber uuid; svc uuid; customer uuid; appt uuid; tok uuid; ord uuid; product uuid; variant uuid; item uuid; plan uuid;
+ k uuid; r jsonb; v jsonb; payload jsonb; failed boolean; live_pay bigint; live_store bigint;
+begin
+ select count(*) into live_pay from public.payments; select count(*) into live_store from public.shop_order_payments;
+ update private.payment_simulator_settings set enabled=true where singleton;
+ insert into auth.users(id,aud,role,email) values(actor,'authenticated','authenticated',actor||'@example.invalid');
+ insert into public.profiles(id,full_name,is_platform_admin,password_change_required) values(actor,'QA checkout',true,false) on conflict(id) do update set is_platform_admin=true,password_change_required=false;
+ insert into public.plans(code,name,price_cents,max_barbers,features,is_active) values('qa-'||actor,'QA plan',150000,5,'{}',true) returning id into plan;
+ insert into public.barbershops(slug,name,status,plan_id) values('qa-'||actor,'QA checkout','active',plan) returning id into shop;
+ insert into public.barbershops(slug,name,status) values('qa-other-'||actor,'Other QA','active') returning id into other_shop;
+ insert into private.payment_checkout_test_shops values(shop);
+ update public.barbershops set deposit_enabled=true where id=shop;
+ failed:=false;begin update public.barbershops set deposit_enabled=true where id=other_shop;exception when others then if sqlerrm='PAYMENTS_UNAVAILABLE' then failed:=true;else raise;end if;end;
+ if not failed then raise exception 'FAIL unlisted deposit enabled';end if;
+ insert into public.barbers(display_name,barbershop_id,is_active) values('QA barber',shop,true) returning id into barber;
+ insert into public.services(barbershop_id,name,price_cents,duration_min,is_active,requires_deposit) values(shop,'QA service',10000,30,true,true) returning id into svc;
+ insert into public.customers(barbershop_id,name,phone) values(shop,'QA customer','+258840000001') returning id into customer;
+ insert into public.appointments(barbershop_id,barber_id,service_id,customer_id,starts_at,ends_at,duration_min,price_cents,status,deposit_status,deposit_cents,hold_expires_at)
+ values(shop,barber,svc,customer,now()+interval '1 day',now()+interval '1 day 30 minutes',30,10000,'pending','awaiting',2000,now()+interval '10 minutes') returning id,manage_token into appt,tok;
+ v:=public.payment_checkout_by_token(tok,'list','{}');
+ if v->>'enabled'<>'true' or v->'quotes'->0->>'amount_minor'<>'2000' or v->'quotes'->1->>'amount_minor'<>'0' then raise exception 'FAIL quotes %',v;end if;
+ k:=gen_random_uuid();payload:=jsonb_build_object('purpose','deposit','scenario','timeout','request_id',k,'amount_minor',1);
+ r:=public.payment_checkout_by_token(tok,'create',payload);
+ if r->>'amount_minor'<>'2000' or r->>'real_money'<>'false' or r->>'id'<>(public.payment_checkout_by_token(tok,'create',payload)->>'id') then raise exception 'FAIL deposit amount/replay';end if;
+ failed:=false;begin perform public.payment_checkout_by_token(tok,'create',payload||jsonb_build_object('request_id',gen_random_uuid()));exception when sqlstate '22023' then failed:=true;end;
+ if not failed then raise exception 'FAIL duplicate pending';end if;
+ payload:=jsonb_build_object('run_id',r->>'id','request_id',gen_random_uuid());
+ r:=public.payment_checkout_by_token(tok,'confirm',payload);
+ if r->>'outcome'<>'TIMEOUT' or (select status from public.appointments where id=appt)<>'pending' then raise exception 'FAIL timeout';end if;
+ r:=public.payment_checkout_by_token(tok,'reconcile',payload||jsonb_build_object('request_id',gen_random_uuid()));
+ if r->>'status'<>'paid' or not exists(select 1 from public.appointments where id=appt and status='confirmed' and deposit_status='paid') then raise exception 'FAIL deposit confirm';end if;
+ update public.appointments set status='completed',completed_at=now() where id=appt;
+ v:=public.payment_checkout_by_token(tok,'list','{}');
+ if v->'quotes'->1->>'amount_minor'<>'8000' then raise exception 'FAIL service balance %',v;end if;
+ r:=public.payment_checkout_by_token(tok,'create',jsonb_build_object('purpose','service','scenario','success','request_id',gen_random_uuid()));
+ r:=public.payment_checkout_by_token(tok,'confirm',jsonb_build_object('run_id',r->>'id','request_id',gen_random_uuid()));
+ if r->>'status'<>'paid' or (public.payment_checkout_by_token(tok,'list','{}')->'quotes'->1->>'amount_minor')<>'0' then raise exception 'FAIL service';end if;
+ insert into public.shop_products(barbershop_id,name,product_kind,track_stock,is_active) values(shop,'QA product','takeaway',false,false) returning id into product;
+ insert into public.shop_product_variants(barbershop_id,product_id,label,unit_label,price_minor,is_active) values(shop,product,'QA','unidade',1000,true) returning id into variant;
+ insert into public.appointment_product_orders(barbershop_id,appointment_id,status) values(shop,appt,'partially_delivered') returning id into ord;
+ insert into public.appointment_product_order_items(barbershop_id,order_id,product_id,variant_id,product_name_snapshot,variant_snapshot,unit_price_snapshot,qty,delivered_qty,options,line_total_snapshot,status)
+ values(shop,ord,product,variant,'QA','QA',1000,4,3,'{}',4000,'partially_delivered') returning id into item;
+ r:=public.payment_checkout_by_token(tok,'create',jsonb_build_object('purpose','product','scenario','late_success','request_id',gen_random_uuid()));
+ if r->>'amount_minor'<>'3000' then raise exception 'FAIL delivered value';end if;
+ r:=public.payment_checkout_by_token(tok,'confirm',jsonb_build_object('run_id',r->>'id','request_id',gen_random_uuid()));
+ if r->>'outcome'<>'LATE_SUCCESS' or public.payment_checkout_by_token(tok,'list','{}')->'quotes'->2->>'amount_minor'<>'3000' then raise exception 'FAIL late settlement';end if;
+ r:=public.payment_checkout_by_token(tok,'refund',jsonb_build_object('run_id',r->>'id','request_id',gen_random_uuid()));
+ if r->>'status'<>'refunded' then raise exception 'FAIL late refund';end if;
+ r:=public.payment_checkout_by_token(tok,'create',jsonb_build_object('purpose','product','scenario','duplicate_callback','request_id',gen_random_uuid()));
+ r:=public.payment_checkout_by_token(tok,'confirm',jsonb_build_object('run_id',r->>'id','request_id',gen_random_uuid()));
+ if r->>'status'<>'paid' or jsonb_array_length(r->'events')<>3 or public.payment_checkout_by_token(tok,'list','{}')->'quotes'->2->>'amount_minor'<>'0' then raise exception 'FAIL product';end if;
+ perform set_config('request.jwt.claim.sub',actor::text,true);perform set_config('request.jwt.claims',jsonb_build_object('sub',actor,'role','authenticated')::text,true);
+ r:=public.payment_checkout_admin(shop,'create',jsonb_build_object('purpose','subscription','scenario','success','request_id',gen_random_uuid()));
+ if r->>'amount_minor'<>'150000' then raise exception 'FAIL plan quote';end if;
+ r:=public.payment_checkout_admin(shop,'confirm',jsonb_build_object('run_id',r->>'id','request_id',gen_random_uuid()));
+ if r->>'status'<>'paid' or public.payment_checkout_admin(shop,'list','{}')->'quotes'->0->>'amount_minor'<>'0' then raise exception 'FAIL monthly settlement';end if;
+ if public.payment_checkout_admin(other_shop,'list','{}')->>'enabled'<>'false' then raise exception 'FAIL allowlist';end if;
+ if has_function_privilege('anon','public.payment_checkout_by_token(uuid,text,jsonb)','EXECUTE') or has_function_privilege('authenticated','public.payment_checkout_by_token(uuid,text,jsonb)','EXECUTE') or has_table_privilege('authenticated','private.payment_checkout_runs','SELECT') then raise exception 'FAIL grants';end if;
+ if (select count(*) from public.payments)<>live_pay or (select count(*) from public.shop_order_payments)<>live_store or private.payments_available() then raise exception 'FAIL operational revenue isolation';end if;
+ raise notice 'PASS operational QA checkout: deposit hold, service net, delivered products, late refund, callback, monthly plan, idempotency and live isolation';
+end $$;
+rollback;

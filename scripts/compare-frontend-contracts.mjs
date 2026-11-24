@@ -16,7 +16,7 @@ export function compareFrontendContracts(source, remote, staging = null) {
     const captured=staging?.edges?.find(f=>f.name===name&&f.status==='ACTIVE'&&f.verify_jwt===true);
     if(name==='payment-simulator'&&staging?.environment==='staging'&&
        staging.project_ref==='asikuyxaapcmayptimxi'&&captured&&calls.length&&
-       calls.every(call=>call.file==='frontend/src/features/payments/simulator-api.ts')){
+       calls.every(call=>['frontend/src/features/payments/simulator-api.ts','frontend/src/features/payments/operational-checkout-api.ts'].includes(call.file))){
       staging_edges.push(name);return false;
     }
     return true;
