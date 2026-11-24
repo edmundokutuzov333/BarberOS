@@ -1,3 +1,5 @@
+import { OperationalCheckout } from '@/features/payments/OperationalCheckout';
+import { operationalSimulatorEnabled,qaCheckoutShop } from '@/features/payments/operational-checkout-api';
 import { useEffect, useState } from 'react';
 import type { Json } from '@/lib/database.types';
 import { CheckCircle2, Edit3, RefreshCw, Save, XCircle } from 'lucide-react';
@@ -28,6 +30,7 @@ export default function AdminPlanos(){
     }
   };
   return <Page title="Planos" subtitle="Configuração comercial dos planos do BarberOS." actions={<Button variant="secondary" size="sm" onClick={()=>void q.refetch()} disabled={q.isFetching}><RefreshCw size={14} className={q.isFetching?'animate-spin':''}/>Actualizar</Button>}>
+    {operationalSimulatorEnabled&&<OperationalCheckout scope={{shopId:qaCheckoutShop}}/>}
     {q.isLoading?<Skeleton className="h-72"/>:q.error?<ErrorState message={humanError(q.error)} onRetry={()=>void q.refetch()}/>:q.data?.length===0?<EmptyState title="Ainda não existem planos."/>:
     <div className="grid xl:grid-cols-[1fr_420px] gap-3">
       <Panel className="p-0 overflow-hidden"><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-sm"><thead><tr className="border-b border-white/10 t-label text-ink-lo text-left"><th className="px-5 py-3">Plano</th><th className="px-5 py-3">Preço</th><th className="px-5 py-3">Barbeiros</th><th className="px-5 py-3">Lojas</th><th className="px-5 py-3">Estado</th><th className="px-5 py-3"></th></tr></thead><tbody>{q.data?.map(p=><tr key={p.id} className="border-b border-white/5 last:border-0"><td className="px-5 py-4"><p className="text-ink-hi">{p.name}</p><p className="t-label text-ink-lo">{p.code}</p></td><td className="px-5 py-4 text-ink-hi">{formatMT(p.price_cents)}</td><td className="px-5 py-4">{p.max_barbers}</td><td className="px-5 py-4">{p.assigned_shops}</td><td className="px-5 py-4">{p.is_active?<span className="inline-flex items-center gap-1.5 text-st-completed t-label"><CheckCircle2 size={14}/>Activo</span>:<span className="inline-flex items-center gap-1.5 text-ink-lo t-label"><XCircle size={14}/>Inactivo</span>}</td><td className="px-5 py-4 text-right"><Button variant="ghost" size="sm" onClick={()=>setSelected({...p})}><Edit3 size={14}/>Editar</Button></td></tr>)}</tbody></table></div></Panel>

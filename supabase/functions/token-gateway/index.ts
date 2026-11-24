@@ -5,6 +5,7 @@ const TOKEN_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 type TokenAction =
+  | "payment_simulator.checkout"
   | "appointment.get"
   | "appointment.reschedule_slots"
   | "appointment.cancel"
@@ -46,6 +47,7 @@ Deno.serve(async (req) => {
   if (!TOKEN_PATTERN.test(token)) return json({ ok: false, error: "APPOINTMENT_NOT_FOUND" }, 404, cors);
 
   const allowedActions = new Set<TokenAction>([
+    "payment_simulator.checkout",
     "appointment.get",
     "appointment.reschedule_slots",
     "appointment.cancel",
@@ -132,6 +134,9 @@ Deno.serve(async (req) => {
     let rpcName: string;
     let args: Record<string, unknown>;
     switch (action) {
+      case "payment_simulator.checkout":
+        if (typeof body.operation !== "string" || !["list","create","confirm","reconcile","refund","replay"].includes(body.operation) || !validBody(body.payload)) return json({ok:false,error:"SIM_INVALID_PAYLOAD"},400,cors);
+        rpcName="payment_checkout_by_token"; args={p_token:token,p_action:body.operation,p_payload:body.payload}; break;
       case "appointment.get":
         rpcName = "get_appointment_by_token";
         args = { p_token: token };
@@ -177,6 +182,10 @@ Deno.serve(async (req) => {
     const { data, error } = await admin.rpc(rpcName, args as never);
     if (error) {
       const message = error.message ?? "";
+      if (action === "payment_simulator.checkout") {
+        const code = /^SIM_[A-Z_]+$/.test(message) ? message : error.code === "22P02" ? "SIM_INVALID_PAYLOAD" : "SIM_UNAVAILABLE";
+        return json({ok:false,error:code},error.code==="42501"?403:error.code==="P0002"?404:code==="SIM_RATE_LIMIT"?429:code==="SIM_UNAVAILABLE"?503:400,cors);
+      }
       if (/WAITLIST_OFFER_NOT_FOUND/i.test(message)) {
         return json({ ok: false, error: "WAITLIST_OFFER_NOT_FOUND" }, 404, cors);
       }

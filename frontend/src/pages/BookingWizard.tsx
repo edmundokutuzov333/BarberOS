@@ -1,3 +1,4 @@
+import { operationalSimulatorEnabled,qaCheckoutSlug } from '@/features/payments/operational-checkout-api';
 import { PAYMENTS_AVAILABLE } from '@/features/payments/availability';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -82,8 +83,8 @@ function validEmail(value: string): boolean {
   return value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-function getDepositCents(service: PublicService, shop: { deposit_enabled: boolean; deposit_mode: 'percent' | 'fixed'; deposit_value: number }): number {
-  if (!PAYMENTS_AVAILABLE || !shop.deposit_enabled || !service.requires_deposit) return 0;
+function getDepositCents(service: PublicService, shop: { deposit_enabled: boolean; deposit_mode: 'percent' | 'fixed'; deposit_value: number }, testMode=false): number {
+  if ((!PAYMENTS_AVAILABLE && !testMode) || !shop.deposit_enabled || !service.requires_deposit) return 0;
   if (shop.deposit_mode === 'fixed') return shop.deposit_value;
   return Math.round(service.price_cents * shop.deposit_value / 100);
 }
@@ -413,7 +414,7 @@ export default function BookingWizard() {
   const boundedStep = !selectableService ? 1 : Math.min(currentStep, start ? customerStep : date ? 5 : 4);
   const effectiveStep = boundedStep === 2 && !hasStyleStep ? 3 : boundedStep;
   const visibleStep = !hasStyleStep && effectiveStep > 2 ? effectiveStep - 1 : effectiveStep;
-  const depositCents = offer ? getDepositCents(offer, data.shop) : 0;
+  const depositCents = offer ? getDepositCents(offer, data.shop, operationalSimulatorEnabled&&slug===qaCheckoutSlug) : 0;
   const depositConfigValid = !offer || depositCents <= offer.price_cents;
   const canBook = Boolean(
     !shopCatalogQuery.isLoading && selectableService && offer && compositionFits(offer) && addonSelectionValid && eligibleBarbers.length && start && (!haircutId || haircut) && slotsQuery.isSuccess && slotsQuery.data.some((slot) => slot.slot_start === start) && (barberParam === 'any' || barber) && depositConfigValid &&
@@ -882,7 +883,7 @@ export default function BookingWizard() {
                     disabled={!canBook}
                     data-testid="booking-submit"
                   >
-                    {depositCents > 0 ? 'Criar marcação com sinal' : 'Confirmar marcação'}
+                    {depositCents > 0 ? (operationalSimulatorEnabled&&slug===qaCheckoutSlug?'Criar marcação com sinal de teste':'Criar marcação com sinal') : 'Confirmar marcação'}
                   </Button>
                 </form>
               </Panel>

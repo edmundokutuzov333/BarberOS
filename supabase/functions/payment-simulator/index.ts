@@ -27,6 +27,13 @@ Deno.serve(async (req) => {
     body = JSON.parse(raw);
     if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Invalid payload");
   } catch { return respond({ error: "SIM_INVALID_PAYLOAD" }, 400); }
+  if (body.action === "checkout") {
+    const p=body.payload as Record<string,unknown> | undefined;
+    if (!p || typeof p.shop_id !== "string" || typeof p.operation !== "string" || !["list","create","confirm","reconcile","refund","replay"].includes(p.operation)) return respond({error:"SIM_INVALID_PAYLOAD"},400);
+    const {data,error}=await client.rpc("payment_checkout_admin",{p_shop:p.shop_id,p_action:p.operation,p_payload:p.payload??{}});
+    if(error){const code=/^(SIM_[A-Z_]+|PLATFORM_ADMIN_REQUIRED|PASSWORD_CHANGE_REQUIRED)$/.test(error.message)?error.message:error.code==="22P02"?"SIM_INVALID_PAYLOAD":"SIM_UNAVAILABLE";return respond({error:code},error.code==="42501"?403:error.code==="P0002"?404:code==="SIM_UNAVAILABLE"?503:400);}
+    return respond({ok:true,data});
+  }
   if (typeof body.action !== "string" || !["availability","list","create","confirm","reconcile","refund","replay"].includes(body.action))
     return respond({ error: "SIM_INVALID_ACTION" }, 400);
   const { data, error } = await client.rpc("payment_simulator", { p_action: body.action, p_payload: body.payload ?? {} });

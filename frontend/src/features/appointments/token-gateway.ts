@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 
 export type TokenGatewayAction =
+  | 'payment_simulator.checkout'
   | 'appointment.get'
   | 'appointment.reschedule_slots'
   | 'appointment.cancel'

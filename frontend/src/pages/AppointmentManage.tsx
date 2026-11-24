@@ -1,3 +1,5 @@
+import { OperationalCheckout } from '@/features/payments/OperationalCheckout';
+import { operationalSimulatorEnabled } from '@/features/payments/operational-checkout-api';
 import { PAYMENTS_AVAILABLE } from '@/features/payments/availability';
 import { PaymentsUnavailableNotice } from '@/features/payments/PaymentsUnavailableNotice';
 import { useEffect, useMemo, useState } from 'react';
@@ -274,7 +276,8 @@ export default function AppointmentManage() {
             </section>
           )}
 
-          {canActions && data.deposit_status === 'awaiting' && data.deposit_cents > 0 && !PAYMENTS_AVAILABLE && <div className="mt-7"><PaymentsUnavailableNotice/></div>}
+          {operationalSimulatorEnabled && token && <div className="mt-7"><OperationalCheckout key={token} scope={{token}} onChanged={()=>{void query.refetch();void shopOrderQuery.refetch();}}/></div>}
+          {canActions && data.deposit_status === 'awaiting' && data.deposit_cents > 0 && !PAYMENTS_AVAILABLE && !operationalSimulatorEnabled && <div className="mt-7"><PaymentsUnavailableNotice/></div>}
           {PAYMENTS_AVAILABLE && canActions && data.deposit_status === 'awaiting' && data.deposit_cents > 0 && (
             <div className="mt-7 rounded-3xl border border-accent/25 bg-accent/10 p-5 sm:p-6" data-testid="payment-section">
               <div className="flex items-start gap-3">

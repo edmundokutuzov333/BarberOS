@@ -45,6 +45,7 @@ export function corsHeaders(req: Request): Record<string, string> {
     .map((value) => value.trim())
     .filter(Boolean);
   const allowedOrigins = new Set<string>([...BUILTIN_ALLOWED_ORIGINS, ...configuredOrigins]);
+  if (Deno.env.get("SUPABASE_URL")?.replace(/\/+$/, "") === "https://asikuyxaapcmayptimxi.supabase.co") allowedOrigins.add("https://barberos-payment-lab.vercel.app");
   const origin = req.headers.get("origin")?.trim() ?? "";
   const headers: Record<string, string> = {
     "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info, idempotency-key",
