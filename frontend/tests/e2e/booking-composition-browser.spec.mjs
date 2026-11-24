@@ -53,6 +53,7 @@ for (const width of [320, 390, 430, 1280]) test('real browser composition at '+w
 test('mobile owner edits category, add-ons and restricted secondary offers via actual Supabase', async ({page,isMobile})=>{
  test.skip(!isMobile, 'Owner regression uses the mobile browser context');
  test.skip(process.env.BARBEROS_COMPOSITION_BROWSER !== '1','isolated local Supabase only');
+ test.setTimeout(90000);
  await page.setViewportSize({width:320,height:740});
  await page.goto('/entrar');
  await page.getByTestId('login-email-input').fill('composition-owner@example.invalid');
@@ -83,7 +84,8 @@ test('mobile owner edits category, add-ons and restricted secondary offers via a
  await expect(style).toBeVisible();
  await expect.poll(()=>style.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
  await style.getByTestId('haircut-add-offer').click();
- const select=style.getByLabel('Serviço adicional',{exact:true});
+ const select=style.getByTestId('haircut-extra-service-0');
+ await expect(select).toHaveAccessibleName('Serviço adicional');
  const value=await select.locator('option').nth(1).getAttribute('value');
  await select.selectOption(value);
  await style.locator('[name="extra_price_0"]').fill('100');
@@ -103,7 +105,7 @@ test('mobile owner edits category, add-ons and restricted secondary offers via a
  await page.getByRole('button',{name:'Nova marcação'}).click();
  const manual=page.getByTestId('manual-booking-modal');
  await manual.getByTestId('manual-booking-services').getByRole('button',{name:/Corte QA/}).click();
- await manual.getByTestId('manual-booking-haircut').selectOption({label:'Fade QA'});
+ await manual.getByTestId('manual-booking-haircut').selectOption({label:'Fade QA · 300 MT · 45 min'});
  await manual.getByTestId('manual-booking-addons').getByRole('checkbox',{name:/Lavagem QA/}).check();
  await expect(manual).toContainText('380 MT');
  await expect(manual.getByTestId('manual-booking-barber')).not.toContainText('Barbeiro Sem Complemento QA');

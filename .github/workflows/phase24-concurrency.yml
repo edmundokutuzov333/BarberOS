@@ -233,6 +233,13 @@ jobs:
         env:
           BARBEROS_COMPOSITION_BROWSER: "1"
         run: npx playwright test tests/e2e/booking-composition-browser.spec.mjs --config=playwright.config.mjs --project=chromium --project=mobile-chrome --workers=1 --retries=0
+      - name: Upload browser diagnostic report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: composition-browser-diagnostics
+          path: frontend/playwright-report/
+          retention-days: 3
       - name: Verify persisted composition and qualified barber (four viewport sizes)
         run: |
           docker exec -i "supabase_db_$BARBEROS_LOCAL_PROJECT_ID" psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'

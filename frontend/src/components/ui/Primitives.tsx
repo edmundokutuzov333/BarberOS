@@ -62,18 +62,19 @@ export function Switch({ checked, onCheckedChange, label, testId }: { checked: b
 }
 
 export function Select({ label, className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement> & { label?: string }) {
-  const inputId = rest.id ?? rest.name;
+  const generatedId = useId();
+  const inputId = rest.id ?? rest.name ?? `select-${generatedId.replace(/:/g, '')}`;
   return (
-    <label className="block min-w-0" htmlFor={inputId}>
-      {label && <span className="t-label text-ink-mid mb-1.5 block">{label}</span>}
+    <div className="block min-w-0">
+      {label && <label htmlFor={inputId} className="t-label text-ink-mid mb-1.5 block">{label}</label>}
       <select
+        {...rest}
         id={inputId}
         className={cn('field appearance-none cursor-pointer', className)}
-        {...rest}
       >
         {children}
       </select>
-    </label>
+    </div>
   );
 }
 
