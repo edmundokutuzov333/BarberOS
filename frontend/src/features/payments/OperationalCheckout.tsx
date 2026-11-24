@@ -14,7 +14,7 @@ export function OperationalCheckout({scope,onChanged}:{scope:CheckoutScope,onCha
  const [selected,setSelected]=useState<string|null>(null),[retry,setRetry]=useState<CheckoutCommand|null>(null),[message,setMessage]=useState('');
  const locked=useRef(false);
  const mutation=useMutation({mutationFn:(command:CheckoutCommand)=>executeCheckout(scope,command),retry:false,onSuccess:r=>{
-  setSelected(r.id);setRetry(null);setMessage('');qc.setQueryData<CheckoutView>(key,old=>old?{...old,runs:[r,...old.runs.filter(x=>x.id!==r.id)].slice(0,25)}:old);void qc.invalidateQueries({queryKey:key});onChanged?.();
+  setSelected(r.id);setRetry(null);setMessage('');qc.setQueryData<CheckoutView>(key,old=>old?{...old,runs:[r,...old.runs.filter(x=>x.id!==r.id)].slice(0,25)}:old);void qc.invalidateQueries({queryKey:key});if(r.purpose==='deposit'&&(r.status==='paid'||r.status==='refunded'))onChanged?.();
  },onError:(error,command)=>{setRetry(command);setMessage(error instanceof Error&&error.message==='SIM_NOT_DUE'?'Não existe saldo elegível para pagar. Actualiza o estado.':error instanceof Error&&error.message==='SIM_PENDING_EXISTS'?'Já existe um pagamento pendente. Continua o pedido existente.':simulationError(error));},onSettled:()=>{locked.current=false;}});
  function submit(command:CheckoutCommand){if(locked.current)return;locked.current=true;mutation.mutate(command);}
  function action(r:CheckoutRun,operation:'confirm'|'reconcile'|'refund'|'replay'){submit({operation,payload:{run_id:r.id,request_id:crypto.randomUUID()}});}
