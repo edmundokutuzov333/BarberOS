@@ -2,7 +2,6 @@ import { useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { useShop } from '@/lib/shop';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { Select } from '@/components/ui/Primitives';
@@ -12,9 +11,7 @@ import { createInvitation, invitationLink, invitationRole, listInvitations, revo
 import { fmt, humanError } from '@/lib/utils';
 
 export function TeamInvitationsPanel({ shopId }: { shopId: string }) {
-  const { role } = useShop();
   const [open, setOpen] = useState(false);
-  if (role !== 'owner') return null;
   return <section className="mt-5 pt-5 border-t border-white/10">
     <Button variant="secondary" type="button" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? 'Fechar convites' : 'Convidar novo funcionário'}</Button>
     {open && <InvitationForm key={shopId} shopId={shopId} />}

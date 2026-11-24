@@ -37,7 +37,7 @@ function InvitationAcceptance({ token }: { token: string | null }) {
   const [message, setMessage] = useState('');
   if (loading) return <main className="min-h-screen grid place-items-center"><p>A verificar o convite…</p></main>;
   if (error || (user && !profile)) return <AccountStateError />;
-  if (!token) return <AuthCard title="Convite indisponível" subtitle="Abra novamente o link enviado pelo dono da barbearia." footer={<Link to="/">Voltar ao início</Link>}><p>Se o convite expirou, peça um novo.</p></AuthCard>;
+  if (!token) return <AuthCard testId="team-invitation-unavailable" title="Convite indisponível" subtitle="Abra novamente o link enviado pelo dono da barbearia." footer={<Link to="/">Voltar ao início</Link>}><p>Se o convite expirou, peça um novo.</p></AuthCard>;
   if (profile?.password_change_required) return <Navigate to="/alterar-palavra-passe" state={{ from: '/convite' }} replace />;
   const submit = async () => {
     if (!user || busy) return;

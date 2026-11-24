@@ -18,17 +18,16 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export function MembersEditor() {
-  const { shop, role } = useShop();
+  const { shop, role, refresh } = useShop();
   const { user } = useAuth();
   if (!shop || !user) return null;
   if (role !== 'owner') return <p role="status" className="t-body text-ink-mid">Só o dono pode gerir os acessos da equipa.</p>;
   // Remount tenant/account-owned drafts and pending dialogs when context changes.
-  return <div key={`${shop.id}:${user.id}`}><MemberForm shopId={shop.id} userId={user.id} /><TeamInvitationsPanel shopId={shop.id} /></div>;
+  return <div key={`${shop.id}:${user.id}`}><MemberForm shopId={shop.id} userId={user.id} refresh={refresh} /><TeamInvitationsPanel shopId={shop.id} /></div>;
 }
 
-function MemberForm({ shopId, userId }: { shopId: string; userId: string }) {
+function MemberForm({ shopId, userId, refresh }: { shopId: string; userId: string; refresh: () => Promise<unknown> }) {
   const qc = useQueryClient();
-  const { refresh } = useShop();
   const q = useMembers(shopId);
   const [email, setEmail] = useState('');
   const [newRole, setNewRole] = useState<MemberRole>('barber');
