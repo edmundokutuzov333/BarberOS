@@ -9,7 +9,7 @@ import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States'
 import { formatMT, humanError } from '@/lib/utils';
 import { buildWhatsAppLink } from '@/lib/calendar';
 import { normalizeMozPhone } from '@/features/booking/api';
-import { barberCanStyle, effectiveOffer, styleMatchesService } from '@/features/booking/offer';
+import { barberCanStyle, composeOffer, compositionFits, effectiveOffer, styleMatchesService } from '@/features/booking/offer';
 import { useAvailableDays, useAvailableSlots } from '@/features/availability/api';
 import {
   useBookManualAppointment,
@@ -199,6 +199,7 @@ export default function ManualBookingModal({
 
   const [serviceId, setServiceId] = useState('');
   const [haircutId, setHaircutId] = useState('');
+  const [addonIds, setAddonIds] = useState<string[]>([]);
   const [barberId, setBarberId] = useState('any');
   const [date, setDate] = useState(today);
   const [start, setStart] = useState('');
@@ -213,11 +214,13 @@ export default function ManualBookingModal({
     [catalog?.haircuts, catalog?.barbers, serviceId],
   );
   const selectedStyle = eligibleHaircuts.find((item) => item.id === haircutId);
+  const addonOptions = useMemo(() => catalog?.services.filter((item) => service?.addon_ids?.includes(item.id) && item.id !== service.id) ?? [],[catalog?.services,service]);
+  const selectedAddons = useMemo(() => addonOptions.filter((item) => addonIds.includes(item.id)),[addonOptions,addonIds]);
   const eligibleBarbers = useMemo(
-    () => catalog?.barbers.filter((barber) => barber.barber_services.some((row) => row.service_id === serviceId) && barberCanStyle(barber.id, selectedStyle)) ?? [],
-    [catalog?.barbers, serviceId, selectedStyle],
+    () => catalog?.barbers.filter((barber) => barber.barber_services.some((row) => row.service_id === serviceId) && barberCanStyle(barber.id, selectedStyle) && addonIds.every((id) => barber.barber_services.some((row) => row.service_id === id))) ?? [],
+    [catalog?.barbers, serviceId, selectedStyle, addonIds],
   );
-  const offer = service ? effectiveOffer(service, selectedStyle) : undefined;
+  const offer = service ? composeOffer(service, selectedStyle, selectedAddons) : undefined;
   const ownBarber = role === 'barber' ? eligibleBarbers.find((barber) => barber.user_id === user?.id) : undefined;
   const selectedBarberId = role === 'barber'
     ? ownBarber?.id ?? null
@@ -227,6 +230,7 @@ export default function ManualBookingModal({
     slug: shop?.slug,
     serviceId: service?.id,
     haircutId: selectedStyle?.id ?? null,
+    addonIds,
     barberId: selectedBarberId,
     from: today,
     to: maxDate,
@@ -235,6 +239,7 @@ export default function ManualBookingModal({
     slug: shop?.slug,
     serviceId: service?.id,
     haircutId: selectedStyle?.id ?? null,
+    addonIds,
     barberId: selectedBarberId,
     date,
   });
@@ -245,6 +250,7 @@ export default function ManualBookingModal({
     setErrors({});
     setServiceId('');
     setHaircutId('');
+    setAddonIds([]);
     setBarberId(role === 'barber' ? ownBarber?.id ?? '' : 'any');
     setDate(today);
     setStart('');
@@ -272,6 +278,7 @@ export default function ManualBookingModal({
 
   const submit = async () => {
     const nextErrors: Record<string, string> = {};
+    if (!offer || !compositionFits(offer) || addonIds.length !== selectedAddons.length) nextErrors.service = 'Reveja os complementos escolhidos.';
     if (!service || !eligibleBarbers.length) nextErrors.service = 'Escolhe um serviço com profissional elegível.';
     if (haircutId && !selectedStyle) nextErrors.service = 'O estilo deixou de estar disponível.';
     if (role === 'barber' && !ownBarber) nextErrors.barber = 'O teu perfil de barbeiro não está ligado a esta loja.';
@@ -288,6 +295,9 @@ export default function ManualBookingModal({
         shopId: shop.id,
         serviceId: service!.id,
         haircutId: selectedStyle?.id ?? null,
+        addonIds,
+        expectedPrice: offer!.price_cents,
+        expectedDuration: offer!.duration_min,
         barberId: selectedBarberId,
         start,
         name: form.name,
@@ -300,6 +310,8 @@ export default function ManualBookingModal({
       toast.success(created.status === 'confirmed' ? 'Marcação criada e confirmada.' : 'Marcação criada. O sinal está pendente.');
     } catch (error) {
       toast.error(humanError(error));
+      await catalogQuery.refetch();
+      setStart('');
     }
   };
 
@@ -349,7 +361,7 @@ export default function ManualBookingModal({
                   service={item}
                   selected={serviceId === item.id}
                   disabled={!hasServiceBarber(item)}
-                  onSelect={() => setServiceId(item.id)}
+                  onSelect={() => { setServiceId(item.id); setHaircutId(''); setAddonIds([]); setBarberId('any'); setStart(''); }}
                 />
               ))}
             </div>
@@ -364,7 +376,7 @@ export default function ManualBookingModal({
                   <select
                     data-testid="manual-booking-haircut"
                     value={haircutId}
-                    onChange={(e) => setHaircutId(e.target.value)}
+                    onChange={(e) => { setHaircutId(e.target.value); setAddonIds([]); setBarberId('any'); setStart(''); }}
                     className="field appearance-none"
                   >
                     <option value="">Sem corte específico</option>
@@ -393,6 +405,8 @@ export default function ManualBookingModal({
                   </div>
                 )}
               </div>
+
+              {addonOptions.length > 0 && <fieldset className="space-y-2" data-testid="manual-booking-addons"><legend className="t-label text-ink-mid">Complementos opcionais</legend>{addonOptions.map((item) => { const chosen = addonIds.includes(item.id); const possible = addonIds.length < 5 && compositionFits(composeOffer(service, selectedStyle, [...selectedAddons,item])) && catalog?.barbers.some((b) => b.barber_services.some((r) => r.service_id === serviceId) && barberCanStyle(b.id, selectedStyle) && [...addonIds,item.id].every((id) => b.barber_services.some((r) => r.service_id === id))); return <label key={item.id} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={chosen} disabled={!chosen && !possible} onChange={() => { setAddonIds((ids) => chosen ? ids.filter((id) => id !== item.id) : [...ids,item.id].sort()); setBarberId('any'); setStart(''); }}/>{item.name} · +{formatMT(item.price_cents)} · +{item.duration_min} min</label>; })}</fieldset>}
 
               <div className="grid lg:grid-cols-[14rem_1fr] gap-4">
                 <div>
@@ -464,10 +478,10 @@ export default function ManualBookingModal({
                 <UserRound size={17} className="text-accent-soft mt-0.5" aria-hidden />
                 <div className="min-w-0">
                   <p className="t-label text-ink-mid">Prévia</p>
-                  <p className="t-body text-ink-hi mt-1">{service.name}{selectedStyle ? ' · ' + selectedStyle.name : ''} · {formatMT(offer?.price_cents ?? service.price_cents)} · {offer?.duration_min ?? service.duration_min} min</p>
+                  <p className="t-body text-ink-hi mt-1">{[service.name,...selectedAddons.map((item) => item.name)].join(' + ')}{selectedStyle ? ' · ' + selectedStyle.name : ''} · {formatMT(offer?.price_cents ?? service.price_cents)} · {offer?.duration_min ?? service.duration_min} min</p>
                   <p className="t-label text-ink-mid mt-1">{role === 'barber' ? ownBarber?.display_name ?? 'Barbeiro' : barberId === 'any' ? 'Qualquer barbeiro disponível' : eligibleBarbers.find((barber) => barber.id === barberId)?.display_name ?? 'Barbeiro'}</p>
                   {start && <p className="t-label text-ink-mid mt-1">{formatDate(date, timezone)} · {formatTime(start, timezone)}</p>}
-                  {service.requires_deposit && shop.deposit_enabled && <p className="t-label text-st-pending mt-2">Este serviço exige sinal. A marcação ficará pendente até o pagamento.</p>}
+                  {offer?.requires_deposit && shop.deposit_enabled && <p className="t-label text-st-pending mt-2">Este serviço exige sinal. A marcação ficará pendente até o pagamento.</p>}
                 </div>
               </div>
 

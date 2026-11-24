@@ -11,6 +11,7 @@ type Props = {
   slug: string;
   serviceId: string;
   haircutId?: string | null;
+  addonIds?: string[];
   barberId?: string | null;
   date: string;
   maxDate: string;
@@ -32,7 +33,7 @@ function validEmail(value: string): boolean {
   return !value || (value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
 }
 
-export function WaitlistJoinPanel({ slug, serviceId, haircutId, barberId, date, maxDate }: Props) {
+export function WaitlistJoinPanel({ slug, serviceId, haircutId, addonIds, barberId, date, maxDate }: Props) {
   const join = useJoinWaitlist();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -42,11 +43,12 @@ export function WaitlistJoinPanel({ slug, serviceId, haircutId, barberId, date, 
   const [period, setPeriod] = useState('any');
   const [joined, setJoined] = useState(false);
 
+  const compositionKey = (addonIds ?? []).join(',');
   useEffect(() => {
     setDateFrom(date);
     setDateTo(date);
     setJoined(false);
-  }, [date]);
+  }, [date, serviceId, haircutId, compositionKey, barberId]);
 
   const submit = async () => {
     const cleanName = name.trim();
@@ -75,6 +77,7 @@ export function WaitlistJoinPanel({ slug, serviceId, haircutId, barberId, date, 
         customerName: cleanName,
         phone: normalizeMozPhone(phone),
         haircutId,
+        addonIds,
         barberId,
         email: cleanEmail || null,
         dateFrom,

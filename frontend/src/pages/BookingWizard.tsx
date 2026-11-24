@@ -11,7 +11,7 @@ import { buildWhatsAppLink } from '@/lib/calendar';
 import { formatMT, humanError } from '@/lib/utils';
 import { useAvailableDays, useAvailableSlots } from '@/features/availability/api';
 import { normalizeMozPhone, useBookAppointment } from '@/features/booking/api';
-import { barberCanStyle, effectiveOffer, groupServices, styleMatchesService } from '@/features/booking/offer';
+import { barberCanStyle, composeOffer, compositionFits, effectiveOffer, groupServices, styleMatchesService } from '@/features/booking/offer';
 import { HaircutPhoto } from '@/components/HaircutPhoto';
 import { rememberLocalBooking } from '@/lib/shop-link';
 import { WaitlistJoinPanel } from '@/features/waitlist/WaitlistJoinPanel';
@@ -205,6 +205,7 @@ function Summary({
   shopName,
   service,
   haircut,
+  addons,
   barber,
   date,
   start,
@@ -218,6 +219,7 @@ function Summary({
   shopName: string;
   service: PublicService | undefined;
   haircut: PublicHaircut | undefined;
+  addons: PublicService[];
   barber: PublicBarber | undefined;
   date: string | null;
   start: string | null;
@@ -233,6 +235,7 @@ function Summary({
       <div className="space-y-3">
         <div className="flex gap-3"><Scissors size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Serviço</p><p className="t-body text-ink-hi mt-0.5">{service?.name ?? 'Por escolher'}</p></div></div>
         {haircut && <div className="flex gap-3"><Scissors size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Estilo</p><p className="t-body text-ink-hi mt-0.5">{haircut.name}</p></div></div>}
+        {addons.length > 0 && <div className="border-t border-white/10 pt-3 space-y-2" data-testid="booking-addon-summary"><p className="t-label text-ink-mid">Complementos</p>{addons.map((item) => <div key={item.id} className="flex justify-between gap-2 t-body"><span>{item.name}</span><span className="text-ink-mid">{formatMT(item.price_cents)} · {item.duration_min} min</span></div>)}</div>}
         <div className="flex gap-3"><UserRound size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Barbeiro</p><p className="t-body text-ink-hi mt-0.5">{barber?.display_name ?? 'Qualquer barbeiro'}</p></div></div>
         <div className="flex gap-3"><Clock3 size={16} className="text-accent-soft mt-0.5" /><div><p className="t-label text-ink-mid">Data e hora</p><p className="t-body text-ink-hi mt-0.5">{date ? formatDate(date, timezone, { day: 'numeric', month: 'long', year: 'numeric' }) : 'Por escolher'}{start ? ' · ' + formatTime(start, timezone) : ''}</p></div></div>
         {service && (
@@ -294,6 +297,8 @@ export default function BookingWizard() {
   const currentStep = Number.isFinite(rawStep) ? Math.min(customerStep, Math.max(1, Math.round(rawStep))) : 1;
   const serviceId = searchParams.get('service');
   const haircutId = searchParams.get('haircut');
+  const rawAddons = searchParams.get('addons') ?? '';
+  const addonIds = useMemo(() => [...new Set(rawAddons.split(',').filter(Boolean))].sort(), [rawAddons]);
   const barberParam = searchParams.get('barber') ?? 'any';
   const date = searchParams.get('date');
   const start = searchParams.get('start');
@@ -310,31 +315,36 @@ export default function BookingWizard() {
     [data?.haircuts, data?.barbers, serviceId],
   );
   const haircut = eligibleHaircuts.find((item) => item.id === haircutId);
-  const offer = service ? effectiveOffer(service, haircut) : undefined;
-  const hasStyleStep = !service || eligibleHaircuts.length > 0;
-  const visibleStepLabels = hasStyleStep ? stepLabels : stepLabels.filter((_, index) => index !== 1);
+  const addonOptions = useMemo(() => data?.services.filter((item) => service?.addon_ids?.includes(item.id) && item.id !== service.id) ?? [], [data?.services, service]);
+  const selectedAddons = useMemo(() => addonOptions.filter((item) => addonIds.includes(item.id)), [addonOptions, addonIds]);
+  const addonSelectionValid = addonIds.length <= 5 && addonIds.length === selectedAddons.length;
+  const offer = service ? composeOffer(service, haircut, selectedAddons) : undefined;
+  const hasStyleStep = !service || eligibleHaircuts.length > 0 || addonOptions.length > 0;
+  const visibleStepLabels = hasStyleStep ? stepLabels.map((label, index) => index === 1 && addonOptions.length ? 'Personalizar' : label) : stepLabels.filter((_, index) => index !== 1);
   const eligibleBarbers = useMemo(
-    () => data?.barbers.filter((barber) => Boolean(serviceId && barber.service_ids.includes(serviceId) && barberCanStyle(barber.id, haircut))) ?? [],
-    [data?.barbers, serviceId, haircut],
+    () => data?.barbers.filter((barber) => Boolean(serviceId && barber.service_ids.includes(serviceId) && barberCanStyle(barber.id, haircut) && addonIds.every((id) => barber.service_ids.includes(id)))) ?? [],
+    [data?.barbers, serviceId, haircut, addonIds],
   );
   const barber = eligibleBarbers.find((item) => item.id === barberParam);
   const selectedBarberId = barberParam === 'any' ? null : barber?.id ?? null;
-  const selectableService = service && eligibleBarbers.length ? service : undefined;
+  const selectableService = service && data?.barbers.some((item) => item.service_ids.includes(service.id)) ? service : undefined;
 
   const today = data ? todayInZone(data.shop.timezone) : null;
   const maxDate = data && today ? addDaysISO(today, data.shop.max_advance_days) : null;
   const daysQuery = useAvailableDays({
     slug,
-    serviceId: service?.id,
+    serviceId: addonSelectionValid && offer && compositionFits(offer) ? service?.id : undefined,
     haircutId: haircut?.id ?? null,
+    addonIds,
     barberId: selectedBarberId,
     from: today ?? undefined,
     to: maxDate ?? undefined,
   });
   const slotsQuery = useAvailableSlots({
     slug,
-    serviceId: service?.id,
+    serviceId: addonSelectionValid && offer && compositionFits(offer) ? service?.id : undefined,
     haircutId: haircut?.id ?? null,
+    addonIds,
     barberId: selectedBarberId,
     date: date ?? undefined,
   });
@@ -347,16 +357,23 @@ export default function BookingWizard() {
   useEffect(() => {
     if (!data || !serviceId) return;
     if (!service) {
-      updateSearchParams(searchParams, setSearchParams, { step: '1', service: null, haircut: null, barber: null, date: null, start: null });
+      updateSearchParams(searchParams, setSearchParams, { step: '1', service: null, haircut: null, addons: null, barber: null, date: null, start: null });
     }
   }, [data, serviceId, service, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!data || !haircutId || !serviceId || !service) return;
     if (!eligibleHaircuts.some((item) => item.id === haircutId)) {
-      updateSearchParams(searchParams, setSearchParams, { step: '2', haircut: null, barber: 'any', date: null, start: null });
+      updateSearchParams(searchParams, setSearchParams, { step: '2', haircut: null, addons: null, barber: 'any', date: null, start: null });
     }
   }, [data, haircutId, serviceId, service, eligibleHaircuts, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (!data || !service || !rawAddons) return;
+    if (!addonSelectionValid || !offer || !compositionFits(offer) || !eligibleBarbers.length) {
+      updateSearchParams(searchParams, setSearchParams, { step: '2', addons: null, barber: 'any', date: null, start: null });
+    }
+  }, [data, service, rawAddons, addonSelectionValid, offer?.price_cents, offer?.duration_min, eligibleBarbers.length, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!data || barberParam === 'any' || !service) return;
@@ -399,19 +416,22 @@ export default function BookingWizard() {
   const depositCents = offer ? getDepositCents(offer, data.shop) : 0;
   const depositConfigValid = !offer || depositCents <= offer.price_cents;
   const canBook = Boolean(
-    !shopCatalogQuery.isLoading && selectableService && start && (!haircutId || haircut) && slotsQuery.isSuccess && slotsQuery.data.some((slot) => slot.slot_start === start) && (barberParam === 'any' || barber) && depositConfigValid &&
+    !shopCatalogQuery.isLoading && selectableService && offer && compositionFits(offer) && addonSelectionValid && eligibleBarbers.length && start && (!haircutId || haircut) && slotsQuery.isSuccess && slotsQuery.data.some((slot) => slot.slot_start === start) && (barberParam === 'any' || barber) && depositConfigValid &&
     shopLines.length <= 20,
   );
 
   const setStep = (step: number) => updateSearchParams(searchParams, setSearchParams, { step: String(step) });
 
   const chooseService = (id: string) => updateSearchParams(searchParams, setSearchParams, {
-    service: id, haircut: null, barber: 'any', date: null, start: null, step: data.haircuts.some((item) => styleMatchesService(item, id) && data.barbers.some((barber) => barber.service_ids.includes(id) && barberCanStyle(barber.id, item))) ? '2' : '3',
+    service: id, haircut: null, addons: null, barber: 'any', date: null, start: null, step: (data.services.find((item) => item.id === id)?.addon_ids?.length || data.haircuts.some((item) => styleMatchesService(item, id) && data.barbers.some((barber) => barber.service_ids.includes(id) && barberCanStyle(barber.id, item)))) ? '2' : '3',
   });
 
   const chooseHaircut = (id: string | null) => updateSearchParams(searchParams, setSearchParams, {
-    haircut: id, date: null, start: null, step: '3',
+    haircut: id, addons: null, barber: 'any', date: null, start: null, step: addonOptions.length ? '2' : '3',
   });
+
+  const addonAvailable = (item: PublicService) => Boolean(service && addonIds.length < 5 && compositionFits(composeOffer(service, haircut, [...selectedAddons, item])) && data.barbers.some((b) => b.service_ids.includes(service.id) && barberCanStyle(b.id, haircut) && [...addonIds, item.id].every((id) => b.service_ids.includes(id))));
+  const toggleAddon = (id: string) => { const next = addonIds.includes(id) ? addonIds.filter((item) => item !== id) : [...addonIds,id].sort(); updateSearchParams(searchParams, setSearchParams, { addons: next.length ? next.join(',') : null, barber: 'any', date: null, start: null, step:'2' }); };
 
   const chooseBarber = (id: string | null) => updateSearchParams(searchParams, setSearchParams, {
     barber: id ?? 'any', date: null, start: null, step: '4',
@@ -489,6 +509,7 @@ export default function BookingWizard() {
     setBookingError(null);
     if (effectiveStep === 1 && !selectableService) return;
     if (effectiveStep === 2) {
+      if (!eligibleBarbers.length || !addonSelectionValid || !offer || !compositionFits(offer)) return;
       setStep(3);
       return;
     }
@@ -512,7 +533,7 @@ export default function BookingWizard() {
   };
 
   const submitBooking = async () => {
-    if (!canBook || !slug || !selectableService || !start) return;
+    if (!canBook || !slug || !selectableService || !offer || !start) return;
 
     const nextErrors: Record<string, string> = {};
     const name = form.name.trim();
@@ -541,6 +562,7 @@ export default function BookingWizard() {
       phone: normalizeMozPhone(phone),
       email: email || null,
       shopItems,
+      addonIds, price:offer.price_cents, duration:offer.duration_min,
     });
     let requestKey = bookingAttemptKey;
     if (bookingAttemptFingerprint.current !== requestFingerprint) {
@@ -561,9 +583,12 @@ export default function BookingWizard() {
         p_phone: normalizeMozPhone(phone),
         p_email: email || null,
         p_shop_items: shopItems,
+        p_addon_ids: addonIds,
+        p_expected_price: offer.price_cents,
+        p_expected_duration: offer.duration_min,
         idempotency_key: requestKey,
       });
-      rememberLocalBooking({ token: result.manage_token, shopSlug: slug, startsAt: start, serviceName: selectableService.name });
+      rememberLocalBooking({ token: result.manage_token, shopSlug: slug, startsAt: start, serviceName: [selectableService.name,...selectedAddons.map((item) => item.name)].join(' + ') });
       navigate(`/marcacao/${result.manage_token}`, { replace: true });
       bookingAttemptFingerprint.current = null;
       setBookingAttemptKey(crypto.randomUUID());
@@ -590,6 +615,10 @@ export default function BookingWizard() {
                     ? 'A selecção mudou desde a última tentativa. Confirme novamente para continuar com os dados actuais.'
                     : humanError(error);
       setBookingError(message);
+      if (errorCode.includes('BOOKING_QUOTE_CHANGED') || errorCode.includes('INVALID_BOOKING_OFFER')) {
+        await query.refetch();
+        updateSearchParams(searchParams, setSearchParams, { step:'2', date:null, start:null });
+      }
       if (errorCode.includes('SLOT_TAKEN') || errorCode.includes('SLOT_UNAVAILABLE')) {
         updateSearchParams(searchParams, setSearchParams, { step: '5', start: null });
         await slotsQuery.refetch();
@@ -646,7 +675,7 @@ export default function BookingWizard() {
             )}
 
             {showHaircutStep && service && (
-              <Panel title="Personalize o seu estilo" testId="booking-step-haircut">
+              <Panel title={addonOptions.length ? 'Personalize a sua marcação' : 'Personalize o seu estilo'} testId="booking-step-haircut">
                 {eligibleHaircuts.length ? (
                   <div className="space-y-3">
                     <ChoiceCard
@@ -673,9 +702,8 @@ export default function BookingWizard() {
                       ))}
                     </div>
                   </div>
-                ) : (
-                  <EmptyState title="Sem cortes configurados" body="Pode continuar sem especificar um corte." action={<Button variant="secondary" onClick={() => chooseHaircut(null)}>Continuar</Button>} />
-                )}
+                ) : null}
+                {addonOptions.length > 0 && <section className="space-y-3 mt-5" data-testid="booking-addons"><h3 className="t-card text-ink-hi">Complementos opcionais</h3><p className="t-label text-ink-mid">Combine serviços na mesma visita, com o mesmo profissional. Preço e duração são somados.</p><div className="grid sm:grid-cols-2 gap-3">{addonOptions.map((item) => <ChoiceCard key={item.id} title={item.name} body={addonIds.includes(item.id) || addonAvailable(item) ? null : 'Incompatível com a selecção actual ou sem profissional elegível.'} meta={'+ ' + formatMT(item.price_cents) + ' · +' + item.duration_min + ' min'} selected={addonIds.includes(item.id)} disabled={!addonIds.includes(item.id) && !addonAvailable(item)} onClick={() => toggleAddon(item.id)} testId={'booking-addon-'+item.id}/>)}</div></section>}
               </Panel>
             )}
 
@@ -770,6 +798,7 @@ export default function BookingWizard() {
                         slug={slug!}
                         serviceId={service.id}
                         haircutId={haircut?.id ?? null}
+                        addonIds={addonIds}
                         barberId={selectedBarberId}
                         date={date}
                         maxDate={maxDate}
@@ -873,6 +902,7 @@ export default function BookingWizard() {
               shopName={data.shop.name}
               service={selectableService ? offer : undefined}
               haircut={haircut}
+              addons={selectedAddons}
               barber={barber}
               date={date}
               start={start}
@@ -911,6 +941,7 @@ export default function BookingWizard() {
               disabled={
                 bookMutation.isPending ||
                 (effectiveStep === 1 && !service) ||
+                (effectiveStep === 2 && (!eligibleBarbers.length || !addonSelectionValid || !offer || !compositionFits(offer))) ||
                 (effectiveStep === 3 && !eligibleBarbers.length) ||
                 (effectiveStep === 4 && !date) ||
                 (effectiveStep === 5 && !start) ||

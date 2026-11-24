@@ -54,6 +54,8 @@ const ERRORS: Record<string, string> = {
   INVALID_PHONE: 'Número inválido. Usa o formato 84 000 0000.',
   INVALID_EMAIL: 'Indica um email válido.',
   HAIRCUT_NOT_FOUND: 'Esse corte já não está disponível.',
+  INVALID_BOOKING_OFFER: 'A selecção já não é compatível. Reveja os serviços e complementos.',
+  BOOKING_QUOTE_CHANGED: 'O preço ou a duração mudou. Reveja os valores actualizados e confirme novamente.',
   INVALID_DEPOSIT_CONFIGURATION: 'O sinal configurado para este serviço é inválido.',
   BOOKING_EMPTY_RESPONSE: 'A marcação não foi criada. Tenta de novo.',
   BOOKING_CREATE_FAILED: 'O serviço de marcações encontrou um erro temporário. Tenta novamente dentro de instantes.',

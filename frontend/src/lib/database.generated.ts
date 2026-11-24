@@ -225,6 +225,7 @@ export type Database = {
           manage_token_expires_at: string | null
           no_show_at: string | null
           price_cents: number
+          service_components: Json
           service_id: string
           source: Database["public"]["Enums"]["booking_source"]
           started_at: string | null
@@ -253,6 +254,7 @@ export type Database = {
           manage_token_expires_at?: string | null
           no_show_at?: string | null
           price_cents: number
+          service_components?: Json
           service_id: string
           source?: Database["public"]["Enums"]["booking_source"]
           started_at?: string | null
@@ -281,6 +283,7 @@ export type Database = {
           manage_token_expires_at?: string | null
           no_show_at?: string | null
           price_cents?: number
+          service_components?: Json
           service_id?: string
           source?: Database["public"]["Enums"]["booking_source"]
           started_at?: string | null
@@ -1472,6 +1475,46 @@ export type Database = {
           },
         ]
       }
+      service_addons: {
+        Row: {
+          addon_service_id: string
+          barbershop_id: string
+          service_id: string
+        }
+        Insert: {
+          addon_service_id: string
+          barbershop_id: string
+          service_id: string
+        }
+        Update: {
+          addon_service_id?: string
+          barbershop_id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_addons_addon_service_id_barbershop_id_fkey"
+            columns: ["addon_service_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+          {
+            foreignKeyName: "service_addons_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_addons_service_id_barbershop_id_fkey"
+            columns: ["service_id", "barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "barbershop_id"]
+          },
+        ]
+      }
       services: {
         Row: {
           barbershop_id: string
@@ -2198,6 +2241,7 @@ export type Database = {
       }
       waitlist_entries: {
         Row: {
+          addon_service_ids: string[]
           barber_id: string | null
           barbershop_id: string
           created_at: string
@@ -2208,6 +2252,7 @@ export type Database = {
           haircut_id: string | null
           id: string
           offer_barber_id: string | null
+          offer_composition: Json | null
           offer_expires_at: string | null
           offer_slot_start: string | null
           offer_token: string | null
@@ -2217,6 +2262,7 @@ export type Database = {
           status: Database["public"]["Enums"]["waitlist_status"]
         }
         Insert: {
+          addon_service_ids?: string[]
           barber_id?: string | null
           barbershop_id: string
           created_at?: string
@@ -2227,6 +2273,7 @@ export type Database = {
           haircut_id?: string | null
           id?: string
           offer_barber_id?: string | null
+          offer_composition?: Json | null
           offer_expires_at?: string | null
           offer_slot_start?: string | null
           offer_token?: string | null
@@ -2236,6 +2283,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["waitlist_status"]
         }
         Update: {
+          addon_service_ids?: string[]
           barber_id?: string | null
           barbershop_id?: string
           created_at?: string
@@ -2246,6 +2294,7 @@ export type Database = {
           haircut_id?: string | null
           id?: string
           offer_barber_id?: string | null
+          offer_composition?: Json | null
           offer_expires_at?: string | null
           offer_slot_start?: string | null
           offer_token?: string | null
@@ -2637,6 +2686,59 @@ export type Database = {
           shop_subtotal_minor: number
         }[]
       }
+      book_composed_appointment_manual: {
+        Args: {
+          p_addon_ids: string[]
+          p_barber_id: string
+          p_email: string
+          p_expected_duration: number
+          p_expected_price: number
+          p_haircut_id: string
+          p_internal_note: string
+          p_name: string
+          p_phone: string
+          p_service_id: string
+          p_shop: string
+          p_start: string
+        }
+        Returns: {
+          appointment_id: string
+          barber_id: string
+          deposit_cents: number
+          ends_at: string
+          manage_token: string
+          needs_payment: boolean
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+        }[]
+      }
+      book_composed_appointment_with_shop_order_idempotent: {
+        Args: {
+          p_addon_ids: string[]
+          p_barber_id: string
+          p_email: string
+          p_expected_duration: number
+          p_expected_price: number
+          p_haircut_id: string
+          p_idempotency_key: string
+          p_name: string
+          p_phone: string
+          p_request_hash: string
+          p_service_id: string
+          p_shop_items: Json
+          p_slug: string
+          p_start: string
+        }
+        Returns: {
+          appointment_id: string
+          deposit_cents: number
+          manage_token: string
+          needs_payment: boolean
+          shop_order_item_count: number
+          shop_order_status: Database["public"]["Enums"]["shop_order_status"]
+          shop_subtotal_minor: number
+        }[]
+      }
       cancel_appointment_by_token: {
         Args: { p_reason?: string; p_token: string }
         Returns: {
@@ -2913,6 +3015,36 @@ export type Database = {
           p_slug: string
         }
         Returns: Json
+      }
+      get_composed_available_days: {
+        Args: {
+          p_addon_ids: string[]
+          p_barber_id: string
+          p_from: string
+          p_haircut_id: string
+          p_service_id: string
+          p_slug: string
+          p_to: string
+        }
+        Returns: {
+          day: string
+          is_open: boolean
+          slots_count: number
+        }[]
+      }
+      get_composed_available_slots: {
+        Args: {
+          p_addon_ids: string[]
+          p_barber_id: string
+          p_date: string
+          p_haircut_id: string
+          p_service_id: string
+          p_slug: string
+        }
+        Returns: {
+          barber_ids: string[]
+          slot_start: string
+        }[]
       }
       get_customer: {
         Args: { p_customer: string; p_shop: string }
@@ -3473,6 +3605,25 @@ export type Database = {
         Returns: boolean
       }
       is_platform_admin: { Args: never; Returns: boolean }
+      join_composed_waitlist: {
+        Args: {
+          p_addon_ids: string[]
+          p_barber_id: string
+          p_customer_name: string
+          p_date_from: string
+          p_date_to: string
+          p_email: string
+          p_haircut_id: string
+          p_period: string
+          p_phone: string
+          p_service_id: string
+          p_slug: string
+        }
+        Returns: {
+          queued_at: string
+          status: Database["public"]["Enums"]["waitlist_status"]
+        }[]
+      }
       join_waitlist: {
         Args: {
           p_barber_id?: string
@@ -3714,6 +3865,15 @@ export type Database = {
           p_opens_at?: string
           p_override_date: string
           p_reason?: Database["public"]["Enums"]["block_reason"]
+          p_shop: string
+        }
+        Returns: string
+      }
+      save_service_configuration: {
+        Args: {
+          p_addon_ids: string[]
+          p_entry: Json
+          p_service: string
           p_shop: string
         }
         Returns: string

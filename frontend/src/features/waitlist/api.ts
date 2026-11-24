@@ -93,13 +93,14 @@ export async function joinWaitlist(input: {
   customerName: string;
   phone: string;
   haircutId?: string | null;
+  addonIds?: string[];
   barberId?: string | null;
   email?: string | null;
   dateFrom: string;
   dateTo: string;
   period: string;
 }) {
-  const { data, error } = await supabase.rpc('join_waitlist', {
+  const args = {
     p_slug: input.slug,
     p_service_id: input.serviceId,
     p_customer_name: input.customerName,
@@ -110,7 +111,10 @@ export async function joinWaitlist(input: {
     p_date_from: input.dateFrom,
     p_date_to: input.dateTo,
     p_period: input.period,
-  });
+  };
+  const { data, error } = input.addonIds?.length
+    ? await supabase.rpc('join_composed_waitlist', { ...args, p_haircut_id: input.haircutId ?? null, p_barber_id: input.barberId ?? null, p_email: input.email ?? null, p_addon_ids: input.addonIds })
+    : await supabase.rpc('join_waitlist', args);
   if (error) throw error;
   const row = data?.[0];
   if (!row) throw new Error('WAITLIST_JOIN_EMPTY_RESPONSE');

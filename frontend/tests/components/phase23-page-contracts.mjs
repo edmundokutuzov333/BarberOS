@@ -28,7 +28,7 @@ const tests = [
     assert.match(source, /styleMatchesService\(item, serviceId\)/);
     assert.match(source, /boundedStep === 2 && !hasStyleStep \? 3/);
     assert.match(source, /haircutId: haircut\?\.id \?\? null/);
-    assert.match(source, /effectiveOffer\(service, haircut\)/);
+    assert.match(source, /composeOffer\(service, haircut, selectedAddons\)/);
     assert.match(source, /barberCanStyle\(barber.id, haircut\)/);
     assert.match(source, /groupServices\(data.services\)/);
     assert.match(read('src/components/config/HaircutsEditor.tsx'), /save_haircut_configuration/);
@@ -36,6 +36,10 @@ const tests = [
     const availability = read('src/features/availability/api.ts');
     assert.match(availability, /get_offer_available_slots/);
     assert.match(availability, /get_offer_available_days/);
+    assert.match(availability, /get_composed_available_slots/);
+    assert.match(availability, /get_composed_available_days/);
+    assert.match(source, /p_expected_price: offer.price_cents/);
+    assert.match(source, /booking-addons/);
     assert.match(availability, /barberId, date, haircutId/);
     const manual = read('src/features/booking/ManualBookingModal.tsx');
     assert.match(manual, /styleMatchesService\(haircut, serviceId\)/);

@@ -25,6 +25,12 @@ async function main() {
         assert.equal(offers.barberCanStyle('trained', secondary), true);
         assert.equal(offers.barberCanStyle('other', secondary), false);
         assert.equal(offers.barberCanStyle('trained', { ...secondary, skill_barber_ids: [] }), false);
+        const composed = offers.composeOffer({ ...base, requires_deposit: false }, variant, [{ id: 'addon', price_cents: 8000, duration_min: 15, requires_deposit: true }]);
+        assert.equal(composed.price_cents, 53000);
+        assert.equal(composed.duration_min, 75);
+        assert.equal(composed.requires_deposit, true);
+        assert.equal(offers.compositionFits(composed), true);
+        assert.equal(offers.compositionFits({ ...composed, duration_min: 481 }), false);
         assert.equal(offers.groupServices([{ ...base, category: 'Cabelo', subcategory: 'Corte' }, { ...base, id: 'other', category: 'Barba' }]).length, 2);
         assert.equal(offers.bookingPath('shop', 'service', 'style'), '/barbearia/shop/marcar?service=service&step=3&haircut=style');
       }],

@@ -20,6 +20,11 @@ export function effectiveOffer<T extends OfferService>(service: T, style?: Offer
 export function barberCanStyle(barberId: string, style?: OfferStyle | null): boolean {
   return !style?.skill_restricted || Boolean(style.skill_barber_ids?.includes(barberId));
 }
+export function composeOffer<T extends OfferService & { requires_deposit: boolean }>(base: T, style: OfferStyle | undefined, addons: T[]): T {
+  const primary = effectiveOffer(base, style);
+  return { ...primary, price_cents: primary.price_cents + addons.reduce((sum, item) => sum + item.price_cents, 0), duration_min: primary.duration_min + addons.reduce((sum, item) => sum + item.duration_min, 0), requires_deposit: primary.requires_deposit || addons.some((item) => item.requires_deposit) };
+}
+export function compositionFits(offer: OfferService): boolean { return Number.isSafeInteger(offer.price_cents) && offer.price_cents >= 0 && offer.price_cents <= 2147483647 && Number.isInteger(offer.duration_min) && offer.duration_min >= 5 && offer.duration_min <= 480; }
 export function groupServices<T extends OfferService>(services: T[]) {
   const groups = new Map<string, { category: string; subcategory: string; services: T[] }>();
   for (const service of services) {
@@ -31,8 +36,8 @@ export function groupServices<T extends OfferService>(services: T[]) {
   }
   return [...groups.values()];
 }
-export function bookingPath(slug: string, serviceId: string, styleId?: string): string {
-  const params = new URLSearchParams({ service: serviceId, step: styleId ? '3' : '2' });
+export function bookingPath(slug: string, serviceId: string, styleId?: string, hasAddons = false): string {
+  const params = new URLSearchParams({ service: serviceId, step: styleId && !hasAddons ? '3' : '2' });
   if (styleId) params.set('haircut', styleId);
   return '/barbearia/' + encodeURIComponent(slug) + '/marcar?' + params.toString();
 }

@@ -1,4 +1,4 @@
-export const SLOT_CONFLICT_CODES = new Set(["SLOT_TAKEN", "SLOT_UNAVAILABLE", "IDEMPOTENCY_IN_PROGRESS", "IDEMPOTENCY_KEY_REUSED", "SHOP_NOT_ENABLED", "SHOP_ITEM_UNAVAILABLE", "SHOP_STOCK_UNAVAILABLE"]);
+export const SLOT_CONFLICT_CODES = new Set(["SLOT_TAKEN", "SLOT_UNAVAILABLE", "IDEMPOTENCY_IN_PROGRESS", "IDEMPOTENCY_KEY_REUSED", "SHOP_NOT_ENABLED", "SHOP_ITEM_UNAVAILABLE", "SHOP_STOCK_UNAVAILABLE", "BOOKING_QUOTE_CHANGED"]);
 
 export const CLIENT_ERROR_CODES = new Set([
   "INVALID_DATE",
@@ -8,6 +8,7 @@ export const CLIENT_ERROR_CODES = new Set([
   "BARBERSHOP_NOT_FOUND",
   "SERVICE_NOT_FOUND",
   "HAIRCUT_NOT_FOUND",
+  "INVALID_BOOKING_OFFER",
   "BARBER_NOT_FOUND",
   "INVALID_DEPOSIT_CONFIGURATION",
   "RATE_LIMITED",
@@ -77,6 +78,10 @@ export function publicBookingMessage(code: string): string {
       return "Esse barbeiro já não está disponível.";
     case "INVALID_DEPOSIT_CONFIGURATION":
       return "O sinal configurado para este serviço é inválido.";
+    case "BOOKING_QUOTE_CHANGED":
+      return "O preço ou a duração mudou. Reveja os valores actualizados antes de confirmar.";
+    case "INVALID_BOOKING_OFFER":
+      return "A selecção já não é compatível. Reveja os serviços e complementos.";
     case "INVALID_DATE":
       return "Escolhe uma data válida.";
     case "RATE_LIMITED":

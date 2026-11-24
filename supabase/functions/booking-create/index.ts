@@ -28,6 +28,9 @@ type BookingPayload = {
   p_phone: string;
   p_email: string | null;
   p_shop_items?: ShopOrderItemInput[];
+  p_addon_ids?: string[];
+  p_expected_price?: number;
+  p_expected_duration?: number;
   idempotency_key: string;
 };
 
@@ -48,6 +51,14 @@ function isShopOrderItems(value: unknown): value is ShopOrderItemInput[] {
     if (row.fulfilment_mode !== "consume_here" && row.fulfilment_mode !== "takeaway") return false;
   }
   return true;
+}
+
+function isValidComposition(body: Record<string, unknown>): boolean {
+  const addons = body.p_addon_ids ?? [];
+  if (!Array.isArray(addons) || addons.length > 5 || !addons.every(isUuid) || new Set(addons.map((id) => id.toLowerCase())).size !== addons.length || addons.some((id) => id.toLowerCase() === String(body.p_service_id).toLowerCase())) return false;
+  const quote = body.p_expected_price !== undefined || body.p_expected_duration !== undefined;
+  if (!quote) return addons.length === 0;
+  return Number.isInteger(body.p_expected_price) && Number(body.p_expected_price) >= 0 && Number(body.p_expected_price) <= 2147483647 && Number.isInteger(body.p_expected_duration) && Number(body.p_expected_duration) >= 5 && Number(body.p_expected_duration) <= 480;
 }
 
 function isValidPayload(value: unknown): value is BookingPayload {
@@ -73,7 +84,8 @@ function isValidPayload(value: unknown): value is BookingPayload {
       typeof body.p_email === "string" && body.p_email.length <= 254
     ))
     && isUuid(body.idempotency_key)
-    && isShopOrderItems(body.p_shop_items);
+    && isShopOrderItems(body.p_shop_items)
+    && isValidComposition(body);
 }
 
 function publicResponse(value: unknown): Record<string, unknown> | null {
@@ -110,6 +122,7 @@ function fingerprintShape(payload: BookingPayload, slug: string, items: ShopOrde
     name: payload.p_name.trim(),
     phone: payload.p_phone.trim(),
     email: payload.p_email?.trim() || null,
+    ...(payload.p_expected_price !== undefined ? { addon_ids: (payload.p_addon_ids ?? []).map((id) => id.toLowerCase()).sort(), expected_price: payload.p_expected_price, expected_duration: payload.p_expected_duration } : {}),
     shop_items: items.map((item) => ({
       variant_id: item.variant_id.toLowerCase(),
       qty: item.qty,
@@ -171,7 +184,7 @@ Deno.serve(async (req) => {
       } else {
         const cachedValue = cached.response && typeof cached.response === "object" && !Array.isArray(cached.response)
           ? cached.response as Record<string, unknown> : null;
-        if (shopItems.length > 0 || cachedValue?.shop_order) {
+        if (shopItems.length > 0 || cachedValue?.shop_order || payload.p_expected_price !== undefined) {
           return json({ ok: false, error: "IDEMPOTENCY_KEY_REUSED", message: publicBookingMessage("IDEMPOTENCY_KEY_REUSED") }, 409);
         }
       }
@@ -205,12 +218,15 @@ Deno.serve(async (req) => {
     }
 
     stage = "booking_rpc";
-    const { data, error } = await admin.rpc("book_appointment_with_shop_order_idempotent", {
+    const args = {
       p_idempotency_key: key, p_slug: slug, p_service_id: payload.p_service_id,
       p_haircut_id: payload.p_haircut_id ?? null, p_barber_id: payload.p_barber_id ?? null,
       p_start: payload.p_start, p_name: payload.p_name.trim(), p_phone: payload.p_phone.trim(),
       p_email: payload.p_email?.trim() || null, p_shop_items: shopItems, p_request_hash: requestHash,
-    });
+    };
+    const { data, error } = payload.p_expected_price !== undefined
+      ? await admin.rpc("book_composed_appointment_with_shop_order_idempotent", { ...args, p_addon_ids: (payload.p_addon_ids ?? []).map((id) => id.toLowerCase()).sort(), p_expected_price: payload.p_expected_price, p_expected_duration: payload.p_expected_duration })
+      : await admin.rpc("book_appointment_with_shop_order_idempotent", args);
     if (error) {
       const code = extractDomainCode(error);
       console.error("booking-create RPC failed", { stage, code });

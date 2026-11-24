@@ -19,6 +19,9 @@ export type BookAppointmentInput =
   Database['public']['Functions']['book_appointment']['Args'] & {
     idempotency_key?: string;
     p_shop_items?: ShopOrderItemInput[];
+    p_addon_ids?: string[];
+    p_expected_price?: number;
+    p_expected_duration?: number;
   };
 
 export type BookAppointmentResult = {
@@ -82,6 +85,8 @@ async function readFunctionError(error: unknown): Promise<{ code: string; status
     'BARBERSHOP_NOT_FOUND',
     'SERVICE_NOT_FOUND',
     'HAIRCUT_NOT_FOUND',
+    'INVALID_BOOKING_OFFER',
+    'BOOKING_QUOTE_CHANGED',
     'BARBER_NOT_FOUND',
     'INVALID_DEPOSIT_CONFIGURATION',
     'RATE_LIMITED',

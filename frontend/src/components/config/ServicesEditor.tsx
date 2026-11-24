@@ -13,15 +13,16 @@ import { PhotoWithFallback, SERVICE_FALLBACK_PHOTOS } from '@/components/PhotoWi
 import { Skeleton, EmptyState, ErrorState } from '@/components/ui/States';
 import { SortableList } from '@/components/ui/SortableList';
 
+type CatalogService = Service & { addons: { addon_service_id: string }[] };
 const empty = { category: 'Outros', subcategory: 'Geral', name: '', price: '', duration: '30', requires_deposit: false, photo_url: null as string | null };
 
 export function useServices(shopId: string) {
   return useQuery({
     queryKey: ['services', shopId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('services').select('*').eq('barbershop_id', shopId).order('sort_order').order('name');
+      const { data, error } = await supabase.from('services').select('*,addons:service_addons!service_addons_service_id_barbershop_id_fkey(addon_service_id)').eq('barbershop_id', shopId).order('sort_order').order('name');
       if (error) throw error;
-      return data as Service[];
+      return data as CatalogService[];
     },
   });
 }
@@ -30,11 +31,13 @@ export function ServicesEditor() {
   const { shop } = useShop();
   const qc = useQueryClient();
   const q = useServices(shop!.id);
-  const [editing, setEditing] = useState<Service | null | 'new'>(null);
+  const [editing, setEditing] = useState<CatalogService | null | 'new'>(null);
+  const [addonIds, setAddonIds] = useState<string[]>([]);
   const [form, setForm] = useState(empty);
   const key = ['services', shop!.id];
 
-  const open = (s: Service | 'new') => {
+  const open = (s: CatalogService | 'new') => {
+    setAddonIds(s === 'new' ? [] : s.addons.map((item) => item.addon_service_id));
     setForm(s === 'new' ? empty : { category: s.category, subcategory: s.subcategory, name: s.name, price: String(s.price_cents / 100), duration: String(s.duration_min), requires_deposit: s.requires_deposit, photo_url: s.photo_url ?? null });
     setEditing(s);
   };
@@ -48,9 +51,7 @@ export function ServicesEditor() {
       if (!Number.isFinite(duration) || duration < 5 || duration > 480) throw new Error('Duração entre 5 e 480 minutos.');
       if (!form.category.trim() || !form.subcategory.trim() || form.category.trim().length > 80 || form.subcategory.trim().length > 80) throw new Error('Indique categoria e subcategoria válidas.');
       const row = { category: form.category.trim(), subcategory: form.subcategory.trim(), name: form.name.trim(), price_cents: price, duration_min: duration, requires_deposit: form.requires_deposit, photo_url: form.photo_url };
-      const r = editing === 'new'
-        ? await supabase.from('services').insert({ ...row, barbershop_id: shop!.id, sort_order: q.data?.length ?? 0 })
-        : await supabase.from('services').update(row).eq('id', (editing as Service).id);
+      const r = await supabase.rpc('save_service_configuration', { p_shop: shop!.id, p_service: editing === 'new' ? null : (editing as Service).id, p_entry: row, p_addon_ids: addonIds });
       if (r.error) throw r.error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: key }); qc.invalidateQueries({ queryKey: ['public-barbershop'] }); qc.invalidateQueries({ queryKey: ['manual-booking', 'catalog'] }); qc.invalidateQueries({ queryKey: ['availability'] }); setEditing(null); toast.success('Serviço guardado'); },
@@ -97,6 +98,7 @@ export function ServicesEditor() {
             <Field data-testid="service-duration-input" label="Duração (min)" name="svc_duration" inputMode="numeric" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
           </div>
           <Switch testId="service-deposit-switch" checked={form.requires_deposit} onCheckedChange={(v) => setForm({ ...form, requires_deposit: v })} label="Exige sinal (se o sinal estiver activo nas definições)" />
+          <fieldset className="space-y-2 border-t border-white/10 pt-3"><legend className="t-label text-ink-mid">Complementos compatíveis</legend><p className="t-label text-ink-mid">O cliente pode juntar estes serviços na mesma visita. O preço e a duração são os do serviço complementar. O profissional tem de estar habilitado para todos.</p>{q.data?.filter((item) => editing === 'new' || item.id !== editing?.id).map((item) => <label key={item.id} className="flex gap-2 items-center text-sm"><input type="checkbox" checked={addonIds.includes(item.id)} onChange={(e) => setAddonIds((ids) => e.target.checked ? [...ids,item.id] : ids.filter((id) => id !== item.id))}/>{item.name} · {formatMT(item.price_cents)} · {item.duration_min} min{!item.is_active && ' (inactivo)'}</label>)}</fieldset>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={() => setEditing(null)}>Cancelar</Button>
             <Button data-testid="service-save-btn" type="submit" loading={save.isPending}>Guardar</Button>

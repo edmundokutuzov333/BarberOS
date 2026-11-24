@@ -10,6 +10,11 @@ type GeneratedFunctions = GeneratedDatabase['public']['Functions'];
 export const nullableRpcArguments = {
   save_barber: ['p_barber_id', 'p_bio', 'p_photo_url', 'p_user_id'],
   save_haircut_configuration: ['p_haircut'],
+  save_service_configuration: ['p_service'],
+  get_composed_available_slots: ['p_haircut_id', 'p_barber_id'],
+  get_composed_available_days: ['p_haircut_id', 'p_barber_id'],
+  book_composed_appointment_manual: ['p_haircut_id', 'p_barber_id', 'p_email', 'p_internal_note'],
+  join_composed_waitlist: ['p_haircut_id', 'p_barber_id', 'p_email'],
   save_schedule_override: ['p_barber_id', 'p_opens_at', 'p_closes_at', 'p_note', 'p_id'],
   transition_appointment: ['p_reason'],
   reschedule_appointment_by_operator: ['p_new_barber_id'],

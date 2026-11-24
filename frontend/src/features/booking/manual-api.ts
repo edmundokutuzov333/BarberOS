@@ -7,7 +7,7 @@ import type { StyleOffer } from '@/features/booking/offer';
 export type ManualService = Pick<
   Database['public']['Tables']['services']['Row'],
   'id' | 'name' | 'price_cents' | 'duration_min' | 'requires_deposit'
->;
+> & { addon_ids: string[] };
 
 export type ManualHaircut = Pick<
   Database['public']['Tables']['haircuts']['Row'],
@@ -28,7 +28,7 @@ export async function getManualBookingCatalog(shopId: string) {
   const [services, haircuts, barbers] = await Promise.all([
     supabase
       .from('services')
-      .select('id,name,price_cents,duration_min,requires_deposit')
+      .select('id,name,price_cents,duration_min,requires_deposit,addons:service_addons!service_addons_service_id_barbershop_id_fkey(addon_service_id)')
       .eq('barbershop_id', shopId)
       .eq('is_active', true)
       .order('sort_order')
@@ -54,7 +54,7 @@ export async function getManualBookingCatalog(shopId: string) {
   }
 
   return {
-    services: (services.data ?? []) as ManualService[],
+    services: (services.data ?? []).map((service) => ({ ...service, addon_ids: (service.addons ?? []).map((a) => a.addon_service_id) })) as ManualService[],
     haircuts: (haircuts.data ?? []).map((haircut) => ({ ...haircut, additional_offers: haircut.haircut_service_offers ?? [], skill_barber_ids: (haircut.haircut_barber_skills ?? []).map((skill) => skill.barber_id) })) as ManualHaircut[],
     barbers: (barbers.data ?? []) as unknown as ManualBarber[],
   };
@@ -75,6 +75,9 @@ export async function bookManualAppointment(input: {
   shopId: string;
   serviceId: string;
   haircutId: string | null;
+  addonIds?: string[];
+  expectedPrice?: number;
+  expectedDuration?: number;
   barberId: string | null;
   start: string;
   name: string;
@@ -82,7 +85,7 @@ export async function bookManualAppointment(input: {
   email?: string | null;
   internalNote?: string | null;
 }): Promise<ManualBookingResult> {
-  const { data, error } = await supabase.rpc('book_appointment_manual', {
+  const args = {
     p_shop: input.shopId,
     p_service_id: input.serviceId,
     p_haircut_id: input.haircutId,
@@ -92,7 +95,10 @@ export async function bookManualAppointment(input: {
     p_phone: normalizeMozPhone(input.phone),
     p_email: input.email ?? null,
     p_internal_note: input.internalNote ?? null,
-  });
+  };
+  const { data, error } = input.expectedPrice !== undefined && input.expectedDuration !== undefined
+    ? await supabase.rpc('book_composed_appointment_manual', { ...args, p_addon_ids: input.addonIds ?? [], p_expected_price: input.expectedPrice, p_expected_duration: input.expectedDuration })
+    : await supabase.rpc('book_appointment_manual', args);
 
   if (error) throw error;
 
