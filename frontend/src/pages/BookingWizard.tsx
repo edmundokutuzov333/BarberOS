@@ -1,4 +1,4 @@
-import { operationalSimulatorEnabled,qaCheckoutSlug } from '@/features/payments/operational-checkout-api';
+import { operationalSimulatorEnabled } from '@/features/payments/operational-checkout-api';
 import { PAYMENTS_AVAILABLE } from '@/features/payments/availability';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -414,7 +414,7 @@ export default function BookingWizard() {
   const boundedStep = !selectableService ? 1 : Math.min(currentStep, start ? customerStep : date ? 5 : 4);
   const effectiveStep = boundedStep === 2 && !hasStyleStep ? 3 : boundedStep;
   const visibleStep = !hasStyleStep && effectiveStep > 2 ? effectiveStep - 1 : effectiveStep;
-  const depositCents = offer ? getDepositCents(offer, data.shop, operationalSimulatorEnabled&&slug===qaCheckoutSlug) : 0;
+  const depositCents = offer ? getDepositCents(offer, data.shop, operationalSimulatorEnabled&&data.shop.deposit_enabled) : 0;
   const depositConfigValid = !offer || depositCents <= offer.price_cents;
   const canBook = Boolean(
     !shopCatalogQuery.isLoading && selectableService && offer && compositionFits(offer) && addonSelectionValid && eligibleBarbers.length && start && (!haircutId || haircut) && slotsQuery.isSuccess && slotsQuery.data.some((slot) => slot.slot_start === start) && (barberParam === 'any' || barber) && depositConfigValid &&
@@ -883,7 +883,7 @@ export default function BookingWizard() {
                     disabled={!canBook}
                     data-testid="booking-submit"
                   >
-                    {depositCents > 0 ? (operationalSimulatorEnabled&&slug===qaCheckoutSlug?'Criar marcação com sinal de teste':'Criar marcação com sinal') : 'Confirmar marcação'}
+                    {depositCents > 0 ? (operationalSimulatorEnabled&&data.shop.deposit_enabled?'Criar marcação com sinal de teste':'Criar marcação com sinal') : 'Confirmar marcação'}
                   </Button>
                 </form>
               </Panel>
