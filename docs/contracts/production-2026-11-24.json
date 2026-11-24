@@ -88,6 +88,10 @@
     },
     {
       "rls": true,
+      "name": "platform_settings"
+    },
+    {
+      "rls": true,
       "name": "profiles"
     },
     {
@@ -285,7 +289,7 @@
       "returns": "TABLE(id uuid, code text, name text, price_cents integer, max_barbers integer, features jsonb, is_active boolean, assigned_shops bigint)",
       "anon_execute": false,
       "definition_md5": "c85ee2a516cfd22e0e65081fe14914f3",
-      "input_arguments": null,
+      "input_arguments": [],
       "identity_arguments": "",
       "authenticated_execute": true,
       "required_argument_count": 0
@@ -572,7 +576,7 @@
       "name": "enqueue_appointment_notifications",
       "returns": "void",
       "anon_execute": false,
-      "definition_md5": "a996b57e15daf2701dc584ef8e6eaef6",
+      "definition_md5": "6bcca07c0f1954785e34e5389aca49b4",
       "input_arguments": [
         "p_appt"
       ],
@@ -1407,6 +1411,19 @@
       "identity_arguments": "p_bucket text, p_limit integer, p_window_seconds integer",
       "authenticated_execute": false,
       "required_argument_count": 3
+    },
+    {
+      "name": "record_email_event",
+      "returns": "void",
+      "anon_execute": false,
+      "definition_md5": "132a9c6470cda58f5ed1c297d874effa",
+      "input_arguments": [
+        "p_provider_message_id",
+        "p_event"
+      ],
+      "identity_arguments": "p_provider_message_id text, p_event text",
+      "authenticated_execute": false,
+      "required_argument_count": 2
     },
     {
       "name": "record_email_event",

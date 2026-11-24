@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isMigrationArchive } from './migration-archive.mjs';
+import { validSourceReview } from './migration-source-review.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const snapshotPath = path.join(root, 'docs', 'barberos-migration-history-snapshot-2026-11-23.json');
@@ -103,13 +104,13 @@ function mapEnvironment(environment, project) {
 
   const mapped = [...output.values()];
   const unresolved = mapped.filter(x=>['unresolved_remote_history','ambiguous_duplicate_name','invalid_reviewed_resolution'].includes(x.status));
-  const hasLocalReviewEvidence = value => value && typeof value.status === 'string' && value.status.trim().length > 0
-    && typeof value.evidence === 'string' && value.evidence.trim().length >= 12;
-  const sourceNotRepresented = snapshot.source_files.filter(file=>!mappedFiles.has(file) && !hasLocalReviewEvidence(reviewedLocal[file]));
+  const hasLocalReviewEvidence = file => localFiles.includes(file)
+    && validSourceReview(reviewedLocal[file], fs.readFileSync(path.join(migrationDir,file),'utf8'));
+  const sourceNotRepresented = snapshot.source_files.filter(file=>!mappedFiles.has(file) && !hasLocalReviewEvidence(file));
   const newlyAddedLocalFiles = localFiles.filter(file=>!snapshotFiles.has(file));
   const latestRemoteVersion = (project.migrations ?? []).map(item=>item.version).sort().at(-1) ?? '00000000000000';
   const unreviewedNewLocalBeforeRemoteHead = newlyAddedLocalFiles.filter(file =>
-    file.slice(0,14) <= latestRemoteVersion && !mappedFiles.has(file) && !hasLocalReviewEvidence(reviewedLocal[file]));
+    file.slice(0,14) <= latestRemoteVersion && !mappedFiles.has(file) && !hasLocalReviewEvidence(file));
   const counts = {};
   for (const item of mapped) counts[item.status] = (counts[item.status] ?? 0) + 1;
   return {
@@ -120,6 +121,7 @@ function mapEnvironment(environment, project) {
     unresolved_remote_records:unresolved.map(x=>({version:x.version,name:x.name,status:x.status,candidates:x.candidates})),
     source_files_not_mapped_at_snapshot:sourceNotRepresented,
     source_file_count_not_mapped:sourceNotRepresented.length,
+    invalid_local_source_reviews:Object.keys(reviewedLocal).filter(file=>!hasLocalReviewEvidence(file)),
     new_local_migration_files_since_snapshot:newlyAddedLocalFiles,
     unreviewed_new_local_files_not_after_remote_head:unreviewedNewLocalBeforeRemoteHead,
     unresolved_source_file_count:sourceNotRepresented.length + unreviewedNewLocalBeforeRemoteHead.length,

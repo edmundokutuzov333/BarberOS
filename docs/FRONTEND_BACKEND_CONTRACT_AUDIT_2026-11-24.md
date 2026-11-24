@@ -32,8 +32,9 @@ found in the literal payloads. Eight call sites pass opaque objects and need the
 own runtime/typed contract acceptance. Presence and shape are not proof of
 payload-value validation, permissions, return values, pagination or E2E behavior.
 
-After the reviewed report-source deployment, staging is missing 15 frontend RPCs:
-all 14 platform administration methods and the dashboard snapshot. All five report
+After the reviewed report/admin source deployments, staging is missing one frontend
+RPC: the dashboard snapshot. All 14 administration names are present; 13 non-payment
+methods pass the synthetic SQL boundary suite. All five report
 methods now pass the same synthetic SQL behavior test in local, stage and production.
 It is also missing
 admin-credential-manager, google-calendar and the three browser-facing payment
@@ -45,6 +46,13 @@ customer rows. The production gate in CI checks new source against this dated
 snapshot. It does not refresh the live database automatically; deployments and
 migrations require a new capture and runtime validation. The stage snapshot remains
 an explicit failing report until the missing backend is reconciled.
+
+`scripts/contract-metadata.sql` reproduces the read-only database catalog capture.
+It excludes extension-owned functions and filters argument modes to input,
+input/output and variadic parameters. Edge status/bundle hashes are captured
+separately from the management API. The latest capture has production 118/staging
+116 public functions and the same 40 public table names; shared names do not imply
+equivalent policies, columns or behavior.
 
 ## Reproduction
 
@@ -65,7 +73,7 @@ collection to continue; it does not turn staging green.
 
 Reconcile stage administration, password-change authorization and their
 policies from reviewed source/production contracts; test each tenant and admin
-boundary before deploying the corresponding functions. Continue the 29 unresolved
+boundary before deploying the corresponding functions. Continue the nine unresolved
 historical source dispositions and restore acceptance. Replace remaining casts in
 critical commerce/admin flows with typed contracts after schema intent is settled.
 No phase is declared complete by this inventory alone.

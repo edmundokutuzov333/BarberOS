@@ -154,7 +154,7 @@
   "projects": {
     "production": {
       "ref": "alseiinjzwjdiwtvkdzy",
-      "migration_count": 146,
+      "migration_count": 147,
       "migrations": [
         {
           "version": "20260918132000",
@@ -739,12 +739,16 @@
         {
           "version": "20261124001017",
           "name": "shop_partial_delivery_notification"
+        },
+        {
+          "version": "20261124041229",
+          "name": "notification_channels_email_first"
         }
       ]
     },
     "staging": {
       "ref": "asikuyxaapcmayptimxi",
-      "migration_count": 128,
+      "migration_count": 135,
       "migrations": [
         {
           "version": "20261019132753",
@@ -1257,6 +1261,34 @@
         {
           "version": "20261124000750",
           "name": "repair_manage_token_expiry"
+        },
+        {
+          "version": "20261124001902",
+          "name": "platform_admin_domain"
+        },
+        {
+          "version": "20261124001906",
+          "name": "platform_admin_user_contract"
+        },
+        {
+          "version": "20261124001910",
+          "name": "platform_admin_metrics_contract"
+        },
+        {
+          "version": "20261124001913",
+          "name": "platform_admin_mutation_contract"
+        },
+        {
+          "version": "20261124001917",
+          "name": "platform_admin_mutation_alias_hardening"
+        },
+        {
+          "version": "20261124001920",
+          "name": "platform_admin_metrics_daily_fix"
+        },
+        {
+          "version": "20261124001924",
+          "name": "platform_admin_support_unassign"
         }
       ]
     }
@@ -1381,6 +1413,26 @@
       "20261019170000_token_rpc_lockdown.sql": {
         "status": "represented_by_verified_gateway_privileges",
         "evidence": "Current catalog verifies every matching *_by_token RPC and all five explicitly named waitlist/payment RPCs deny anon/authenticated and grant service_role. token_gateway_privilege_audit.sql passes in isolated, staging and production on 2026-11-23. Production history includes 20261021063049 phase27_token_rpc_gateway_lockdown and 20261026100016 token_rpc_lockdown_reconciliation; no historical replay or grant change was performed."
+      },
+      "20261019180000_complete_public_shop_profiles.sql": {
+        "status": "retired_unsafe_demo_seed",
+        "source_sha256": "3c2fde2e49b64835a8a1ab9cb2c9d61b51831c5ac2ee4b77aa0ab70c014c4c58",
+        "evidence": "Full SQL review: fabricates phone, WhatsApp, address, coordinates and Instagram for every incomplete tenant. Deliberately not deployed; preserve missing owner data and require verified publication inputs instead. See docs/LEGACY_SOURCE_DISPOSITIONS_2026-11-24.md."
+      },
+      "20261019150000_platform_foundations.sql": {
+        "status": "retired_unwired_prototype",
+        "source_sha256": "07966e74334d5d54a06e29a8fb8a6def1dbf7667dd997129ddca753459e027c9",
+        "evidence": "Full SQL and repository reference review: eight prototype tables plus soft-delete/privacy fields and two unwired privacy RPCs; no frontend or Edge consumer. Commerce uses shop_products/inventory_movements instead. Do not add unimplemented integration scaffolding to cloud. Existing fresh-chain-only artifacts are documented schema drift, not deployment evidence."
+      },
+      "20261019110000_booking_gateway_hardening.sql": {
+        "status": "represented_by_verified_gateway_prerequisites",
+        "source_sha256": "f5918c6e6b264fce10ed816e6b8752e4086c4b0cf2be2ce493d996b3a30938cf",
+        "evidence": "Actual local/staging/production SQL behavior passes booking_gateway_foundation.sql: service-only cache and rate RPC, browser booking denial, real 2-request rate boundary, preserved token/default+explicit expiry. Live rate_limit_consume definitions match across cloud environments; expiry repair is tracked separately. No payment provider or public booking RPC was executed."
+      },
+      "20261018030000_noir_brass_demo_theme.sql": {
+        "status": "represented_immutability_preserve_selected_theme",
+        "source_sha256": "95f02478cae5c86ce4886f55a31238f6c125eeb75a2f989e912d85092124fd56",
+        "evidence": "tenant_immutability_boundary.sql passes local/stage/production as authenticated owner of two tenants: root profile edit succeeds and child reparent raises TENANT_IMMUTABLE. Production has the exact JSON-safe prevent_tenant_reparent helper; stage uses 14 prevent_tenant_move triggers. The hardcoded Oryon theme override is deliberately not replayed; persisted production theme is speakeasy."
       }
     },
     "staging": {
@@ -1407,6 +1459,46 @@
       "20261019170000_token_rpc_lockdown.sql": {
         "status": "represented_by_verified_gateway_privileges",
         "evidence": "Current catalog verifies every matching *_by_token RPC and all five explicitly named waitlist/payment RPCs deny anon/authenticated and grant service_role. token_gateway_privilege_audit.sql passes in isolated, staging and production on 2026-11-23. Production history includes 20261021063049 phase27_token_rpc_gateway_lockdown and 20261026100016 token_rpc_lockdown_reconciliation; no historical replay or grant change was performed."
+      },
+      "20261019180000_complete_public_shop_profiles.sql": {
+        "status": "retired_unsafe_demo_seed",
+        "source_sha256": "3c2fde2e49b64835a8a1ab9cb2c9d61b51831c5ac2ee4b77aa0ab70c014c4c58",
+        "evidence": "Full SQL review: fabricates phone, WhatsApp, address, coordinates and Instagram for every incomplete tenant. Deliberately not deployed; preserve missing owner data and require verified publication inputs instead. See docs/LEGACY_SOURCE_DISPOSITIONS_2026-11-24.md."
+      },
+      "20261019140257_default_haircut_photos_and_moz_demo_data.sql": {
+        "status": "retired_unsafe_demo_seed",
+        "source_sha256": "da2b496bd8caa6f305ee117d82198843594b1cb09e7010ca552c5744395738e5",
+        "evidence": "Full SQL review: inserts 22 haircuts and default services into every tenant, rewrites first-barber identity/experience and seeds fictional contacts/hours. Not a production contract; do not replay against a populated staging environment."
+      },
+      "20261019144435_refine_haircut_reference_photos_and_demo_profiles.sql": {
+        "status": "retired_demo_seed_companion",
+        "source_sha256": "7fad62d08d5545d0b1d03856a76c457b2231a359df0d313ac7e7743dd2ba6d18",
+        "evidence": "Full SQL review: only updates illustrative cut photos and three fictional demo bios/descriptions. This companion to the retired bulk demo seed is not required by any frontend/API signature; no live tenant presentation is changed."
+      },
+      "20261020053148_publish_shop_photos_and_polished_profiles.sql": {
+        "status": "retired_unsafe_demo_seed",
+        "source_sha256": "c465b74dcfe53240ff2679eeaf826223b349eb751fd5756ac8a4506f82da6583",
+        "evidence": "Full SQL review: changes three demo logos/covers and removes explicit fictional/demo disclosures from their marketing copy. Deliberately not replayed; preserve disclosure and owner-edited presentation instead."
+      },
+      "20261020055726_repair_barber_hours_for_published_team.sql": {
+        "status": "retired_demo_seed_companion",
+        "source_sha256": "985c359dc26aef25fd3cb0b2672f4420ddbbaba5adde2a99082e2b586440ae30",
+        "evidence": "Full SQL review: copies shared weekly hours to all active staff of three hardcoded demo slugs. No schema/API object is defined. Retired with the seeded-team rollout; real schedules remain owner managed."
+      },
+      "20261019150000_platform_foundations.sql": {
+        "status": "retired_unwired_prototype",
+        "source_sha256": "07966e74334d5d54a06e29a8fb8a6def1dbf7667dd997129ddca753459e027c9",
+        "evidence": "Full SQL and repository reference review: eight prototype tables plus soft-delete/privacy fields and two unwired privacy RPCs; no frontend or Edge consumer. Commerce uses shop_products/inventory_movements instead. Do not add unimplemented integration scaffolding to cloud. Existing fresh-chain-only artifacts are documented schema drift, not deployment evidence."
+      },
+      "20261019110000_booking_gateway_hardening.sql": {
+        "status": "represented_by_verified_gateway_prerequisites",
+        "source_sha256": "f5918c6e6b264fce10ed816e6b8752e4086c4b0cf2be2ce493d996b3a30938cf",
+        "evidence": "Actual local/staging/production SQL behavior passes booking_gateway_foundation.sql: service-only cache and rate RPC, browser booking denial, real 2-request rate boundary, preserved token/default+explicit expiry. Live rate_limit_consume definitions match across cloud environments; expiry repair is tracked separately. No payment provider or public booking RPC was executed."
+      },
+      "20261018030000_noir_brass_demo_theme.sql": {
+        "status": "represented_immutability_preserve_selected_theme",
+        "source_sha256": "95f02478cae5c86ce4886f55a31238f6c125eeb75a2f989e912d85092124fd56",
+        "evidence": "tenant_immutability_boundary.sql passes local/stage/production as authenticated owner of two tenants: root profile edit succeeds and child reparent raises TENANT_IMMUTABLE. Production has the exact JSON-safe prevent_tenant_reparent helper; stage uses 14 prevent_tenant_move triggers. The hardcoded Oryon theme override is deliberately not replayed; persisted production theme is speakeasy."
       }
     }
   },

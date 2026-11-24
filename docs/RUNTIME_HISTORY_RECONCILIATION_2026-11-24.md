@@ -26,17 +26,18 @@ some staging token-management bodies still differ from production.
 
 ## Current schema scope
 
-Production has 39 public tables and staging 39; every one has RLS enabled. The
-fresh local chain has 47 public tables. Production has platform access events
-and support tickets previously absent from staging; platform access events now
-exist in both. Support tickets remain absent from staging, which has platform settings absent
-from production. Eight prototype-foundation tables in the source chain are absent
+Production and staging now each have the same 40 public table names; every one
+has RLS enabled. The fresh local chain has 47 public tables. Platform access events
+and support tickets have been installed in staging; platform settings have been
+installed in production. Eight prototype-foundation tables in the source chain are absent
 from production. Counts do not establish schema parity, and RLS presence alone does
 not establish correct authorization. These differences still need explicit intent,
 contract tests and reviewed forward migrations.
 
-The current history auditor reports 29 unresolved source dispositions (five in
-production and 24 in staging), zero unmapped remote migration records. A source
+The current history auditor reports nine unresolved source dispositions (zero in
+production and nine in staging), zero unmapped remote migration records. Eight
+unsafe demo/unwired prototype dispositions are deliberately retired with exact
+source hashes; see `LEGACY_SOURCE_DISPOSITIONS_2026-11-24.md`. A source
 mapping is not permission to replay older SQL: later tenant hardening, notification
 semantics and data already owned by shops must be preserved.
 
@@ -72,11 +73,12 @@ and rollback limits. None of these operations rewrites remote history.
 
 ## Current security advisors
 
-Both databases still report `btree_gist` in public and leaked-password protection
-disabled. Production has seven anonymous and 79 authenticated SECURITY DEFINER
-exposure advisories; staging has seven and 56. Each callable contract needs its
+Fresh advisors after the prerequisite rollouts still report `btree_gist` in public
+and leaked-password protection disabled in both databases. Production has seven
+anonymous and 79 authenticated SECURITY DEFINER exposure findings; staging has
+seven and 76. Each callable contract needs its
 own authorization review rather than revoking all legitimate application RPCs.
-The seven/ six no-policy RLS informational findings include intentionally private
+The eight no-policy RLS informational findings in each environment include intentionally private
 service-only tables; the live Gmail REST denial independently confirms its boundary.
 
 Advisor references: [extension location](https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public),

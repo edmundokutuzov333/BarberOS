@@ -148,6 +148,10 @@
     },
     {
       "rls": true,
+      "name": "support_tickets"
+    },
+    {
+      "rls": true,
       "name": "time_blocks"
     },
     {
@@ -173,6 +177,213 @@
       "identity_arguments": "p_shop uuid, p_email text, p_role app_role",
       "authenticated_execute": true,
       "required_argument_count": 3
+    },
+    {
+      "name": "admin_assign_barbershop_plan",
+      "returns": "TABLE(shop_id uuid, plan_id uuid, plan_code text, plan_name text)",
+      "anon_execute": false,
+      "definition_md5": "159fef8c3e761486b623131d0509539b",
+      "input_arguments": [
+        "p_shop",
+        "p_plan"
+      ],
+      "identity_arguments": "p_shop uuid, p_plan uuid",
+      "authenticated_execute": true,
+      "required_argument_count": 2
+    },
+    {
+      "name": "admin_create_support_ticket",
+      "returns": "TABLE(id uuid, subject text, status support_ticket_status, priority support_ticket_priority, created_at timestamp with time zone)",
+      "anon_execute": false,
+      "definition_md5": "c8817818e9713e0a713090492b91f504",
+      "input_arguments": [
+        "p_shop",
+        "p_subject",
+        "p_description",
+        "p_priority"
+      ],
+      "identity_arguments": "p_shop uuid, p_subject text, p_description text, p_priority support_ticket_priority",
+      "authenticated_execute": true,
+      "required_argument_count": 3
+    },
+    {
+      "name": "admin_get_activity",
+      "returns": "TABLE(id uuid, barbershop_id uuid, shop_name text, actor_id uuid, action text, entity text, entity_id uuid, diff jsonb, created_at timestamp with time zone)",
+      "anon_execute": false,
+      "definition_md5": "4971dc789a212356a4c35c1b0a28591a",
+      "input_arguments": [
+        "p_limit"
+      ],
+      "identity_arguments": "p_limit integer",
+      "authenticated_execute": true,
+      "required_argument_count": 0
+    },
+    {
+      "name": "admin_get_barbershop",
+      "returns": "jsonb",
+      "anon_execute": false,
+      "definition_md5": "07a62300b13f75cc6f11894eac575771",
+      "input_arguments": [
+        "p_shop"
+      ],
+      "identity_arguments": "p_shop uuid",
+      "authenticated_execute": true,
+      "required_argument_count": 1
+    },
+    {
+      "name": "admin_get_metrics",
+      "returns": "jsonb",
+      "anon_execute": false,
+      "definition_md5": "3048163f9cf036df5dbef98e9da32276",
+      "input_arguments": [
+        "p_from",
+        "p_to"
+      ],
+      "identity_arguments": "p_from date, p_to date",
+      "authenticated_execute": true,
+      "required_argument_count": 2
+    },
+    {
+      "name": "admin_get_overview",
+      "returns": "jsonb",
+      "anon_execute": false,
+      "definition_md5": "79ec7f7dda680e6954bcb26b3ae765f9",
+      "input_arguments": null,
+      "identity_arguments": "",
+      "authenticated_execute": true,
+      "required_argument_count": 0
+    },
+    {
+      "name": "admin_list_barbershops",
+      "returns": "TABLE(id uuid, name text, slug text, status shop_status, plan_id uuid, plan_code text, plan_name text, plan_price_cents integer, created_at timestamp with time zone, member_count bigint, barber_count bigint, customer_count bigint, appointment_count bigint, total_count bigint)",
+      "anon_execute": false,
+      "definition_md5": "3c3094256f19783aad1d30d20b496878",
+      "input_arguments": [
+        "p_search",
+        "p_status",
+        "p_limit",
+        "p_offset"
+      ],
+      "identity_arguments": "p_search text, p_status shop_status, p_limit integer, p_offset integer",
+      "authenticated_execute": true,
+      "required_argument_count": 0
+    },
+    {
+      "name": "admin_list_payments",
+      "returns": "TABLE(id uuid, shop_id uuid, shop_name text, appointment_id uuid, provider payment_provider, amount_cents integer, status payment_state, provider_ref text, provider_transaction_id text, requires_refund boolean, paid_at timestamp with time zone, failed_at timestamp with time zone, created_at timestamp with time zone, total_count bigint)",
+      "anon_execute": false,
+      "definition_md5": "3c0e315a4fc2bd19a8c526e33bbd5ed0",
+      "input_arguments": [
+        "p_search",
+        "p_status",
+        "p_provider",
+        "p_limit",
+        "p_offset"
+      ],
+      "identity_arguments": "p_search text, p_status payment_state, p_provider payment_provider, p_limit integer, p_offset integer",
+      "authenticated_execute": true,
+      "required_argument_count": 0
+    },
+    {
+      "name": "admin_list_plans",
+      "returns": "TABLE(id uuid, code text, name text, price_cents integer, max_barbers integer, features jsonb, is_active boolean, assigned_shops bigint)",
+      "anon_execute": false,
+      "definition_md5": "d471e4366dc4da72d1a950c524e6e658",
+      "input_arguments": [],
+      "identity_arguments": "",
+      "authenticated_execute": true,
+      "required_argument_count": 0
+    },
+    {
+      "name": "admin_list_support_tickets",
+      "returns": "TABLE(id uuid, barbershop_id uuid, shop_name text, created_by uuid, created_by_name text, assigned_to uuid, assigned_to_name text, subject text, description text, priority support_ticket_priority, status support_ticket_status, created_at timestamp with time zone, updated_at timestamp with time zone, resolved_at timestamp with time zone, total_count bigint)",
+      "anon_execute": false,
+      "definition_md5": "5b369c7f3efd19a8f1985d2a4661fabc",
+      "input_arguments": [
+        "p_search",
+        "p_status",
+        "p_priority",
+        "p_limit",
+        "p_offset"
+      ],
+      "identity_arguments": "p_search text, p_status support_ticket_status, p_priority support_ticket_priority, p_limit integer, p_offset integer",
+      "authenticated_execute": true,
+      "required_argument_count": 0
+    },
+    {
+      "name": "admin_list_users",
+      "returns": "TABLE(id uuid, email text, full_name text, phone text, avatar_url text, is_platform_admin boolean, is_confirmed boolean, last_sign_in_at timestamp with time zone, created_at timestamp with time zone, shop_count bigint, shop_roles jsonb, total_count bigint)",
+      "anon_execute": false,
+      "definition_md5": "6ce450007ff9adfa916ac8902b9365f2",
+      "input_arguments": [
+        "p_search",
+        "p_limit",
+        "p_offset"
+      ],
+      "identity_arguments": "p_search text, p_limit integer, p_offset integer",
+      "authenticated_execute": true,
+      "required_argument_count": 0
+    },
+    {
+      "name": "admin_set_barbershop_status",
+      "returns": "TABLE(id uuid, status shop_status)",
+      "anon_execute": false,
+      "definition_md5": "5d311bac7ee9b406fad59cb7d5a8eeda",
+      "input_arguments": [
+        "p_shop",
+        "p_status"
+      ],
+      "identity_arguments": "p_shop uuid, p_status shop_status",
+      "authenticated_execute": true,
+      "required_argument_count": 2
+    },
+    {
+      "name": "admin_update_plan",
+      "returns": "TABLE(id uuid, code text, name text, price_cents integer, max_barbers integer, features jsonb, is_active boolean)",
+      "anon_execute": false,
+      "definition_md5": "5f4222236f755301edd3f4153cca2394",
+      "input_arguments": [
+        "p_plan",
+        "p_name",
+        "p_price_cents",
+        "p_max_barbers",
+        "p_features",
+        "p_is_active"
+      ],
+      "identity_arguments": "p_plan uuid, p_name text, p_price_cents integer, p_max_barbers integer, p_features jsonb, p_is_active boolean",
+      "authenticated_execute": true,
+      "required_argument_count": 6
+    },
+    {
+      "name": "admin_update_support_ticket",
+      "returns": "TABLE(id uuid, status support_ticket_status, priority support_ticket_priority, assigned_to uuid, updated_at timestamp with time zone)",
+      "anon_execute": false,
+      "definition_md5": "41e8db7243ff3a2418c3bc8f61dca098",
+      "input_arguments": [
+        "p_ticket",
+        "p_status",
+        "p_priority",
+        "p_assigned_to"
+      ],
+      "identity_arguments": "p_ticket uuid, p_status support_ticket_status, p_priority support_ticket_priority, p_assigned_to uuid",
+      "authenticated_execute": true,
+      "required_argument_count": 1
+    },
+    {
+      "name": "admin_update_support_ticket",
+      "returns": "TABLE(id uuid, status support_ticket_status, priority support_ticket_priority, assigned_to uuid, updated_at timestamp with time zone)",
+      "anon_execute": false,
+      "definition_md5": "89077c3277d265c4d1ec3bdeb01d2528",
+      "input_arguments": [
+        "p_ticket",
+        "p_status",
+        "p_priority",
+        "p_assigned_to",
+        "p_clear_assignee"
+      ],
+      "identity_arguments": "p_ticket uuid, p_status support_ticket_status, p_priority support_ticket_priority, p_assigned_to uuid, p_clear_assignee boolean",
+      "authenticated_execute": true,
+      "required_argument_count": 1
     },
     {
       "name": "book_appointment",

@@ -907,7 +907,9 @@ export type Database = {
           appointment_id: string | null
           attempts: number
           barbershop_id: string
+          bounced_at: string | null
           channel: Database["public"]["Enums"]["notif_channel"]
+          delivered_at: string | null
           error: string | null
           fallback_url: string | null
           id: string
@@ -926,7 +928,9 @@ export type Database = {
           appointment_id?: string | null
           attempts?: number
           barbershop_id: string
+          bounced_at?: string | null
           channel: Database["public"]["Enums"]["notif_channel"]
+          delivered_at?: string | null
           error?: string | null
           fallback_url?: string | null
           id?: string
@@ -945,7 +949,9 @@ export type Database = {
           appointment_id?: string | null
           attempts?: number
           barbershop_id?: string
+          bounced_at?: string | null
           channel?: Database["public"]["Enums"]["notif_channel"]
+          delivered_at?: string | null
           error?: string | null
           fallback_url?: string | null
           id?: string
@@ -1182,6 +1188,24 @@ export type Database = {
           shop_slugs?: string[]
           target_email?: string
           target_user_id?: string
+        }
+        Relationships: []
+      }
+      platform_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
         }
         Relationships: []
       }
@@ -3399,14 +3423,19 @@ export type Database = {
           retry_after_seconds: number
         }[]
       }
-      record_email_event: {
-        Args: {
-          p_event: string
-          p_provider_event_id: string
-          p_provider_message_id: string
-        }
-        Returns: undefined
-      }
+      record_email_event:
+        | {
+            Args: { p_event: string; p_provider_message_id: string }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_event: string
+              p_provider_event_id: string
+              p_provider_message_id: string
+            }
+            Returns: undefined
+          }
       record_shop_inventory_movement: {
         Args: {
           p_barbershop_id: string
@@ -3897,3 +3926,4 @@ export const Constants = {
     },
   },
 } as const
+
