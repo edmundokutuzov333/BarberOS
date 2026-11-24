@@ -152,12 +152,13 @@
     "20261026190000_resend_email_event_fk_index.sql",
     "20261124063655_store_catalog_atomic_management.sql",
     "20261124070136_store_reference_catalog_provisioning.sql",
-    "20261124071304_payments_unavailable_for_store_launch.sql"
+    "20261124071304_payments_unavailable_for_store_launch.sql",
+    "20261124074322_store_reference_lookup_index.sql"
   ],
   "projects": {
     "production": {
       "ref": "alseiinjzwjdiwtvkdzy",
-      "migration_count": 151,
+      "migration_count": 152,
       "migrations": [
         {
           "version": "20260918132000",
@@ -762,12 +763,16 @@
         {
           "version": "20261124072818",
           "name": "payments_unavailable_for_store_launch"
+        },
+        {
+          "version": "20261124074354",
+          "name": "store_reference_lookup_index"
         }
       ]
     },
     "staging": {
       "ref": "asikuyxaapcmayptimxi",
-      "migration_count": 139,
+      "migration_count": 140,
       "migrations": [
         {
           "version": "20261019132753",
@@ -1324,6 +1329,10 @@
         {
           "version": "20261124072341",
           "name": "payments_unavailable_for_store_launch"
+        },
+        {
+          "version": "20261124074349",
+          "name": "store_reference_lookup_index"
         }
       ]
     }
