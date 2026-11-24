@@ -1,0 +1,38 @@
+name: BarberOS Windows Update Acceptance
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/native-update-acceptance.yml'
+      - 'scripts/verification/windows-update.*'
+permissions:
+  contents: read
+concurrency:
+  group: barberos-windows-update-acceptance
+  cancel-in-progress: true
+jobs:
+  actual-upgrade:
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-2025
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/desktop/package-lock.json
+      - run: npm ci
+        working-directory: apps/desktop
+      - name: Exercise actual published update and profile continuity
+        shell: pwsh
+        run: ./scripts/verification/windows-update.ps1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-real-upgrade-evidence
+          path: windows-update-evidence/**
+          if-no-files-found: warn
