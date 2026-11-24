@@ -8,7 +8,7 @@ import { scenarios,simulationError } from './simulator-api';
 import { executeCheckout,getCheckout,type CheckoutScope,type CheckoutCommand,type CheckoutPurpose,type CheckoutRun,type CheckoutView } from './operational-checkout-api';
 const labels={pending:'Pendente',paid:'Pago (teste)',failed:'Falhado',refunded:'Reembolsado (teste)'};
 const outcome:Record<string,string>={REQUESTED:'A aguardar resposta',CONFIRMED:'Pagamento confirmado',PENDING:'Pendente',TIMEOUT:'Tempo de resposta excedido',RECONCILED:'Confirmado por reconciliação',LATE_SUCCESS:'Reembolso necessário — sem liquidação',REFUNDED:'Reembolso concluído',DUPLICATE_IGNORED:'Callback duplicado ignorado',INSUFFICIENT_FUNDS:'Saldo insuficiente',CANCELLED:'Cancelado',INVALID_NUMBER:'Número inválido',PROVIDER_ERROR:'Falha da operadora',PROVIDER_REJECTED:'Operadora rejeitou'};
-export function OperationalCheckout({scope,onChanged}:{scope:CheckoutScope,onChanged?:()=>void}){
+export function OperationalCheckout({scope,onChanged,showDisabled=false}:{scope:CheckoutScope,onChanged?:()=>void,showDisabled?:boolean}){
  const {user}=useAuth();
  const qc=useQueryClient(),key=['operational-payment-simulator','token' in scope?scope.token:scope.shopId,'token' in scope?'customer':user?.id];
  const q=useQuery({queryKey:key,queryFn:()=>getCheckout(scope),retry:false,staleTime:0,refetchOnWindowFocus:'always'});
@@ -16,14 +16,14 @@ export function OperationalCheckout({scope,onChanged}:{scope:CheckoutScope,onCha
  const [selected,setSelected]=useState<string|null>(null),[retry,setRetry]=useState<CheckoutCommand|null>(null),[message,setMessage]=useState('');
  const locked=useRef(false);
  const mutation=useMutation({mutationFn:(command:CheckoutCommand)=>executeCheckout(scope,command),retry:false,onSuccess:r=>{
-  setSelected(r.id);setRetry(null);setMessage('');qc.setQueryData<CheckoutView>(key,old=>old?{...old,runs:[r,...old.runs.filter(x=>x.id!==r.id)].slice(0,25)}:old);void qc.invalidateQueries({queryKey:key});if(r.purpose==='deposit'&&(r.status==='paid'||r.status==='refunded'))onChanged?.();
+  setSelected(r.id);setRetry(null);setMessage('');qc.setQueryData<CheckoutView>(key,old=>old?{...old,runs:[r,...old.runs.filter(x=>x.id!==r.id)].slice(0,25)}:old);void qc.invalidateQueries({queryKey:key});if(r.status==='paid'||r.status==='refunded')onChanged?.();
  },onError:(error,command)=>{setRetry(command);setMessage(error instanceof Error&&error.message==='SIM_NOT_DUE'?'Não existe saldo elegível para pagar. Actualiza o estado.':error instanceof Error&&error.message==='SIM_PENDING_EXISTS'?'Já existe um pagamento pendente. Continua o pedido existente.':simulationError(error));},onSettled:()=>{locked.current=false;}});
  function submit(command:CheckoutCommand){if(locked.current)return;locked.current=true;mutation.mutate(command);}
  function action(r:CheckoutRun,operation:'confirm'|'reconcile'|'refund'|'replay'){submit({operation,payload:{run_id:r.id,request_id:crypto.randomUUID()}});}
  function create(purpose:CheckoutPurpose){submit({operation:'create',payload:{purpose,scenario,request_id:crypto.randomUUID()}});}
  if(q.isPending)return <p className="t-label text-ink-mid" role="status">A verificar pagamentos de teste…</p>;
  if(q.isError)return <Panel><p role="alert">Não foi possível consultar o checkout de testes.</p><Button variant="secondary" onClick={()=>void q.refetch()}>Actualizar</Button></Panel>;
- if(!q.data?.enabled)return null;
+ if(!q.data?.enabled)return showDisabled?<p role="status" className="t-body text-ink-mid">Simulador operacional não autorizado para esta barbearia.</p>:null;
  const busy=mutation.isPending||!!retry||q.isFetching;
  return <Panel className="space-y-4" testId="operational-checkout">
   <div><p className="t-label text-accent-soft">TEST MODE · M-Pesa</p><h2 className="t-card text-ink-hi">Pagamento de teste</h2><p className="t-body text-ink-mid">Sem dinheiro real. Os valores são calculados pelo servidor a partir desta operação QA.</p></div>
