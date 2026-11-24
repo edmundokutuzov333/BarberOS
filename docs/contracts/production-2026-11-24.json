@@ -285,7 +285,7 @@
       "returns": "TABLE(id uuid, code text, name text, price_cents integer, max_barbers integer, features jsonb, is_active boolean, assigned_shops bigint)",
       "anon_execute": false,
       "definition_md5": "c85ee2a516cfd22e0e65081fe14914f3",
-      "input_arguments": [],
+      "input_arguments": null,
       "identity_arguments": "",
       "authenticated_execute": true,
       "required_argument_count": 0
@@ -1811,6 +1811,48 @@
   ],
   "edges": [
     {
+      "name": "admin-credential-manager",
+      "status": "ACTIVE",
+      "version": 9,
+      "verify_jwt": true,
+      "bundle_sha256": "d95ad9aac719dbb12191efccd5bde4e7788f84c3e4a2cb4ba0935eccd2768c3c"
+    },
+    {
+      "name": "barber-assets",
+      "status": "ACTIVE",
+      "version": 4,
+      "verify_jwt": false,
+      "bundle_sha256": "1344f113134cc0cdd271d9e1d2f4e915b687d8ea0dc04ef8c7cc9fc1041b6929"
+    },
+    {
+      "name": "booking-create",
+      "status": "ACTIVE",
+      "version": 6,
+      "verify_jwt": false,
+      "bundle_sha256": "28ee13df851d6e2df749c1085963ebce35bebad4de4af8d38be021d41440a75c"
+    },
+    {
+      "name": "gmail-integration",
+      "status": "ACTIVE",
+      "version": 8,
+      "verify_jwt": false,
+      "bundle_sha256": "72335aaba8998203450c9dfbb4bd28e3989ff403fd6af400d10b8c891a75d244"
+    },
+    {
+      "name": "payments-configure",
+      "status": "ACTIVE",
+      "version": 5,
+      "verify_jwt": true,
+      "bundle_sha256": "cbcecaad78e593231a91c3d01c6da179df712dc60aa37c44a728f5a5b4e1323c"
+    },
+    {
+      "name": "payments-webhook",
+      "status": "ACTIVE",
+      "version": 4,
+      "verify_jwt": false,
+      "bundle_sha256": "243c8eac97a2d2cc918f1bbe1f82eceef664381a76ef3b46749bf90c751fade2"
+    },
+    {
       "name": "payments-reconcile",
       "status": "ACTIVE",
       "version": 4,
@@ -1865,48 +1907,6 @@
       "version": 5,
       "verify_jwt": false,
       "bundle_sha256": "b9d7087cac62b61dddb31411fb34b8d6f82b70419332fefaa2dcd9c934ce2b1d"
-    },
-    {
-      "name": "admin-credential-manager",
-      "status": "ACTIVE",
-      "version": 8,
-      "verify_jwt": true,
-      "bundle_sha256": "ba3f46bee4859a235373b20d0f55aa6d0d398898066c7c095e34a0144f292d00"
-    },
-    {
-      "name": "barber-assets",
-      "status": "ACTIVE",
-      "version": 4,
-      "verify_jwt": false,
-      "bundle_sha256": "1344f113134cc0cdd271d9e1d2f4e915b687d8ea0dc04ef8c7cc9fc1041b6929"
-    },
-    {
-      "name": "booking-create",
-      "status": "ACTIVE",
-      "version": 6,
-      "verify_jwt": false,
-      "bundle_sha256": "28ee13df851d6e2df749c1085963ebce35bebad4de4af8d38be021d41440a75c"
-    },
-    {
-      "name": "gmail-integration",
-      "status": "ACTIVE",
-      "version": 7,
-      "verify_jwt": false,
-      "bundle_sha256": "39903cbaea775e94a10d28ca71ef8895d3a374e59f8ba3c47af7f289ddb60669"
-    },
-    {
-      "name": "payments-configure",
-      "status": "ACTIVE",
-      "version": 5,
-      "verify_jwt": true,
-      "bundle_sha256": "cbcecaad78e593231a91c3d01c6da179df712dc60aa37c44a728f5a5b4e1323c"
-    },
-    {
-      "name": "payments-webhook",
-      "status": "ACTIVE",
-      "version": 4,
-      "verify_jwt": false,
-      "bundle_sha256": "243c8eac97a2d2cc918f1bbe1f82eceef664381a76ef3b46749bf90c751fade2"
     }
   ]
 }

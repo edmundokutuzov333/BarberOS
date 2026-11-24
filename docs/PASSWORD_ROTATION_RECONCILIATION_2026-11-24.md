@@ -70,5 +70,10 @@ AuthProvider, without tenant queries. Public-page provider promotion and moving
 recovery under the entire tenant layout were rejected because they respectively
 increase public bootstrap work and couple account recovery to shop availability.
 Real-router browser regressions cover entry, missing session, both completion
-paths, backend failure/retry and validation. Production acceptance of this latest
-route correction must be recorded after deployment.
+paths, backend failure/retry and validation: all 12 desktop/mobile cases pass.
+All six workflows for `276ed9d935e5880bd229503007ccc86f8558203c` passed. On the
+published application (entry `index--SBxEw-i.js`), the actual Gmail recovery link
+now opens `/alterar-palavra-passe`, renders both password inputs and removes the
+pending account message. The same controlled flag was restored to false in a
+finally block; no password was entered/submitted. The old service worker initially
+served the previous bundle; its update was confirmed before this acceptance.

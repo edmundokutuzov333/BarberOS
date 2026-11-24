@@ -154,7 +154,7 @@
   "projects": {
     "production": {
       "ref": "alseiinjzwjdiwtvkdzy",
-      "migration_count": 145,
+      "migration_count": 146,
       "migrations": [
         {
           "version": "20260918132000",
@@ -735,12 +735,16 @@
         {
           "version": "20261123124859",
           "name": "reconcile_operation_incidents"
+        },
+        {
+          "version": "20261124001017",
+          "name": "shop_partial_delivery_notification"
         }
       ]
     },
     "staging": {
       "ref": "asikuyxaapcmayptimxi",
-      "migration_count": 122,
+      "migration_count": 128,
       "migrations": [
         {
           "version": "20261019132753",
@@ -1229,6 +1233,30 @@
         {
           "version": "20261123234200",
           "name": "platform_access_audit"
+        },
+        {
+          "version": "20261124000710",
+          "name": "reports_engine"
+        },
+        {
+          "version": "20261124000714",
+          "name": "reports_summary_alias_hardening"
+        },
+        {
+          "version": "20261124000717",
+          "name": "reports_capacity_alias_hardening"
+        },
+        {
+          "version": "20261124000721",
+          "name": "reports_daily_alias_hardening"
+        },
+        {
+          "version": "20261124000724",
+          "name": "reports_barber_alias_hardening"
+        },
+        {
+          "version": "20261124000750",
+          "name": "repair_manage_token_expiry"
         }
       ]
     }

@@ -16,12 +16,7 @@
     "admin_set_barbershop_status",
     "admin_update_plan",
     "admin_update_support_ticket",
-    "get_dashboard_snapshot",
-    "get_report_barbers",
-    "get_report_daily",
-    "get_report_haircuts",
-    "get_report_services",
-    "get_report_summary"
+    "get_dashboard_snapshot"
   ],
   "missing_tables": [],
   "missing_edges": [

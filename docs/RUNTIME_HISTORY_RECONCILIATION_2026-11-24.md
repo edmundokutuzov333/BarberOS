@@ -35,8 +35,8 @@ from production. Counts do not establish schema parity, and RLS presence alone d
 not establish correct authorization. These differences still need explicit intent,
 contract tests and reviewed forward migrations.
 
-The current history auditor reports 36 unresolved source dispositions (six in
-production and 30 in staging), zero unmapped remote migration records. A source
+The current history auditor reports 29 unresolved source dispositions (five in
+production and 24 in staging), zero unmapped remote migration records. A source
 mapping is not permission to replay older SQL: later tenant hardening, notification
 semantics and data already owned by shops must be preserved.
 
@@ -56,6 +56,19 @@ The live history contains 122 staging records. The new flag is non-null/default
 false with zero accounts awaiting rotation; the audit table has RLS and denies
 browser SELECT. These prerequisites do not install the pending SQL authorization
 candidate, reporting RPCs or the administrative Edge Function.
+
+Subsequently, the five existing reports sources were applied unchanged at server
+versions `20261124000710`, `20261124000714`, `20261124000717`, `20261124000721`
+and `20261124000724`. The existing management-token expiry repair was applied at
+`20261124000750`. Staging now has 128 history records. No existing token was
+replaced; there were zero staging appointments to backfill.
+
+Production's existing partial-delivery notification source was applied at server
+version `20261124001017`, bringing its history to 146 records. The exact before
+definition/constraints/grants were captured. The change adds the missing partial
+event to the check and emitter, preserving every other transition and tenant key.
+See `REPORTING_AND_PARTIAL_DELIVERY_ACCEPTANCE_2026-11-24.md` for runtime evidence
+and rollback limits. None of these operations rewrites remote history.
 
 ## Current security advisors
 

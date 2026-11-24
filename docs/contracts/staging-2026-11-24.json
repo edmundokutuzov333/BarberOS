@@ -84,6 +84,10 @@
     },
     {
       "rls": true,
+      "name": "platform_access_events"
+    },
+    {
+      "rls": true,
       "name": "platform_settings"
     },
     {
@@ -733,6 +737,81 @@
       "identity_arguments": "p_slug text",
       "authenticated_execute": true,
       "required_argument_count": 1
+    },
+    {
+      "name": "get_report_barbers",
+      "returns": "TABLE(barber_id uuid, barber_name text, appointment_count bigint, completed_count bigint, cancelled_count bigint, no_show_count bigint, booked_minutes numeric, capacity_minutes numeric, occupancy_percent numeric, estimated_revenue_cents bigint, rating_avg numeric, rating_count bigint)",
+      "anon_execute": false,
+      "definition_md5": "2777e625e095a39f438ff800b542d041",
+      "input_arguments": [
+        "p_shop",
+        "p_from",
+        "p_to",
+        "p_barber_id"
+      ],
+      "identity_arguments": "p_shop uuid, p_from date, p_to date, p_barber_id uuid",
+      "authenticated_execute": true,
+      "required_argument_count": 3
+    },
+    {
+      "name": "get_report_daily",
+      "returns": "TABLE(report_date date, appointment_count bigint, completed_count bigint, cancelled_count bigint, no_show_count bigint, pending_count bigint, confirmed_count bigint, in_progress_count bigint, booked_minutes numeric, capacity_minutes numeric, occupancy_percent numeric, estimated_revenue_cents bigint, paid_deposit_cents bigint)",
+      "anon_execute": false,
+      "definition_md5": "07336c8e9380ca93a5fb7f3c0b3c6d84",
+      "input_arguments": [
+        "p_shop",
+        "p_from",
+        "p_to",
+        "p_barber_id"
+      ],
+      "identity_arguments": "p_shop uuid, p_from date, p_to date, p_barber_id uuid",
+      "authenticated_execute": true,
+      "required_argument_count": 3
+    },
+    {
+      "name": "get_report_haircuts",
+      "returns": "TABLE(haircut_id uuid, haircut_name text, appointment_count bigint, completed_count bigint, cancelled_count bigint, no_show_count bigint, booked_minutes numeric, estimated_revenue_cents bigint)",
+      "anon_execute": false,
+      "definition_md5": "d8851bc57471fdc112a23767ae484f67",
+      "input_arguments": [
+        "p_shop",
+        "p_from",
+        "p_to",
+        "p_barber_id"
+      ],
+      "identity_arguments": "p_shop uuid, p_from date, p_to date, p_barber_id uuid",
+      "authenticated_execute": true,
+      "required_argument_count": 3
+    },
+    {
+      "name": "get_report_services",
+      "returns": "TABLE(service_id uuid, service_name text, appointment_count bigint, completed_count bigint, cancelled_count bigint, no_show_count bigint, booked_minutes numeric, estimated_revenue_cents bigint, paid_deposit_cents bigint, average_completed_ticket_cents numeric)",
+      "anon_execute": false,
+      "definition_md5": "db2063f8a2b3600455b6e4dbb8ced72c",
+      "input_arguments": [
+        "p_shop",
+        "p_from",
+        "p_to",
+        "p_barber_id"
+      ],
+      "identity_arguments": "p_shop uuid, p_from date, p_to date, p_barber_id uuid",
+      "authenticated_execute": true,
+      "required_argument_count": 3
+    },
+    {
+      "name": "get_report_summary",
+      "returns": "TABLE(from_date date, to_date date, appointment_count bigint, pending_count bigint, confirmed_count bigint, in_progress_count bigint, completed_count bigint, cancelled_count bigint, no_show_count bigint, booked_minutes numeric, capacity_minutes numeric, occupancy_percent numeric, estimated_revenue_cents bigint, paid_deposit_cents bigint, refunded_deposit_cents bigint, average_completed_ticket_cents numeric, new_customers_count bigint)",
+      "anon_execute": false,
+      "definition_md5": "ca81e2978aaafe7ace139f04290d92e3",
+      "input_arguments": [
+        "p_shop",
+        "p_from",
+        "p_to",
+        "p_barber_id"
+      ],
+      "identity_arguments": "p_shop uuid, p_from date, p_to date, p_barber_id uuid",
+      "authenticated_execute": true,
+      "required_argument_count": 3
     },
     {
       "name": "get_reschedule_slots_by_token",
@@ -1510,32 +1589,18 @@
   ],
   "edges": [
     {
-      "name": "health",
+      "name": "booking-create",
       "status": "ACTIVE",
-      "version": 2,
+      "version": 6,
       "verify_jwt": false,
-      "bundle_sha256": "a96c4824e923269210b0424e0f9097da40d61cb4e3420b18ec95065cb8146474"
-    },
-    {
-      "name": "token-gateway",
-      "status": "ACTIVE",
-      "version": 3,
-      "verify_jwt": false,
-      "bundle_sha256": "8cd979407ecc274b2fdd082816281598e5b58b22a9f0f651a6314a0da4f17ce1"
+      "bundle_sha256": "bf4abed6ea4b40a7373a9cfe99717fba8d2671ec666d78be7d414f2a310fd8db"
     },
     {
       "name": "gmail-integration",
       "status": "ACTIVE",
-      "version": 3,
+      "version": 4,
       "verify_jwt": false,
-      "bundle_sha256": "39903cbaea775e94a10d28ca71ef8895d3a374e59f8ba3c47af7f289ddb60669"
-    },
-    {
-      "name": "notify-dispatch",
-      "status": "ACTIVE",
-      "version": 1,
-      "verify_jwt": false,
-      "bundle_sha256": "abf4d31ab33055a48a745dde3baa8c28b7e4bdef58dd988a68f510fa95c0c6d7"
+      "bundle_sha256": "72335aaba8998203450c9dfbb4bd28e3989ff403fd6af400d10b8c891a75d244"
     },
     {
       "name": "resend-webhook",
@@ -1545,11 +1610,25 @@
       "bundle_sha256": "edb81e81ba10d7e53364f0be50cc11d17b0a0e2feeab12235b0c6598886fce9e"
     },
     {
-      "name": "booking-create",
+      "name": "notify-dispatch",
       "status": "ACTIVE",
-      "version": 6,
+      "version": 1,
       "verify_jwt": false,
-      "bundle_sha256": "bf4abed6ea4b40a7373a9cfe99717fba8d2671ec666d78be7d414f2a310fd8db"
+      "bundle_sha256": "abf4d31ab33055a48a745dde3baa8c28b7e4bdef58dd988a68f510fa95c0c6d7"
+    },
+    {
+      "name": "token-gateway",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": false,
+      "bundle_sha256": "8cd979407ecc274b2fdd082816281598e5b58b22a9f0f651a6314a0da4f17ce1"
+    },
+    {
+      "name": "health",
+      "status": "ACTIVE",
+      "version": 2,
+      "verify_jwt": false,
+      "bundle_sha256": "a96c4824e923269210b0424e0f9097da40d61cb4e3420b18ec95065cb8146474"
     }
   ]
 }

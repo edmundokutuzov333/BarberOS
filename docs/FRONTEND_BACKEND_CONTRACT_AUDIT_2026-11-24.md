@@ -32,8 +32,10 @@ found in the literal payloads. Eight call sites pass opaque objects and need the
 own runtime/typed contract acceptance. Presence and shape are not proof of
 payload-value validation, permissions, return values, pagination or E2E behavior.
 
-Staging is missing 20 frontend RPCs: all 14 platform administration methods, the
-dashboard snapshot and five report methods. It is also missing
+After the reviewed report-source deployment, staging is missing 15 frontend RPCs:
+all 14 platform administration methods and the dashboard snapshot. All five report
+methods now pass the same synthetic SQL behavior test in local, stage and production.
+It is also missing
 admin-credential-manager, google-calendar and the three browser-facing payment
 functions. No payment provider was called or tested by this inventory.
 
@@ -61,9 +63,9 @@ collection to continue; it does not turn staging green.
 
 ## Next base work
 
-Reconcile stage reporting, administration, password-change prerequisites and their
+Reconcile stage administration, password-change authorization and their
 policies from reviewed source/production contracts; test each tenant and admin
-boundary before deploying the corresponding functions. Continue the 36 unresolved
+boundary before deploying the corresponding functions. Continue the 29 unresolved
 historical source dispositions and restore acceptance. Replace remaining casts in
 critical commerce/admin flows with typed contracts after schema intent is settled.
 No phase is declared complete by this inventory alone.
