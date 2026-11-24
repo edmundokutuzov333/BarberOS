@@ -49,7 +49,7 @@ export default function Entrar() {
 
   return (
     <AuthCard testId="login-page" title="Entrar" subtitle="A tua barbearia, o teu dia."
-      footer={<>Ainda não tens conta? <Link data-testid="go-register-link" to="/registar" className="text-accent-soft hover:text-ink-hi transition-colors">Criar conta</Link></>}>
+      footer={<>Ainda não tens conta? <Link data-testid="go-register-link" to="/registar" state={loc.state?.from === '/convite' ? { from: '/convite' } : undefined} className="text-accent-soft hover:text-ink-hi transition-colors">Criar conta</Link></>}>
       <form onSubmit={submit} className="space-y-4" noValidate>
         <Field data-testid="login-email-input" label="Email" name="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@barbearia.co.mz" />
         <Field data-testid="login-password-input" label="Palavra-passe" name="password" type="password" autoComplete="current-password" required value={pw} onChange={(e) => setPw(e.target.value)} placeholder="••••••••" />

@@ -15,6 +15,7 @@ const Privacy = lazy(() => import('./pages/Legal').then((module) => ({ default: 
 const Terms = lazy(() => import('./pages/Legal').then((module) => ({ default: module.Terms })));
 const Entrar = lazy(() => import('./pages/auth/Entrar'));
 const Registar = lazy(() => import('./pages/auth/Registar'));
+const Convite = lazy(() => import('./pages/auth/Convite'));
 const Recuperar = lazy(() => import('./pages/auth/Recuperar'));
 const AlterarPalavraPasse = lazy(() => import('./pages/auth/AlterarPalavraPasse'));
 const AppointmentManage = lazy(() => import('./pages/AppointmentManage'));
@@ -116,6 +117,7 @@ export default function App() {
         <Route path="/b/:slug" element={<ShortLink />} />
         <Route path="/entrar" element={<Entrar />} />
         <Route path="/registar" element={<Registar />} />
+        <Route path="/convite" element={<Convite />} />
         <Route path="/recuperar" element={<Recuperar />} />
         <Route path="/alterar-palavra-passe" element={<AlterarPalavraPasse />} />
         <Route path="/marcacao/:token" element={<AppointmentManage />} />

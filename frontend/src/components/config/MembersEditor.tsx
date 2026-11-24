@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useShop } from '@/lib/shop';
+import { TeamInvitationsPanel } from './TeamInvitationsPanel';
 import { useAuth } from '@/lib/auth';
 import { humanError } from '@/lib/utils';
 import { ROLE_LABEL } from '@/lib/types';
@@ -22,7 +23,7 @@ export function MembersEditor() {
   if (!shop || !user) return null;
   if (role !== 'owner') return <p role="status" className="t-body text-ink-mid">Só o dono pode gerir os acessos da equipa.</p>;
   // Remount tenant/account-owned drafts and pending dialogs when context changes.
-  return <MemberForm key={`${shop.id}:${user.id}`} shopId={shop.id} userId={user.id} />;
+  return <div key={`${shop.id}:${user.id}`}><MemberForm shopId={shop.id} userId={user.id} /><TeamInvitationsPanel shopId={shop.id} /></div>;
 }
 
 function MemberForm({ shopId, userId }: { shopId: string; userId: string }) {
