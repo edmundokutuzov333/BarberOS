@@ -55,6 +55,14 @@
       "name": "gmail_oauth_states"
     },
     {
+      "name": "haircut_barber_skills",
+      "rls": true
+    },
+    {
+      "name": "haircut_service_offers",
+      "rls": true
+    },
+    {
       "rls": true,
       "name": "haircuts"
     },
@@ -105,6 +113,10 @@
     {
       "rls": true,
       "name": "schedule_overrides"
+    },
+    {
+      "name": "service_addons",
+      "rls": true
     },
     {
       "rls": true,
@@ -467,6 +479,54 @@
       "required_argument_count": 11
     },
     {
+      "name": "book_composed_appointment_manual",
+      "returns": "TABLE(appointment_id uuid, manage_token uuid, barber_id uuid, starts_at timestamp with time zone, ends_at timestamp with time zone, status appointment_status, deposit_cents integer, needs_payment boolean)",
+      "identity_arguments": "p_shop uuid, p_service_id uuid, p_haircut_id uuid, p_barber_id uuid, p_start timestamp with time zone, p_name text, p_phone text, p_email text, p_internal_note text, p_addon_ids uuid[], p_expected_price integer, p_expected_duration integer",
+      "input_arguments": [
+        "p_shop",
+        "p_service_id",
+        "p_haircut_id",
+        "p_barber_id",
+        "p_start",
+        "p_name",
+        "p_phone",
+        "p_email",
+        "p_internal_note",
+        "p_addon_ids",
+        "p_expected_price",
+        "p_expected_duration"
+      ],
+      "required_argument_count": 12,
+      "definition_md5": "dae910849cee2ad667fb9109e09a7ee7",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "name": "book_composed_appointment_with_shop_order_idempotent",
+      "returns": "TABLE(appointment_id uuid, manage_token uuid, deposit_cents integer, needs_payment boolean, shop_order_status shop_order_status, shop_order_item_count integer, shop_subtotal_minor bigint)",
+      "identity_arguments": "p_idempotency_key uuid, p_slug text, p_service_id uuid, p_haircut_id uuid, p_barber_id uuid, p_start timestamp with time zone, p_name text, p_phone text, p_email text, p_shop_items jsonb, p_request_hash text, p_addon_ids uuid[], p_expected_price integer, p_expected_duration integer",
+      "input_arguments": [
+        "p_idempotency_key",
+        "p_slug",
+        "p_service_id",
+        "p_haircut_id",
+        "p_barber_id",
+        "p_start",
+        "p_name",
+        "p_phone",
+        "p_email",
+        "p_shop_items",
+        "p_request_hash",
+        "p_addon_ids",
+        "p_expected_price",
+        "p_expected_duration"
+      ],
+      "required_argument_count": 14,
+      "definition_md5": "cded05697c5c52e6da5d46b0016a0afe",
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    {
       "name": "cancel_appointment_by_token",
       "returns": "TABLE(cancelled_at timestamp with time zone)",
       "anon_execute": false,
@@ -520,14 +580,14 @@
     {
       "name": "claim_waitlist_offer",
       "returns": "TABLE(waitlist_entry_id uuid, appointment_id uuid, manage_token uuid, status appointment_status, starts_at timestamp with time zone, ends_at timestamp with time zone, barber_id uuid, deposit_cents integer, needs_payment boolean)",
-      "anon_execute": false,
-      "definition_md5": "da2c3da0cf5229ccc0f9b7a78e0ba622",
+      "identity_arguments": "p_token uuid",
       "input_arguments": [
         "p_token"
       ],
-      "identity_arguments": "p_token uuid",
-      "authenticated_execute": false,
-      "required_argument_count": 1
+      "required_argument_count": 1,
+      "definition_md5": "c35dfe81cd9bd2c9069899624d2085bf",
+      "anon_execute": false,
+      "authenticated_execute": false
     },
     {
       "name": "create_barbershop",
@@ -645,16 +705,16 @@
     {
       "name": "get_agenda_appointments",
       "returns": "TABLE(appointment_id uuid, barber_id uuid, barber_name text, barber_photo_url text, customer_name text, customer_phone text, customer_email text, service_id uuid, service_name text, haircut_id uuid, haircut_name text, starts_at timestamp with time zone, ends_at timestamp with time zone, duration_min integer, price_cents integer, status appointment_status, deposit_status deposit_state, deposit_cents integer, hold_expires_at timestamp with time zone, source booking_source, manage_token uuid)",
-      "anon_execute": false,
-      "definition_md5": "1f9c017ef6946a3dd7ed0ace9758e5a0",
+      "identity_arguments": "p_shop uuid, p_from timestamp with time zone, p_to timestamp with time zone",
       "input_arguments": [
         "p_shop",
         "p_from",
         "p_to"
       ],
-      "identity_arguments": "p_shop uuid, p_from timestamp with time zone, p_to timestamp with time zone",
-      "authenticated_execute": true,
-      "required_argument_count": 3
+      "required_argument_count": 3,
+      "definition_md5": "aab5e8568025f0918441cd2d9d9aacbf",
+      "anon_execute": false,
+      "authenticated_execute": true
     },
     {
       "name": "get_agenda_schedule",
@@ -673,20 +733,19 @@
     {
       "name": "get_appointment_by_token",
       "returns": "TABLE(shop_name text, shop_slug text, shop_phone text, shop_whatsapp text, shop_address text, shop_maps_url text, timezone text, cancellation_rule cancellation_rule, customer_name text, appointment_starts_at timestamp with time zone, appointment_ends_at timestamp with time zone, appointment_status appointment_status, deposit_status deposit_state, deposit_cents integer, service_name text, service_price_cents integer, service_duration_min integer, haircut_name text, barber_name text, barber_photo_url text, can_cancel boolean, can_reschedule boolean, action_deadline timestamp with time zone, hold_expires_at timestamp with time zone, payment_methods payment_provider[], latest_payment_status payment_state, latest_payment_failure_code text, latest_payment_failure_reason text, latest_payment_requires_refund boolean)",
-      "anon_execute": false,
-      "definition_md5": "c8d150699e19050fe3d2a9c56fc986ea",
+      "identity_arguments": "p_token uuid",
       "input_arguments": [
         "p_token"
       ],
-      "identity_arguments": "p_token uuid",
-      "authenticated_execute": false,
-      "required_argument_count": 1
+      "required_argument_count": 1,
+      "definition_md5": "b27a68d091b46824a16ed7afc35bc192",
+      "anon_execute": false,
+      "authenticated_execute": false
     },
     {
       "name": "get_appointments",
       "returns": "TABLE(appointment_id uuid, barber_id uuid, barber_name text, customer_id uuid, customer_name text, customer_phone text, customer_email text, service_id uuid, service_name text, haircut_id uuid, haircut_name text, starts_at timestamp with time zone, ends_at timestamp with time zone, duration_min integer, price_cents integer, status appointment_status, deposit_status deposit_state, deposit_cents integer, hold_expires_at timestamp with time zone, source booking_source, total_count bigint)",
-      "anon_execute": false,
-      "definition_md5": "d62db172122ee476d8dad14cad63915c",
+      "identity_arguments": "p_shop uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_status appointment_status, p_search text, p_limit integer, p_offset integer",
       "input_arguments": [
         "p_shop",
         "p_from",
@@ -696,9 +755,10 @@
         "p_limit",
         "p_offset"
       ],
-      "identity_arguments": "p_shop uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_status appointment_status, p_search text, p_limit integer, p_offset integer",
-      "authenticated_execute": true,
-      "required_argument_count": 3
+      "required_argument_count": 3,
+      "definition_md5": "69948c842e5c92bcc068021525b2d114",
+      "anon_execute": false,
+      "authenticated_execute": true
     },
     {
       "name": "get_available_days",
@@ -747,32 +807,67 @@
       "required_argument_count": 2
     },
     {
+      "name": "get_composed_available_days",
+      "returns": "TABLE(day date, slots_count integer, is_open boolean)",
+      "identity_arguments": "p_slug text, p_service_id uuid, p_barber_id uuid, p_from date, p_to date, p_haircut_id uuid, p_addon_ids uuid[]",
+      "input_arguments": [
+        "p_slug",
+        "p_service_id",
+        "p_barber_id",
+        "p_from",
+        "p_to",
+        "p_haircut_id",
+        "p_addon_ids"
+      ],
+      "required_argument_count": 7,
+      "definition_md5": "b6da663ff745e8e7facdc48f80c45a13",
+      "anon_execute": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "get_composed_available_slots",
+      "returns": "TABLE(slot_start timestamp with time zone, barber_ids uuid[])",
+      "identity_arguments": "p_slug text, p_service_id uuid, p_barber_id uuid, p_date date, p_haircut_id uuid, p_addon_ids uuid[]",
+      "input_arguments": [
+        "p_slug",
+        "p_service_id",
+        "p_barber_id",
+        "p_date",
+        "p_haircut_id",
+        "p_addon_ids"
+      ],
+      "required_argument_count": 6,
+      "definition_md5": "841a3421ff9c51f1178625076c98558b",
+      "anon_execute": true,
+      "authenticated_execute": true
+    },
+    {
       "name": "get_customer",
       "returns": "TABLE(customer_id uuid, name text, phone text, email text, notes text, preferences jsonb, visits_count integer, no_show_count integer, last_visit_at timestamp with time zone, next_appointment_at timestamp with time zone, next_appointment_status appointment_status, last_service_name text, last_haircut_name text, last_barber_name text, total_spend_cents bigint, total_appointments bigint, completed_appointments bigint, cancelled_appointments bigint)",
-      "anon_execute": false,
-      "definition_md5": "4e0afa4115b69ab60bdf1d7cd7eba182",
+      "identity_arguments": "p_shop uuid, p_customer uuid",
       "input_arguments": [
         "p_shop",
         "p_customer"
       ],
-      "identity_arguments": "p_shop uuid, p_customer uuid",
-      "authenticated_execute": true,
-      "required_argument_count": 2
+      "required_argument_count": 2,
+      "definition_md5": "6a6b135e2a4755f2a47e86af315e672c",
+      "anon_execute": false,
+      "authenticated_execute": true
     },
     {
       "name": "get_customer_appointments",
       "returns": "TABLE(appointment_id uuid, starts_at timestamp with time zone, ends_at timestamp with time zone, status appointment_status, service_name text, haircut_name text, barber_name text, price_cents integer, source booking_source, deposit_status deposit_state, deposit_cents integer, total_count bigint)",
-      "anon_execute": false,
-      "definition_md5": "779af6476962035d1c5029806664b27d",
+      "identity_arguments": "p_shop uuid, p_customer uuid, p_limit integer, p_offset integer",
       "input_arguments": [
         "p_shop",
         "p_customer",
         "p_limit",
         "p_offset"
       ],
-      "identity_arguments": "p_shop uuid, p_customer uuid, p_limit integer, p_offset integer",
-      "authenticated_execute": true,
-      "required_argument_count": 2
+      "required_argument_count": 2,
+      "definition_md5": "496a0028f6ec04621c349a814739c101",
+      "anon_execute": false,
+      "authenticated_execute": true
     },
     {
       "name": "get_customer_metrics",
@@ -789,8 +884,7 @@
     {
       "name": "get_customers",
       "returns": "TABLE(customer_id uuid, name text, phone text, email text, notes text, preferences jsonb, visits_count integer, no_show_count integer, last_visit_at timestamp with time zone, next_appointment_at timestamp with time zone, next_appointment_status appointment_status, last_service_name text, last_haircut_name text, total_spend_cents bigint, total_count bigint)",
-      "anon_execute": false,
-      "definition_md5": "14b383e45b469c578dc56368e4175c24",
+      "identity_arguments": "p_shop uuid, p_search text, p_view text, p_limit integer, p_offset integer",
       "input_arguments": [
         "p_shop",
         "p_search",
@@ -798,21 +892,22 @@
         "p_limit",
         "p_offset"
       ],
-      "identity_arguments": "p_shop uuid, p_search text, p_view text, p_limit integer, p_offset integer",
-      "authenticated_execute": true,
-      "required_argument_count": 1
+      "required_argument_count": 1,
+      "definition_md5": "ecee09a465c8183755f18b9ae81b08fe",
+      "anon_execute": false,
+      "authenticated_execute": true
     },
     {
       "name": "get_dashboard_snapshot",
       "returns": "jsonb",
-      "anon_execute": false,
-      "definition_md5": "5ed43aee66b006c631c94b3ba75917a1",
+      "identity_arguments": "p_shop uuid",
       "input_arguments": [
         "p_shop"
       ],
-      "identity_arguments": "p_shop uuid",
-      "authenticated_execute": true,
-      "required_argument_count": 1
+      "required_argument_count": 1,
+      "definition_md5": "ed8f879379b80b729a8649e00d858fa4",
+      "anon_execute": false,
+      "authenticated_execute": true
     },
     {
       "name": "get_notification_automation_status",
@@ -857,8 +952,7 @@
     {
       "name": "get_offer_available_days",
       "returns": "TABLE(day date, slots_count integer, is_open boolean)",
-      "anon_execute": true,
-      "definition_md5": "6ca67fddd1572106bfbf86dd11e2ca6d",
+      "identity_arguments": "p_slug text, p_service_id uuid, p_barber_id uuid, p_from date, p_to date, p_haircut_id uuid",
       "input_arguments": [
         "p_slug",
         "p_service_id",
@@ -867,15 +961,15 @@
         "p_to",
         "p_haircut_id"
       ],
-      "identity_arguments": "p_slug text, p_service_id uuid, p_barber_id uuid, p_from date, p_to date, p_haircut_id uuid",
-      "authenticated_execute": true,
-      "required_argument_count": 6
+      "required_argument_count": 6,
+      "definition_md5": "7db9e6ad873dd313b2b5ad1024429f5f",
+      "anon_execute": true,
+      "authenticated_execute": true
     },
     {
       "name": "get_offer_available_slots",
       "returns": "TABLE(slot_start timestamp with time zone, barber_ids uuid[])",
-      "anon_execute": true,
-      "definition_md5": "8cd6cf3221fe00fd0620e7a982403dad",
+      "identity_arguments": "p_slug text, p_service_id uuid, p_barber_id uuid, p_date date, p_haircut_id uuid",
       "input_arguments": [
         "p_slug",
         "p_service_id",
@@ -883,9 +977,10 @@
         "p_date",
         "p_haircut_id"
       ],
-      "identity_arguments": "p_slug text, p_service_id uuid, p_barber_id uuid, p_date date, p_haircut_id uuid",
-      "authenticated_execute": true,
-      "required_argument_count": 5
+      "required_argument_count": 5,
+      "definition_md5": "16ab122069f23c47fb20c75104593a55",
+      "anon_execute": true,
+      "authenticated_execute": true
     },
     {
       "name": "get_payment_accounts",
@@ -979,14 +1074,14 @@
     {
       "name": "get_public_barbershop",
       "returns": "jsonb",
-      "anon_execute": true,
-      "definition_md5": "4bb9864344b33fcf8b08101d35249993",
+      "identity_arguments": "p_slug text",
       "input_arguments": [
         "p_slug"
       ],
-      "identity_arguments": "p_slug text",
-      "authenticated_execute": true,
-      "required_argument_count": 1
+      "required_argument_count": 1,
+      "definition_md5": "cb5212d20f849b079529a75d0f4813f2",
+      "anon_execute": true,
+      "authenticated_execute": true
     },
     {
       "name": "get_public_payment_methods",
@@ -1060,17 +1155,17 @@
     {
       "name": "get_report_services",
       "returns": "TABLE(service_id uuid, service_name text, appointment_count bigint, completed_count bigint, cancelled_count bigint, no_show_count bigint, booked_minutes numeric, estimated_revenue_cents bigint, paid_deposit_cents bigint, average_completed_ticket_cents numeric)",
-      "anon_execute": false,
-      "definition_md5": "db2063f8a2b3600455b6e4dbb8ced72c",
+      "identity_arguments": "p_shop uuid, p_from date, p_to date, p_barber_id uuid",
       "input_arguments": [
         "p_shop",
         "p_from",
         "p_to",
         "p_barber_id"
       ],
-      "identity_arguments": "p_shop uuid, p_from date, p_to date, p_barber_id uuid",
-      "authenticated_execute": true,
-      "required_argument_count": 3
+      "required_argument_count": 3,
+      "definition_md5": "a6a123e9a09084d06f5f1246fd862d7b",
+      "anon_execute": false,
+      "authenticated_execute": true
     },
     {
       "name": "get_report_summary",
@@ -1103,14 +1198,14 @@
     {
       "name": "get_review_by_token",
       "returns": "TABLE(shop_name text, shop_slug text, timezone text, customer_name text, appointment_status appointment_status, appointment_completed_at timestamp with time zone, service_name text, haircut_name text, barber_name text, barber_photo_url text, available_at timestamp with time zone, has_review boolean, rating integer, comment text, review_is_published boolean, review_created_at timestamp with time zone, can_submit boolean)",
-      "anon_execute": false,
-      "definition_md5": "2f3a78f7a569de985e1aaa2aa8e5dcfe",
+      "identity_arguments": "p_token uuid",
       "input_arguments": [
         "p_token"
       ],
-      "identity_arguments": "p_token uuid",
-      "authenticated_execute": false,
-      "required_argument_count": 1
+      "required_argument_count": 1,
+      "definition_md5": "c2350cf2792debbd4ee81b1bd6088bca",
+      "anon_execute": false,
+      "authenticated_execute": false
     },
     {
       "name": "get_reviews",
@@ -1208,8 +1303,7 @@
     {
       "name": "get_waitlist",
       "returns": "TABLE(waitlist_entry_id uuid, queue_position bigint, customer_name text, phone text, email text, service_name text, haircut_name text, barber_name text, date_from date, date_to date, period text, status waitlist_status, offer_slot_start timestamp with time zone, offer_barber_name text, offer_expires_at timestamp with time zone, created_at timestamp with time zone, total_count bigint)",
-      "anon_execute": false,
-      "definition_md5": "1b21a36d0e033d19818f0fa41f4851f3",
+      "identity_arguments": "p_shop uuid, p_status text, p_search text, p_limit integer, p_offset integer",
       "input_arguments": [
         "p_shop",
         "p_status",
@@ -1217,9 +1311,10 @@
         "p_limit",
         "p_offset"
       ],
-      "identity_arguments": "p_shop uuid, p_status text, p_search text, p_limit integer, p_offset integer",
-      "authenticated_execute": true,
-      "required_argument_count": 1
+      "required_argument_count": 1,
+      "definition_md5": "957b0fefc2e37950a91f26eb0f85b31f",
+      "anon_execute": false,
+      "authenticated_execute": true
     },
     {
       "name": "get_waitlist_metrics",
@@ -1236,14 +1331,14 @@
     {
       "name": "get_waitlist_offer",
       "returns": "TABLE(status waitlist_status, can_claim boolean, customer_name text, service_name text, service_price_cents integer, service_duration_min integer, haircut_name text, barber_name text, slot_start timestamp with time zone, offer_expires_at timestamp with time zone, shop_name text, shop_slug text, shop_phone text, shop_whatsapp text, timezone text)",
-      "anon_execute": false,
-      "definition_md5": "c3d25c4a9673f2fb6adcaeb813dad5d3",
+      "identity_arguments": "p_token uuid",
       "input_arguments": [
         "p_token"
       ],
-      "identity_arguments": "p_token uuid",
-      "authenticated_execute": false,
-      "required_argument_count": 1
+      "required_argument_count": 1,
+      "definition_md5": "8c1ce55ae8afac82e144f3636d14b859",
+      "anon_execute": false,
+      "authenticated_execute": false
     },
     {
       "name": "handle_new_user",
@@ -1306,10 +1401,31 @@
       "required_argument_count": 0
     },
     {
+      "name": "join_composed_waitlist",
+      "returns": "TABLE(status waitlist_status, queued_at timestamp with time zone)",
+      "identity_arguments": "p_slug text, p_service_id uuid, p_customer_name text, p_phone text, p_haircut_id uuid, p_barber_id uuid, p_email text, p_date_from date, p_date_to date, p_period text, p_addon_ids uuid[]",
+      "input_arguments": [
+        "p_slug",
+        "p_service_id",
+        "p_customer_name",
+        "p_phone",
+        "p_haircut_id",
+        "p_barber_id",
+        "p_email",
+        "p_date_from",
+        "p_date_to",
+        "p_period",
+        "p_addon_ids"
+      ],
+      "required_argument_count": 11,
+      "definition_md5": "b7a5cc3c08e46bae10aa06731955550b",
+      "anon_execute": true,
+      "authenticated_execute": true
+    },
+    {
       "name": "join_waitlist",
       "returns": "TABLE(status waitlist_status, queued_at timestamp with time zone)",
-      "anon_execute": true,
-      "definition_md5": "3f95a19ad4d8f482c77d384e950d842b",
+      "identity_arguments": "p_slug text, p_service_id uuid, p_customer_name text, p_phone text, p_haircut_id uuid, p_barber_id uuid, p_email text, p_date_from date, p_date_to date, p_period text",
       "input_arguments": [
         "p_slug",
         "p_service_id",
@@ -1322,9 +1438,10 @@
         "p_date_to",
         "p_period"
       ],
-      "identity_arguments": "p_slug text, p_service_id uuid, p_customer_name text, p_phone text, p_haircut_id uuid, p_barber_id uuid, p_email text, p_date_from date, p_date_to date, p_period text",
-      "authenticated_execute": true,
-      "required_argument_count": 4
+      "required_argument_count": 4,
+      "definition_md5": "c5d6aa896e5af7beee732047ad37a9e4",
+      "anon_execute": true,
+      "authenticated_execute": true
     },
     {
       "name": "list_members",
@@ -1630,17 +1747,17 @@
     {
       "name": "reschedule_appointment_by_operator",
       "returns": "TABLE(appointment_id uuid, new_starts_at timestamp with time zone, new_ends_at timestamp with time zone)",
-      "anon_execute": false,
-      "definition_md5": "6570a17ea6c4277886b93a36135f9cda",
+      "identity_arguments": "p_shop uuid, p_appointment uuid, p_new_start timestamp with time zone, p_new_barber_id uuid",
       "input_arguments": [
         "p_shop",
         "p_appointment",
         "p_new_start",
         "p_new_barber_id"
       ],
-      "identity_arguments": "p_shop uuid, p_appointment uuid, p_new_start timestamp with time zone, p_new_barber_id uuid",
-      "authenticated_execute": true,
-      "required_argument_count": 3
+      "required_argument_count": 3,
+      "definition_md5": "c5572ea14a2c5e83894ce556c6a09cfa",
+      "anon_execute": false,
+      "authenticated_execute": true
     },
     {
       "name": "reschedule_appointment_by_token",
@@ -1703,6 +1820,22 @@
       "required_argument_count": 8
     },
     {
+      "name": "save_haircut_configuration",
+      "returns": "uuid",
+      "identity_arguments": "p_shop uuid, p_haircut uuid, p_entry jsonb, p_offers jsonb, p_skill_barbers uuid[]",
+      "input_arguments": [
+        "p_shop",
+        "p_haircut",
+        "p_entry",
+        "p_offers",
+        "p_skill_barbers"
+      ],
+      "required_argument_count": 5,
+      "definition_md5": "6293863dcce2635905bad9520060ee50",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
       "name": "save_schedule_override",
       "returns": "uuid",
       "anon_execute": false,
@@ -1721,6 +1854,21 @@
       "identity_arguments": "p_shop uuid, p_override_date date, p_barber_id uuid, p_is_closed boolean, p_opens_at time without time zone, p_closes_at time without time zone, p_reason block_reason, p_note text, p_id uuid",
       "authenticated_execute": true,
       "required_argument_count": 2
+    },
+    {
+      "name": "save_service_configuration",
+      "returns": "uuid",
+      "identity_arguments": "p_shop uuid, p_service uuid, p_entry jsonb, p_addon_ids uuid[]",
+      "input_arguments": [
+        "p_shop",
+        "p_service",
+        "p_entry",
+        "p_addon_ids"
+      ],
+      "required_argument_count": 4,
+      "definition_md5": "81578a3b38c84ff3e0e3ea57d0a8e595",
+      "anon_execute": false,
+      "authenticated_execute": true
     },
     {
       "name": "save_shop_catalog_product",
@@ -1752,14 +1900,14 @@
     {
       "name": "seed_haircut_catalogue",
       "returns": "integer",
-      "anon_execute": false,
-      "definition_md5": "0af276a465925b8e730dab38d48e2ed9",
+      "identity_arguments": "p_shop uuid",
       "input_arguments": [
         "p_shop"
       ],
-      "identity_arguments": "p_shop uuid",
-      "authenticated_execute": true,
-      "required_argument_count": 1
+      "required_argument_count": 1,
+      "definition_md5": "193ed15685307f1287cb88b61d376726",
+      "anon_execute": false,
+      "authenticated_execute": true
     },
     {
       "name": "set_payment_provider_account",
@@ -1928,9 +2076,9 @@
     {
       "name": "booking-create",
       "status": "ACTIVE",
-      "version": 6,
+      "version": 7,
       "verify_jwt": false,
-      "bundle_sha256": "bf4abed6ea4b40a7373a9cfe99717fba8d2671ec666d78be7d414f2a310fd8db"
+      "bundle_sha256": "23e54a6e13540dac167d6a8abcd48c7add385e7431ac7f861c3068c78f276bb3"
     },
     {
       "name": "gmail-integration",
@@ -1970,5 +2118,23 @@
   ],
   "catalog_capture": "2026-11-24, after transactional catalog migration; live PostgreSQL metadata",
   "store_launch_capture": "2026-11-24 after reference catalog and payment gate",
-  "booking_offer_capture": "2026-11-24 — live PostgreSQL function metadata following three booking-offer migrations"
+  "booking_offer_capture": "2026-11-24 — live PostgreSQL function metadata following three booking-offer migrations",
+  "booking_composition_capture": {
+    "migrations": [
+      {
+        "version": "20261124094748",
+        "name": "booking_catalog_relationships"
+      },
+      {
+        "version": "20261124095153",
+        "name": "booking_service_composition"
+      },
+      {
+        "version": "20261124095759",
+        "name": "booking_catalog_production_hardening"
+      }
+    ],
+    "verified_sql_acceptance": true,
+    "edge_version": 7
+  }
 }

@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.18"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -2570,38 +2570,22 @@ export type Database = {
           price_cents: number
         }[]
       }
-      admin_update_support_ticket:
-        | {
-            Args: {
-              p_assigned_to?: string
-              p_priority?: Database["public"]["Enums"]["support_ticket_priority"]
-              p_status?: Database["public"]["Enums"]["support_ticket_status"]
-              p_ticket: string
-            }
-            Returns: {
-              assigned_to: string
-              id: string
-              priority: Database["public"]["Enums"]["support_ticket_priority"]
-              status: Database["public"]["Enums"]["support_ticket_status"]
-              updated_at: string
-            }[]
-          }
-        | {
-            Args: {
-              p_assigned_to?: string
-              p_clear_assignee?: boolean
-              p_priority?: Database["public"]["Enums"]["support_ticket_priority"]
-              p_status?: Database["public"]["Enums"]["support_ticket_status"]
-              p_ticket: string
-            }
-            Returns: {
-              assigned_to: string
-              id: string
-              priority: Database["public"]["Enums"]["support_ticket_priority"]
-              status: Database["public"]["Enums"]["support_ticket_status"]
-              updated_at: string
-            }[]
-          }
+      admin_update_support_ticket: {
+        Args: {
+          p_assigned_to?: string
+          p_clear_assignee?: boolean
+          p_priority?: Database["public"]["Enums"]["support_ticket_priority"]
+          p_status?: Database["public"]["Enums"]["support_ticket_status"]
+          p_ticket: string
+        }
+        Returns: {
+          assigned_to: string
+          id: string
+          priority: Database["public"]["Enums"]["support_ticket_priority"]
+          status: Database["public"]["Enums"]["support_ticket_status"]
+          updated_at: string
+        }[]
+      }
       book_appointment: {
         Args: {
           p_barber_id: string

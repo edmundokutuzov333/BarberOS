@@ -156,12 +156,15 @@
     "20261124074322_store_reference_lookup_index.sql",
     "20261124080000_booking_offer_consistency.sql",
     "20261124080100_booking_offer_history_integrity.sql",
-    "20261124080200_booking_operator_reschedule_integrity.sql"
+    "20261124080200_booking_operator_reschedule_integrity.sql",
+    "20261124110000_booking_catalog_relationships.sql",
+    "20261124110100_booking_service_composition.sql",
+    "20261124110200_booking_catalog_production_hardening.sql"
   ],
   "projects": {
     "production": {
       "ref": "alseiinjzwjdiwtvkdzy",
-      "migration_count": 155,
+      "migration_count": 158,
       "migrations": [
         {
           "version": "20260918132000",
@@ -782,12 +785,24 @@
         {
           "version": "20261124093617",
           "name": "booking_operator_reschedule_integrity"
+        },
+        {
+          "version": "20261124095946",
+          "name": "booking_catalog_relationships"
+        },
+        {
+          "version": "20261124095953",
+          "name": "booking_service_composition"
+        },
+        {
+          "version": "20261124095958",
+          "name": "booking_catalog_production_hardening"
         }
       ]
     },
     "staging": {
       "ref": "asikuyxaapcmayptimxi",
-      "migration_count": 143,
+      "migration_count": 146,
       "migrations": [
         {
           "version": "20261019132753",
@@ -1360,6 +1375,18 @@
         {
           "version": "20261124093436",
           "name": "booking_operator_reschedule_integrity"
+        },
+        {
+          "version": "20261124094748",
+          "name": "booking_catalog_relationships"
+        },
+        {
+          "version": "20261124095153",
+          "name": "booking_service_composition"
+        },
+        {
+          "version": "20261124095759",
+          "name": "booking_catalog_production_hardening"
         }
       ]
     }
@@ -1720,5 +1747,14 @@
       ]
     },
     "acceptance": "Transactional fixture suite passed in staging and production; production appointment snapshot unchanged (16 rows), 63 active linked styles, 3 gallery references."
+  },
+  "booking_composition_capture": {
+    "source_commit": "67128e013f2b5949fae11109f023b431c709f478",
+    "migrations": [
+      "20261124110000_booking_catalog_relationships.sql",
+      "20261124110100_booking_service_composition.sql",
+      "20261124110200_booking_catalog_production_hardening.sql"
+    ],
+    "production_history_preserved": true
   }
 }
