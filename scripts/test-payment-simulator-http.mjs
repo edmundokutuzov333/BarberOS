@@ -54,6 +54,15 @@ try{
  assert.equal(ok(await call(actor.token,'availability')).enabled,true);
  assert.equal((await call(nonadmin.token,'list')).status,403);
  assert.equal((await call(config.ANON_KEY,'list')).status,401);
+ const direct=await request('/rest/v1/rpc/payment_simulator',{p_action:'list',p_payload:{}},nonadmin.token);
+ assert.ok(direct.status>=400,'Direct RPC must reject non-admin');
+ const unauthenticatedRpc=await request('/rest/v1/rpc/payment_simulator',{p_action:'list',p_payload:{}},config.ANON_KEY);
+ assert.ok(unauthenticatedRpc.status>=400,'Anonymous direct RPC must be blocked');
+ for(const amount of [0,-1,2500001,1.5,'25000',null]){
+  assert.equal((await call(actor.token,'create',{request_id:randomUUID(),shop_id:shop,purpose:'deposit',scenario:'success',amount_minor:amount})).status,400);
+ }
+ assert.equal((await call(actor.token,'create',{request_id:'bad-uuid',shop_id:shop,purpose:'deposit',scenario:'success',amount_minor:1})).status,400);
+ assert.equal((await call(actor.token,'unknown')).status,400);
  const payload={request_id:randomUUID(),shop_id:shop,purpose:'deposit',scenario:'timeout',amount_minor:25050};
  // Real concurrent HTTP calls through the Edge Function and PostgREST.
  const creates=await Promise.all(Array.from({length:8},()=>call(actor.token,'create',payload)));
@@ -77,6 +86,16 @@ try{
   const {certifyPaymentBrowser}=await import('../frontend/tests/payment-simulator-real-browser.mjs');
   await certifyPaymentBrowser({apiUrl:root,anonKey:config.ANON_KEY,actor,nonadmin,shop,readRun:id=>JSON.parse(sql("select jsonb_build_object('status',r.status,'amount_minor',r.amount_minor,'purpose',r.purpose,'entitlement',r.simulated_entitlement,'event_count',(select count(*) from private.payment_simulator_events e where e.run_id=r.id)) from private.payment_simulator_runs r where r.id="+uuid(id)+';'))});
  }
+ // Re-check authoritative permissions using the same still-valid JWT.
+ sql("update public.profiles set password_change_required=true where id="+uuid(other.id)+";");
+ assert.equal((await call(other.token,'list')).status,403);
+ sql("update public.profiles set password_change_required=false,is_platform_admin=false where id="+uuid(other.id)+";");
+ assert.equal((await call(other.token,'list')).status,403);
+ // The feature gate must reject mutations even for a valid administrator.
+ sql('update private.payment_simulator_settings set enabled=false where singleton;');
+ assert.equal(ok(await call(actor.token,'availability')).enabled,false);
+ assert.equal((await call(actor.token,'create',{...payload,request_id:randomUUID()})).status,403);
+ sql('update private.payment_simulator_settings set enabled=true where singleton;');
  const after=sql("select (select count(*) from public.payments)||':'||(select count(*) from public.shop_order_payments)||':'||(select count(*) from public.appointments)||':'||(select value::text from public.platform_settings where key='payments');");
  assert.equal(after,before,'Operational data changed during simulator acceptance');
  console.log('PASS | Real local authenticated Edge HTTP, PostgreSQL, concurrent idempotency, authorization, reconciliation and live isolation');

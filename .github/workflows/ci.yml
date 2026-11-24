@@ -214,3 +214,13 @@ jobs:
       - run: corepack yarn install --frozen-lockfile
       - run: corepack yarn playwright install --with-deps chromium
       - run: corepack yarn test:e2e:payment-simulator
+
+  payment-simulator-staging-smoke:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/test-payment-simulator-staging-smoke.mjs

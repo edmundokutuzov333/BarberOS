@@ -73,8 +73,10 @@ export async function certifyPaymentBrowser({apiUrl,anonKey,actor,nonadmin,shop,
         await expect(result.getByRole('heading',{name:/Pago \(teste\)/})).toBeVisible({timeout:20000});
         await result.getByRole('button',{name:'Simular reembolso'}).click();
         await expect(result.getByRole('heading',{name:/Reembolsado \(teste\)/})).toBeVisible({timeout:20000});
+        const repeats=result.getByText('Callback repetido',{exact:true});
+        const previousRepeats=await repeats.count();
         await result.getByRole('button',{name:'Repetir callback'}).click();
-        await expect(result.getByText('Callback repetido',{exact:true}).last()).toBeVisible({timeout:20000});
+        await expect(repeats).toHaveCount(previousRepeats+1,{timeout:20000});
         const refunded=readRun(reference);
         assert.equal(refunded.status,'refunded');
         assert.equal(refunded.entitlement,'reversed');
