@@ -79,7 +79,11 @@ select ok(
   position(
     'private.book_appointment_core'
     in lower(pg_get_functiondef('public.book_appointment(text,uuid,uuid,uuid,timestamptz,text,text,text)'::regprocedure))
-  ) > 0,
+  ) > 0 and exists (
+    select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='private' and p.proname='book_appointment_core'
+      and position('private.book_composed_appointment_core' in lower(pg_get_functiondef(p.oid)))>0
+  ),
   'public booking boundary delegates to the private core'
 );
 
@@ -87,7 +91,7 @@ select ok(
   coalesce((
     select position('pg_advisory_xact_lock' in pg_get_functiondef(p.oid)) > 0
     from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-    where n.nspname='private' and p.proname='book_appointment_core'
+    where n.nspname='private' and p.proname='book_composed_appointment_core'
   ), false),
   'booking core uses a transaction-scoped advisory lock'
 );
@@ -96,7 +100,7 @@ select ok(
   coalesce((
     select position('SLOT_TAKEN' in pg_get_functiondef(p.oid)) > 0
     from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-    where n.nspname='private' and p.proname='book_appointment_core'
+    where n.nspname='private' and p.proname='book_composed_appointment_core'
   ), false),
   'booking core maps unavailable concurrent slots to SLOT_TAKEN'
 );
@@ -105,7 +109,7 @@ select ok(
   coalesce((
     select position('exclusion_violation' in lower(pg_get_functiondef(p.oid))) > 0
     from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-    where n.nspname='private' and p.proname='book_appointment_core'
+    where n.nspname='private' and p.proname='book_composed_appointment_core'
   ), false),
   'booking core translates the exclusion constraint as the last concurrency barrier'
 );
