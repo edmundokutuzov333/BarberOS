@@ -118,7 +118,17 @@ test('mobile owner edits category, add-ons and restricted secondary offers via a
  });
  const g=await geometry(); console.log('MANUAL_MODAL_GEOMETRY',JSON.stringify(g));
  await expect.poll(async()=>{const r=await geometry();return r.top>=r.frameTop-1 && r.bottom<=r.frameBottom+1 && r.top>=-1 && r.bottom<=r.innerHeight+1 && r.left>=-1 && r.right<=r.innerWidth+1;}).toBe(true);
+ // Public tests consume today's earliest slots; select a deterministic future
+ // fixture date distinct from the composed HTTP race (today + 3 days).
+ const todayParts=new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Maputo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const parts=Object.fromEntries(todayParts.map(p=>[p.type,p.value]));
+ const fixtureDate=new Date(parts.year+'-'+parts.month+'-'+parts.day+'T00:00:00Z');
+ fixtureDate.setUTCDate(fixtureDate.getUTCDate()+7);
+ const selectedDate=fixtureDate.toISOString().slice(0,10);
+ await manual.getByTestId('manual-booking-date').fill(selectedDate);
+ await expect(manual.getByTestId('manual-booking-date')).toHaveValue(selectedDate);
  const slot=manual.getByTestId('manual-booking-slots').getByRole('button').first();
+ await expect(slot,'A future fixture day must offer a composed 60-minute slot').toBeVisible({timeout:15000});
  await slot.click();
  await expect(slot).toHaveAttribute('aria-pressed','true');
  await manual.getByTestId('manual-booking-name').fill('Cliente Manual QA');
