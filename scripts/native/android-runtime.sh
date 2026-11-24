@@ -7,6 +7,10 @@ adb shell pm path com.android.chrome
 # These flags apply only to the disposable CI emulator, never a user's browser.
 adb shell 'echo "chrome --no-first-run --disable-fre --disable-default-browser-promo" > /data/local/tmp/chrome-command-line'
 adb shell am set-debug-app --persistent com.android.chrome
+adb logcat -c
+adb logcat -v threadtime AndroidRuntime:E chromium:E ActivityTaskManager:W TwaLauncher:D LauncherActivity:D '*:S' > "$evidence/startup-logcat.txt" &
+logcat_pid=$!
+trap 'kill "$logcat_pid" 2>/dev/null || true' EXIT
 adb install -r "$apk"
 adb shell am start -W -n app.barberos.mobile/.LauncherActivity
 for attempt in $(seq 1 18); do
@@ -31,6 +35,8 @@ PY
   sleep 5
 done
 adb exec-out screencap -p > "$evidence/android-failure.png"
-adb logcat -d -t 500 > "$evidence/logcat.txt"
+adb logcat -b crash -d > "$evidence/crashes.txt"
+adb shell dumpsys activity activities > "$evidence/activities.txt"
+adb logcat -d -t 1000 > "$evidence/logcat.txt"
 echo 'Android runtime acceptance failed; evidence captured' >&2
 exit 1

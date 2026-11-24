@@ -91,7 +91,8 @@
       "createStartMenuShortcut": true,
       "shortcutName": "BarberOS",
       "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico"
+      "uninstallerIcon": "build/icon.ico",
+      "allowElevation": false
     },
     "artifactName": "BarberOS-${version}-${os}-${arch}.${ext}"
   },

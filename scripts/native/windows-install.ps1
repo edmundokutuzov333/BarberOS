@@ -4,9 +4,18 @@ if (!$installer) { throw 'Windows installer not produced' }
 $destination = Join-Path $env:RUNNER_TEMP 'BarberOS-installed'
 Write-Output 'Installing NSIS package into the disposable test profile'
 # Start-Process -Wait waits for the entire descendant tree, including the app launched after installation.
-$process = Start-Process -FilePath $installer.FullName -ArgumentList '/S', "/D=$destination" -PassThru
+$start = [System.Diagnostics.ProcessStartInfo]::new()
+$start.FileName = $installer.FullName
+$start.UseShellExecute = $false
+$start.CreateNoWindow = $true
+$start.ArgumentList.Add('/S')
+$start.ArgumentList.Add('/currentuser')
+$start.ArgumentList.Add("/D=$destination")
+$process = [System.Diagnostics.Process]::new()
+$process.StartInfo = $start
+if (!$process.Start()) { throw 'Could not start NSIS installer' }
+Write-Output "Started NSIS process $($process.Id)"
 if (!$process.WaitForExit(180000)) { throw 'NSIS installer did not exit within three minutes' }
-$process.Refresh()
 Write-Output "NSIS process exited: $($process.ExitCode)"
 if ($process.ExitCode -ne 0) { throw "NSIS failed: $($process.ExitCode)" }
 $executable = Join-Path $destination 'BarberOS.exe'
