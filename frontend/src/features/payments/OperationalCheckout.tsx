@@ -25,7 +25,7 @@ export function OperationalCheckout({scope,onChanged}:{scope:CheckoutScope,onCha
  if(q.isError)return <Panel><p role="alert">Não foi possível consultar o checkout de testes.</p><Button variant="secondary" onClick={()=>void q.refetch()}>Actualizar</Button></Panel>;
  if(!q.data?.enabled)return null;
  const busy=mutation.isPending||!!retry||q.isFetching;
- return <Panel className="space-y-4" data-testid="operational-checkout">
+ return <Panel className="space-y-4" testId="operational-checkout">
   <div><p className="t-label text-accent-soft">TEST MODE · M-Pesa</p><h2 className="t-card text-ink-hi">Pagamento de teste</h2><p className="t-body text-ink-mid">Sem dinheiro real. Os valores são calculados pelo servidor a partir desta operação QA.</p></div>
   <label className="block"><span className="t-label text-ink-mid">Cenário de teste</span><select className="field w-full mt-1" value={scenario} disabled={busy} onChange={e=>setScenario(e.target.value as keyof typeof scenarios)}>{Object.entries(scenarios).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
   {q.data.quotes.map(quote=><div key={quote.purpose} className="flex flex-wrap justify-between items-center gap-2 border border-white/10 rounded-xl p-3"><div><p>{quote.label}</p>{quote.period&&<p className="t-label text-ink-mid">{quote.period.slice(0,7)}</p>}<p className="t-label text-ink-mid">{quote.amount_minor>0?formatMT(quote.amount_minor):'Sem valor elegível a pagar'}</p></div><Button disabled={busy||quote.amount_minor===0||q.data.runs.some(r=>r.purpose===quote.purpose&&r.status==='pending')} onClick={()=>create(quote.purpose)}>Pagar {quote.label.toLowerCase()}</Button></div>)}
