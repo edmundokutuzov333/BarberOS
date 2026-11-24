@@ -130,6 +130,9 @@ export async function certifyPaymentBrowser({apiUrl,anonKey,actor,nonadmin,shop,
         const page=await admin.newPage();await signIn(page,actor);
         await expect(page.getByRole('button',{name:'Abrir laboratório'})).toBeVisible({timeout:20000});
         await page.goto(origin+'/admin/planos');
+        const selector=page.getByLabel('Barbearia da mensalidade de teste');
+        await expect(selector).toBeVisible({timeout:20000});
+        await selector.selectOption({label:'Operational QA fixture'});
         const lab=page.getByTestId('operational-checkout');
         await expect(lab).toBeVisible({timeout:20000});
         await lab.getByRole('button',{name:'Pagar qa checkout plan',exact:true}).click();
