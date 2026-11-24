@@ -2166,9 +2166,14 @@
       {
         "version": "20261124095958",
         "name": "booking_catalog_production_hardening"
+      },
+      {
+        "version": "20261124100531",
+        "name": "booking_catalog_fk_indexes"
       }
     ],
     "verified_sql_acceptance": true,
-    "edge_version": 7
+    "edge_version": 7,
+    "uncovered_foreign_keys": 0
   }
 }

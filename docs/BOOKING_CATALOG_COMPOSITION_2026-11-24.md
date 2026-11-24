@@ -9,10 +9,12 @@
 - Tenant-scoped composite foreign keys, RLS, atomic management RPCs; anonymous direct writes and raw booking RPCs denied. Existing public booking Edge Function retains its validation, rate limit and service-role-only gateway.
 
 ## Rollout receipts
-- All three versioned migrations applied to staging and production; three acceptance scripts executed successfully in production (rollback fixtures).
+- All four versioned migrations applied to staging and production; three acceptance scripts executed successfully in production (rollback fixtures).
 - booking-create version 7 ACTIVE in both projects; identical bundle hash.
 - Production: 45 services, five categories, 90 additional style offers, 45 compatible add-on relations, four shop records (including records without catalogue). No explicit restricted skills were invented. 16 existing appointments retained the same history digest 37496559e919d5429ac8f7e94972323d before/after.
 - Read-only contract and generated TypeScript refreshed from live production. See GitHub Actions for frontend/browser and concurrency gate outcomes.
 
 ## Boundaries
 Configured staff/service availability governs public visibility; blank shops still require actual service and staff setup. No payment provider enabled by this release. The composition scope uses one barber, not simultaneous appointments with multiple specialists.
+
+- Index coverage audited in both environments: zero public foreign keys without a leading-column index. The fourth migration includes the existing production Gmail/support indexes to align staging.

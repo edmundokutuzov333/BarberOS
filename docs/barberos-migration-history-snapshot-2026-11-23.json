@@ -159,12 +159,13 @@
     "20261124080200_booking_operator_reschedule_integrity.sql",
     "20261124110000_booking_catalog_relationships.sql",
     "20261124110100_booking_service_composition.sql",
-    "20261124110200_booking_catalog_production_hardening.sql"
+    "20261124110200_booking_catalog_production_hardening.sql",
+    "20261124110300_booking_catalog_fk_indexes.sql"
   ],
   "projects": {
     "production": {
       "ref": "alseiinjzwjdiwtvkdzy",
-      "migration_count": 158,
+      "migration_count": 159,
       "migrations": [
         {
           "version": "20260918132000",
@@ -797,12 +798,16 @@
         {
           "version": "20261124095958",
           "name": "booking_catalog_production_hardening"
+        },
+        {
+          "version": "20261124100531",
+          "name": "booking_catalog_fk_indexes"
         }
       ]
     },
     "staging": {
       "ref": "asikuyxaapcmayptimxi",
-      "migration_count": 146,
+      "migration_count": 147,
       "migrations": [
         {
           "version": "20261019132753",
@@ -1387,6 +1392,10 @@
         {
           "version": "20261124095759",
           "name": "booking_catalog_production_hardening"
+        },
+        {
+          "version": "20261124100525",
+          "name": "booking_catalog_fk_indexes"
         }
       ]
     }
@@ -1753,7 +1762,8 @@
     "migrations": [
       "20261124110000_booking_catalog_relationships.sql",
       "20261124110100_booking_service_composition.sql",
-      "20261124110200_booking_catalog_production_hardening.sql"
+      "20261124110200_booking_catalog_production_hardening.sql",
+      "20261124110300_booking_catalog_fk_indexes.sql"
     ],
     "production_history_preserved": true
   }
