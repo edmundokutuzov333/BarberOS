@@ -29,7 +29,7 @@ const payload={shopId:shop,days:7,topic:'overview'};
 const call=(token,body=payload)=>request('/functions/v1/barber-intelligence',body,token);
 const ok=res=>{assert.equal(res.status,200,JSON.stringify({status:res.status,error:res.data?.error}));assert.equal(res.data.version,1);return res.data};
 try{
- sql("insert into public.barbershops(id,name,slug,status,timezone) values("+q(shop)+",'Intelligence QA','intel-"+shop+"','trial','Africa/Maputo'),("+q(other)+",'Other QA','intel-"+other+"','trial','Africa/Maputo');");
+ sql("insert into public.barbershops(id,name,slug,status,timezone,shop_enabled) values("+q(shop)+",'Intelligence QA','intel-"+shop+"','trial','Africa/Maputo',false),("+q(other)+",'Other QA','intel-"+other+"','trial','Africa/Maputo',false);");
  sql("insert into public.customers(id,barbershop_id,name,phone) values("+q(customer)+","+q(shop)+",'QA Customer','+258840000011'),("+q(otherCustomer)+","+q(other)+",'Other QA','+258840000012');");
  const owner=await user('owner'),manager=await user('manager'),barber=await user('barber'),outsider=await user(null);
  let initial;
@@ -48,8 +48,10 @@ try{
  const reviews=ok(await call(owner.token,{...payload,action:'reviews'}));assert.equal(reviews.sampleCount,0);assert.equal(reviews.average,null);
  assert.equal((await call(barber.token,{...payload,action:'reviews'})).status,403);
  assert.equal((await call(owner.token,{...payload,action:'inventory',shopId:other})).status,403);
+ assert.equal(sql('select shop_enabled from public.barbershops where id='+q(shop)+';'),'f');
  assert.equal((await call(manager.token,{...payload,action:'inventory'})).status,409);
  sql("begin; select set_config('request.jwt.claim.role','service_role',true); update public.barbershops set shop_enabled=true where id="+q(shop)+"; commit;");
+ assert.equal(sql('select shop_enabled from public.barbershops where id='+q(shop)+';'),'t');
  const inventory=ok(await call(manager.token,{...payload,action:'inventory'}));assert.equal(inventory.trackedCount,0);assert.equal(inventory.rows.length,0);
  assert.equal((await call(barber.token,{...payload,action:'inventory'})).status,403);
  const finances=ok(await call(manager.token,{...payload,action:'finance'}));assert.equal(finances.revenue,0);assert.equal(finances.ticket,null);assert.equal(finances.afterCommission,0);
