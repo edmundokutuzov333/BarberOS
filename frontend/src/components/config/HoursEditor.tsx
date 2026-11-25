@@ -41,7 +41,7 @@ function HoursWorkspace(){
   useEffect(() => {
     const base = q.data?.filter((h) => h.barber_id === null) ?? [];
     const src = scoped.length ? scoped : base;
-    setRows(ORDER.map((d) => { const h = src.find((x) => x.weekday === d); return h ? { weekday: d, opens_at: t5(h.opens_at), closes_at: t5(h.closes_at), is_closed: h.is_closed, break_start:h.break_start?t5(h.break_start):null, break_end:h.break_end?t5(h.break_end):null } : { weekday: d, opens_at: '09:00', closes_at: '19:00', is_closed: d === 0,break_start:null,break_end:null }; }));
+    setRows(ORDER.map((d) => { const h = src.find((x) => x.weekday === d); return h ? { weekday: d, opens_at: t5(h.opens_at), closes_at: t5(h.closes_at), is_closed: h.is_closed, break_start:(!barberId||scoped.length)&&h.break_start?t5(h.break_start):null, break_end:(!barberId||scoped.length)&&h.break_end?t5(h.break_end):null } : { weekday: d, opens_at: '09:00', closes_at: '19:00', is_closed: d === 0,break_start:null,break_end:null }; }));
   }, [q.data, barberId]);
 
   const save = useMutation({

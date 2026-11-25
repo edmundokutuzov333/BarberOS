@@ -507,6 +507,7 @@ export type Database = {
           onboarding_step: number
           phone: string | null
           plan_id: string | null
+          service_buffer_min: number
           shop_enabled: boolean
           slot_interval_min: number
           slug: string
@@ -537,6 +538,7 @@ export type Database = {
           onboarding_step?: number
           phone?: string | null
           plan_id?: string | null
+          service_buffer_min?: number
           shop_enabled?: boolean
           slot_interval_min?: number
           slug: string
@@ -567,6 +569,7 @@ export type Database = {
           onboarding_step?: number
           phone?: string | null
           plan_id?: string | null
+          service_buffer_min?: number
           shop_enabled?: boolean
           slot_interval_min?: number
           slug?: string
