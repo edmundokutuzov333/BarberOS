@@ -3,6 +3,7 @@ import { CheckCircle2, ChevronLeft, ChevronRight, Clock3, MessageCircle, Move, P
 import { toast } from 'sonner';
 import { Page } from '@/components/layout/Page';
 import { Button } from '@/components/ui/Button';
+import { Modal, Textarea } from '@/components/ui/Primitives';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { StatusChip, type ApptStatus } from '@/components/ui/StatusChip';
 import { buildWhatsAppLink } from '@/lib/calendar';
@@ -141,8 +142,10 @@ function AppointmentCard({
 }) {
   const canDrag = allowed(appointment.status, 'reschedule') && !busy;
   const top = Math.max(0, (timeParts(appointment.starts_at, timezone) - gridStart) * PX_PER_MINUTE);
-  const height = Math.max(56, appointment.duration_min * PX_PER_MINUTE);
+  const height = Math.max(1, appointment.duration_min * PX_PER_MINUTE);
+  const [detailsOpen,setDetailsOpen]=useState(false);
   return (
+    <>
     <article
       draggable={canDrag}
       onDragStart={(event) => {
@@ -151,14 +154,20 @@ function AppointmentCard({
         event.dataTransfer.setData('text/plain', appointment.appointment_id);
         event.dataTransfer.setData('application/x-barberos-barber', appointment.barber_id);
       }}
-      className="absolute inset-x-1 rounded-2xl border border-accent-soft/25 bg-accent-soft/10 p-3 overflow-hidden"
-      style={{ top, minHeight: height }}
+      className="absolute inset-x-1 rounded-lg border border-accent-soft/25 bg-[var(--surface-3)] overflow-hidden"
+      style={{ top, height }}
       data-testid={'agenda-appointment-' + appointment.appointment_id}
     >
+      <button type="button" aria-label={'Abrir marcação de '+appointment.customer_name+' às '+formatTime(appointment.starts_at,timezone)} title={appointment.customer_name+' · '+appointment.service_name} onClick={()=>setDetailsOpen(true)} className="w-full h-full min-w-0 flex items-start gap-1 px-2 py-0.5 text-left overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-soft">
+        <span className="min-w-0 flex-1"><span className="block truncate text-xs font-medium text-ink-hi">{formatTime(appointment.starts_at,timezone)} · {appointment.customer_name}</span>{height>=40&&<span className="block truncate text-xs text-ink-mid">{appointment.service_name}</span>}</span>
+        {canDrag&&height>=28&&<Move size={13} className="shrink-0 text-accent-soft" aria-hidden/>}
+      </button>
+    </article>
+    <Modal open={detailsOpen} onOpenChange={setDetailsOpen} title="Detalhes da marcação" testId="agenda-appointment-details">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-ink-hi truncate">{appointment.customer_name}</p>
-          <p className="t-label text-ink-mid truncate mt-0.5">{appointment.service_name}{appointment.source === 'manual' ? ' · Presencial' : ''}</p>
+          <p className="text-sm font-medium text-ink-hi break-words">{appointment.customer_name}</p>
+          <p className="t-label text-ink-mid break-words mt-0.5">{appointment.service_name}{appointment.source === 'manual' ? ' · Presencial' : ''}</p>
         </div>
         {canDrag && <Move size={13} className="text-accent-soft shrink-0" aria-hidden />}
       </div>
@@ -167,13 +176,13 @@ function AppointmentCard({
         <span className="t-label text-ink-mid">· {appointment.duration_min} min</span>
       </div>
       <div className="flex items-center gap-2 mt-2"><StatusChip status={appointment.status} />{appointment.deposit_status === 'awaiting' && <span className="t-label text-st-pending">Sinal</span>}</div>
-      <div className="flex items-center gap-1 mt-2">
+      <div className="flex flex-wrap items-center gap-2 mt-4">
         {allowed(appointment.status, 'confirm') && appointment.deposit_status !== 'awaiting' && <ActionButton label="Confirmar" onClick={() => onAction('confirm', appointment)} busy={busy}><CheckCircle2 size={14} /></ActionButton>}
         {allowed(appointment.status, 'start') && new Date(appointment.starts_at).getTime() <= Date.now() + 30 * 60 * 1000 && <ActionButton label="Iniciar atendimento" onClick={() => onAction('start', appointment)} busy={busy}><Play size={14} /></ActionButton>}
         {allowed(appointment.status, 'complete') && <ActionButton label="Concluir atendimento" onClick={() => onAction('complete', appointment)} busy={busy}><CheckCircle2 size={14} /></ActionButton>}
         {allowed(appointment.status, 'no_show') && new Date(appointment.starts_at).getTime() <= Date.now() + 30 * 60 * 1000 && <ActionButton label="Marcar falta" onClick={() => onAction('no_show', appointment)} busy={busy}><UserX size={14} /></ActionButton>}
-        {allowed(appointment.status, 'cancel') && <ActionButton label="Cancelar marcação" onClick={() => onAction('cancel', appointment)} busy={busy}><X size={14} /></ActionButton>}
-        {allowed(appointment.status, 'reschedule') && <ActionButton label="Remarcar" onClick={() => onReschedule(appointment)} busy={busy}><RefreshCw size={14} /></ActionButton>}
+        {allowed(appointment.status, 'cancel') && <ActionButton label="Cancelar marcação" onClick={() => {setDetailsOpen(false);onAction('cancel', appointment);}} busy={busy}><X size={14} /></ActionButton>}
+        {allowed(appointment.status, 'reschedule') && <ActionButton label="Remarcar" onClick={() => {setDetailsOpen(false);onReschedule(appointment);}} busy={busy}><RefreshCw size={14} /></ActionButton>}
         {appointment.customer_phone && (
           <a
             href={buildWhatsAppLink(appointment.customer_phone, 'Olá ' + appointment.customer_name + ', falamos da sua marcação na nossa barbearia.')}
@@ -187,14 +196,15 @@ function AppointmentCard({
           </a>
         )}
       </div>
-    </article>
+    </Modal>
+    </>
   );
 }
 
 function ActionButton({
   label, onClick, busy, children,
 }: { label: string; onClick: () => void; busy: boolean; children: ReactNode }) {
-  return <button type="button" title={label} aria-label={label} onClick={onClick} disabled={busy} className="p-1.5 rounded-lg hover:bg-white/10 text-ink-mid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft disabled:opacity-50">{children}</button>;
+  return <button type="button" title={label} aria-label={label} onClick={onClick} disabled={busy} className="min-h-11 min-w-11 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/10 text-ink-mid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft disabled:opacity-50">{children}<span className="text-xs">{label}</span></button>;
 }
 
 function DayGrid({
@@ -238,13 +248,13 @@ function DayGrid({
   };
 
   return (
-    <div className="overflow-x-auto rounded-3xl border border-white/10">
-      <div className="min-w-[760px]">
-        <div className="grid grid-cols-[5rem_repeat(auto-fit,minmax(13rem,1fr))] border-b border-white/10 bg-white/[.03]">
+    <div className="min-w-0 overflow-x-auto rounded-3xl border border-white/10" tabIndex={0} role="region" aria-label="Agenda diária com deslocamento horizontal">
+      <div style={{minWidth:Math.max(760,80+208*columns.length)}}>
+        <div className="grid border-b border-white/10 bg-white/[.03]" style={{gridTemplateColumns:`5rem repeat(${columns.length},minmax(13rem,1fr))`}}>
           <div className="p-3 t-label text-ink-mid">Hora</div>
           {columns.map((column) => <div key={column.barber_id} className="p-3 border-l border-white/5"><p className="t-card text-ink-hi truncate">{column.barber_name}</p><p className="t-label text-ink-mid mt-0.5">{column.is_closed ? 'Fechado' : column.opens_at.slice(0,5) + '–' + column.closes_at.slice(0,5)}</p></div>)}
         </div>
-        <div className="grid grid-cols-[5rem_repeat(auto-fit,minmax(13rem,1fr))]">
+        <div className="grid" style={{gridTemplateColumns:`5rem repeat(${columns.length},minmax(13rem,1fr))`}}>
           <div className="relative" style={{ height }}>
             {Array.from({ length: gridSteps + 1 }).map((_, index) => {
               const minute = gridStart + index * GRID_STEP;
@@ -325,6 +335,10 @@ function WeekBoard({
 }
 
 export default function AgendaPage() {
+  const {shop}=useShop();
+  return <AgendaWorkspace key={shop?.id??'none'}/>;
+}
+function AgendaWorkspace() {
   const { shop } = useShop();
   const timezone = shop?.timezone ?? 'Africa/Maputo';
   const [view, setView] = useState<ViewMode>('day');
@@ -333,6 +347,8 @@ export default function AgendaPage() {
   const [rescheduleDate, setRescheduleDate] = useState(selectedDate);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [manualBookingOpen, setManualBookingOpen] = useState(false);
+  const [cancelTarget,setCancelTarget]=useState<AgendaAppointment|null>(null);
+  const [cancelReason,setCancelReason]=useState('');
 
   const range = useMemo(() => rangeFor(view, selectedDate, timezone), [view, selectedDate, timezone]);
   const appointmentsQuery = useAgendaAppointments(shop?.id, range.from, range.to);
@@ -362,16 +378,10 @@ export default function AgendaPage() {
     setRescheduleAppointment(null);
   };
 
-  const handleAction = async (appointmentAction: 'confirm' | 'start' | 'complete' | 'no_show' | 'cancel', appointment: AgendaAppointment) => {
-    let reason: string | null = null;
-    if (appointmentAction === 'cancel') {
-      if (!window.confirm('Cancelar esta marcação?')) return;
-      reason = window.prompt('Motivo do cancelamento (opcional):');
-      if (reason && reason.length > 500) {
-        toast.error('O motivo pode ter no máximo 500 caracteres.');
-        return;
-      }
-    }
+  const handleAction = async (appointmentAction: 'confirm' | 'start' | 'complete' | 'no_show' | 'cancel', appointment: AgendaAppointment, reason: string|null=null, confirmed=false) => {
+    if(busyId)return;
+    if(appointmentAction==='cancel'&&!confirmed){setCancelTarget(appointment);setCancelReason('');return;}
+    if(reason&&reason.length>500){toast.error('O motivo pode ter no máximo 500 caracteres.');return;}
     setBusyId(appointment.appointment_id);
     try {
       await actionMutation.mutateAsync({
@@ -385,6 +395,7 @@ export default function AgendaPage() {
         appointmentAction === 'complete' ? 'Atendimento concluído.' :
         appointmentAction === 'no_show' ? 'Falta registada.' : 'Marcação cancelada.';
       toast.success(success);
+      if(appointmentAction==='cancel')setCancelTarget(null);
     } catch (error) {
       toast.error(humanError(error));
     } finally {
@@ -423,7 +434,7 @@ export default function AgendaPage() {
       title="Agenda"
       subtitle={label}
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" size="sm" pill onClick={() => setManualBookingOpen(true)}>
             <Plus size={15} />Nova marcação
           </Button>
@@ -500,6 +511,13 @@ export default function AgendaPage() {
           )}
         </>
       )}
+      <Modal open={!!cancelTarget} onOpenChange={open=>{if(!open&&!busyId)setCancelTarget(null);}} title="Cancelar marcação" testId="agenda-cancel-modal">
+        <form className="space-y-4" onSubmit={event=>{event.preventDefault();if(cancelTarget)void handleAction('cancel',cancelTarget,cancelReason.trim()||null,true);}}>
+          <p className="t-body text-ink-mid">Confirma o cancelamento da marcação de {cancelTarget?.customer_name}?</p>
+          <Textarea label="Motivo (opcional)" maxLength={500} rows={4} value={cancelReason} onChange={event=>setCancelReason(event.target.value)}/>
+          <div className="flex flex-wrap justify-end gap-2"><Button variant="secondary" disabled={!!busyId} onClick={()=>setCancelTarget(null)}>Voltar</Button><Button type="submit" variant="danger" loading={!!busyId}>Cancelar marcação</Button></div>
+        </form>
+      </Modal>
       <ManualBookingModal
         open={manualBookingOpen}
         onOpenChange={setManualBookingOpen}
