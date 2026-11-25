@@ -15,6 +15,7 @@ import {
 import { Textarea } from "@/components/ui/Primitives";
 import { EmptyState, ErrorState, Panel, Skeleton } from "@/components/ui/States";
 import { useShop } from "@/lib/shop";
+import CommunicationDraft from "@/features/intelligence/CommunicationDraft";
 import {
   useGmailActions,
   useGmailStatus,
@@ -85,7 +86,8 @@ function ThreadRow({
 }
 
 export default function Comunicacoes() {
-  const { shop, shops, setShopId } = useShop();
+  const { shop, shops, setShopId, role } = useShop();
+  const canUseDraft=role==="owner"||role==="manager";
   const shopId = shop?.id ?? "";
   const status = useGmailStatus(shopId || undefined);
   const connected = status.data?.connection.connected === true;
@@ -404,6 +406,7 @@ export default function Comunicacoes() {
                   <Field ref={toRef} error={draftErrors.to} disabled={busyAction} label="Destinatário" name="gmail-to" type="email" inputMode="email" autoComplete="email" value={to} onChange={(event) => setTo(event.target.value)} required placeholder="cliente@exemplo.com" />
                   <Field ref={subjectRef} error={draftErrors.subject} disabled={busyAction} label="Assunto" name="gmail-subject" value={subject} onChange={(event) => setSubject(event.target.value)} required maxLength={200} placeholder="Assunto do email" />
                 </div>
+                {canUseDraft && <CommunicationDraft key={shopId+":compose"} shopId={shopId} disabled={busyAction} hasText={Boolean(subject.trim()||newBody.trim())} onApply={(s,b)=>{setSubject(s);setNewBody(b);setDraftErrors(e=>({...e,subject:undefined,body:undefined}));}}/>}
                 <Textarea ref={bodyRef} error={draftErrors.body} disabled={busyAction} className="resize-none" label="Mensagem" name="gmail-message" value={newBody} onChange={(event) => setNewBody(event.target.value)} required rows={8} maxLength={50000} placeholder="Escreva a mensagem..." />
                 <div className="flex flex-wrap justify-end gap-2">
                   <Button type="button" variant="ghost" disabled={busyAction} onClick={() => setComposeOpen(false)}><X size={15} /> Cancelar</Button>
@@ -454,6 +457,7 @@ export default function Comunicacoes() {
                       ))}
                     </div>
                     <form noValidate className="mt-4 space-y-3 border-t border-white/10 pt-4" onSubmit={(event) => void sendReply(event)}>
+                      {canUseDraft && <CommunicationDraft key={shopId+":"+selectedThreadId} shopId={shopId} disabled={busyAction} hasText={Boolean(replyBody.trim())} onApply={(_s,b)=>setReplyBody(b)}/>}
                       <Textarea className="resize-none" disabled={busyAction} label="Responder nesta conversa" name="gmail-reply" value={replyBody} onChange={(event) => setReplyBody(event.target.value)} rows={4} maxLength={50000} required placeholder="Escreva a sua resposta..." />
                       <div className="flex justify-end">
                         <Button type="submit" loading={busyAction} disabled={!replyBody.trim()}><Send size={15} /> Enviar resposta</Button>

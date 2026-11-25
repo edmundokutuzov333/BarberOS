@@ -21,3 +21,16 @@ export async function loadCustomerIntelligence(shopId:string,customerId:string){
   if(error)throw new Error('INTELLIGENCE_CUSTOMER_UNAVAILABLE');
   return customerContract.parse(data);
 }
+
+const planContract=z.object({version:z.literal(1),today:date,days:z.array(z.object({date,weekday:z.string(),capacity:n,booked:n,remaining:n,occupancy:n,historicalOccupancy:n,samples:z.number().int().nonnegative(),signal:z.enum(['unknown','closed','busy','opportunity','monitor'])})).length(7),campaign:z.object({title:z.string(),reason:z.string(),body:z.string()}).nullable(),setup:z.object({step:z.number().int().min(0).max(9),total:z.literal(9),complete:z.boolean(),next:z.string().nullable()}).nullable()});
+export async function loadOperationalPlan(shopId:string){
+ const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'operations',days:7,topic:'agenda'}});
+ if(error)throw new Error('INTELLIGENCE_OPERATIONS_UNAVAILABLE');return planContract.parse(data);
+}
+export const draftKinds=['confirmation','reschedule','acknowledgement','feedback','return','information'] as const;
+export type DraftKind=typeof draftKinds[number];
+const draftContract=z.object({version:z.literal(1),kind:z.enum(draftKinds),subject:z.string().max(200),body:z.string().max(5000)});
+export async function loadCommunicationDraft(shopId:string,kind:DraftKind){
+ const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'draft',kind,days:7,topic:'communications'}});
+ if(error)throw new Error('INTELLIGENCE_DRAFT_UNAVAILABLE');return draftContract.parse(data);
+}

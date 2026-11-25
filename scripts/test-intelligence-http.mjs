@@ -41,6 +41,10 @@ try{
  assert.equal((await call()).status,401);
  assert.equal((await call(owner.token,{...payload,shopId:other})).status,403);
  assert.equal((await call(owner.token,{...payload,days:8})).status,400);
+ const plan=ok(await call(owner.token,{...payload,action:'operations'}));assert.equal(plan.days.length,7);assert.equal(plan.campaign,null);
+ const draft=ok(await call(manager.token,{...payload,action:'draft',kind:'feedback'}));assert.equal(draft.kind,'feedback');assert.ok(draft.body);
+ assert.equal((await call(barber.token,{...payload,action:'draft',kind:'feedback'})).status,403);
+ assert.equal((await call(owner.token,{...payload,action:'draft',kind:'__proto__'})).status,400);
  const c={...payload,action:'customer',customerId:customer};
  const result=ok(await call(owner.token,c));assert.equal(result.returnStatus,'insufficient');assert.equal(result.draft,null);
  assert.equal((await call(manager.token,c)).status,200);

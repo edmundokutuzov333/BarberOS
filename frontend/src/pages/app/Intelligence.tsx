@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import OperationalPlan from '@/features/intelligence/OperationalPlan';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Sparkles, ArrowUpRight, RefreshCw } from 'lucide-react';
@@ -55,6 +56,7 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
           {data.forecast.length===0?<EmptyState title="Histórico insuficiente" body="A previsão só é apresentada com amostras suficientes."/>:<div className="space-y-3">{data.forecast.map(f=><div key={f.date} className="flex flex-wrap justify-between gap-2 border-b border-white/10 pb-2"><span className="t-body">{f.date}</span><span className="t-body text-ink-hi">{num(f.expected)} marcações</span><span className="t-label text-ink-mid">{f.low}–{f.high} · {f.samples} dias</span></div>)}</div>}
         </Panel>
       </>}
+      <OperationalPlan shopId={shopId} userId={userId}/>
       <p className="t-label text-ink-mid">A inteligência não altera marcações, preços, pagamentos ou contactos. As decisões são tomadas pela equipa.</p>
     </div>
   </Page>

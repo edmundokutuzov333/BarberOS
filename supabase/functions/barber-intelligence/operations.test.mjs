@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {test} from 'node:test';
+import {operationalPlan,prepareDraft,draftKinds} from './operations.mjs';
+import {shift} from './engine.mjs';
+const today='2026-11-25';
+const row=(date,capacity=100,booked=20)=>({report_date:date,capacity_minutes:capacity,booked_minutes:booked});
+const history=Array.from({length:56},(_,i)=>row(shift(today,i-56)));
+const future=Array.from({length:7},(_,i)=>row(shift(today,i+1)));
+test('seven upcoming days and weighted historical occupancy',()=>{const x=operationalPlan(history,future,today,4);assert.equal(x.days.length,7);assert.equal(x.days[0].historicalOccupancy,20);assert.equal(x.days[0].samples,8);assert.equal(x.days[0].remaining,80);assert.equal(x.days[0].signal,'opportunity');assert.equal(x.setup.next,'Cortes');assert.ok(x.campaign)});
+test('no history means no promotional opportunity',()=>{const x=operationalPlan([],future,today,9);assert.equal(x.days[0].signal,'monitor');assert.equal(x.campaign,null);assert.equal(x.setup.complete,true)});
+test('missing and duplicate rows unknown',()=>{const x=operationalPlan(history,[future[0],future[0]],today,null);assert.ok(x.days.every(d=>d.signal==='unknown'));assert.equal(x.setup,null)});
+test('closed and overbooked days never imply available slots',()=>{const x=operationalPlan(history,[row(future[0].report_date,0,0),row(future[1].report_date,100,120)],today,1);assert.equal(x.days[0].signal,'closed');assert.equal(x.days[0].remaining,null);assert.equal(x.days[1].signal,'busy');assert.equal(x.days[1].remaining,0);assert.equal(x.campaign,null)});
+test('weighted rate excludes closed and invalid days',()=>{const h=[...history];h[0]={...h[0],capacity_minutes:0};h[7]={...h[7],booked_minutes:NaN};const x=operationalPlan(h,future,today,0);assert.equal(x.days[6].samples,6);assert.equal(x.days[6].historicalOccupancy,20)});
+test('drafts reject arbitrary keys',()=>{for(const k of draftKinds){const d=prepareDraft(k);assert.equal(d.kind,k);assert.ok(d.subject&&d.body)}assert.throws(()=>prepareDraft('__proto__'));assert.throws(()=>prepareDraft('send mail'))});
