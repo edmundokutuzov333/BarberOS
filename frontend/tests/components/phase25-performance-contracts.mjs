@@ -149,9 +149,10 @@ const tests = [
   }],
   ['mobile dock does not steal focus on mount and restores focus only after closing', () => {
     const source = read('src/components/layout/MobileDock.tsx');
-    assert.ok(source.includes('const wasOpenRef = useRef(false)'));
-    assert.ok(source.includes('if (wasOpenRef.current && !open) moreRef.current?.focus()'));
-    assert.ok(source.includes('wasOpenRef.current = open'));
+    assert.match(source,/Dialog\.Root open=\{open\} onOpenChange=\{setOpen\}/);
+    assert.match(source,/Dialog\.Trigger asChild/);
+    assert.match(source,/onOpenAutoFocus=\{event => \{ event\.preventDefault\(\); closeRef\.current\?\.focus\(\); \}\}/);
+    assert.doesNotMatch(source,/onCloseAutoFocus=/); // Radix restores focus to its trigger by default.
   }],
   ['theme picker cleanup follows the last saved theme instead of a stale closure', () => {
     const source = read('src/components/config/ShopForms.tsx');

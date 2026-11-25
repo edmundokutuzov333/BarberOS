@@ -140,6 +140,7 @@ function AppointmentCard({
   onReschedule: (appointment: AgendaAppointment, targetBarberId?: string) => void;
   busy: boolean;
 }) {
+  const {shop}=useShop();
   const canDrag = allowed(appointment.status, 'reschedule') && !busy;
   const top = Math.max(0, (timeParts(appointment.starts_at, timezone) - gridStart) * PX_PER_MINUTE);
   const height = Math.max(1, appointment.duration_min * PX_PER_MINUTE);
@@ -180,7 +181,7 @@ function AppointmentCard({
         {allowed(appointment.status, 'confirm') && appointment.deposit_status !== 'awaiting' && <ActionButton label="Confirmar" onClick={() => onAction('confirm', appointment)} busy={busy}><CheckCircle2 size={14} /></ActionButton>}
         {allowed(appointment.status, 'start') && new Date(appointment.starts_at).getTime() <= Date.now() + 30 * 60 * 1000 && <ActionButton label="Iniciar atendimento" onClick={() => onAction('start', appointment)} busy={busy}><Play size={14} /></ActionButton>}
         {allowed(appointment.status, 'complete') && <ActionButton label="Concluir atendimento" onClick={() => onAction('complete', appointment)} busy={busy}><CheckCircle2 size={14} /></ActionButton>}
-        {allowed(appointment.status, 'no_show') && new Date(appointment.starts_at).getTime() <= Date.now() + 30 * 60 * 1000 && <ActionButton label="Marcar falta" onClick={() => onAction('no_show', appointment)} busy={busy}><UserX size={14} /></ActionButton>}
+        {allowed(appointment.status, 'no_show') && new Date(appointment.starts_at).getTime() + (shop?.late_grace_min ?? 0) * 60 * 1000 <= Date.now() && <ActionButton label="Marcar falta" onClick={() => onAction('no_show', appointment)} busy={busy}><UserX size={14} /></ActionButton>}
         {allowed(appointment.status, 'cancel') && <ActionButton label="Cancelar marcação" onClick={() => {setDetailsOpen(false);onAction('cancel', appointment);}} busy={busy}><X size={14} /></ActionButton>}
         {allowed(appointment.status, 'reschedule') && <ActionButton label="Remarcar" onClick={() => {setDetailsOpen(false);onReschedule(appointment);}} busy={busy}><RefreshCw size={14} /></ActionButton>}
         {appointment.customer_phone && (

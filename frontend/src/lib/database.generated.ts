@@ -499,6 +499,7 @@ export type Database = {
           instagram: string | null
           lat: number | null
           lng: number | null
+          late_grace_min: number
           logo_url: string | null
           maps_url: string | null
           max_advance_days: number
@@ -530,6 +531,7 @@ export type Database = {
           instagram?: string | null
           lat?: number | null
           lng?: number | null
+          late_grace_min?: number
           logo_url?: string | null
           maps_url?: string | null
           max_advance_days?: number
@@ -561,6 +563,7 @@ export type Database = {
           instagram?: string | null
           lat?: number | null
           lng?: number | null
+          late_grace_min?: number
           logo_url?: string | null
           maps_url?: string | null
           max_advance_days?: number

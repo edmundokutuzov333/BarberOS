@@ -191,7 +191,7 @@ export function ThemePicker({ onDone }: { onDone?: () => void }) {
 export function RulesForm({ onDone }: { onDone?: () => void }) {
   const { shop } = useShop();
   const s = shop!;
-  const [f, setF] = useState({ slot: String(s.slot_interval_min), lead: String(s.min_lead_time_min), advance: String(s.max_advance_days), rule: s.cancellation_rule, buffer: String(s.service_buffer_min ?? 0) });
+  const [f, setF] = useState({ slot: String(s.slot_interval_min), lead: String(s.min_lead_time_min), advance: String(s.max_advance_days), rule: s.cancellation_rule, buffer: String(s.service_buffer_min ?? 0), grace: String(s.late_grace_min ?? 0) });
   const m = useUpdateShop(onDone);
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -203,7 +203,10 @@ export function RulesForm({ onDone }: { onDone?: () => void }) {
     const bufferAvailable = typeof s.service_buffer_min === 'number';
     const buffer = Number(f.buffer);
     if(bufferAvailable&&(!/^\d+$/.test(f.buffer.trim())||buffer<0||buffer>120))return toast.error('Tempo de preparação entre 0 e 120 minutos.');
-    m.mutate({ slot_interval_min: slot, min_lead_time_min: lead, max_advance_days: adv, cancellation_rule: f.rule, ...(bufferAvailable?{service_buffer_min:buffer}:{}) });
+    const grace=Number(f.grace);
+    const graceAvailable=typeof s.late_grace_min==='number';
+    if(graceAvailable&&(!/^\d+$/.test(f.grace.trim())||grace>120))return toast.error('Tolerância entre 0 e 120 minutos.');
+    m.mutate({ ...(graceAvailable?{late_grace_min:grace}:{}), slot_interval_min: slot, min_lead_time_min: lead, max_advance_days: adv, cancellation_rule: f.rule, ...(bufferAvailable?{service_buffer_min:buffer}:{}) });
   };
   return (
     <form onSubmit={submit} className="space-y-5" data-testid="rules-form">
@@ -214,6 +217,7 @@ export function RulesForm({ onDone }: { onDone?: () => void }) {
       </div>
       <p className="t-body text-ink-mid">A grelha determina de quantos em quantos minutos surgem opções de início. A duração de cada serviço continua a ser definida no respectivo serviço.</p>
       {typeof s.service_buffer_min === 'number' ? <Field data-testid="rules-buffer-input" label="Preparação entre clientes (min)" name="r_buffer" inputMode="numeric" hint="Tempo livre mínimo entre dois atendimentos do mesmo barbeiro. Não altera a duração nem o preço dos serviços." value={f.buffer} onChange={(e)=>setF({...f,buffer:e.target.value})}/> : <p role="status" className="t-label text-ink-mid">A configuração de preparação aguarda a actualização da base de dados.</p>}
+      {typeof s.late_grace_min === "number"&&<Field data-testid="rules-late-grace" label="Tolerância de atraso (min)" inputMode="numeric" value={f.grace} onChange={e=>setF({...f,grace:e.target.value})} hint="Só depois deste prazo é permitido registar falta. Não cancela marcações automaticamente."/>}
       <div>
         <span className="t-label text-ink-mid mb-2 block">Regra de cancelamento e remarcação</span>
         <div className="grid sm:grid-cols-2 gap-2">
