@@ -27,7 +27,7 @@ export function Sidebar() {
       data-testid="sidebar"
       animate={{ width: collapsed ? 76 : 264 }}
       transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 200, damping: 25 }}
-      className="glass sticky top-6 h-[calc(100vh-3rem)] shrink-0 flex flex-col overflow-hidden"
+      className="glass sticky top-6 h-[calc(100dvh-3rem)] shrink-0 flex flex-col overflow-hidden"
     >
       <div className={cn('flex items-center h-16 px-4 shrink-0', collapsed ? 'justify-center' : 'justify-between')}>
         {!collapsed && <Brand size="sm" />}
@@ -45,7 +45,9 @@ export function Sidebar() {
               value={shop.id}
               onChange={(e) => setShopId(e.target.value)}
               aria-label="Barbearia"
-              className={cn('field appearance-none cursor-pointer !py-2.5 text-sm font-normal truncate', collapsed && 'opacity-0 pointer-events-none absolute')}
+              tabIndex={collapsed ? -1 : undefined}
+              aria-hidden={collapsed || undefined}
+              className={cn('field appearance-none cursor-pointer !py-2.5 pr-9 text-sm font-normal truncate', collapsed && 'opacity-0 pointer-events-none absolute')}
             >
               {shops.map((m) => <option key={m.barbershops.id} value={m.barbershops.id}>{m.barbershops.name}</option>)}
             </select>
@@ -56,12 +58,12 @@ export function Sidebar() {
         </div>
       )}
 
-      <nav className="flex-1 overflow-y-auto no-scrollbar px-3 space-y-1" aria-label="Navegação principal">
+      <nav className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-3 space-y-1" aria-label="Navegação principal">
         {navItems.map((item) => {
           const isActive = active?.to === item.to;
           return (
-            <NavLink key={item.to} to={item.to} end={item.end} data-testid={item.testId} title={collapsed ? item.label : undefined}
-              className={cn('group relative flex items-center gap-3 h-11 rounded-2xl px-3 transition-colors duration-150',
+            <NavLink key={item.to} to={item.to} end={item.end} data-testid={item.testId} title={item.label} aria-label={item.label}
+              className={cn('group relative flex items-center gap-3 h-11 rounded-2xl px-3 transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-accent-soft',
                 isActive ? 'text-accent-ink' : 'text-ink-mid hover:text-ink-hi', collapsed && 'justify-center px-0')}>
               {isActive && (
                 <motion.div layoutId="nav-active" className="absolute inset-0 rounded-2xl bg-accent-soft"
@@ -77,7 +79,7 @@ export function Sidebar() {
           <NavLink
             to="/admin"
             data-testid="nav-platform-admin"
-            title={collapsed ? 'Administração da plataforma' : undefined}
+            title="Administração da plataforma" aria-label="Administração da plataforma"
             className={cn(
               'group relative flex items-center gap-3 h-11 rounded-2xl px-3 transition-colors duration-150',
               pathname.startsWith('/admin') ? 'text-accent-ink' : 'text-ink-mid hover:text-ink-hi',
@@ -109,7 +111,7 @@ export function Sidebar() {
       </nav>
 
       <div className="p-3 shrink-0 border-t border-white/5">
-        <button data-testid="sign-out-btn" type="button" onClick={signOut} aria-label={collapsed ? 'Sair da conta' : undefined}
+        <button data-testid="sign-out-btn" type="button" onClick={signOut} aria-label="Sair da conta"
           className={cn('flex items-center gap-3 h-11 w-full rounded-2xl px-3 text-ink-mid hover:text-ink-hi hover:bg-white/5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent-soft', collapsed && 'justify-center px-0')}>
           <LogOut size={18} className="opacity-55 shrink-0" />
           {!collapsed && <span className="text-sm truncate text-left flex-1">{profile?.full_name ?? 'Sair'}</span>}
