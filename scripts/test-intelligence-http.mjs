@@ -48,6 +48,7 @@ try{
  const reviews=ok(await call(owner.token,{...payload,action:'reviews'}));assert.equal(reviews.sampleCount,0);assert.equal(reviews.average,null);
  assert.equal((await call(barber.token,{...payload,action:'reviews'})).status,403);
  assert.equal((await call(owner.token,{...payload,action:'inventory',shopId:other})).status,403);
+ sql("begin; select set_config('request.jwt.claim.role','service_role',true); update public.barbershops set shop_enabled=false where id="+q(shop)+"; commit;");
  assert.equal(sql('select shop_enabled from public.barbershops where id='+q(shop)+';'),'f');
  assert.equal((await call(manager.token,{...payload,action:'inventory'})).status,409);
  sql("begin; select set_config('request.jwt.claim.role','service_role',true); update public.barbershops set shop_enabled=true where id="+q(shop)+"; commit;");
