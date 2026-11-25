@@ -2078,9 +2078,9 @@
     {
       "name": "barber-intelligence",
       "status": "ACTIVE",
-      "version": 9,
+      "version": 10,
       "verify_jwt": true,
-      "bundle_sha256": "2c5c0ab9c22fc4237e6c5adf434b8564fa5f39d2f177075d2533d1ce5231197f"
+      "bundle_sha256": "028e75570d5056724c260f7079fbcdff160c32a94ca6785c20c11a994a69f083"
     },
     {
       "name": "booking-create",
@@ -2198,9 +2198,9 @@
     "source": "Supabase management API list_edge_functions",
     "project_ref": "alseiinjzwjdiwtvkdzy",
     "edge": "barber-intelligence",
-    "version": 9,
-    "bundle_sha256": "2c5c0ab9c22fc4237e6c5adf434b8564fa5f39d2f177075d2533d1ce5231197f",
-    "scope": "Production/staging deployment metadata; authenticated HTTP, browser and live voice acceptance separate."
+    "version": 10,
+    "bundle_sha256": "028e75570d5056724c260f7079fbcdff160c32a94ca6785c20c11a994a69f083",
+    "scope": "Production/staging deployment metadata; live Groq probes and authenticated browser/HTTP acceptance tracked separately."
   },
   "intelligence_groq_capture": {
     "captured_on": "2026-11-25",
@@ -2255,5 +2255,17 @@
     "time_cutoff": null,
     "live_voice": "not verified",
     "current_release_ci": "pending"
+  },
+  "intelligence_cloud_reliability_capture": {
+    "captured_on": "2026-11-25",
+    "production_edge_version": 10,
+    "staging_edge_version": 12,
+    "bundle_sha256": "028e75570d5056724c260f7079fbcdff160c32a94ca6785c20c11a994a69f083",
+    "root_cause_reproduced": "HTTP 200 with all-none stock action selection rejected by prior renderer",
+    "production_vault_configured": true,
+    "live_direct_groq_probes": "9/9 HTTP 200 with valid primary actions, all nine topics, free rate headers 1000 RPD / 8000 TPM",
+    "unit_harness": "13 passed; isolated JS with mocked transport",
+    "authenticated_live_edge_generation": "not verified for this release",
+    "ci": "pending"
   }
 }
