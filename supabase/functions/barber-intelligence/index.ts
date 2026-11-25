@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { adminClient, consume, corsHeaders, rateLimitSalt, sha256Hex } from "../_shared/guard.ts";
 import { accountAccessFailure } from "../_shared/account.ts";
 import { analyze, ranges, topics, topicFor } from "./engine.mjs";
+import { customerIntelligence } from "./customer.mjs";
 import { cloudEnabled, genericAdvice } from "./provider.mjs";
 
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -25,6 +26,7 @@ Deno.serve(async (req:Request)=>{
     raw+=decoder.decode();
     let body;try{body=JSON.parse(raw)}catch{return json({error:"INVALID_REQUEST"},400)}
     if(!body||typeof body!=="object"||Array.isArray(body)||typeof body.shopId!=="string"||!uuid.test(body.shopId)||![7,30].includes(body.days)||!topics.includes(body.topic)||("question" in body&&(typeof body.question!=="string"||body.question.length>300))||("cloud" in body&&typeof body.cloud!=="boolean"))return json({error:"INVALID_REQUEST"},400);
+    if(("action" in body&&body.action!=="customer")||(body.action==="customer"&&(typeof body.customerId!=="string"||!uuid.test(body.customerId)||body.cloud===true)))return json({error:"INVALID_REQUEST"},400);
     const userId=auth.user.id,shopId=body.shopId;
     const [{data:profile,error:pe},{data:member,error:me}]=await Promise.all([
       admin.from("profiles").select("password_change_required").eq("id",userId).maybeSingle(),
@@ -46,6 +48,14 @@ Deno.serve(async (req:Request)=>{
     const params={p_shop:shopId,p_from:range.from,p_to:range.to};
     const rpc=async(name:string,args:Record<string,unknown>)=>{const {data,error}=await client.rpc(name,args);if(error||data===null)throw new Error("DATA_UNAVAILABLE");return data};
     const first=(v:unknown)=>{if(!Array.isArray(v)||!v[0]||typeof v[0]!=="object")throw new Error("DATA_UNAVAILABLE");return v[0]};
+    if(body.action==="customer"){
+      const args={p_shop:shopId,p_customer:body.customerId};
+      const {data:customer,error:ce}=await client.rpc("get_customer",args);
+      if(ce)return json({error:ce.message==="CUSTOMER_NOT_FOUND"?"CUSTOMER_NOT_FOUND":"DATA_UNAVAILABLE"},ce.message==="CUSTOMER_NOT_FOUND"?404:503);
+      if(!Array.isArray(customer)||!customer[0])return json({error:"CUSTOMER_NOT_FOUND"},404);
+      const history=await rpc("get_customer_appointments",{...args,p_limit:100,p_offset:0});
+      return json(customerIntelligence(customer[0],history,new Date(),shop.timezone));
+    }
     const [current,previous,dashboard,crm,wait,notifications,services,barbers,history,store]=await Promise.all([
       rpc("get_report_summary",params).then(first),
       rpc("get_report_summary",{p_shop:shopId,p_from:range.previousFrom,p_to:range.previousTo}).then(first),

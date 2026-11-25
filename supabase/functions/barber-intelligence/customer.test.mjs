@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {test} from 'node:test';
+import {customerIntelligence} from './customer.mjs';
+const now=new Date('2026-11-25T10:00:00Z');
+const row=(i,day,status='completed',service='Corte')=>({appointment_id:String(i),starts_at:day+'T09:00:00Z',status,service_name:service,haircut_name:'Clássico'});
+const history=[row(1,'2026-09-01'),row(2,'2026-09-15'),row(3,'2026-09-29'),row(4,'2026-10-13')];
+const calc=(rows=history,customer={})=>customerIntelligence(customer,rows,now,'Africa/Maputo');
+test('median visit cycle and overdue draft',()=>{const a=calc();assert.equal(a.cycleDays,14);assert.equal(a.daysSinceVisit,43);assert.equal(a.returnStatus,'overdue');assert.equal(a.indicativeReturnDate,'2026-10-27');assert.equal(a.frequentService.count,4);assert.ok(a.draft)});
+test('future appointment suppresses recovery even outside sampled rows',()=>{const a=calc(history,{next_appointment_at:'2026-11-26T10:00:00Z'});assert.equal(a.returnStatus,'scheduled');assert.equal(a.draft,null)});
+test('same-day appointments and duplicates do not bias cycle',()=>{const a=calc([...history,history[0],row(5,'2026-09-01')]);assert.equal(a.cycleDays,14);assert.equal(a.cycleSamples,3);assert.equal(a.historyCount,5)});
+test('low sample does not fabricate cycle or rate',()=>{const a=calc([history[0],history[1]]);assert.equal(a.cycleDays,null);assert.equal(a.noShowRate,null);assert.equal(a.returnStatus,'insufficient');assert.equal(a.draft,null)});
+test('historical absence signal only uses completed and no-show',()=>{const a=calc([...history,row(5,'2026-10-20','no_show'),row(6,'2026-11-01','no_show'),row(7,'2026-11-02','cancelled'),row(8,'2026-11-27','completed')]);assert.equal(a.noShowRate,33.3);assert.equal(a.risk,'review');assert.equal(a.resolved,6)});
+test('ties have no invented preferred service and active visit suppresses draft',()=>{const a=calc([row(1,'2026-09-01','completed','A'),row(2,'2026-09-15','completed','A'),row(3,'2026-09-29','completed','B'),row(4,'2026-10-13','completed','B'),row(5,'2026-11-24','in_progress')]);assert.equal(a.frequentService,null);assert.equal(a.hasUpcoming,true);assert.equal(a.draft,null)});

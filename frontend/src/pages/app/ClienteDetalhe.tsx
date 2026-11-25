@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { StatusChip, type ApptStatus } from '@/components/ui/StatusChip';
 import { useShop } from '@/lib/shop';
+import { useAuth } from '@/lib/auth';
+import CustomerIntelligencePanel from '@/features/intelligence/CustomerIntelligencePanel';
 import { buildWhatsAppLink } from '@/lib/calendar';
 import { fmt, formatMT, humanError } from '@/lib/utils';
 import { useCustomer, useCustomerAppointments, useUpdateCustomer } from '@/features/customers/api';
@@ -33,7 +35,8 @@ function initials(name: string): string {
 }
 
 export default function ClienteDetalhe() {
-  const { shop } = useShop();
+  const { shop, role } = useShop();
+  const { user } = useAuth();
   const { customerId } = useParams<{ customerId: string }>();
   const navigate = useNavigate();
   const customer = useCustomer(shop?.id, customerId);
@@ -216,6 +219,7 @@ export default function ClienteDetalhe() {
             </Panel>
           )}
 
+          {shop && user && (role==='owner'||role==='manager') && <CustomerIntelligencePanel key={user.id+':'+shop.id+':'+item.customer_id} userId={user.id} shopId={shop.id} customerId={item.customer_id}/>}
           <Panel title="Histórico de marcações" aside={<span className="t-label text-ink-mid">{Number(item.total_appointments)} no total</span>} testId="customer-history">
             {history.isLoading && <div className="space-y-2"><Skeleton className="h-16" lines={2} /><Skeleton className="h-16" lines={2} /></div>}
             {history.error && !history.isLoading && <ErrorState message={humanError(history.error)} onRetry={() => void history.refetch()} />}

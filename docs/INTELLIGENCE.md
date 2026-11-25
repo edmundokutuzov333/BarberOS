@@ -13,3 +13,7 @@ Completed historical periods exclude today; today's bookings come from dashboard
 ## Verification
 
 Run node --test supabase/functions/barber-intelligence/engine.test.mjs; deno check --node-modules-dir=auto supabase/functions/barber-intelligence/index.ts; frontend lint/typecheck/build and the repository's existing isolation suites. Verify production/staging function deployment and role boundaries with authenticated synthetic owner, manager, barber, cross-tenant and anonymous sessions before certification. Cloud configuration and live provider acceptance are separate gates. Never change the captured production contract until deployment evidence exists.
+
+## Customer intelligence
+
+Owner/manager-only, explicitly requested on the customer detail page. The edge calls the existing get_customer and get_customer_appointments RPCs with the caller JWT, reads at most 100 recent appointments, and calculates distinct visit-day median intervals (at least 3 intervals), recorded absence proportion (at least 5 resolved visits), and uniquely frequent services. Existing future booking or in-progress appointment suppresses recovery drafts. No external provider receives customer information. No automatic contact, customer scoring penalty, price change or persistent inference. The date is an indicative historic cycle, not availability. Run scripts/test-intelligence-http.mjs only in disposable local CI, never against production. The script creates and removes test fixtures and verifies owner/manager/barber/outsider/anonymous and revoked access.

@@ -13,3 +13,11 @@ export async function loadIntelligence(shopId:string,days:7|30,topic:Topic,quest
   if(error)throw new Error('Não foi possível consultar a inteligência de gestão. Confirme a sessão e tente novamente.');
   return contract.parse(data);
 }
+
+const frequency=z.object({label:z.string(),count:z.number().int().min(2)}).nullable();
+const customerContract=z.object({version:z.literal(1),today:date,historyCount:z.number().int().nonnegative(),completed:z.number().int().nonnegative(),missed:z.number().int().nonnegative(),resolved:z.number().int().nonnegative(),cycleDays:n,cycleSamples:z.number().int().nonnegative(),lastVisit:date.nullable(),daysSinceVisit:n,indicativeReturnDate:date.nullable(),returnStatus:z.enum(['scheduled','insufficient','overdue','due','regular']),hasUpcoming:z.boolean(),noShowRate:n,risk:z.enum(['insufficient','review','normal']),frequentService:frequency,frequentHaircut:frequency,lastService:z.string().nullable(),draft:z.string().nullable()});
+export async function loadCustomerIntelligence(shopId:string,customerId:string){
+  const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,customerId,action:'customer',days:7,topic:'customers'}});
+  if(error)throw new Error('INTELLIGENCE_CUSTOMER_UNAVAILABLE');
+  return customerContract.parse(data);
+}
