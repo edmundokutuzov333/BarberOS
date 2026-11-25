@@ -30,5 +30,37 @@
     "qa_shop": "shop-phase8-preview-qa",
     "token_gateway_version": 4,
     "booking_create_version": 8
+  },
+  "catalog_evolution": {
+    "captured_at": "2026-11-25",
+    "migration": "20261125090244_catalog_presentation_and_gross_margin.sql",
+    "remote_version": "20261125090244",
+    "functions": [
+      {
+        "name": "get_public_shop_catalog_v2",
+        "input_arguments": [
+          "p_slug"
+        ],
+        "required_argument_count": 1,
+        "return_type": "jsonb",
+        "anon": true,
+        "authenticated": true
+      },
+      {
+        "name": "save_shop_catalog_product_presentation",
+        "input_arguments": [
+          "p_barbershop_id",
+          "p_product_id",
+          "p_payload",
+          "p_gallery",
+          "p_featured",
+          "p_expected_updated_at"
+        ],
+        "required_argument_count": 5,
+        "return_type": "jsonb",
+        "anon": false,
+        "authenticated": true
+      }
+    ]
   }
 }
