@@ -151,7 +151,7 @@ export function AppShell() {
   }
 
   return (
-    <div className={pathname==='/app/inteligencia'?'barber-shell bi-shell min-h-screen lg:flex lg:gap-6 lg:p-6 lg:pr-8':'barber-shell min-h-screen lg:flex lg:gap-6 lg:p-6 lg:pr-8'}>
+    <div className="barber-shell min-h-screen lg:flex lg:gap-6 lg:p-6 lg:pr-8">
       
       <SkipLink />
       {desktop && <Sidebar />}

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ChevronsLeft, ChevronsRight, LogOut, ChevronsUpDown, ShieldCheck, ChevronDown } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, LogOut, ChevronsUpDown, ShieldCheck } from 'lucide-react';
 import { navForRole, type NavItem } from './nav';
 import { Brand } from '@/components/ui/Brand';
 import { useAuth } from '@/lib/auth';
@@ -9,7 +9,6 @@ import { useShop } from '@/lib/shop';
 import { cn } from '@/lib/utils';
 
 const KEY = 'barberos.sidebar';
-const intelligenceOrder=['nav-dashboard','nav-intelligence','nav-agenda','nav-marcacoes','nav-clientes','nav-servicos','nav-cortes','nav-barbeiros','nav-horarios','nav-shop','nav-pagamentos','nav-relatorios','nav-definicoes'];
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(KEY) === '1');
@@ -20,11 +19,6 @@ export function Sidebar() {
   const shopSchemaAvailable = typeof (shop as unknown as { shop_enabled?: unknown } | null)?.shop_enabled === 'boolean';
   const navItems = navForRole(role).filter((item) => shopSchemaAvailable || !item.to.startsWith('/app/loja'));
 
-  const intelligence=pathname==='/app/inteligencia';
-  const primary=intelligence?intelligenceOrder.map(id=>navItems.find(n=>n.testId===id)).filter((n):n is NavItem=>!!n):navItems;
-  const secondary=intelligence?navItems.filter(n=>!intelligenceOrder.includes(n.testId)):[];
-  const initials=(profile?.full_name?.trim().split(/\s+/).filter(Boolean).slice(0,2).map(n=>n[0]).join('')||'B').toUpperCase();
-  const roleLabel=role==='owner'?'Proprietário':role==='manager'?'Administrador':'Barbeiro';
   const toggle = () => { localStorage.setItem(KEY, collapsed ? '0' : '1'); setCollapsed(!collapsed); };
   const active = navItems.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)));
 
@@ -38,7 +32,7 @@ export function Sidebar() {
                 <motion.div layoutId="nav-active" className="absolute inset-0 rounded-2xl bg-accent-soft"
                   transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 350, damping: 30 }} />
               )}
-              <item.icon size={intelligence?22:18} strokeWidth={intelligence?1.8:2} aria-hidden="true" className={cn('relative shrink-0 transition-[opacity,color] duration-150',
+              <item.icon size={18} strokeWidth={2} aria-hidden="true" className={cn('relative shrink-0 transition-[opacity,color] duration-150',
                 isActive ? 'opacity-100' : 'opacity-55 text-ink-lo group-hover:opacity-100 group-hover:text-accent-soft')} />
               {!collapsed && <span className={cn('relative text-sm truncate', isActive ? 'font-medium' : 'font-light')}>{item.label}</span>}
             </NavLink>
@@ -48,8 +42,7 @@ export function Sidebar() {
   return (
     <motion.aside
       data-testid="sidebar"
-      animate={{ width: collapsed ? 76 : intelligence ? 294 : 264 }}
-      data-intelligence={intelligence||undefined} data-collapsed={collapsed||undefined}
+      animate={{ width: collapsed ? 76 : 264 }}
       transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 200, damping: 25 }}
       className="glass sticky top-6 h-[calc(100dvh-3rem)] shrink-0 flex flex-col overflow-hidden"
     >
@@ -77,14 +70,13 @@ export function Sidebar() {
             </select>
             {collapsed
               ? <div className="h-10 w-10 mx-auto rounded-2xl bg-[var(--surface-3)] border border-white/10 grid place-items-center text-sm font-medium">{shop.name.slice(0, 1)}</div>
-              : (intelligence||shops.length > 1) && <ChevronsUpDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-lo pointer-events-none" />}
+              : shops.length > 1 && <ChevronsUpDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-lo pointer-events-none" />}
           </div>
         </div>
       )}
 
       <nav className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-3 space-y-1" aria-label="Navegação principal">
-        {primary.map(renderItem)}
-        {secondary.length>0&&(collapsed?secondary.map(renderItem):<details className="bi-more-nav"><summary>Mais opções <ChevronDown size={16} aria-hidden="true"/></summary>{secondary.map(renderItem)}</details>)}
+        {navItems.map(renderItem)}
         {profile?.is_platform_admin === true && (
           <NavLink
             to="/admin"
@@ -123,7 +115,8 @@ export function Sidebar() {
       <div className="p-3 shrink-0 border-t border-white/5">
         <button data-testid="sign-out-btn" type="button" onClick={signOut} aria-label="Sair da conta"
           className={cn('flex items-center gap-3 h-11 w-full rounded-2xl px-3 text-ink-mid hover:text-ink-hi hover:bg-white/5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent-soft', collapsed && 'justify-center px-0')}>
-          {intelligence&&!collapsed?<><span className="bi-account-avatar" aria-hidden="true">{initials}</span><span className="bi-account-text"><span>{profile?.full_name??'Conta autenticada'}</span><small>{roleLabel}</small></span><LogOut size={18} className="shrink-0" aria-hidden="true"/></>:<><LogOut size={18} className="opacity-55 shrink-0" />{!collapsed && <span className="text-sm truncate text-left flex-1">{profile?.full_name ?? 'Sair'}</span>}</>}
+          <LogOut size={18} className="opacity-55 shrink-0" />
+          {!collapsed && <span className="text-sm truncate text-left flex-1">{profile?.full_name ?? 'Sair'}</span>}
         </button>
       </div>
     </motion.aside>

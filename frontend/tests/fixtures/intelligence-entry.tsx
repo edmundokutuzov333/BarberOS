@@ -1,10 +1,11 @@
 import {createRoot} from 'react-dom/client';
-import {MemoryRouter} from 'react-router-dom';
+import {MemoryRouter,Routes,Route} from 'react-router-dom';
 import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
 import {Toaster} from 'sonner';
-import {Sidebar} from '@/components/layout/Sidebar';
+import {AppShell} from '@/components/layout/AppShell';
+import {Page} from '@/components/layout/Page';
 import Intelligence from '@/pages/app/Intelligence';
 import SetupAssistant from '@/features/intelligence/SetupAssistant';
 import '@/index.css';
 const client=new QueryClient({defaultOptions:{queries:{retry:false},mutations:{retry:false}}});
-createRoot(document.getElementById('root')!).render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/app/inteligencia']}><div className="barber-shell bi-shell min-h-screen lg:flex"><Sidebar/><main className="flex-1 min-w-0 px-4 pt-5 pb-28 lg:p-0"><Intelligence/><SetupAssistant shopId="11111111-1111-4111-8111-111111111111" step={6}/></main></div><Toaster/></MemoryRouter></QueryClientProvider>);
+createRoot(document.getElementById('root')!).render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/app/inteligencia']}><Routes><Route path="/app" element={<AppShell/>}><Route index element={<Page title="Início" testId="fixture-dashboard"><p>Área de gestão</p></Page>}/><Route path="inteligencia" element={<><Intelligence/><SetupAssistant shopId="11111111-1111-4111-8111-111111111111" step={6}/></>}/><Route path="*" element={<Page title="Módulo" testId="fixture-module"><p>Área de gestão</p></Page>}/></Route></Routes><Toaster/></MemoryRouter></QueryClientProvider>);
