@@ -67,7 +67,7 @@ export function Select({ label, className, children, ...rest }: SelectHTMLAttrib
   return (
     <label className="block min-w-0" htmlFor={inputId}>
       {label && <span className="t-label text-ink-mid mb-1.5 block">{label}</span>}
-      <span className="relative block min-w-0">
+      <span className="field-select-layout relative block min-w-0">
         <select {...rest} id={inputId} className={cn('field appearance-none cursor-pointer pr-10', className)}>
           {children}
         </select>
