@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import * as SwitchPrimitive from '@radix-ui/react-switch';
-import { X, ImagePlus } from 'lucide-react';
+import { X, ImagePlus, ChevronDown } from 'lucide-react';
 import { forwardRef, useId, useRef, useState, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 import { uploadImage, type Bucket } from '@/lib/storage';
@@ -25,14 +25,14 @@ export function Modal({ open, onOpenChange, title, children, testId }: { open: b
               returnFocus.current.focus();
             }
           }}
-          className="!fixed inset-x-4 top-4 bottom-4 z-50 m-auto h-fit w-auto max-w-lg glass glass-2 p-6 sm:p-7 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain touch-pan-y no-scrollbar outline-none"
+          className="!fixed inset-x-4 top-4 bottom-4 z-50 m-auto h-fit w-auto max-w-lg glass glass-2 p-4 sm:p-7 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain touch-pan-y no-scrollbar outline-none"
         >
           <div className="flex items-start justify-between gap-4 mb-5">
-            <Dialog.Title className="t-title">{title}</Dialog.Title>
+            <Dialog.Title className="t-title min-w-0 break-words">{title}</Dialog.Title>
             <Dialog.Close
               data-testid="modal-close"
               aria-label="Fechar"
-              className="icon-button -mr-2 -mt-2"
+              className="icon-button shrink-0 -mr-1 -mt-1 focus-visible:ring-2 focus-visible:ring-accent-soft"
             >
               <X size={18} aria-hidden />
             </Dialog.Close>
@@ -62,17 +62,17 @@ export function Switch({ checked, onCheckedChange, label, testId }: { checked: b
 }
 
 export function Select({ label, className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement> & { label?: string }) {
-  const inputId = rest.id ?? rest.name;
+  const generatedId = useId();
+  const inputId = rest.id ?? `select-${generatedId.replace(/:/g, '')}`;
   return (
     <label className="block min-w-0" htmlFor={inputId}>
       {label && <span className="t-label text-ink-mid mb-1.5 block">{label}</span>}
-      <select
-        id={inputId}
-        className={cn('field appearance-none cursor-pointer', className)}
-        {...rest}
-      >
-        {children}
-      </select>
+      <span className="relative block min-w-0">
+        <select {...rest} id={inputId} className={cn('field appearance-none cursor-pointer pr-10', className)}>
+          {children}
+        </select>
+        <ChevronDown size={16} aria-hidden="true" className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink-mid" />
+      </span>
     </label>
   );
 }
@@ -80,7 +80,7 @@ export function Select({ label, className, children, ...rest }: SelectHTMLAttrib
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; error?: string }>(
   ({ label, className, error, ...rest }, ref) => {
     const generatedId = useId();
-    const inputId = rest.id ?? rest.name ?? `textarea-${generatedId.replace(/:/g, '')}`;
+    const inputId = rest.id ?? `textarea-${generatedId.replace(/:/g, '')}`;
     const errorId = error ? `${inputId}-error` : undefined;
     const describedBy = [rest['aria-describedby'], errorId].filter(Boolean).join(' ') || undefined;
     return (
@@ -90,7 +90,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
         </label>
         <textarea {...rest} ref={ref} id={inputId} aria-invalid={error ? true : rest['aria-invalid']}
           aria-describedby={describedBy} aria-errormessage={errorId}
-          className={cn('field min-h-[112px] resize-none', error && 'border-st-noshow/60', className)} />
+          className={cn('field min-h-[112px] resize-y', error && 'border-st-noshow/60', className)} />
         {error && <span id={errorId} role="alert" className="t-label text-st-noshow mt-1.5 block">{error}</span>}
       </div>
     );
@@ -126,8 +126,9 @@ export function ImageUpload({ bucket, shopId, ratio, value, onChange, label, cla
         onClick={() => ref.current?.click()}
         disabled={busy}
         aria-busy={busy || undefined}
+        aria-label={`${value ? 'Trocar' : 'Carregar'} ${label}`}
         className={cn(
-          'relative overflow-hidden bg-[var(--surface-3)] border border-dashed border-white/15 hover:border-accent/60 transition-colors grid place-items-center text-ink-mid w-full disabled:cursor-wait disabled:opacity-70',
+          'group relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft bg-[var(--surface-3)] border border-dashed border-white/15 hover:border-accent/60 transition-colors grid place-items-center text-ink-mid w-full disabled:cursor-wait disabled:opacity-70',
           shape === 'circle' ? 'rounded-full aspect-square max-w-[120px]' : 'rounded-2xl',
         )}
         style={shape === 'card' ? { aspectRatio: String(ratio) } : undefined}
@@ -136,7 +137,7 @@ export function ImageUpload({ bucket, shopId, ratio, value, onChange, label, cla
         {busy && <div className="absolute inset-0 aurora-sweep animate-aurora" aria-hidden />}
         <span className={cn(
           'relative flex flex-col items-center gap-1 t-label',
-          value && 'opacity-0 hover:opacity-100 bg-black/55 absolute inset-0 justify-center transition-opacity',
+          value && 'absolute inset-x-0 bottom-0 bg-black/65 py-2 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100',
         )}>
           <ImagePlus size={18} aria-hidden />
           {value ? 'Trocar foto' : 'Carregar foto'}
