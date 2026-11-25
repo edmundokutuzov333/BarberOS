@@ -538,6 +538,7 @@ function CatalogWorkspace() {
       </Page>
     );
   const loading = catsQ.isLoading || productsQ.isLoading || variantsQ.isLoading;
+  const catalogUnavailable = catsQ.isError || productsQ.isError || variantsQ.isError;
   return (
     <Page
       testId="shop-products-page"
@@ -589,8 +590,8 @@ function CatalogWorkspace() {
         ].map((x) => (
           <Panel key={x.label}>
             <p className="t-label text-ink-mid">{x.label}</p>
-            <p className="text-2xl mt-2">{x.value}</p>
-            <p className="t-label text-ink-lo">{x.sub}</p>
+            <p className="text-2xl mt-2 tabular-nums">{loading || catalogUnavailable ? "—" : x.value}</p>
+            <p className="t-label text-ink-lo">{loading ? "A carregar…" : catalogUnavailable ? "Dados indisponíveis" : x.sub}</p>
           </Panel>
         ))}
       </div>
@@ -624,7 +625,7 @@ function CatalogWorkspace() {
         <Panel
           title="Produtos"
           aside={
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Switch
                 checked={showDrafts}
                 onCheckedChange={setShowDrafts}
@@ -641,9 +642,7 @@ function CatalogWorkspace() {
             <Skeleton className="h-40" />
           ) : productsQ.error || variantsQ.error || catsQ.error ? (
             <ErrorState
-              message={humanError(
-                productsQ.error ?? variantsQ.error ?? catsQ.error,
-              )}
+              message="Não foi possível consultar o catálogo. Os produtos guardados não foram removidos. Tenta actualizar."
               onRetry={() => {
                 void productsQ.refetch();
                 void variantsQ.refetch();
