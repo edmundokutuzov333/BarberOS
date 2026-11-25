@@ -58,8 +58,8 @@ begin
     values(v_shop,'Categoria Fase 5 QA',true) returning id into v_category;
   insert into public.shop_products(barbershop_id,category_id,name,product_kind,track_stock,is_active)
     values(v_shop,v_category,'Produto Fase 5 QA','takeaway',true,false) returning id into v_product;
-  insert into public.shop_product_variants(barbershop_id,product_id,label,unit_label,price_minor,is_active)
-    values(v_shop,v_product,'Unidade QA','unidade',1000,true) returning id into v_variant;
+  insert into public.shop_product_variants(barbershop_id,product_id,label,unit_label,price_minor,cost_minor,is_active)
+    values(v_shop,v_product,'Unidade QA','unidade',1000,400,true) returning id into v_variant;
   perform set_config('request.jwt.claim.role','service_role',true);
   update public.barbershops set shop_enabled=true where id=v_shop;
   perform public.record_shop_inventory_movement(v_shop,v_variant,4,'opening_balance','Fase 5 fixture');
@@ -170,6 +170,10 @@ begin
   if v_stock<>3 or v_item_status<>'delivered' or (select status from public.appointment_product_orders where id=v_order_b)<>'delivered' then
     raise exception 'FAIL: second partial delivery did not reconcile final stock and states';
   end if;
+
+  -- Report only delivered units and the cost frozen at creation.
+  v_result:=public.get_shop_phase6_report(v_shop,(now() at time zone 'Africa/Maputo')::date,(now() at time zone 'Africa/Maputo')::date);
+  if (v_result->>'delivered_cost_known_units')::integer<>7 or (v_result->>'delivered_known_cost_minor')::bigint<>2800 or (v_result->>'delivered_known_gross_margin_minor')::bigint<>4200 or (v_result->>'delivered_cost_unknown_units')::integer<>0 then raise exception 'FAIL: delivered historical margin report %',v_result;end if;
 
   -- Unavailability releases reservations and requires confirmation.
   v_slot := v_slot+interval '1 hour';
