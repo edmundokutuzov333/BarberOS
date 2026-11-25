@@ -45,6 +45,20 @@ begin
  select read_by,read_at into v_read_by,v_read_at from public.shop_notification_events where id=v_notification;
  if v_read_by is distinct from v_actor or v_read_at is null then raise exception 'FAIL: acknowledgement actor/time missing'; end if;
  if has_table_privilege('authenticated','public.shop_notification_events','UPDATE') then raise exception 'FAIL: direct update privilege still granted'; end if;
+ -- Exercise the actual PostgREST role, not the migration owner.
+ execute 'set local role authenticated';
+ if not exists(select 1 from public.shop_products where id=v_product and barbershop_id=v_shop) then raise exception 'FAIL: owner cannot read draft'; end if;
+ if not exists(select 1 from public.shop_product_variants where id=v_variant and barbershop_id=v_shop) then raise exception 'FAIL: owner cannot read variant'; end if;
+ if not exists(select 1 from public.shop_product_categories where id=v_category and barbershop_id=v_shop) then raise exception 'FAIL: owner cannot read category'; end if;
+ perform * from public.shop_catalog_audit_events where barbershop_id=v_shop limit 1;
+ perform * from public.inventory_movements where barbershop_id=v_shop limit 1;
+ execute 'reset role';
+ perform set_config('request.jwt.claim.sub',gen_random_uuid()::text,true);
+ execute 'set local role authenticated';
+ if exists(select 1 from public.shop_products where id=v_product) then raise exception 'FAIL: unrelated authenticated user reads draft'; end if;
+ if exists(select 1 from public.shop_product_variants where id=v_variant) then raise exception 'FAIL: unrelated authenticated user reads draft variant'; end if;
+ execute 'reset role';
+ if exists(select 1 from pg_policy p join pg_depend d on d.classid='pg_policy'::regclass and d.objid=p.oid join pg_proc f on d.refclassid='pg_proc'::regclass and d.refobjid=f.oid join pg_namespace n on n.oid=f.pronamespace where n.nspname='public' and f.proname in ('is_member','is_platform_admin')) then raise exception 'FAIL: stale RLS helper dependency'; end if;
  raise notice 'PASS | Phase 7: tenant-scoped product approval, provenance, publish guard, invalidation, store remains enabled by default, RPC-only alert acknowledgement.';
 end;
 $shop_catalog_phase7$;
