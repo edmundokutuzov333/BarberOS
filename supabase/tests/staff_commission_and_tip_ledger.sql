@@ -22,5 +22,9 @@ begin
  if has_function_privilege('anon','public.get_staff_earnings(uuid,date,date,integer)','EXECUTE') or has_table_privilege('authenticated','private.staff_earnings','SELECT') then raise exception 'FAIL privilege';end if;
  perform set_config('request.jwt.claim.sub',gen_random_uuid()::text,true);
  rejected:=false;begin perform public.get_staff_earnings(sh,d,d,0);exception when insufficient_privilege then rejected:=true;end;if not rejected then raise exception 'FAIL tenant scope';end if;
+ perform set_config('request.jwt.claim.sub',actor::text,true);
+ delete from public.barbershops where id=sh;
+ if exists(select 1 from private.staff_earnings where appointment_id=ap) then raise exception 'FAIL shop cascade';end if;
 end $qa$;
+set constraints all immediate;
 rollback;
