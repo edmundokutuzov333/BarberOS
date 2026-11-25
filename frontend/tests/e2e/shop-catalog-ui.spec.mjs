@@ -93,7 +93,7 @@ async function fixture(page, { product = false } = {}) {
       });
     if (path.endsWith("/shop_products"))
       result = req.url().includes(otherId) ? [] : state.products;
-    if (path.endsWith("/rpc/save_shop_catalog_product")) {
+    if (path.endsWith("/rpc/save_shop_catalog_product") || path.endsWith("/rpc/save_shop_catalog_product_presentation")) {
       const body = req.postDataJSON();
       state.save.push(body);
       if (state.delay)
@@ -104,6 +104,8 @@ async function fixture(page, { product = false } = {}) {
         id: body.p_product_id,
         barbershop_id: body.p_barbershop_id,
         ...body.p_payload,
+        gallery: body.p_gallery ?? [],
+        is_featured: body.p_featured ?? false,
         is_active: false,
         updated_at: version,
       };
@@ -258,4 +260,18 @@ test("product modal has no serious accessibility violations or narrow overflow",
   ).toBe(true);
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("shop-product-modal")).toBeHidden();
+});
+
+test("featured catalogue presentation survives save and reload", async ({page}) => {
+  const state=await fixture(page);
+  await page.getByRole("button",{name:"Novo produto"}).click();
+  const modal=page.getByTestId("shop-product-modal");
+  await modal.getByLabel("Nome do produto").fill("Produto destaque QA");
+  await modal.getByText("Destacar este produto na vitrine",{exact:true}).click();
+  await modal.getByRole("button",{name:"Guardar produto"}).click();
+  await expect(modal).toBeHidden();
+  expect(state.save[0].p_featured).toBe(true);
+  expect(state.save[0].p_gallery).toEqual([]);
+  await page.reload();
+  await expect(page.getByText("Em destaque na vitrine",{exact:true})).toBeVisible();
 });

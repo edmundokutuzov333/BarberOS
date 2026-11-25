@@ -6,7 +6,7 @@ import {expect} from '@playwright/test';
 
 const widths=[1440,1280,768,390,360];
 const output=fileURLToPath(new URL('./test-results/authenticated-layout/',import.meta.url));
-const settings=['perfil','pagina','regras','sinal','pagamentos','utilizadores','link'];
+const settings=['perfil','pagina','regras','comissoes','sinal','pagamentos','utilizadores','link'];
 const ownerRoutes=[
  '/app','/app/onboarding','/app/agenda','/app/marcacoes','/app/clientes',
  '/app/lista-espera','/app/notificacoes','/app/comunicacoes','/app/pagamentos',
@@ -100,6 +100,60 @@ export async function certifyAuthenticatedLayout({browser,origin,owner,admin,sho
       await expect(more).toBeFocused();
       findings.push({role,width,route:'mobile-menu',status:'pass'});
      }catch(error){findings.push({role,width,route:'mobile-menu',status:'fail',message:String(error).slice(0,800)});}
+    }
+   }
+   if(role==='owner'){
+    await page.setViewportSize({width:1280,height:900});
+    for(const [scenario,action] of [
+     ['operational-rules-persist',async()=>{
+      await page.goto(origin+'/app/definicoes/regras');
+      const grace=page.getByTestId('rules-late-grace');
+      await expect(grace).toBeVisible();
+      await grace.fill('15');
+      await page.getByTestId('rules-buffer-input').fill('15');
+      await page.getByTestId('rules-save-btn').click();
+      await expect(page.getByText('Guardado',{exact:true})).toBeVisible();
+      await page.reload();
+      await expect(grace).toHaveValue('15');
+      await expect(page.getByTestId('rules-buffer-input')).toHaveValue('15');
+     }],
+     ['commission-rate-persist',async()=>{
+      await page.goto(origin+'/app/definicoes/comissoes');
+      const rate=page.getByLabel('Comissão (%)').first();
+      await expect(rate).toBeVisible();
+      await rate.fill('37.5');
+      await page.getByRole('button',{name:'Guardar',exact:true}).first().click();
+      await expect(page.getByText('Comissão guardada.',{exact:true})).toBeVisible();
+      await page.reload();
+      await expect.poll(async()=>Number((await rate.inputValue()).replace(',','.'))).toBe(37.5);
+     }],
+     ['catalog-advanced-price-persist',async()=>{
+      await page.goto(origin+'/app/loja/produtos');
+      await page.getByRole('button',{name:'Novo produto'}).click();
+      const modal=page.getByTestId('shop-product-modal');
+      const name='Produto QA '+Date.now();
+      await modal.getByLabel('Nome do produto').fill(name);
+      await modal.getByText('Destacar este produto na vitrine',{exact:true}).click();
+      await modal.getByRole('button',{name:'Guardar produto'}).click();
+      await expect(modal).toBeHidden();
+      const product=page.locator('article').filter({has:page.getByText(name,{exact:true})});
+      await expect(product.getByText('Em destaque na vitrine')).toBeVisible();
+      await product.getByRole('button',{name:'Variante',exact:true}).click();
+      const variant=page.getByTestId('shop-variant-modal');
+      await variant.getByLabel('Formato / variante').fill('QA 100 ml');
+      await variant.getByLabel('Preço de venda normal (MT)').fill('150');
+      await variant.getByLabel('Preço promocional (MT)').fill('120');
+      await variant.getByLabel('Preço de custo (MT)').fill('70');
+      await expect(variant.getByText('50 MT',{exact:true})).toBeVisible();
+      await variant.getByRole('button',{name:'Guardar variante'}).click();
+      await expect(variant).toBeHidden();
+      await page.reload();
+      await expect(product).toContainText('120');
+      await expect(product).toContainText('QA 100 ml');
+     }],
+    ]){
+     try{await action();findings.push({role,width:1280,route:scenario,status:'pass'});}
+     catch(error){findings.push({role,width:1280,route:scenario,status:'fail',message:String(error).slice(0,800)});}
     }
    }
   }finally{await context.close();}
