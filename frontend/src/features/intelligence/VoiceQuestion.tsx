@@ -3,7 +3,7 @@ import { Mic, Square } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { transcribeQuestion } from './api';
 
-export default function VoiceQuestion({shopId,disabled,onText,onBusy}:{shopId:string;disabled:boolean;onText:(text:string)=>void;onBusy:(busy:boolean)=>void}){
+export default function VoiceQuestion({shopId,disabled,onText,onBusy,compact=false}:{shopId:string;disabled:boolean;onText:(text:string)=>void;onBusy:(busy:boolean)=>void;compact?:boolean}){
  const [status,setStatus]=useState<'idle'|'starting'|'recording'|'review'|'uploading'>('idle');
  const [error,setError]=useState('');
  useEffect(()=>{onBusy(status!=='idle');return()=>onBusy(false)},[status,onBusy]);
@@ -33,6 +33,17 @@ export default function VoiceQuestion({shopId,disabled,onText,onBusy}:{shopId:st
   finally{audio.current=null;if(active.current)setStatus('idle')}
  }
  if(!supported)return null;
+ if(compact)return <div className="bi-voice-compact">
+ <button className="bi-voice-trigger" type="button" aria-label={status==='recording'?'Terminar gravação':'Gravar pergunta'} title={status==='recording'?'Terminar gravação':'Gravar pergunta'} disabled={status!=='recording'&&(disabled||status!=='idle')} onClick={()=>status==='recording'?stop():void start()}>{status==='recording'?<Square size={19}/>:<Mic size={20}/>}</button>
+ {(status!=='idle'||error)&&<div className="bi-voice-popover" role="group" aria-label="Ditado de pergunta">
+ <p className="bi-message">Até 15 segundos. Não diga nomes, contactos ou informações privadas. O áudio só segue para a Groq após confirmação.</p>
+ {status==='starting'&&<p role="status">A solicitar microfone…</p>}
+ {status==='recording'&&<p role="status">A gravar… prima o quadrado para terminar.</p>}
+ {status==='review'&&<><Button type="button" variant="secondary" size="sm" disabled={disabled} onClick={()=>void send()}>Enviar áudio à Groq e transcrever</Button><Button type="button" variant="ghost" size="sm" onClick={()=>{audio.current=null;setStatus('idle')}}>Descartar áudio</Button></>}
+ {status==='uploading'&&<p role="status">A transcrever…</p>}
+ {error&&<><p role="alert" className="bi-message">{error}</p><Button type="button" variant="ghost" size="sm" onClick={()=>setError('')}>Fechar</Button></>}
+ </div>}
+ </div>;
  return <div className="rounded-xl border border-white/10 p-3 space-y-2">
  <p className="t-label text-ink-mid">Ditado opcional: até 15 segundos. Não diga nomes, contactos ou informações privadas. Só ao confirmar o envio é que o áudio segue para a Groq para transcrição.</p>
  <div className="flex flex-wrap gap-2">

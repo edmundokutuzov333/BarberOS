@@ -33,15 +33,15 @@ async function fixture(page){
   else data={version:1,range:{today:'2026-11-25',from:'2026-11-18',to:'2026-11-24',previousFrom:'2026-11-11',previousTo:'2026-11-17',historyFrom:'2026-09-30'},topic:p.question?.includes('receita')?'finance':p.contextTopic??p.topic,metrics:{today:0,appointments:0,completed:0,noShow:null,occupancy:null,revenue:0,revenueChange:null,waiting:0,failedNotifications:0,customers:0,recentCustomers:0,lowStock:0},insights:[],forecast:[],answer:p.question?'Resposta calculada para '+p.question:'Resumo inicial.',cloud:{status:p.cloud?'generated':'available',advice:p.cloud?'1. Consulte os relatórios.':null}};
   return route.fulfill({status:200,headers,contentType:'application/json',body:JSON.stringify(data)});
  });
- await page.goto(origin+'/__intel-test');await expect(page.getByTestId('intelligence-page')).toBeVisible();await expect(page.getByRole('button',{name:'Consultar com Groq'})).toBeVisible();
+ await page.goto(origin+'/__intel-test');await expect(page.getByTestId('intelligence-page')).toBeVisible();await expect(page.getByRole('button',{name:'Consultar IA'})).toBeVisible();
  return calls;
 }
 test('conversation retains bounded context and resets explicitly',async({page})=>{
  const calls=await fixture(page);
  const question=page.getByLabel('Pergunta (não inclua dados pessoais)');
- await question.fill('Qual foi a receita?');await page.getByRole('button',{name:'Consultar',exact:true}).click();
+ await question.fill('Qual foi a receita?');await page.getByRole('button',{name:'Consultar IA',exact:true}).click();
  await expect(page.getByText('Resposta calculada para Qual foi a receita?',{exact:true})).toBeVisible();
- await question.fill('E como melhorar?');await page.getByRole('button',{name:'Consultar com Groq'}).click();
+ await question.fill('E como melhorar?');await page.getByRole('button',{name:'Consultar IA'}).click();
  await expect(page.getByText('1. Consulte os relatórios.',{exact:true})).toBeVisible();
  expect(calls.at(-1)).toMatchObject({shopId,contextTopic:'finance',cloud:true,question:'E como melhorar?'});
  await page.getByRole('button',{name:'Nova conversa'}).click();await expect(page.getByText('Resposta calculada para Qual foi a receita?',{exact:true})).toHaveCount(0);
@@ -65,4 +65,26 @@ test('setup guide reads the step without changing configuration',async({page})=>
  await page.getByRole('button',{name:'Como posso verificar?'}).click();
  await expect(page.getByText('Confirme a disponibilidade oficial.',{exact:true})).toBeVisible();
  expect(calls.at(-1)).toMatchObject({shopId,action:'setup_guide',step:6,intent:'verify'});
+});
+
+test('clean overview has exactly four real KPIs and progressive details',async({page})=>{
+ const calls=await fixture(page);
+ await expect(page.getByTestId('intelligence-kpis').locator('article')).toHaveCount(4);
+ await expect(page.getByTestId('intelligence-hub').getByRole('button')).toHaveCount(7);
+ await expect(page.getByRole('button',{name:'Consultar IA',exact:true})).toHaveCount(1);
+ await expect(page.getByRole('button',{name:'Analisar finanças'})).toHaveCount(0);
+ await expect(page.getByLabel('Período de análise')).toHaveValue('30');
+ await page.getByTestId('intelligence-hub').getByRole('button',{name:'Operações'}).click();
+ await expect(page.getByRole('button',{name:'Agenda e procura',exact:true})).toHaveAttribute('aria-pressed','true');
+ expect(calls.filter(c=>c.cloud)).toHaveLength(0);
+ await page.getByRole('button',{name:'Como posso aumentar a ocupação da agenda?'}).click();
+ await expect(page.getByLabel('Pergunta (não inclua dados pessoais)')).toHaveValue('Como posso aumentar a ocupação da agenda?');
+ expect(calls.filter(c=>c.cloud)).toHaveLength(0);
+ await page.getByRole('button',{name:'Análises e prioridades'}).click();
+ await expect(page.getByRole('button',{name:'Analisar finanças'})).toBeVisible();
+ await page.getByRole('button',{name:'Análises e prioridades'}).click();
+ await expect(page.getByRole('button',{name:'Analisar finanças'})).toHaveCount(0);
+ await page.getByLabel('Período de análise').selectOption('7');
+ await expect.poll(()=>calls.at(-1)?.days).toBe(7);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });

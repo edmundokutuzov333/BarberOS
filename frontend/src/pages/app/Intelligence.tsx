@@ -1,76 +1,104 @@
-import { useState } from 'react';
-import VoiceQuestion from '@/features/intelligence/VoiceQuestion';
-import FinancialIntelligence from '@/features/intelligence/FinancialIntelligence';
-import OperationalPlan from '@/features/intelligence/OperationalPlan';
+import { useRef, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Sparkles, ArrowUpRight, RefreshCw } from 'lucide-react';
+import { Sparkles, RefreshCw, CalendarDays, ChevronDown, ChevronRight, TrendingUp, TrendingDown, Users, Target, Coins, ArrowUpRight, BarChart3, CalendarCheck, type LucideIcon } from 'lucide-react';
 import { Page } from '@/components/layout/Page';
-import { Panel, Skeleton, ErrorState, EmptyState } from '@/components/ui/States';
-import { Button } from '@/components/ui/Button';
+import { Skeleton, ErrorState } from '@/components/ui/States';
 import { useShop } from '@/lib/shop';
 import { useAuth } from '@/lib/auth';
 import { formatMT } from '@/lib/utils';
-import { loadIntelligence, topics, labels, type Topic } from '@/features/intelligence/api';
+import { loadIntelligence, labels, type Topic, type Intelligence } from '@/features/intelligence/api';
+import IntelligenceHub from '@/features/intelligence/IntelligenceHub';
+import VoiceQuestion from '@/features/intelligence/VoiceQuestion';
+import FinancialIntelligence from '@/features/intelligence/FinancialIntelligence';
+import OperationalPlan from '@/features/intelligence/OperationalPlan';
+import '@/features/intelligence/intelligence.css';
 
-const num=(v:number|null)=>v===null?'n/d':new Intl.NumberFormat('pt-PT',{maximumFractionDigits:1}).format(v);
-const percent=(v:number|null)=>v===null?'n/d':num(v)+'%';
-
+const mainTopics:Topic[]=['overview','agenda','finance','customers','team','stock','communications','marketing'];
+const quick: {label:string; question:string; topic:Topic; icon:LucideIcon}[]=[
+ {label:'Como posso aumentar a ocupação da agenda?',question:'Como posso aumentar a ocupação da agenda?',topic:'agenda',icon:TrendingUp},
+ {label:'Que dias são melhores para campanhas?',question:'Como está a próxima semana?',topic:'marketing',icon:CalendarDays},
+ {label:'Como posso melhorar a fidelização de clientes?',question:'Como posso melhorar a fidelização de clientes?',topic:'customers',icon:Users}
+];
+const fmt=(v:number|null)=>v===null?'—':new Intl.NumberFormat('pt-PT',{maximumFractionDigits:1}).format(v);
+const pct=(v:number|null)=>v===null?'—':fmt(v)+'%';
+type Turn={question:string;answer:string;advice:string|null;topic:Topic;cloud: Intelligence['cloud']['status']};
+function Metric({label,value,icon:Icon,delta,caption}:{label:string;value:string;icon:LucideIcon;delta?:number|null;caption:string}){
+ return <article className="bi-metric">
+  <span className="bi-metric-icon"><Icon size={23} aria-hidden="true"/></span>
+  <div className="bi-metric-content"><p>{label}</p><strong>{value}</strong><span className="bi-metric-caption">{caption}</span></div>
+  {delta!==null&&delta!==undefined&&<span className={'bi-delta '+(delta<0?'bi-delta-down':delta>0?'bi-delta-up':'')} title="Variação face ao período anterior equivalente">{delta>0?<TrendingUp size={13}/>:delta<0?<TrendingDown size={13}/>:null}{delta>0?'+':''}{fmt(delta)}%</span>}
+ </article>
+}
 function Workspace({shopId,userId}:{shopId:string;userId:string}){
-  const [days,setDays]=useState<7|30>(7);
-  const [topic,setTopic]=useState<Topic>('overview');
-  const [question,setQuestion]=useState('');
-  const [voiceBusy,setVoiceBusy]=useState(false);
-  const [history,setHistory]=useState<{question:string;answer:string;advice:string|null;topic:Topic}[]>([]);
-  const contextTopic=history.at(-1)?.topic;
-  const resetConversation=()=>{ask.reset();setHistory([]);setQuestion('')};
-  const q=useQuery({queryKey:['intelligence',userId,shopId,days,topic],queryFn:()=>loadIntelligence(shopId,days,topic),staleTime:60_000,retry:false});
-  const ask=useMutation({mutationFn:(input:{question?:string;cloud?:boolean})=>loadIntelligence(shopId,days,input.question?topic:contextTopic??topic,input.question,input.cloud,contextTopic),retry:false,onSuccess:(response,input)=>{setHistory(h=>[...h,{question:input.question||labels[response.topic],answer:response.answer,advice:response.cloud.advice,topic:response.topic}].slice(-12));setQuestion('')}});
-  const data=q.data;
-  return <Page title="Inteligência de gestão" subtitle="Dados reais da sua barbearia, prioridades e recomendações práticas." testId="intelligence-page" actions={<Button variant="secondary" onClick={()=>{ask.reset();void q.refetch()}} disabled={ask.isPending||voiceBusy} loading={q.isFetching}><RefreshCw size={16}/> Actualizar</Button>}>
-    <div className="space-y-4 min-w-0">
-      <Panel title="Período de análise">
-        <p className="t-body text-ink-mid mb-3">Dias completos anteriores a hoje, comparados com um período de igual duração.</p>
-        <div className="flex flex-wrap gap-2">{([7,30] as const).map(d=><Button key={d} variant={days===d?'primary':'secondary'} aria-pressed={days===d} disabled={ask.isPending||voiceBusy} onClick={()=>{resetConversation();setDays(d)}}>{d} dias</Button>)}</div>
-      </Panel>
-      <Panel title="Assistente de gestão" aside={<Sparkles size={18} className="text-accent-soft" aria-hidden/>}>
-        <p className="t-body text-ink-mid mb-3">Escolha um tema ou escreva uma pergunta sobre gestão. Pode continuar uma consulta com perguntas de seguimento. O contexto conserva o último tema; os indicadores são calculados no servidor.</p>
-        <div className="flex flex-wrap gap-2 mb-4">{topics.map(t=><Button key={t} size="sm" variant={topic===t?'primary':'secondary'} aria-pressed={topic===t} disabled={ask.isPending||voiceBusy} onClick={()=>{resetConversation();setTopic(t)}}>{labels[t]}</Button>)}</div>
-        <div className="flex flex-wrap gap-2 mb-3" aria-label="Perguntas sugeridas">{['Quanto em comissões?','Qual o ticket médio?','Como estão as avaliações?','Quais produtos devo repor?','Como está a próxima semana?'].map(prompt=><Button key={prompt} size="sm" variant="ghost" disabled={ask.isPending||voiceBusy} onClick={()=>setQuestion(prompt)}>{prompt}</Button>)}</div>
-        <form className="space-y-2" onSubmit={e=>{e.preventDefault();if(!voiceBusy&&!ask.isPending&&question.trim())ask.mutate({question:question.trim()})}}>
-          <label className="t-label text-ink-mid" htmlFor="intelligence-question">Pergunta (não inclua dados pessoais)</label>
-          <textarea id="intelligence-question" value={question} disabled={voiceBusy||ask.isPending} onChange={e=>setQuestion(e.target.value)} maxLength={300} rows={2} placeholder="Como posso melhorar a ocupação da agenda?" className="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 p-3 text-ink-hi focus-visible:ring-2 focus-visible:ring-accent-soft"/>
-          <Button type="submit" loading={ask.isPending} disabled={!question.trim()||q.isPending||voiceBusy}>Consultar</Button>
-          {data&&data.cloud.status!=='disabled'&&<VoiceQuestion shopId={shopId} disabled={ask.isPending||Boolean(question.trim())} onText={setQuestion} onBusy={setVoiceBusy}/>}
-        </form>
-        {ask.isError&&<div className="mt-3"><ErrorState message="Não foi possível concluir a consulta." onRetry={()=>ask.mutate({question:question.trim()||undefined})}/></div>}
-        <div className="mt-4 space-y-3" aria-live="polite">{history.length===0?<p className="t-body text-ink-hi whitespace-pre-wrap break-words">{data?.answer??''}</p>:history.map((turn,i)=><article key={i} className="rounded-xl border border-white/10 p-3 space-y-2 min-w-0"><p className="t-label text-ink-mid">{labels[turn.topic]}</p><p className="font-medium break-words">{turn.question}</p><p className="t-body text-ink-hi whitespace-pre-wrap break-words">{turn.answer}</p>{turn.advice&&<><p className="t-label text-accent-soft">Acções seleccionadas pela Groq</p><p className="t-body whitespace-pre-wrap break-words">{turn.advice}</p></>}</article>)}</div>{history.length>0&&<Button size="sm" variant="ghost" disabled={ask.isPending||voiceBusy} onClick={resetConversation}>Nova conversa</Button>}
-        {data&&data.cloud.status!=='disabled'&&<div className="mt-4"><Button variant="secondary" loading={ask.isPending} disabled={voiceBusy} onClick={()=>ask.mutate({cloud:true,question:question.trim()||undefined})}>Consultar com Groq</Button><p className="t-label text-ink-mid mt-2">A Groq recebe apenas o tema, intenção e sinais operacionais qualitativos, sem nomes, valores, contactos ou o texto da pergunta.</p></div>}
-        {['quota','unavailable'].includes(ask.data?.cloud.status??'')&&<p role="status" className="mt-3 t-body text-ink-mid">IA externa indisponível. As recomendações de gestão continuam activas.</p>}
-        {data?.cloud.status==='disabled'&&<p className="t-label text-ink-mid mt-3">Modo de inteligência própria activo. IA generativa externa não configurada.</p>}
-      </Panel>
-      {q.isPending?<Skeleton lines={5}/>:q.isError?<ErrorState message="Não foi possível carregar os indicadores reais." onRetry={()=>void q.refetch()}/>:data&&<>
-        <p className="t-label text-ink-mid">Período: {data.range.from} — {data.range.to} · Marcações de hoje são apresentadas separadamente.</p>
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">{[
-          ['Marcações hoje',num(data.metrics.today)],['Atendimentos concluídos',num(data.metrics.completed)],['Ocupação',percent(data.metrics.occupancy)],['Receita estimada',data.metrics.revenue===null?'n/d':formatMT(data.metrics.revenue)],['Variação da receita',percent(data.metrics.revenueChange)],['Taxa de faltas*',percent(data.metrics.noShow)],['Clientes em espera',num(data.metrics.waiting)],['Notificações falhadas',num(data.metrics.failedNotifications)]
-        ].map(([label,value])=><Panel key={label}><p className="t-label text-ink-mid break-words">{label}</p><p className="text-xl sm:text-2xl font-medium text-ink-hi break-words mt-2">{value}</p></Panel>)}</div>
-        <p className="t-label text-ink-mid">*Faltas ÷ (concluídas + faltas). Receita estimada não é lucro nem pagamento confirmado.</p>
-        <Panel title="Prioridades de gestão">
-          {data.insights.length===0?<EmptyState title="Sem alertas nestes indicadores" body="Continue a acompanhar a operação. Não significa que todos os riscos estejam cobertos."/>:<div className="space-y-3">{data.insights.map(i=><article key={i.id} className="border border-white/10 rounded-2xl p-4 min-w-0"><p className="t-label text-accent-soft">{i.priority==='high'?'Atenção prioritária':labels[i.category]}</p><h3 className="font-medium text-ink-hi mt-1 break-words">{i.title}</h3><p className="t-body text-ink-mid mt-2 break-words">{i.detail}</p><Link className="inline-flex items-center min-h-11 gap-1 text-accent-soft text-sm mt-2" to={i.href}>Consultar módulo <ArrowUpRight size={15}/></Link></article>)}</div>}
-        </Panel>
-        <Panel title="Procura indicativa · próximos 7 dias">
-          <p className="t-body text-ink-mid mb-4">Média por dia da semana nos últimos 56 dias, apenas dias com capacidade. Intervalo histórico observado; não é uma garantia de procura nem de vagas.</p>
-          {data.forecast.length===0?<EmptyState title="Histórico insuficiente" body="A previsão só é apresentada com amostras suficientes."/>:<div className="space-y-3">{data.forecast.map(f=><div key={f.date} className="flex flex-wrap justify-between gap-2 border-b border-white/10 pb-2"><span className="t-body">{f.date}</span><span className="t-body text-ink-hi">{num(f.expected)} marcações</span><span className="t-label text-ink-mid">{f.low}–{f.high} · {f.samples} dias</span></div>)}</div>}
-        </Panel>
-      </>}
-      <OperationalPlan shopId={shopId} userId={userId}/>
-      <FinancialIntelligence shopId={shopId} userId={userId}/>
-      <p className="t-label text-ink-mid">A inteligência não altera marcações, preços, pagamentos ou contactos. As decisões são tomadas pela equipa.</p>
-    </div>
-  </Page>
+ const [days,setDays]=useState<7|30>(30);
+ const [topic,setTopic]=useState<Topic>('overview');
+ const [question,setQuestion]=useState('');
+ const [voiceBusy,setVoiceBusy]=useState(false);
+ const [history,setHistory]=useState<Turn[]>([]);
+ const [expanded,setExpanded]=useState(false);
+ const input=useRef<HTMLTextAreaElement>(null);
+ const contextTopic=history.at(-1)?.topic;
+ // The overview always uses the selected period; choosing a topic does not spend a cloud request.
+ const q=useQuery({queryKey:['intelligence',userId,shopId,days,'overview'],queryFn:()=>loadIntelligence(shopId,days,'overview'),staleTime:60_000,retry:false});
+ const ask=useMutation({mutationFn:(request:{question?:string;topic:Topic;context?:Topic;cloud:boolean})=>loadIntelligence(shopId,days,request.topic,request.question,request.cloud,request.context),retry:false,onSuccess:(response,request)=>{
+  setHistory(h=>[...h,{question:request.question||labels[request.topic],answer:response.answer,advice:response.cloud.advice,topic:response.topic,cloud:response.cloud.status}].slice(-12));
+  setQuestion('');setTopic(response.topic);
+ }});
+ const data=q.data;
+ const busy=ask.isPending||voiceBusy;
+ const reset=()=>{ask.reset();setHistory([]);setQuestion('')};
+ const selectTopic=(next:Topic,focus=false)=>{if(busy)return;reset();setTopic(next);if(focus)input.current?.focus({preventScroll:true})};
+ const submit=()=>{if(busy||!data)return;ask.mutate({question:question.trim()||undefined,topic,context:contextTopic,cloud:data.cloud.status!=='disabled'})};
+ const chooseQuick=(item:typeof quick[number])=>{if(busy)return;reset();setTopic(item.topic);setQuestion(item.question);input.current?.focus()};
+ return <Page testId="intelligence-page" className="bi-page" title="Inteligência de gestão" subtitle="IA especializada na gestão da sua barbearia. Análises, previsões e recomendações com dados reais." actions={<div className="bi-toolbar">
+  <label className="bi-period"><CalendarDays size={17} aria-hidden="true"/><span className="sr-only">Período de análise</span><select value={days} disabled={busy} onChange={e=>{reset();setDays(Number(e.target.value)===7?7:30)}}><option value={30}>Últimos 30 dias</option><option value={7}>Últimos 7 dias</option></select><ChevronDown size={15} aria-hidden="true"/></label>
+  <button className="bi-outline" type="button" disabled={busy||q.isFetching} onClick={()=>void q.refetch()}><RefreshCw size={17} className={q.isFetching?'bi-spin':undefined} aria-hidden="true"/>Actualizar</button>
+ </div>}>
+ <div className="bi-workspace">
+  <section className="bi-hero" aria-label="Centro de inteligência">
+   <IntelligenceHub topic={topic} disabled={busy} onSelect={t=>selectTopic(t,true)}/>
+   <section className="bi-assistant" aria-labelledby="bi-assistant-title">
+    <div className="bi-assistant-heading"><span className="bi-assistant-icon"><Sparkles size={25} aria-hidden="true"/></span><div><h2 id="bi-assistant-title">Assistente de gestão</h2><p>Pergunte, analise e receba recomendações práticas para melhorar o desempenho da sua barbearia.</p></div></div>
+    <div className="bi-topics" aria-label="Temas de gestão">{mainTopics.map(t=><button key={t} type="button" aria-pressed={topic===t} disabled={busy} onClick={()=>selectTopic(t)}>{labels[t]}</button>)}</div>
+    <form className="bi-form" onSubmit={e=>{e.preventDefault();submit()}}>
+     <label className="sr-only" htmlFor="intelligence-question">Pergunta (não inclua dados pessoais)</label>
+     <div className="bi-input"><textarea ref={input} id="intelligence-question" rows={2} maxLength={300} value={question} disabled={busy} onChange={e=>setQuestion(e.target.value)} placeholder="Faça uma pergunta sobre a sua barbearia..." onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();submit()}}}/>{data&&data.cloud.status!=='disabled'&&<VoiceQuestion compact shopId={shopId} disabled={ask.isPending||Boolean(question.trim())} onText={setQuestion} onBusy={setVoiceBusy}/>}</div>
+     <button type="submit" className="bi-submit" disabled={busy||!data} aria-busy={ask.isPending}><Sparkles size={19} aria-hidden="true"/>{ask.isPending?'A consultar…':'Consultar IA'}</button>
+    </form>
+    {ask.isError&&<div role="alert" className="bi-message">Não foi possível concluir a consulta. <button type="button" className="bi-text-button" disabled={busy} onClick={()=>submit()}>Tentar novamente</button></div>}
+    {q.isError&&<div role="alert" className="bi-message">Não foi possível carregar os indicadores. <button className="bi-text-button" type="button" onClick={()=>void q.refetch()}>Actualizar</button></div>}
+    {data?.cloud.status==='disabled'&&<p className="bi-message">Modo de análise própria activo.</p>}
+    {history.length>0&&<section className="bi-conversation" aria-label="Conversa">
+     <div className="bi-conversation-header"><h3>Conversa</h3><button type="button" className="bi-text-button" onClick={()=>{reset();input.current?.focus()}} disabled={busy}>Nova conversa</button></div>
+     <div className="bi-turns" aria-live="polite" aria-relevant="additions text" role="log">{history.map((turn,i)=><article className="bi-turn" key={i}><p className="bi-question">{turn.question}</p><p className="bi-answer">{turn.answer}</p>{turn.advice&&<><span className="bi-advice-label">Recomendações</span><p className="bi-answer">{turn.advice}</p></>}{['quota','unavailable'].includes(turn.cloud)&&<p className="bi-message">IA externa indisponível. Análise própria apresentada.</p>}</article>)}</div>
+    </section>}
+    <div className="bi-quick"><h3>Sugestões rápidas</h3>{quick.map(item=><button key={item.label} type="button" disabled={busy} onClick={()=>chooseQuick(item)}><item.icon size={20} aria-hidden="true"/><span>{item.label}</span><ChevronRight size={16} aria-hidden="true"/></button>)}</div>
+    <details className="bi-privacy"><summary>Privacidade e funcionamento</summary><p>Não inclua dados pessoais nas perguntas. A Groq recebe apenas tema, intenção e sinais qualitativos. O áudio é enviado apenas com confirmação. A IA não altera marcações, preços, pagamentos ou contactos.</p></details>
+   </section>
+  </section>
+  <section aria-label="Indicadores essenciais" className="bi-kpis" data-testid="intelligence-kpis">
+   {q.isPending?<div className="bi-kpi-loading"><Skeleton lines={2}/></div>:data&&!q.isError?<>
+    <Metric label="Marcações hoje" value={fmt(data.metrics.today)} icon={CalendarCheck} caption="Hoje"/>
+    <Metric label="Atendimentos concluídos" value={fmt(data.metrics.completed)} icon={Users} caption={days+' dias completos'}/>
+    <Metric label="Ocupação" value={pct(data.metrics.occupancy)} icon={Target} caption={days+' dias completos'}/>
+    <Metric label="Receita estimada" value={data.metrics.revenue===null?'—':formatMT(data.metrics.revenue)} icon={Coins} delta={data.metrics.revenueChange} caption="Não é lucro"/>
+   </>:<p className="bi-message">Indicadores indisponíveis. Actualize para consultar os dados reais.</p>}
+  </section>
+  {data&&!q.isError&&<div className="bi-detail">
+   <button type="button" className="bi-detail-toggle" aria-expanded={expanded} aria-controls="bi-detail-content" onClick={()=>setExpanded(v=>!v)}><BarChart3 size={19} aria-hidden="true"/><span>Análises e prioridades</span>{data.insights.some(i=>i.priority==='high')&&<small>{data.insights.filter(i=>i.priority==='high').length} prioritárias</small>}<ChevronDown size={18} className={expanded?'bi-rotated':undefined}/></button>
+   {expanded&&<div id="bi-detail-content" className="bi-detail-content"><p className="bi-message">Período: {data.range.from} — {data.range.to}. Comparação com igual período anterior; marcações de hoje em separado.</p>
+    <div className="bi-secondary-metrics">{[['Taxa de faltas',pct(data.metrics.noShow)],['Clientes em espera',fmt(data.metrics.waiting)],['Notificações falhadas',fmt(data.metrics.failedNotifications)]].map(([label,value])=><div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
+    <section className="bi-priorities"><h3>Prioridades de gestão</h3>{data.insights.length===0?<p className="bi-message">Sem alertas nestes indicadores.</p>:data.insights.map(i=><article key={i.id}><div><strong>{i.title}</strong><p>{i.detail}</p></div><Link to={i.href} className="bi-text-button">Consultar módulo <ArrowUpRight size={15}/></Link></article>)}</section>
+    <section className="bi-priorities"><h3>Procura indicativa · próximos 7 dias</h3><p className="bi-message">Média histórica, não garantia de vagas.</p>{data.forecast.length?data.forecast.map(f=><div className="bi-forecast" key={f.date}><span>{f.date}</span><strong>{fmt(f.expected)} marcações</strong><small>{f.low}–{f.high} · {f.samples} dias</small></div>):<p className="bi-message">Histórico insuficiente para estimar procura.</p>}</section>
+    <OperationalPlan shopId={shopId} userId={userId}/><FinancialIntelligence shopId={shopId} userId={userId}/>
+   </div>}
+  </div>}
+ </div>
+ </Page>
 }
 export default function IntelligencePage(){
-  const {shop,role}=useShop();const {user}=useAuth();
-  if(!shop||!user||!['owner','manager'].includes(role??''))return <ErrorState message="Acesso reservado à gestão da barbearia."/>;
-  return <Workspace key={user.id+':'+shop.id} userId={user.id} shopId={shop.id}/>;
+ const {shop,role}=useShop();const {user}=useAuth();
+ if(!shop||!user||!['owner','manager'].includes(role??''))return <ErrorState message="Acesso reservado à gestão da barbearia."/>;
+ return <Workspace key={user.id+':'+shop.id} shopId={shop.id} userId={user.id}/>;
 }
