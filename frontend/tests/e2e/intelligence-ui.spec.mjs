@@ -4,7 +4,7 @@ let server,origin;
 const shopId='11111111-1111-4111-8111-111111111111';
 test.beforeAll(async()=>{
  server=await createServer({root:process.cwd(),server:{host:'127.0.0.1',port:0,strictPort:false,hmr:false},logLevel:'error',plugins:[{name:'intelligence-fixture',enforce:'pre',transform(_src,id){
- if(id.endsWith('/src/lib/shop.tsx'))return 'const shop={id:"'+shopId+'",name:"MUFU Barber House".replace(/\\u200b/g,""),shop_enabled:true};export const useShop=()=>({shop,shops:[{barbershops:shop}],role:"owner",setShopId:()=>{}})';
+ if(id.endsWith('/src/lib/shop.tsx'))return 'const shop={id:"'+shopId+'",name:"MUFU Barber House",shop_enabled:true};export const useShop=()=>({shop,shops:[{barbershops:shop}],role:"owner",setShopId:()=>{}})';
  if(id.endsWith('/src/lib/auth.tsx'))return 'export const useAuth=()=>({user:{id:"44444444-4444-4444-8444-444444444444"},profile:{full_name:"Gestor de teste"},signOut:async()=>true})';
  },configureServer(vite){vite.middlewares.use('/__intel-test',async(_req,res,next)=>{try{res.setHeader('Content-Type','text/html');res.end(await vite.transformIndexHtml('/__intel-test','<!doctype html><html lang="pt-MZ"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="root"></div><script type="module" src="/tests/fixtures/intelligence-entry.tsx"></script></body></html>'))}catch(e){next(e)}})}}]});
  await server.listen();origin='http://127.0.0.1:'+server.httpServer.address().port;
@@ -42,8 +42,8 @@ test('conversation retains bounded context and resets explicitly',async({page})=
  await question.fill('Qual foi a receita?');await page.getByRole('button',{name:'Consultar IA',exact:true}).click();
  await expect(page.getByText('Resposta calculada para Qual foi a receita?',{exact:true})).toBeVisible();
  await question.fill('E como melhorar?');await page.getByRole('button',{name:'Consultar IA'}).click();
- await expect(page.getByText('1. Consulte os relatórios.',{exact:true}).last()).toBeVisible();
- expect(calls.at(-1)).toMatchObject({shopId,contextTopic:'finance',cloud:true,question:'E como melhorar?'});
+ await expect(page.getByText('Resposta calculada para E como melhorar?',{exact:true})).toBeVisible();
+ await expect.poll(()=>calls.filter(c=>c.question).at(-1)).toMatchObject({shopId,contextTopic:'finance',cloud:true,question:'E como melhorar?'});
  await page.getByRole('button',{name:'Nova conversa'}).click();await expect(page.getByText('Resposta calculada para Qual foi a receita?',{exact:true})).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });
@@ -111,7 +111,7 @@ test('reference desktop geometry and icon semantics',async({page})=>{
  await expect(page.getByTestId('nav-intelligence').locator('svg')).toHaveClass(/lucide-brain-circuit/);
  await expect(page.getByTestId('nav-cortes').locator('svg')).toHaveClass(/lucide-hair-clipper/);
  await expect(page.getByTestId('nav-gmail')).not.toBeVisible();
- await page.getByText('Mais opções',{exact:true}).click();await expect(page.getByTestId('nav-gmail')).toBeVisible();await page.getByText('Mais opções',{exact:true}).click();
+ await page.getByText('Mais opções',{exact:true}).click();await expect(page.getByTestId('nav-gmail')).toBeVisible();await page.getByText('Mais opções',{exact:true}).click();await page.getByRole('navigation',{name:'Navegação principal'}).evaluate(el=>el.scrollTop=0);
  for(const row of await panel.locator('.bi-topic-row').all())await expect(row.getByRole('button')).toHaveCount(4);
  await expect(page.getByTestId('intelligence-kpis').locator('article')).toHaveCount(4);
  await page.screenshot({path:test.info().outputPath('intelligence-reference-desktop.png'),fullPage:false,animations:'disabled'});

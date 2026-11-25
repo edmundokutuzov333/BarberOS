@@ -7,4 +7,4 @@ import Intelligence from '@/pages/app/Intelligence';
 import SetupAssistant from '@/features/intelligence/SetupAssistant';
 import '@/index.css';
 const client=new QueryClient({defaultOptions:{queries:{retry:false},mutations:{retry:false}}});
-createRoot(document.getElementById('root')!).render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/app/inteligencia']}><div className="barber-shell bi-shell min-h-screen lg:flex"><div className="contents lg:hidden" aria-hidden="true"/><Sidebar/><main className="flex-1 min-w-0 px-4 pt-5 pb-28 lg:p-0"><Intelligence/><SetupAssistant shopId="11111111-1111-4111-8111-111111111111" step={6}/></main></div><Toaster/></MemoryRouter></QueryClientProvider>);
+createRoot(document.getElementById('root')!).render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/app/inteligencia']}><div className="barber-shell bi-shell min-h-screen lg:flex"><Sidebar/><main className="flex-1 min-w-0 px-4 pt-5 pb-28 lg:p-0"><Intelligence/><SetupAssistant shopId="11111111-1111-4111-8111-111111111111" step={6}/></main></div><Toaster/></MemoryRouter></QueryClientProvider>);

@@ -93,5 +93,13 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_fixture
         run: corepack yarn playwright test tests/e2e/intelligence-ui.spec.mjs --workers=1
 
+      - name: Preserve intelligence reference captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intelligence-reference-captures
+          path: frontend/test-results/**/intelligence-reference-*.png
+          if-no-files-found: ignore
+
       - name: Production asset budget
         run: corepack yarn perf:budget
