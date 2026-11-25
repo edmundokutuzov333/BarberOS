@@ -216,8 +216,13 @@ test('cloud failures retain real analysis and distinguish quota from invalid out
  await input.fill('Quanto em comissões?');await page.getByRole('button',{name:'Consultar IA',exact:true}).click();
  await expect(page.getByText('A Groq atingiu o limite gratuito.',{exact:false})).toBeVisible();
  await expect(page.getByText('Análise verificada do servidor.',{exact:true})).toBeVisible();
+ await expect(input).toHaveValue('Quanto em comissões?');
+ reason=null;await page.getByRole('button',{name:'Consultar IA',exact:true}).click();
+ await expect(input).toHaveValue('');
+ await expect(page.getByText('A Groq atingiu o limite gratuito.',{exact:false})).toHaveCount(0);
+ await expect(page.getByText('Análise verificada do servidor.',{exact:true})).toHaveCount(1);
  reason='invalid_response';await input.fill('Qual o ticket médio?');await page.getByRole('button',{name:'Consultar IA',exact:true}).click();
  await expect(page.getByText('A Groq não devolveu recomendações válidas.',{exact:false})).toBeVisible();
  reason=null;await input.fill('Como evoluíram as receitas?');await page.getByRole('button',{name:'Consultar IA',exact:true}).click();
- await expect(page.getByText('Recomendações · Groq',{exact:true})).toBeVisible();
+ await expect(page.getByText('Recomendações · Groq',{exact:true}).last()).toBeVisible();
 });

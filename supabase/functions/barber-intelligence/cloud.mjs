@@ -2,7 +2,7 @@
 const transient=new Set(['timeout','transport','provider_error','invalid_response']);
 const state=(status,advice=null,reason=null,retryAfter=null)=>({status,advice,reason,retryAfter});
 export const idleCloud=enabled=>enabled?state('available'):state('disabled',null,'configuration');
-export async function consultCloud({enabled,requested,reserve,request,sleep=(ms)=>new Promise(resolve=>setTimeout(resolve,ms)),observe=()=>{}}){
+export async function consultCloud({enabled,requested,reserve,request,sleep=(ms)=>new Promise(resolve=>setTimeout(resolve,ms)),observe=(_reason,_attempt)=>{}}){
  if(!enabled||!requested)return idleCloud(enabled);
  let result=idleCloud(true);
  for(let attempt=0;attempt<2;attempt++){
