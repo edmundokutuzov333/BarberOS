@@ -71,6 +71,10 @@ export function useAgendaSchedule(
   });
 }
 
+export function useAgendaWorkingHours(shopId?:string){
+  return useQuery({queryKey:['agenda','working-hours',shopId],enabled:!!shopId,queryFn:async()=>{const {data,error}=await supabase.from('working_hours').select('*').eq('barbershop_id',shopId!);if(error)throw error;return data??[];},staleTime:15000,refetchOnWindowFocus:true,refetchInterval:30000,retry:false});
+}
+
 export async function transitionAppointment(
   shopId: string,
   appointmentId: string,

@@ -1,4 +1,4 @@
-import { useMemo, useState, type DragEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type DragEvent, type ReactNode } from 'react';
 import { CheckCircle2, ChevronLeft, ChevronRight, Clock3, MessageCircle, Move, Play, Plus, RefreshCw, UserX, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Page } from '@/components/layout/Page';
@@ -16,12 +16,14 @@ import { useAgendaRealtime, type AgendaRealtimeStatus } from '@/features/agenda/
 import {
   useAgendaAppointments,
   useAgendaSchedule,
+  useAgendaWorkingHours,
   useAppointmentAction,
   useOperatorReschedule,
   type AgendaAppointment,
   type AgendaSchedule,
 } from '@/features/agenda/api';
 import { TZDate } from '@date-fns/tz';
+import type { WorkingHour } from '@/lib/types';
 
 type ViewMode = 'day' | 'week';
 
@@ -145,6 +147,8 @@ function AppointmentCard({
   const top = Math.max(0, (timeParts(appointment.starts_at, timezone) - gridStart) * PX_PER_MINUTE);
   const height = Math.max(1, appointment.duration_min * PX_PER_MINUTE);
   const [detailsOpen,setDetailsOpen]=useState(false);
+  const [clock,setClock]=useState(Date.now);
+  useEffect(()=>{if(!detailsOpen)return;setClock(Date.now());const id=setInterval(()=>setClock(Date.now()),1000);return()=>clearInterval(id);},[detailsOpen]);
   return (
     <>
     <article
@@ -179,9 +183,9 @@ function AppointmentCard({
       <div className="flex items-center gap-2 mt-2"><StatusChip status={appointment.status} />{appointment.deposit_status === 'awaiting' && <span className="t-label text-st-pending">Sinal</span>}</div>
       <div className="flex flex-wrap items-center gap-2 mt-4">
         {allowed(appointment.status, 'confirm') && appointment.deposit_status !== 'awaiting' && <ActionButton label="Confirmar" onClick={() => onAction('confirm', appointment)} busy={busy}><CheckCircle2 size={14} /></ActionButton>}
-        {allowed(appointment.status, 'start') && new Date(appointment.starts_at).getTime() <= Date.now() + 30 * 60 * 1000 && <ActionButton label="Iniciar atendimento" onClick={() => onAction('start', appointment)} busy={busy}><Play size={14} /></ActionButton>}
+        {allowed(appointment.status, 'start') && new Date(appointment.starts_at).getTime() <= clock + 30 * 60 * 1000 && <ActionButton label="Iniciar atendimento" onClick={() => onAction('start', appointment)} busy={busy}><Play size={14} /></ActionButton>}
         {allowed(appointment.status, 'complete') && <ActionButton label="Concluir atendimento" onClick={() => onAction('complete', appointment)} busy={busy}><CheckCircle2 size={14} /></ActionButton>}
-        {allowed(appointment.status, 'no_show') && new Date(appointment.starts_at).getTime() + (shop?.late_grace_min ?? 0) * 60 * 1000 <= Date.now() && <ActionButton label="Marcar falta" onClick={() => onAction('no_show', appointment)} busy={busy}><UserX size={14} /></ActionButton>}
+        {allowed(appointment.status, 'no_show') && new Date(appointment.starts_at).getTime() + (shop?.late_grace_min ?? 0) * 60 * 1000 <= clock && <ActionButton label="Marcar falta" onClick={() => onAction('no_show', appointment)} busy={busy}><UserX size={14} /></ActionButton>}
         {allowed(appointment.status, 'cancel') && <ActionButton label="Cancelar marcação" onClick={() => {setDetailsOpen(false);onAction('cancel', appointment);}} busy={busy}><X size={14} /></ActionButton>}
         {allowed(appointment.status, 'reschedule') && <ActionButton label="Remarcar" onClick={() => {setDetailsOpen(false);onReschedule(appointment);}} busy={busy}><RefreshCw size={14} /></ActionButton>}
         {appointment.customer_phone && (
@@ -208,10 +212,19 @@ function ActionButton({
   return <button type="button" title={label} aria-label={label} onClick={onClick} disabled={busy} className="min-h-11 min-w-11 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/10 text-ink-mid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft disabled:opacity-50">{children}<span className="text-xs">{label}</span></button>;
 }
 
+function recurringBreaks(date:string,barberId:string,workingHours:WorkingHour[],opensAt:string,closesAt:string):{start:number;end:number}[]{
+ const weekday=new Date(date+'T12:00:00Z').getUTCDay();
+ const intervals=workingHours.filter(w=>w.weekday===weekday&&(w.barber_id===null||w.barber_id===barberId)&&!w.is_closed&&w.break_start&&w.break_end).map(w=>({start:Math.max(minutesOf(opensAt),minutesOf(w.break_start!)),end:Math.min(minutesOf(closesAt),minutesOf(w.break_end!))})).filter(w=>w.end>w.start).sort((a,b)=>a.start-b.start);
+ const merged:{start:number;end:number}[]=[];
+ for(const current of intervals){const last=merged[merged.length-1];if(last&&current.start<=last.end)last.end=Math.max(last.end,current.end);else merged.push({...current});}
+ return merged;
+}
+
 function DayGrid({
   date,
   timezone,
   schedule,
+  workingHours,
   appointments,
   onAction,
   onReschedule,
@@ -220,6 +233,7 @@ function DayGrid({
   date: string;
   timezone: string;
   schedule: AgendaSchedule[];
+  workingHours: WorkingHour[];
   appointments: AgendaAppointment[];
   onAction: (action: 'confirm' | 'start' | 'complete' | 'no_show' | 'cancel', appointment: AgendaAppointment) => void;
   onReschedule: (appointment: AgendaAppointment, targetBarberId?: string) => void;
@@ -274,6 +288,7 @@ function DayGrid({
                 data-testid={'agenda-column-' + column.barber_id}
               >
                 {Array.from({ length: gridSteps }).map((_, index) => <div key={index} className="absolute inset-x-0 border-t border-white/5" style={{ top: index * GRID_STEP * PX_PER_MINUTE }} />)}
+                {!column.is_closed&&recurringBreaks(date,column.barber_id,workingHours,column.opens_at,column.closes_at).map(b=><div key={b.start+':'+b.end} data-testid="agenda-recurring-break" className="absolute inset-x-0 bg-amber-400/10 border-y border-amber-400/20 px-2 text-xs text-ink-mid pointer-events-none overflow-hidden" style={{top:(b.start-gridStart)*PX_PER_MINUTE,height:(b.end-b.start)*PX_PER_MINUTE}} title={'Pausa '+clockLabel(b.start)+'–'+clockLabel(b.end)}>Pausa · {clockLabel(b.start)}–{clockLabel(b.end)}</div>)}
                 {nowMinute !== null && nowMinute >= gridStart && nowMinute <= gridEnd && <div className="absolute inset-x-0 h-px bg-accent-soft z-10" style={{ top: (nowMinute - gridStart) * PX_PER_MINUTE }} aria-hidden />}
                 {items.map((appointment) => <AppointmentCard key={appointment.appointment_id} appointment={appointment} timezone={timezone} gridStart={gridStart} onAction={onAction} onReschedule={onReschedule} busy={busyId === appointment.appointment_id} />)}
               </div>
@@ -354,6 +369,7 @@ function AgendaWorkspace() {
   const range = useMemo(() => rangeFor(view, selectedDate, timezone), [view, selectedDate, timezone]);
   const appointmentsQuery = useAgendaAppointments(shop?.id, range.from, range.to);
   const scheduleQuery = useAgendaSchedule(shop?.id, range.start, addDays(range.start, view === 'day' ? 0 : 6));
+  const hoursQuery=useAgendaWorkingHours(shop?.id);
   const actionMutation = useAppointmentAction();
   const rescheduleMutation = useOperatorReschedule();
   const realtimeStatus = useAgendaRealtime(shop?.id);
@@ -462,14 +478,14 @@ function AgendaWorkspace() {
         </div>
       )}
 
-      {appointmentsQuery.isLoading || scheduleQuery.isLoading ? (
+      {appointmentsQuery.isLoading || scheduleQuery.isLoading || hoursQuery.isLoading ? (
         <div className="grid lg:grid-cols-[1fr_20rem] gap-4"><Skeleton className="h-[42rem]" lines={10} /><Skeleton className="h-64" lines={6} /></div>
-      ) : appointmentsQuery.error || scheduleQuery.error ? (
-        <ErrorState message={humanError(appointmentsQuery.error ?? scheduleQuery.error)} onRetry={() => { void appointmentsQuery.refetch(); void scheduleQuery.refetch(); }} />
+      ) : appointmentsQuery.error || scheduleQuery.error || hoursQuery.error ? (
+        <ErrorState message={humanError(appointmentsQuery.error ?? scheduleQuery.error ?? hoursQuery.error)} onRetry={() => { void appointmentsQuery.refetch(); void scheduleQuery.refetch(); void hoursQuery.refetch(); }} />
       ) : (
         <>
           {view === 'day'
-            ? <DayGrid date={selectedDate} timezone={timezone} schedule={schedule} appointments={appointments} onAction={handleAction} onReschedule={openReschedule} busyId={busyId} />
+            ? <DayGrid date={selectedDate} timezone={timezone} schedule={schedule} workingHours={hoursQuery.data??[]} appointments={appointments} onAction={handleAction} onReschedule={openReschedule} busyId={busyId} />
             : <WeekBoard start={range.start} timezone={timezone} appointments={appointments} onAction={handleAction} onReschedule={openReschedule} busyId={busyId} />}
 
           {appointments.length === 0 && <div className="mt-4"><EmptyState title="Agenda livre" body="Não há marcações neste período." /></div>}

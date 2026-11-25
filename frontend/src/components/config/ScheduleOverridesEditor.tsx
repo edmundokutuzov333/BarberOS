@@ -105,8 +105,8 @@ export function ScheduleOverridesEditor() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: key });
+    onSuccess: async () => {
+      await Promise.all([qc.invalidateQueries({queryKey:key}),qc.invalidateQueries({queryKey:['availability']}),qc.invalidateQueries({queryKey:['agenda']}),qc.invalidateQueries({queryKey:['reports']})]);
       setOpen(false);
       setEditing(null);
       toast.success('Excepção de horário guardada');
@@ -122,8 +122,8 @@ export function ScheduleOverridesEditor() {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: key });
+    onSuccess: async () => {
+      await Promise.all([qc.invalidateQueries({queryKey:key}),qc.invalidateQueries({queryKey:['availability']}),qc.invalidateQueries({queryKey:['agenda']}),qc.invalidateQueries({queryKey:['reports']})]);
       toast.success('Excepção removida');
     },
     onError: (e) => toast.error(humanError(e)),

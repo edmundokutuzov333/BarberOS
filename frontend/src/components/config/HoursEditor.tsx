@@ -60,7 +60,7 @@ function HoursWorkspace(){
       const { error } = await supabase.rpc('replace_working_hours', params);
       if (error) throw error;
     },
-    onSuccess: async () => { await Promise.all([qc.invalidateQueries({ queryKey: key }),qc.invalidateQueries({queryKey:['availability']}),qc.invalidateQueries({queryKey:['agenda']}),qc.invalidateQueries({queryKey:['public-barbershop',shop!.slug]})]); toast.success('Horário guardado'); },
+    onSuccess: async () => { await Promise.all([qc.invalidateQueries({ queryKey: key }),qc.invalidateQueries({queryKey:['availability']}),qc.invalidateQueries({queryKey:['agenda']}),qc.invalidateQueries({queryKey:['reports']}),qc.invalidateQueries({queryKey:['public-barbershop',shop!.slug]})]); toast.success('Horário guardado'); },
     onError: (e) => toast.error(e instanceof Error && e.message.includes(':') ? e.message : humanError(e)),
   });
   const clearOverride = useMutation({
@@ -72,7 +72,7 @@ function HoursWorkspace(){
       });
       if (error) throw error;
     },
-    onSuccess: async () => { await Promise.all([qc.invalidateQueries({ queryKey: key }),qc.invalidateQueries({queryKey:['availability']}),qc.invalidateQueries({queryKey:['agenda']}),qc.invalidateQueries({queryKey:['public-barbershop',shop!.slug]})]); toast.success('Este barbeiro volta a seguir o horário da barbearia'); },
+    onSuccess: async () => { await Promise.all([qc.invalidateQueries({ queryKey: key }),qc.invalidateQueries({queryKey:['availability']}),qc.invalidateQueries({queryKey:['agenda']}),qc.invalidateQueries({queryKey:['reports']}),qc.invalidateQueries({queryKey:['public-barbershop',shop!.slug]})]); toast.success('Este barbeiro volta a seguir o horário da barbearia'); },
     onError: (e) => toast.error(humanError(e)),
   });
   const set = (i: number, patch: Partial<Row>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
@@ -131,12 +131,12 @@ export function BlocksEditor() {
       const r = await supabase.from('time_blocks').insert({ barbershop_id: shop!.id, barber_id: form.barber_id || null, starts_at, ends_at, reason: form.reason, note: form.note.trim() || null });
       if (r.error) throw r.error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: key }); setOpen(false); setForm(emptyBlock); toast.success('Bloqueio criado'); },
+    onSuccess: async () => { await Promise.all([qc.invalidateQueries({ queryKey: key }),qc.invalidateQueries({queryKey:['availability']}),qc.invalidateQueries({queryKey:['agenda']}),qc.invalidateQueries({queryKey:['reports']})]); setOpen(false); setForm(emptyBlock); toast.success('Bloqueio criado'); },
     onError: (e) => toast.error(e instanceof Error && !e.message.includes('_') && e.message.length < 60 ? e.message : humanError(e)),
   });
   const remove = useMutation({
     mutationFn: async (id: string) => { const r = await supabase.from('time_blocks').delete().eq('id', id); if (r.error) throw r.error; },
-    onSuccess: () => qc.invalidateQueries({ queryKey: key }), onError: (e) => toast.error(humanError(e)),
+    onSuccess: async () => { await Promise.all([qc.invalidateQueries({queryKey:key}),qc.invalidateQueries({queryKey:['availability']}),qc.invalidateQueries({queryKey:['agenda']}),qc.invalidateQueries({queryKey:['reports']})]); }, onError: (e) => toast.error(humanError(e)),
   });
   const barberName = (id: string | null) => (id ? barbers.data?.find((b) => b.id === id)?.display_name ?? 'Barbeiro' : 'Toda a barbearia');
 

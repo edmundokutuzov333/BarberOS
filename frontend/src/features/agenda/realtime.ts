@@ -34,6 +34,7 @@ export function useAgendaRealtime(shopId?: string): AgendaRealtimeStatus {
         () => {
           void queryClient.invalidateQueries({ queryKey: ['agenda', 'appointments'] });
           void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+          void queryClient.invalidateQueries({ queryKey: ['staff-earnings',shopId] });
         },
       )
       .on(
@@ -47,6 +48,7 @@ export function useAgendaRealtime(shopId?: string): AgendaRealtimeStatus {
         () => {
           void queryClient.invalidateQueries({ queryKey: ['agenda', 'appointments'] });
           void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+          void queryClient.invalidateQueries({ queryKey: ['staff-earnings',shopId] });
         },
       )
       .subscribe((nextStatus) => {
