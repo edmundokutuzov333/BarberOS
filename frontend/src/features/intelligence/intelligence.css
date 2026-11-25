@@ -101,3 +101,6 @@
 /* Reference-inspired desktop shell, scoped to this route; existing navigation and role filters remain intact. */
 @media(min-width:1024px){.bi-shell{gap:0!important;padding:0!important;background:radial-gradient(ellipse at 90% 0%,#2b231645,transparent 50%),#13110e;}.bi-shell>aside{top:0!important;height:100dvh!important;border-radius:0 20px 20px 0!important;background:#14110f!important;box-shadow:inset -1px 0 #6a55302b;backdrop-filter:none;}.bi-shell>aside::before{display:none;}.bi-shell>main{max-width:none!important;padding:28px 25px 32px 30px!important;}.bi-shell>aside nav [aria-current="page"]>div{background:linear-gradient(115deg,#f8d78b,#dbb46d)!important;}}
 @media(min-width:1600px){.bi-shell>main{padding:32px 24px 38px 34px!important;}}
+
+.bi-page button:focus-visible,.bi-page select:focus-visible,.bi-privacy summary:focus-visible{outline:2px solid var(--bi-gold-light);outline-offset:3px;}
+.bi-voice-trigger:hover:not(:disabled){border-color:var(--bi-gold);background:#d8b46a16;}

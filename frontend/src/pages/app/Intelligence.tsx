@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Sparkles, RefreshCw, CalendarDays, ChevronDown, ChevronRight, TrendingUp, TrendingDown, Users, Target, Coins, ArrowUpRight, BarChart3, CalendarCheck, type LucideIcon } from 'lucide-react';
@@ -17,7 +17,7 @@ import '@/features/intelligence/intelligence.css';
 const mainTopics:Topic[]=['overview','agenda','finance','customers','team','stock','communications','marketing'];
 const quick: {label:string; question:string; topic:Topic; icon:LucideIcon}[]=[
  {label:'Como posso aumentar a ocupação da agenda?',question:'Como posso aumentar a ocupação da agenda?',topic:'agenda',icon:TrendingUp},
- {label:'Que dias são melhores para campanhas?',question:'Como está a próxima semana?',topic:'marketing',icon:CalendarDays},
+ {label:'Que dias são melhores para campanhas?',question:'Que dias da próxima semana são melhores para campanhas?',topic:'marketing',icon:CalendarDays},
  {label:'Como posso melhorar a fidelização de clientes?',question:'Como posso melhorar a fidelização de clientes?',topic:'customers',icon:Users}
 ];
 const fmt=(v:number|null)=>v===null?'—':new Intl.NumberFormat('pt-PT',{maximumFractionDigits:1}).format(v);
@@ -38,6 +38,8 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
  const [history,setHistory]=useState<Turn[]>([]);
  const [expanded,setExpanded]=useState(false);
  const input=useRef<HTMLTextAreaElement>(null);
+ const turns=useRef<HTMLDivElement>(null);
+ useEffect(()=>{if(turns.current)turns.current.scrollTop=turns.current.scrollHeight},[history]);
  const contextTopic=history.at(-1)?.topic;
  // The overview always uses the selected period; choosing a topic does not spend a cloud request.
  const q=useQuery({queryKey:['intelligence',userId,shopId,days,'overview'],queryFn:()=>loadIntelligence(shopId,days,'overview'),staleTime:60_000,retry:false});
@@ -71,7 +73,7 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
     {data?.cloud.status==='disabled'&&<p className="bi-message">Modo de análise própria activo.</p>}
     {history.length>0&&<section className="bi-conversation" aria-label="Conversa">
      <div className="bi-conversation-header"><h3>Conversa</h3><button type="button" className="bi-text-button" onClick={()=>{reset();input.current?.focus()}} disabled={busy}>Nova conversa</button></div>
-     <div className="bi-turns" aria-live="polite" aria-relevant="additions text" role="log">{history.map((turn,i)=><article className="bi-turn" key={i}><p className="bi-question">{turn.question}</p><p className="bi-answer">{turn.answer}</p>{turn.advice&&<><span className="bi-advice-label">Recomendações</span><p className="bi-answer">{turn.advice}</p></>}{['quota','unavailable'].includes(turn.cloud)&&<p className="bi-message">IA externa indisponível. Análise própria apresentada.</p>}</article>)}</div>
+     <div ref={turns} className="bi-turns" aria-live="polite" aria-relevant="additions text" role="log">{history.map((turn,i)=><article className="bi-turn" key={i}><p className="bi-question">{turn.question}</p><p className="bi-answer">{turn.answer}</p>{turn.advice&&<><span className="bi-advice-label">Recomendações</span><p className="bi-answer">{turn.advice}</p></>}{['quota','unavailable'].includes(turn.cloud)&&<p className="bi-message">IA externa indisponível. Análise própria apresentada.</p>}</article>)}</div>
     </section>}
     <div className="bi-quick"><h3>Sugestões rápidas</h3>{quick.map(item=><button key={item.label} type="button" disabled={busy} onClick={()=>chooseQuick(item)}><item.icon size={20} aria-hidden="true"/><span>{item.label}</span><ChevronRight size={16} aria-hidden="true"/></button>)}</div>
     <details className="bi-privacy"><summary>Privacidade e funcionamento</summary><p>Não inclua dados pessoais nas perguntas. A Groq recebe apenas tema, intenção e sinais qualitativos. O áudio é enviado apenas com confirmação. A IA não altera marcações, preços, pagamentos ou contactos.</p></details>
@@ -86,7 +88,7 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
    </>:<p className="bi-message">Indicadores indisponíveis. Actualize para consultar os dados reais.</p>}
   </section>
   {data&&!q.isError&&<div className="bi-detail">
-   <button type="button" className="bi-detail-toggle" aria-expanded={expanded} aria-controls="bi-detail-content" onClick={()=>setExpanded(v=>!v)}><BarChart3 size={19} aria-hidden="true"/><span>Análises e prioridades</span>{data.insights.some(i=>i.priority==='high')&&<small>{data.insights.filter(i=>i.priority==='high').length} prioritárias</small>}<ChevronDown size={18} className={expanded?'bi-rotated':undefined}/></button>
+   <button type="button" className="bi-detail-toggle" aria-expanded={expanded} aria-controls={expanded?"bi-detail-content":undefined} onClick={()=>setExpanded(v=>!v)}><BarChart3 size={19} aria-hidden="true"/><span>Análises e prioridades</span>{data.insights.some(i=>i.priority==='high')&&<small>{data.insights.filter(i=>i.priority==='high').length} prioritárias</small>}<ChevronDown size={18} className={expanded?'bi-rotated':undefined}/></button>
    {expanded&&<div id="bi-detail-content" className="bi-detail-content"><p className="bi-message">Período: {data.range.from} — {data.range.to}. Comparação com igual período anterior; marcações de hoje em separado.</p>
     <div className="bi-secondary-metrics">{[['Taxa de faltas',pct(data.metrics.noShow)],['Clientes em espera',fmt(data.metrics.waiting)],['Notificações falhadas',fmt(data.metrics.failedNotifications)]].map(([label,value])=><div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
     <section className="bi-priorities"><h3>Prioridades de gestão</h3>{data.insights.length===0?<p className="bi-message">Sem alertas nestes indicadores.</p>:data.insights.map(i=><article key={i.id}><div><strong>{i.title}</strong><p>{i.detail}</p></div><Link to={i.href} className="bi-text-button">Consultar módulo <ArrowUpRight size={15}/></Link></article>)}</section>

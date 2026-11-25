@@ -42,7 +42,7 @@ test('conversation retains bounded context and resets explicitly',async({page})=
  await question.fill('Qual foi a receita?');await page.getByRole('button',{name:'Consultar IA',exact:true}).click();
  await expect(page.getByText('Resposta calculada para Qual foi a receita?',{exact:true})).toBeVisible();
  await question.fill('E como melhorar?');await page.getByRole('button',{name:'Consultar IA'}).click();
- await expect(page.getByText('1. Consulte os relatórios.',{exact:true})).toBeVisible();
+ await expect(page.getByText('1. Consulte os relatórios.',{exact:true}).last()).toBeVisible();
  expect(calls.at(-1)).toMatchObject({shopId,contextTopic:'finance',cloud:true,question:'E como melhorar?'});
  await page.getByRole('button',{name:'Nova conversa'}).click();await expect(page.getByText('Resposta calculada para Qual foi a receita?',{exact:true})).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
@@ -86,5 +86,18 @@ test('clean overview has exactly four real KPIs and progressive details',async({
  await expect(page.getByRole('button',{name:'Analisar finanças'})).toHaveCount(0);
  await page.getByLabel('Período de análise').selectOption('7');
  await expect.poll(()=>calls.at(-1)?.days).toBe(7);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+});
+
+test('desktop layout preserves two columns and mobile layout has no horizontal overflow',async({page})=>{
+ await page.setViewportSize({width:1366,height:900});
+ await fixture(page);
+ const hub=page.getByTestId('intelligence-hub');
+ const assistant=page.getByRole('region',{name:'Assistente de gestão'});
+ const a=await hub.boundingBox(),b=await assistant.boundingBox();
+ expect(a).not.toBeNull();expect(b).not.toBeNull();expect(b.x).toBeGreaterThanOrEqual(a.x+a.width);
+ await page.setViewportSize({width:390,height:844});
+ const mobile=await assistant.boundingBox(),mobileHub=await hub.boundingBox();
+ expect(mobile.y).toBeGreaterThanOrEqual(mobileHub.y+mobileHub.height);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });
