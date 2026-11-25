@@ -9,6 +9,7 @@ async function main() {
     const { Button } = await server.ssrLoadModule('/src/components/ui/Button.tsx');
     const { StatusChip } = await server.ssrLoadModule('/src/components/ui/StatusChip.tsx');
     const { EmptyState, ErrorState, Panel, Skeleton } = await server.ssrLoadModule('/src/components/ui/States.tsx');
+    const { Field } = await server.ssrLoadModule('/src/components/ui/Field.tsx');
     const { Page } = await server.ssrLoadModule('/src/components/layout/Page.tsx');
     const { SkipLink } = await server.ssrLoadModule('/src/components/ui/SkipLink.tsx');
     const tests = [
@@ -35,6 +36,23 @@ async function main() {
       ['ErrorState exposes alert and retry button', () => {
         const html = renderToStaticMarkup(React.createElement(ErrorState, { message: 'Falhou', onRetry: () => undefined }));
         assert.match(html, /role="alert"/); assert.match(html, /aria-live="assertive"/); assert.match(html, /type="button"/);
+      }],
+      ['Field prefixes use layout, IDs are unique, validation descriptions exist', () => {
+        const html = renderToStaticMarkup(React.createElement(React.Fragment, null,
+          React.createElement(Field, { label:'Contacto', name:'phone', prefix:'+258', hint:'Nove dígitos', error:'Inválido' }),
+          React.createElement(Field, { label:'Outro contacto', name:'phone', prefix:'+258' })));
+        const ids = [...html.matchAll(/<input[^>]*\sid="([^"]+)"/g)].map(match=>match[1]);
+        assert.equal(ids.length, 2);
+        assert.equal(new Set(ids).size, 2);
+        assert.match(html, /field-prefix-layout/);
+        assert.doesNotMatch(html, /pl-\[4\.4rem\]/);
+        assert.ok(html.includes('aria-describedby="'+ids[0]+'-error"'));
+        assert.doesNotMatch(html, /aria-describedby="[^"]*-hint/);
+      }],
+      ['Skeleton remains valid for long loading lists', () => {
+        const html = renderToStaticMarkup(React.createElement(Skeleton, { lines: 12 }));
+        assert.equal([...html.matchAll(/width:[0-9]+%/g)].length, 12);
+        assert.doesNotMatch(html, /width:-/);
       }],
       ['Panel labels heading', () => {
         const html = renderToStaticMarkup(React.createElement(Panel, { title: 'Agenda' }, 'Conteúdo'));
