@@ -18,6 +18,7 @@ begin
  perform public.record_staff_tip(sh,ap,1000,0,'Idempotent retry');
  rejected:=false;begin perform public.record_staff_tip(sh,ap,2000,0,'Stale edit');exception when serialization_failure then rejected:=true;end;if not rejected then raise exception 'FAIL stale tip';end if;
  result:=public.get_staff_earnings(sh,d,d,0);
+ if (select estimated_revenue_cents from public.get_report_summary(sh,d,d)) is distinct from 10000::bigint or (select completed_count from public.get_report_summary(sh,d,d)) is distinct from (result->>'total')::bigint or (select sum(estimated_revenue_cents) from public.get_report_services(sh,d,d)) is distinct from 10000::numeric then raise exception 'FAIL intelligence financial reconciliation';end if;
  if (result->'summary'->0->>'commission_minor')::integer is distinct from 3750 or (result->'summary'->0->>'tip_minor')::integer is distinct from 1000 or (result->'rates'->0->>'rate_bps')::integer is distinct from 5000 then raise exception 'FAIL snapshot/summary %',result;end if;
  if has_function_privilege('anon','public.get_staff_earnings(uuid,date,date,integer)','EXECUTE') or has_table_privilege('authenticated','private.staff_earnings','SELECT') then raise exception 'FAIL privilege';end if;
  perform set_config('request.jwt.claim.sub',gen_random_uuid()::text,true);

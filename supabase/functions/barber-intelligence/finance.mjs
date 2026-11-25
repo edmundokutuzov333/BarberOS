@@ -17,7 +17,7 @@ export function financialIntelligence(current,previous,services,barbers,staff,st
  const unknown=staffRows?sum(staffRows,'unknown_count'):null;
  const commission=staffRows?sum(staffRows,'commission_minor'):null;
  const tips=staffRows?sum(staffRows,'tip_minor'):null;
- const reconciled=staffRows!==null&&completed!==null&&staffTotal===completed&&money(staff.total)===completed&&unknown!==null&&unknown<=completed&&commission!==null&&tips!==null&&revenue!==null&&commission<=revenue;
+ const reconciled=staffRows!==null&&staffRows.every(r=>money(r.unknown_count)!==null&&money(r.completed_count)!==null&&r.unknown_count<=r.completed_count)&&completed!==null&&staffTotal===completed&&money(staff.total)===completed&&unknown!==null&&unknown<=completed&&commission!==null&&tips!==null&&revenue!==null&&commission<=revenue;
  const fullyKnown=reconciled&&unknown===0;
  const staffMap=new Map((staffRows??[]).map(r=>[r.barber_id,r]));
  const team=unique(barbers,'barber_id').map(r=>{
@@ -26,7 +26,7 @@ export function financialIntelligence(current,previous,services,barbers,staff,st
    return {id:r.barber_id,name:String(r.barber_name??'Barbeiro').slice(0,120),completed:count,revenue:earned,capacity:cap,occupancy:ratio(used,cap),commission:known?s.commission_minor:null,afterCommission:known?earned-s.commission_minor:null};
  });
  const svc=unique(services,'service_id').map(r=>{const count=money(r.completed_count),earned=money(r.estimated_revenue_cents);return {id:r.service_id,name:String(r.service_name??'Serviço').slice(0,120),completed:count,revenue:earned,share:ratio(earned,revenue),ticket:count!==null&&count>0&&earned!==null?Math.round(earned/count):null}}).filter(r=>r.completed!==null&&r.completed>0).sort((a,b)=>(b.revenue??-1)-(a.revenue??-1)||a.id.localeCompare(b.id));
- const serviceConsistent=sum(svc,'revenue')===revenue&&sum(svc,'completed')===completed;
+ const serviceConsistent=revenue!==null&&completed!==null&&sum(svc,'revenue')===revenue&&sum(svc,'completed')===completed;
  const knownUnits=store?money(store.delivered_cost_known_units):null,unknownUnits=store?money(store.delivered_cost_unknown_units):null;
  const gross=store?signed(store.delivered_known_gross_margin_minor):null,cost=store?money(store.delivered_known_cost_minor):null;
  const shop=store?{knownUnits,unknownUnits,knownCost:cost,knownGrossMargin:gross,complete:knownUnits!==null&&knownUnits>0&&unknownUnits===0&&gross!==null&&cost!==null}:null;
