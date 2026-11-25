@@ -4,11 +4,30 @@ import { fileURLToPath } from 'node:url';
 
 export function compareFrontendContracts(source, remote, staging = null) {
   if(!Array.isArray(source.calls)||!Array.isArray(source.rpc_names)||!Array.isArray(source.edge_names)||!Array.isArray(source.table_names)||!Array.isArray(remote.functions)||!Array.isArray(remote.tables)||!Array.isArray(remote.edges)) throw new Error('INCOMPLETE_CONTRACT_INVENTORY');
-  const missing_rpcs=source.rpc_names.filter(name=>!remote.functions.some(f=>f.name===name));
+  // Explicitly scoped staged additions, with compatibility paths in the named adapters.
+  // Never accept arbitrary staging RPCs as production-ready.
+  const stagedAdapters={
+    get_public_shop_catalog_v2:'frontend/src/features/public-shop/catalog.ts',
+    save_shop_catalog_product_presentation:'frontend/src/features/shop-catalog/api.ts',
+  };
+  const staging_rpcs=[];
+  function rpcMatches(name) {
+    const deployed=remote.functions.filter(f=>f.name===name);
+    if(deployed.length)return deployed;
+    const adapter=Object.hasOwn(stagedAdapters,name)?stagedAdapters[name]:null;
+    const calls=source.calls.filter(c=>c.kind==='rpc'&&c.names.includes(name));
+    const candidate=staging?.catalog_evolution?.functions?.find(f=>f.name===name&&f.authenticated===true&&f.anon===(name==='get_public_shop_catalog_v2')&&Array.isArray(f.input_arguments)&&Number.isInteger(f.required_argument_count)&&f.return_type==='jsonb');
+    if(adapter&&staging?.environment==='staging'&&staging.project_ref==='asikuyxaapcmayptimxi'&&candidate&&calls.length&&calls.every(c=>c.file===adapter)){
+      if(!staging_rpcs.includes(name))staging_rpcs.push(name);
+      return [candidate];
+    }
+    return [];
+  }
+  const missing_rpcs=source.rpc_names.filter(name=>!rpcMatches(name).length);
   const missing_tables=source.table_names.filter(name=>!remote.tables.some(t=>t.name===name));
   // Only an explicitly captured staging-only edge, reached exclusively from
   // its reviewed adapter, can satisfy an otherwise missing production edge.
-  // This is not an exception for unresolved calls, RPCs or production edges.
+  // This is not an exception for unresolved calls or production edges.
   const staging_edges=[];
   const missing_edges=source.edge_names.filter(name=>{
     if(remote.edges.some(f=>f.name===name&&f.status==='ACTIVE'))return false;
@@ -25,7 +44,7 @@ export function compareFrontendContracts(source, remote, staging = null) {
   for(const call of source.calls.filter(c=>c.kind==='rpc'&&c.names.length&&!c.forwarding)) {
     if(call.opaque_payload) {opaque_payloads.push({file:call.file,line:call.line,names:call.names});continue;}
     for(const name of call.names) {
-      const matches=remote.functions.filter(f=>f.name===name);if(!matches.length)continue;
+      const matches=rpcMatches(name);if(!matches.length)continue;
       const provided=new Set(call.payload_keys);
       const compatible=matches.some(f=>{
         const args=f.input_arguments??[];
@@ -36,7 +55,7 @@ export function compareFrontendContracts(source, remote, staging = null) {
   }
   const unresolved_dynamic_calls=source.unresolved_dynamic_calls??[];
   const failures=missing_rpcs.length+missing_tables.length+missing_edges.length+invalid_payloads.length+unresolved_dynamic_calls.length;
-  return {status:failures?'CONTRACT_GAPS':'DECLARED_BOUNDARIES_PRESENT',scope:'Static name and literal argument compatibility only; no runtime authorization, payload value, return, provider or E2E certification',missing_rpcs,missing_tables,missing_edges,staging_edges,invalid_payloads,unresolved_dynamic_calls,opaque_payloads};
+  return {status:failures?'CONTRACT_GAPS':'DECLARED_BOUNDARIES_PRESENT',scope:'Static name and literal argument compatibility only; no runtime authorization, payload value, return, provider or E2E certification',missing_rpcs,staging_rpcs,missing_tables,missing_edges,staging_edges,invalid_payloads,unresolved_dynamic_calls,opaque_payloads};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   const args=process.argv.slice(2);const paths=args.filter(a=>!a.startsWith('--'));
