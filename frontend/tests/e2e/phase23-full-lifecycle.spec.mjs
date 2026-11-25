@@ -110,14 +110,17 @@ test.describe('BarberOS Phase 23 full lifecycle', () => {
     await expect(page.getByTestId(/agenda-appointment-/).first()).toBeVisible();
 
     const appointment = page.getByTestId(/agenda-appointment-/).first();
-    const confirm = appointment.getByRole('button', { name: 'Confirmar' });
+    await appointment.getByRole('button', { name: /Abrir marcação/ }).click();
+    const details = page.getByTestId('agenda-appointment-details');
+    await expect(details).toBeVisible();
+    const confirm = details.getByRole('button', { name: 'Confirmar', exact: true });
     if (await confirm.count()) await confirm.click();
 
-    const start = appointment.getByRole('button', { name: 'Iniciar atendimento' });
+    const start = details.getByRole('button', { name: 'Iniciar atendimento' });
     if (await start.count()) await start.click();
 
-    await expect(appointment.getByRole('button', { name: 'Concluir atendimento' })).toBeVisible();
-    await appointment.getByRole('button', { name: 'Concluir atendimento' }).click();
+    await expect(details.getByRole('button', { name: 'Concluir atendimento' })).toBeVisible();
+    await details.getByRole('button', { name: 'Concluir atendimento' }).click();
 
     await page.goto('/app/clientes');
     await expect(page.getByText('Cliente QA ' + unique)).toBeVisible();
