@@ -110,8 +110,10 @@ try{
    if(action==='appointment.get')assert.equal(reply.result.data?.[0]?.shop_slug,checkoutSlug);
    if(action==='payment_simulator.checkout'){assert.equal(reply.result.data?.enabled,true);assert.equal(reply.result.data?.quotes?.[0]?.amount_minor,2000);}
   }
+  sql("insert into public.barbershop_members(barbershop_id,user_id,role) values("+uuid(checkoutShop)+","+uuid(nonadmin.id)+",'owner') on conflict do nothing;");
+  const customerId=sql("select customer_id from public.appointments where id="+uuid(appointment)+";");
   const operational={
-   token,
+   token,shopId:checkoutShop,customerId,shopSlug:checkoutSlug,
    readAppointment:()=>sql("select status::text||':'||deposit_status::text from public.appointments where id="+uuid(appointment)+";"),
    completeAndDeliver:()=>{
     sql("update public.appointments set status='completed',completed_at=now() where id="+uuid(appointment)+";");

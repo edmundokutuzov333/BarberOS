@@ -5,6 +5,7 @@ import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {preview} from 'vite';
 import {chromium,devices,expect} from '@playwright/test';
+import {certifyAuthenticatedLayout} from './authenticated-layout-browser.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const origin='http://127.0.0.1:4173';
@@ -145,6 +146,7 @@ export async function certifyPaymentBrowser({apiUrl,anonKey,actor,nonadmin,shop,
         await expect(page.getByTestId('login-page')).toBeVisible({timeout:20000});
         console.log('PASS | real admin subscription checkout and monthly duplicate prevention');
       }finally{await admin.close();}
+      await certifyAuthenticatedLayout({browser,origin,owner:nonadmin,admin:actor,shopId:operational.shopId,customerId:operational.customerId});
     }
   }finally{
     await browser?.close();

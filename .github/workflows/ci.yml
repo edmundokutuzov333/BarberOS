@@ -90,7 +90,7 @@ jobs:
   database:
     name: Supabase migrations and security contracts
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     env:
       BARBEROS_LOCAL_PROJECT_ID: barberos_ci_${{ github.run_id }}_${{ github.run_attempt }}
     steps:
@@ -178,6 +178,13 @@ jobs:
         env:
           BARBEROS_SIMULATOR_BROWSER: '1'
         run: node scripts/test-payment-simulator-http.mjs
+      - name: Upload isolated authenticated layout QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: authenticated-layout-qa
+          path: frontend/test-results/authenticated-layout
+          if-no-files-found: ignore
       - name: Run Phase 4 two-session stock reservation race
         shell: bash
         run: |
