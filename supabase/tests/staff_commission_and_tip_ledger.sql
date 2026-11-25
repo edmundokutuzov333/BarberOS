@@ -1,0 +1,26 @@
+begin;
+do $qa$
+declare actor uuid:=gen_random_uuid(); sh uuid; br uuid; sv uuid; cu uuid; ap uuid; d date:=(now() at time zone 'Africa/Maputo')::date; result jsonb; rejected boolean;
+begin
+ insert into auth.users(id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values(actor,'authenticated','authenticated',actor::text||'@example.invalid','',now(),'{"provider":"email","providers":["email"]}','{}',now(),now());
+ insert into public.barbershops(slug,name,status,timezone) values('earnings-qa-'||replace(gen_random_uuid()::text,'-',''),'Staff QA','active','Africa/Maputo') returning id into sh;
+ insert into public.barbershop_members(barbershop_id,user_id,role) values(sh,actor,'owner');
+ perform set_config('request.jwt.claim.sub',actor::text,true); perform set_config('request.jwt.claim.role','authenticated',true);
+ insert into public.barbers(barbershop_id,display_name,is_active) values(sh,'QA barber',true) returning id into br;
+ insert into public.services(barbershop_id,name,duration_min,price_cents,is_active) values(sh,'QA service',30,10000,true) returning id into sv;
+ insert into public.customers(barbershop_id,name,phone) values(sh,'QA customer','+258840000001') returning id into cu;
+ perform public.set_staff_commission_rate(sh,br,3750);
+ insert into public.appointments(barbershop_id,barber_id,service_id,customer_id,starts_at,ends_at,duration_min,price_cents,status) values(sh,br,sv,cu,(d+time '10:00') at time zone 'Africa/Maputo',(d+time '10:30') at time zone 'Africa/Maputo',30,10000,'in_progress') returning id into ap;
+ rejected:=false;begin perform public.record_staff_tip(sh,ap,1000,0,'Cash tip');exception when raise_exception then if sqlerrm='STAFF_TIP_REQUIRES_COMPLETED' then rejected:=true;else raise;end if;end;if not rejected then raise exception 'FAIL pending tip';end if;
+ perform public.transition_appointment(sh,ap,'complete',null);
+ perform public.set_staff_commission_rate(sh,br,5000);
+ perform public.record_staff_tip(sh,ap,1000,0,'Cash tip recorded');
+ perform public.record_staff_tip(sh,ap,1000,0,'Idempotent retry');
+ rejected:=false;begin perform public.record_staff_tip(sh,ap,2000,0,'Stale edit');exception when serialization_failure then rejected:=true;end;if not rejected then raise exception 'FAIL stale tip';end if;
+ result:=public.get_staff_earnings(sh,d,d,0);
+ if (result->'summary'->0->>'commission_minor')::integer is distinct from 3750 or (result->'summary'->0->>'tip_minor')::integer is distinct from 1000 or (result->'rates'->0->>'rate_bps')::integer is distinct from 5000 then raise exception 'FAIL snapshot/summary %',result;end if;
+ if has_function_privilege('anon','public.get_staff_earnings(uuid,date,date,integer)','EXECUTE') or has_table_privilege('authenticated','private.staff_earnings','SELECT') then raise exception 'FAIL privilege';end if;
+ perform set_config('request.jwt.claim.sub',gen_random_uuid()::text,true);
+ rejected:=false;begin perform public.get_staff_earnings(sh,d,d,0);exception when insufficient_privilege then rejected:=true;end;if not rejected then raise exception 'FAIL tenant scope';end if;
+end $qa$;
+rollback;
