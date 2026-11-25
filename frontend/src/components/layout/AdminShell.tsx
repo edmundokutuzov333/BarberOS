@@ -24,19 +24,19 @@ export function AdminShell() {
   const active = ADMIN_NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)));
 
   return (
-    <div className="barber-shell min-h-screen md:flex md:gap-6 md:p-6">
+    <div className="barber-shell min-h-screen lg:flex lg:gap-6 lg:p-6">
       
       <SkipLink targetId="admin-main-content" />
       <aside
         data-testid="admin-sidebar"
-        className="glass glass-2 md:sticky md:top-6 md:h-[calc(100vh-3rem)] md:w-64 shrink-0 flex flex-col m-4 md:m-0 overflow-hidden"
+        className="glass glass-2 lg:sticky lg:top-6 lg:h-[calc(100dvh-3rem)] lg:w-64 shrink-0 flex flex-col m-4 lg:m-0 overflow-hidden"
       >
-        <div className="h-16 px-5 flex items-center justify-between border-b border-[var(--border-subtle)]">
+        <div className="h-16 shrink-0 px-5 flex items-center justify-between border-b border-[var(--border-subtle)]">
           <Brand size="sm" />
           <span className="t-label text-ink-mid rounded-full border border-[var(--border-default)] px-2 py-1">Admin</span>
         </div>
 
-        <nav className="flex-1 px-3 py-3 space-y-1 flex md:flex-col overflow-x-auto no-scrollbar" aria-label="Navegação de administração">
+        <nav className="flex-1 min-h-0 px-3 py-3 gap-1 flex lg:flex-col overflow-x-auto lg:overflow-x-hidden lg:overflow-y-auto no-scrollbar" aria-label="Navegação de administração">
           {ADMIN_NAV.map((n) => {
             const isActive = active?.to === n.to;
             return (
@@ -66,7 +66,7 @@ export function AdminShell() {
           })}
         </nav>
 
-        <div className="p-3 border-t border-[var(--border-subtle)] space-y-2">
+        <div className="p-3 shrink-0 border-t border-[var(--border-subtle)] space-y-2">
           <div className="rounded-2xl bg-white/[0.025] border border-white/5 px-3 py-3">
             <p className="t-label text-ink-lo">Administrador da plataforma</p>
             <p className="text-sm text-ink-hi truncate mt-1">{profile?.full_name || user?.email || 'Admin Oryon'}</p>
@@ -92,7 +92,7 @@ export function AdminShell() {
         </div>
       </aside>
 
-      <main id="admin-main-content" tabIndex={-1} aria-label="Conteúdo principal da administração" className="flex-1 min-w-0 px-4 pb-10 md:p-0">
+      <main id="admin-main-content" tabIndex={-1} aria-label="Conteúdo principal da administração" className="flex-1 min-w-0 px-4 pb-10 lg:p-0">
         <AnimatedOutlet />
       </main>
     </div>
