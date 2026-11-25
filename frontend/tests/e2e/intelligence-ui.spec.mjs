@@ -4,8 +4,8 @@ let server,origin;
 const shopId='11111111-1111-4111-8111-111111111111';
 test.beforeAll(async()=>{
  server=await createServer({root:process.cwd(),server:{host:'127.0.0.1',port:0,strictPort:false,hmr:false},logLevel:'error',plugins:[{name:'intelligence-fixture',enforce:'pre',transform(_src,id){
- if(id.endsWith('/src/lib/shop.tsx'))return 'export const useShop=()=>({shop:{id:"'+shopId+'"},role:"owner"})';
- if(id.endsWith('/src/lib/auth.tsx'))return 'export const useAuth=()=>({user:{id:"44444444-4444-4444-8444-444444444444"}})';
+ if(id.endsWith('/src/lib/shop.tsx'))return 'const shop={id:"'+shopId+'",name:"MUFU Barber House".replace(/\\u200b/g,""),shop_enabled:true};export const useShop=()=>({shop,shops:[{barbershops:shop}],role:"owner",setShopId:()=>{}})';
+ if(id.endsWith('/src/lib/auth.tsx'))return 'export const useAuth=()=>({user:{id:"44444444-4444-4444-8444-444444444444"},profile:{full_name:"Gestor de teste"},signOut:async()=>true})';
  },configureServer(vite){vite.middlewares.use('/__intel-test',async(_req,res,next)=>{try{res.setHeader('Content-Type','text/html');res.end(await vite.transformIndexHtml('/__intel-test','<!doctype html><html lang="pt-MZ"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="root"></div><script type="module" src="/tests/fixtures/intelligence-entry.tsx"></script></body></html>'))}catch(e){next(e)}})}}]});
  await server.listen();origin='http://127.0.0.1:'+server.httpServer.address().port;
 });
@@ -30,7 +30,7 @@ async function fixture(page){
   let data;
   if(p.action==='voice')data={version:1,text:'Como melhorar a agenda?'};
   else if(p.action==='setup_guide')data={version:1,step:6,progress:3,title:'Horários',answer:'Confirme a disponibilidade oficial.',review:'Verifique a agenda.'};
-  else data={version:1,range:{today:'2026-11-25',from:'2026-11-18',to:'2026-11-24',previousFrom:'2026-11-11',previousTo:'2026-11-17',historyFrom:'2026-09-30'},topic:p.question?.includes('receita')?'finance':p.contextTopic??p.topic,metrics:{today:0,appointments:0,completed:0,noShow:null,occupancy:null,revenue:0,revenueChange:null,waiting:0,failedNotifications:0,customers:0,recentCustomers:0,lowStock:0},insights:[],forecast:[],answer:p.question?'Resposta calculada para '+p.question:'Resumo inicial.',cloud:{status:p.cloud?'generated':'available',advice:p.cloud?'1. Consulte os relatórios.':null}};
+  else data={version:1,range:{today:'2026-11-25',from:'2026-11-18',to:'2026-11-24',previousFrom:'2026-11-11',previousTo:'2026-11-17',historyFrom:'2026-09-30'},topic:p.question?.includes('receita')?'finance':p.contextTopic??p.topic,metrics:{today:24,appointments:32,completed:21,noShow:null,occupancy:78,revenue:1250000,revenueChange:24,waiting:0,failedNotifications:0,customers:0,recentCustomers:0,lowStock:0},insights:[],forecast:[],answer:p.question?'Resposta calculada para '+p.question:'Resumo inicial.',cloud:{status:p.cloud?'generated':'available',advice:p.cloud?'1. Consulte os relatórios.':null}};
   return route.fulfill({status:200,headers,contentType:'application/json',body:JSON.stringify(data)});
  });
  await page.goto(origin+'/__intel-test');await expect(page.getByTestId('intelligence-page')).toBeVisible();await expect(page.getByRole('button',{name:'Consultar IA'})).toBeVisible();
@@ -108,8 +108,12 @@ test('reference desktop geometry and icon semantics',async({page})=>{
  const a=await hub.boundingBox(),b=await panel.boundingBox();
  expect(a.height).toBeGreaterThanOrEqual(600);expect(b.x).toBeGreaterThan(a.x+a.width);
  await expect(panel.locator('.bi-topic-row')).toHaveCount(2);
+ await expect(page.getByTestId('nav-intelligence').locator('svg')).toHaveClass(/lucide-brain-circuit/);
+ await expect(page.getByTestId('nav-cortes').locator('svg')).toHaveClass(/lucide-hair-clipper/);
+ await expect(page.getByTestId('nav-gmail')).not.toBeVisible();
+ await page.getByText('Mais opções',{exact:true}).click();await expect(page.getByTestId('nav-gmail')).toBeVisible();await page.getByText('Mais opções',{exact:true}).click();
  for(const row of await panel.locator('.bi-topic-row').all())await expect(row.getByRole('button')).toHaveCount(4);
  await expect(page.getByTestId('intelligence-kpis').locator('article')).toHaveCount(4);
- await page.screenshot({path:test.info().outputPath('intelligence-reference-desktop.png'),fullPage:true,animations:'disabled'});
+ await page.screenshot({path:test.info().outputPath('intelligence-reference-desktop.png'),fullPage:false,animations:'disabled'});
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:test.info().outputPath('intelligence-reference-mobile.png'),fullPage:true,animations:'disabled'});
 });

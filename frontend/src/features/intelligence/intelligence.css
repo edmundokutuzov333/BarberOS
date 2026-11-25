@@ -197,3 +197,6 @@
  .bi-metric:has(.bi-delta) .bi-metric-content strong{font-size:23px;}
 }
 @container(max-width:480px){.bi-node:first-child{width:100%;max-width:none;}.bi-topic-row{gap:6px;}.bi-topic-row button{flex:1 1 40%;}.bi-core{border-width:2px;}.bi-assistant-heading{align-items:flex-start;}}
+
+@media(max-width:1023px){.bi-shell>aside[data-intelligence]{display:none;}}
+@container(max-width:480px){.bi-core{top:auto;left:auto;}}
