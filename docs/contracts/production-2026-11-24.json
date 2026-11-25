@@ -2078,9 +2078,9 @@
     {
       "name": "barber-intelligence",
       "status": "ACTIVE",
-      "version": 7,
+      "version": 8,
       "verify_jwt": true,
-      "bundle_sha256": "e6e0665f8d1eb9cc7f7a8da7a9712a7e77e06a4b138b4912251a59505d7bdcd9"
+      "bundle_sha256": "157daf93a5750cbddc9cec4ead1da651664c3c2526ecef8172033a26b0313401"
     },
     {
       "name": "booking-create",
@@ -2198,9 +2198,9 @@
     "source": "Supabase management API list_edge_functions",
     "project_ref": "alseiinjzwjdiwtvkdzy",
     "edge": "barber-intelligence",
-    "version": 7,
-    "bundle_sha256": "e6e0665f8d1eb9cc7f7a8da7a9712a7e77e06a4b138b4912251a59505d7bdcd9",
-    "scope": "Production and staging deployment metadata; new structured Groq contract live probe passed, browser and authenticated HTTP acceptance tracked separately."
+    "version": 8,
+    "bundle_sha256": "157daf93a5750cbddc9cec4ead1da651664c3c2526ecef8172033a26b0313401",
+    "scope": "Production/staging deployment metadata only; latest authenticated and browser CI acceptance separate."
   },
   "intelligence_groq_capture": {
     "captured_on": "2026-11-25",
@@ -2227,6 +2227,17 @@
     },
     "unit_harness": "9 passed",
     "voice_live_transcription": "not yet verified",
-    "browser_ci": "pending"
+    "browser_ci": "V7 completed success, desktop and mobile"
+  },
+  "intelligence_precise_answers_capture": {
+    "captured_on": "2026-11-25",
+    "production_edge_version": 8,
+    "staging_edge_version": 10,
+    "bundle_sha256": "157daf93a5750cbddc9cec4ead1da651664c3c2526ecef8172033a26b0313401",
+    "unit_harness": "4 passed",
+    "previous_release_frontend_ci": "success",
+    "previous_release_authenticated_intelligence": "success",
+    "live_voice": "not verified",
+    "current_release_ci": "pending"
   }
 }
