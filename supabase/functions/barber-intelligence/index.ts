@@ -7,7 +7,7 @@ import { operationalPlan, draftKinds, prepareDraft } from "./operations.mjs";
 import { inventoryIntelligence, reviewIntelligence } from "./quality.mjs";
 import { financialIntelligence } from "./finance.mjs";
 import { customerIntelligence } from "./customer.mjs";
-import { cloudEnabled, genericAdvice } from "./provider.mjs";
+import { cloudEnabled, credentialFromVault, genericAdvice } from "./provider.mjs";
 
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 Deno.serve(async (req:Request)=>{
@@ -106,12 +106,18 @@ Deno.serve(async (req:Request)=>{
     const topic=detected??body.topic;
     const result=analyze({current,previous,dashboard,crm,wait,notifications,services,barbers,history,store},range,topic);
     if(!detected)result.answer="Não identifiquei o tema da pergunta. Escolha uma das áreas disponíveis. "+result.answer;
-    let cloud:{status:string;advice:string|null}={status:cloudEnabled(Deno.env.get.bind(Deno.env))?"available":"disabled",advice:null};
+    // Never include the credential in a response or log. Vault allows rotation without deploying the edge.
+    let groqKey=cloudEnabled(Deno.env.get.bind(Deno.env))?Deno.env.get("BARBEROS_AI_GROQ_KEY")!:null;
+    if(!groqKey){
+      const {data:config,error:configError}=await admin.rpc("get_intelligence_cloud_config");
+      if(!configError)groqKey=credentialFromVault(config);
+    }
+    let cloud:{status:string;advice:string|null}={status:groqKey?"available":"disabled",advice:null};
     if(body.cloud===true&&cloud.status==="available"){
       const shopBucket=await sha256Hex(salt+":intelligence:cloud:shop:"+shopId);
       const globalBucket=await sha256Hex(salt+":intelligence:cloud:global");
       if((await consume(admin,shopBucket,5,86400)).allowed&&(await consume(admin,globalBucket,100,86400)).allowed){
-        const advice=await genericAdvice(topic,Deno.env.get("BARBEROS_AI_GROQ_KEY")!);
+        const advice=await genericAdvice(topic,groqKey!,fetch,result.insights.filter(i=>topic==="overview"||i.category===topic).map(i=>i.id));
         cloud={status:advice?"generated":"unavailable",advice};
       }else cloud={status:"quota",advice:null};
     }

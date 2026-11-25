@@ -38,8 +38,8 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
         </form>
         {ask.isError&&<div className="mt-3"><ErrorState message="Não foi possível concluir a consulta." onRetry={()=>ask.mutate({question:question.trim()||undefined})}/></div>}
         <div className="mt-4 t-body text-ink-hi whitespace-pre-wrap break-words" aria-live="polite">{ask.data?.answer??data?.answer??''}</div>
-        {data&&data.cloud.status!=='disabled'&&<div className="mt-4"><Button variant="secondary" loading={ask.isPending} onClick={()=>ask.mutate({cloud:true})}>Gerar conselho geral com IA</Button><p className="t-label text-ink-mid mt-2">Apenas o tema genérico é enviado ao fornecedor, sem dados da barbearia.</p></div>}
-        {ask.data?.cloud.status==='generated'&&<p className="mt-3 t-body whitespace-pre-wrap break-words">{ask.data.cloud.advice}</p>}
+        {data&&data.cloud.status!=='disabled'&&<div className="mt-4"><Button variant="secondary" loading={ask.isPending} onClick={()=>ask.mutate({cloud:true,question:question.trim()||undefined})}>Gerar recomendações com Groq</Button><p className="t-label text-ink-mid mt-2">A Groq recebe apenas o tema e sinais operacionais qualitativos, sem nomes, valores, contactos ou o texto da pergunta.</p></div>}
+        {ask.data?.cloud.status==='generated'&&<div className="mt-3 rounded-xl border border-white/10 p-3 space-y-2"><p className="t-label text-accent-soft">IA generativa · GPT-OSS 20B / Groq</p><p className="t-body whitespace-pre-wrap break-words">{ask.data.cloud.advice}</p><p className="t-label text-ink-mid">Sugestões para revisão. Os indicadores reais continuam a ser calculados pelo BarberOS.</p></div>}
         {['quota','unavailable'].includes(ask.data?.cloud.status??'')&&<p role="status" className="mt-3 t-body text-ink-mid">IA externa indisponível. As recomendações de gestão continuam activas.</p>}
         {data?.cloud.status==='disabled'&&<p className="t-label text-ink-mid mt-3">Modo de inteligência própria activo. IA generativa externa não configurada.</p>}
       </Panel>

@@ -107,7 +107,7 @@ for (const fn of expectedFunctions) {
 
 for (const [key, value] of Object.entries(process.env)) {
   if (!key.startsWith('VITE_')) continue;
-  if (/(SECRET|PRIVATE|SERVICE_ROLE|PASSWORD|ACCESS_TOKEN)/i.test(key)) {
+  if (/(SECRET|PRIVATE|SERVICE_ROLE|PASSWORD|ACCESS_TOKEN|GROQ)/i.test(key)) {
     throw new Error('DEPLOY_PUBLIC_ENV_SECRET_PREFIX:' + key);
   }
   if (value && key === 'VITE_SUPABASE_PUBLISHABLE_KEY' && !value.startsWith('sb_publishable_')) {

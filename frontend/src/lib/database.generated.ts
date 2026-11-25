@@ -3559,6 +3559,7 @@ export type Database = {
         Args: { p_barbershop_id: string }
         Returns: Json
       }
+      get_intelligence_cloud_config: { Args: Record<PropertyKey, never>; Returns: Json }
       get_staff_earnings: { Args: { p_shop: string; p_from: string; p_to: string; p_offset?: number }; Returns: Json }
       get_waitlist: {
         Args: {
