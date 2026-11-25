@@ -30,3 +30,18 @@ test('reviewed staging-only edge uses captured active authenticated contract, no
  assert.deepEqual(compareFrontendContracts(fixture,remote,{...stage,edges:[{name,status:'ACTIVE',verify_jwt:false}]}).missing_edges,[name]);
  assert.deepEqual(compareFrontendContracts({...fixture,calls:[...fixture.calls,{...call,file:'frontend/src/pages/PublicShop.tsx'}]},remote,stage).missing_edges,[name]);
 });
+
+test('catalog staging contract is narrowly scoped and reports staged RPCs separately',()=>{
+ const name='get_public_shop_catalog_v2';
+ const call={kind:'rpc',names:[name],payload_keys:['p_slug'],file:'frontend/src/features/public-shop/catalog.ts',line:1};
+ const fixture={...source,rpc_names:['action',name],calls:[...source.calls,call]};
+ const candidate={name,input_arguments:['p_slug'],required_argument_count:1,return_type:'jsonb',anon:true,authenticated:true};
+ const stage={environment:'staging',project_ref:'asikuyxaapcmayptimxi',catalog_evolution:{functions:[candidate]}};
+ const result=compareFrontendContracts(fixture,remote,stage);
+ assert.equal(result.status,'DECLARED_BOUNDARIES_PRESENT');
+ assert.deepEqual(result.staging_rpcs,[name]);
+ assert.deepEqual(compareFrontendContracts(fixture,remote).missing_rpcs,[name]);
+ assert.deepEqual(compareFrontendContracts({...fixture,calls:[...fixture.calls,{...call,file:'frontend/src/pages/Other.tsx'}]},remote,stage).missing_rpcs,[name]);
+ assert.equal(compareFrontendContracts({...fixture,calls:[...source.calls,{...call,payload_keys:['wrong']}]},remote,stage).invalid_payloads.length,1);
+ assert.deepEqual(compareFrontendContracts(fixture,remote,{...stage,project_ref:'other'}).missing_rpcs,[name]);
+});
