@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Sparkles, RefreshCw, CalendarDays, ChevronDown, ChevronRight, TrendingUp, TrendingDown, Users, Target, Coins, ArrowUpRight, BarChart3, CalendarCheck, type LucideIcon } from 'lucide-react';
+import { Sparkles, BrainCircuit, RefreshCw, CalendarDays, ChevronDown, ChevronRight, TrendingUp, TrendingDown, Users, Target, Coins, ArrowUpRight, BarChart3, CalendarCheck, type LucideIcon } from 'lucide-react';
 import { Page } from '@/components/layout/Page';
 import { Skeleton, ErrorState } from '@/components/ui/States';
 import { useShop } from '@/lib/shop';
@@ -61,8 +61,8 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
   <section className="bi-hero" aria-label="Centro de inteligência">
    <IntelligenceHub topic={topic} disabled={busy} onSelect={t=>selectTopic(t,true)}/>
    <section className="bi-assistant" aria-labelledby="bi-assistant-title">
-    <div className="bi-assistant-heading"><span className="bi-assistant-icon"><Sparkles size={25} aria-hidden="true"/></span><div><h2 id="bi-assistant-title">Assistente de gestão</h2><p>Pergunte, analise e receba recomendações práticas para melhorar o desempenho da sua barbearia.</p></div></div>
-    <div className="bi-topics" aria-label="Temas de gestão">{mainTopics.map(t=><button key={t} type="button" aria-pressed={topic===t} disabled={busy} onClick={()=>selectTopic(t)}>{labels[t]}</button>)}</div>
+    <div className="bi-assistant-heading"><span className="bi-assistant-icon"><BrainCircuit size={25} aria-hidden="true"/></span><div><h2 id="bi-assistant-title">Assistente de gestão</h2><p>Pergunte, analise e receba recomendações práticas para melhorar o desempenho da sua barbearia.</p></div></div>
+    <div className="bi-topics" aria-label="Temas de gestão">{[mainTopics.slice(0,4),mainTopics.slice(4)].map((row,i)=><div className="bi-topic-row" key={i}>{row.map(t=><button key={t} type="button" aria-pressed={topic===t} disabled={busy} onClick={()=>selectTopic(t)}>{labels[t]}</button>)}</div>)}</div>
     <form className="bi-form" onSubmit={e=>{e.preventDefault();submit()}}>
      <label className="sr-only" htmlFor="intelligence-question">Pergunta (não inclua dados pessoais)</label>
      <div className="bi-input"><textarea ref={input} id="intelligence-question" rows={2} maxLength={300} value={question} disabled={busy} onChange={e=>setQuestion(e.target.value)} placeholder="Faça uma pergunta sobre a sua barbearia..." onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();submit()}}}/>{data&&data.cloud.status!=='disabled'&&<VoiceQuestion compact shopId={shopId} disabled={ask.isPending||Boolean(question.trim())} onText={setQuestion} onBusy={setVoiceBusy}/>}</div>
@@ -76,7 +76,7 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
      <div ref={turns} className="bi-turns" aria-live="polite" aria-relevant="additions text" role="log">{history.map((turn,i)=><article className="bi-turn" key={i}><p className="bi-question">{turn.question}</p><p className="bi-answer">{turn.answer}</p>{turn.advice&&<><span className="bi-advice-label">Recomendações</span><p className="bi-answer">{turn.advice}</p></>}{['quota','unavailable'].includes(turn.cloud)&&<p className="bi-message">IA externa indisponível. Análise própria apresentada.</p>}</article>)}</div>
     </section>}
     <div className="bi-quick"><h3>Sugestões rápidas</h3>{quick.map(item=><button key={item.label} type="button" disabled={busy} onClick={()=>chooseQuick(item)}><item.icon size={20} aria-hidden="true"/><span>{item.label}</span><ChevronRight size={16} aria-hidden="true"/></button>)}</div>
-    <details className="bi-privacy"><summary>Privacidade e funcionamento</summary><p>Não inclua dados pessoais nas perguntas. A Groq recebe apenas tema, intenção e sinais qualitativos. O áudio é enviado apenas com confirmação. A IA não altera marcações, preços, pagamentos ou contactos.</p></details>
+    
    </section>
   </section>
   <section aria-label="Indicadores essenciais" className="bi-kpis" data-testid="intelligence-kpis">
@@ -96,6 +96,7 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
     <OperationalPlan shopId={shopId} userId={userId}/><FinancialIntelligence shopId={shopId} userId={userId}/>
    </div>}
   </div>}
+  <details className="bi-privacy"><summary>Privacidade e funcionamento</summary><p>Não inclua dados pessoais nas perguntas. A Groq recebe apenas tema, intenção e sinais qualitativos. O áudio é enviado apenas com confirmação. A IA não altera marcações, preços, pagamentos ou contactos.</p></details>
  </div>
  </Page>
 }

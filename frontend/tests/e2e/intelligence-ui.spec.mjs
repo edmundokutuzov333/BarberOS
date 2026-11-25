@@ -101,3 +101,15 @@ test('desktop layout preserves two columns and mobile layout has no horizontal o
  expect(mobile.y).toBeGreaterThanOrEqual(mobileHub.y+mobileHub.height);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });
+
+test('reference desktop geometry and icon semantics',async({page})=>{
+ await page.setViewportSize({width:1648,height:928});await fixture(page);
+ const hub=page.getByTestId('intelligence-hub'),panel=page.getByRole('region',{name:'Assistente de gestão'});
+ const a=await hub.boundingBox(),b=await panel.boundingBox();
+ expect(a.height).toBeGreaterThanOrEqual(600);expect(b.x).toBeGreaterThan(a.x+a.width);
+ await expect(panel.locator('.bi-topic-row')).toHaveCount(2);
+ for(const row of await panel.locator('.bi-topic-row').all())await expect(row.getByRole('button')).toHaveCount(4);
+ await expect(page.getByTestId('intelligence-kpis').locator('article')).toHaveCount(4);
+ await page.screenshot({path:test.info().outputPath('intelligence-reference-desktop.png'),fullPage:true,animations:'disabled'});
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:test.info().outputPath('intelligence-reference-mobile.png'),fullPage:true,animations:'disabled'});
+});

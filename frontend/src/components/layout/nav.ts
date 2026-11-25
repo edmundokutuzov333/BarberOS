@@ -1,4 +1,4 @@
-import { type LucideIcon, LayoutDashboard, CalendarDays, ClipboardList, Users, Scissors, Sparkles, UserRound, Clock, Hourglass, Bell, Mail, Star, BarChart3, Settings, CreditCard, Package, ClipboardCheck, BellRing, Banknote } from 'lucide-react';
+import { type LucideIcon, LayoutDashboard, CalendarDays, ClipboardList, Users, Scissors, BrainCircuit, createLucideIcon, UserRound, Clock, Hourglass, Bell, Mail, Star, BarChart3, Settings, CreditCard, Package, ClipboardCheck, BellRing, Banknote } from 'lucide-react';
 import type { Role } from '@/lib/shop';
 import { canAccessAppRoute } from '@/lib/permissions';
 
@@ -10,14 +10,24 @@ export interface NavItem {
   testId: string;
 }
 
+// Tabler Icons, razor-electric (v3.34.1), MIT. See third-party license.
+const HairClipper = createLucideIcon('HairClipper', [
+  ['path', {d:'M8 3v2',key:'tooth-left'}],
+  ['path', {d:'M12 3v2',key:'tooth-middle'}],
+  ['path', {d:'M16 3v2',key:'tooth-right'}],
+  ['path', {d:'M9 12v6a3 3 0 0 0 6 0v-6h-6z',key:'handle'}],
+  ['path', {d:'M8 5h8l-1 4h-6z',key:'blade'}],
+  ['path', {d:'M12 17v1',key:'switch'}],
+]);
+
 export const NAV: NavItem[] = [
   { to: '/app', label: 'Início', icon: LayoutDashboard, end: true, testId: 'nav-dashboard' },
-  { to: '/app/inteligencia', label: 'Inteligência', icon: Sparkles, testId: 'nav-intelligence' },
+  { to: '/app/inteligencia', label: 'Inteligência', icon: BrainCircuit, testId: 'nav-intelligence' },
   { to: '/app/agenda', label: 'Agenda', icon: CalendarDays, testId: 'nav-agenda' },
   { to: '/app/marcacoes', label: 'Marcações', icon: ClipboardList, testId: 'nav-marcacoes' },
   { to: '/app/clientes', label: 'Clientes', icon: Users, testId: 'nav-clientes' },
   { to: '/app/servicos', label: 'Serviços', icon: Scissors, testId: 'nav-servicos' },
-  { to: '/app/cortes', label: 'Cortes', icon: Sparkles, testId: 'nav-cortes' },
+  { to: '/app/cortes', label: 'Cortes', icon: HairClipper, testId: 'nav-cortes' },
   { to: '/app/barbeiros', label: 'Barbeiros', icon: UserRound, testId: 'nav-barbeiros' },
   { to: '/app/horarios', label: 'Horários', icon: Clock, testId: 'nav-horarios' },
   { to: '/app/lista-espera', label: 'Lista de espera', icon: Hourglass, testId: 'nav-lista-espera' },
