@@ -36,6 +36,17 @@ jobs:
           node ../scripts/compare-frontend-contracts.mjs "$RUNNER_TEMP/frontend-contracts.json" ../docs/contracts/production-2026-11-24.json ../docs/contracts/payment-simulator-staging.json
       - run: corepack yarn build
       - run: corepack yarn perf:budget
+      - name: Install Chromium for responsive route QA
+        run: corepack yarn playwright install --with-deps chromium
+      - name: Responsive route matrix (public read-only and authentication boundaries)
+        run: corepack yarn playwright test tests/e2e/responsive-route-matrix.spec.mjs --project=chromium --workers=2
+      - name: Upload responsive QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: responsive-route-qa
+          path: frontend/playwright-report
+          if-no-files-found: ignore
 
   contracts:
     runs-on: ubuntu-latest
