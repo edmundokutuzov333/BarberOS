@@ -86,5 +86,12 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_fixture
         run: corepack yarn playwright test tests/e2e/shop-catalog-ui.spec.mjs tests/e2e/store-launch-ui.spec.mjs --workers=1
 
+      - name: Management intelligence conversation, consent and onboarding browser regressions
+        env:
+          BARBEROS_E2E_NO_PREVIEW: '1'
+          VITE_SUPABASE_URL: https://intelligence-fixture.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_fixture
+        run: corepack yarn playwright test tests/e2e/intelligence-ui.spec.mjs --workers=1
+
       - name: Production asset budget
         run: corepack yarn perf:budget

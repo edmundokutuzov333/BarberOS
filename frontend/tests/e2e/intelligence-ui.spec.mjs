@@ -1,0 +1,68 @@
+import {test,expect} from '@playwright/test';
+import {createServer} from 'vite';
+let server,origin;
+const shopId='11111111-1111-4111-8111-111111111111';
+test.beforeAll(async()=>{
+ server=await createServer({root:process.cwd(),server:{host:'127.0.0.1',port:0,strictPort:false,hmr:false},logLevel:'error',plugins:[{name:'intelligence-fixture',enforce:'pre',transform(_src,id){
+ if(id.endsWith('/src/lib/shop.tsx'))return 'export const useShop=()=>({shop:{id:"'+shopId+'"},role:"owner"})';
+ if(id.endsWith('/src/lib/auth.tsx'))return 'export const useAuth=()=>({user:{id:"44444444-4444-4444-8444-444444444444"}})';
+ },configureServer(vite){vite.middlewares.use('/__intel-test',async(_req,res,next)=>{try{res.setHeader('Content-Type','text/html');res.end(await vite.transformIndexHtml('/__intel-test','<!doctype html><html lang="pt-MZ"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="root"></div><script type="module" src="/tests/fixtures/intelligence-entry.tsx"></script></body></html>'))}catch(e){next(e)}})}}]});
+ await server.listen();origin='http://127.0.0.1:'+server.httpServer.address().port;
+});
+test.afterAll(async()=>{await server?.close()});
+async function fixture(page){
+ const calls=[];
+ await page.addInitScript(()=>{
+  Object.defineProperty(navigator,'mediaDevices',{configurable:true,value:{getUserMedia:async()=>({getTracks:()=>[{stop(){window.__audioReleased=true}}]})}});
+  window.MediaRecorder=class{
+   static isTypeSupported(){return true}
+   state='inactive';mimeType='audio/webm;codecs=opus';
+   start(){this.state='recording'}
+   stop(){this.state='inactive';this.ondataavailable?.({data:new Blob([new Uint8Array([26,69,223,163,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])])});this.onstop?.()}
+  };
+ });
+ await page.route('https://*.supabase.co/**',async route=>{
+  const req=route.request();
+  const headers={'access-control-allow-origin':'*','access-control-allow-headers':'*'};
+  if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});
+  if(!req.url().includes('/functions/v1/barber-intelligence'))return route.abort();
+  const p=req.postDataJSON();calls.push(p);
+  let data;
+  if(p.action==='voice')data={version:1,text:'Como melhorar a agenda?'};
+  else if(p.action==='setup_guide')data={version:1,step:6,progress:3,title:'Horários',answer:'Confirme a disponibilidade oficial.',review:'Verifique a agenda.'};
+  else data={version:1,range:{today:'2026-11-25',from:'2026-11-18',to:'2026-11-24',previousFrom:'2026-11-11',previousTo:'2026-11-17',historyFrom:'2026-09-30'},topic:p.question?.includes('receita')?'finance':p.contextTopic??p.topic,metrics:{today:0,appointments:0,completed:0,noShow:null,occupancy:null,revenue:0,revenueChange:null,waiting:0,failedNotifications:0,customers:0,recentCustomers:0,lowStock:0},insights:[],forecast:[],answer:p.question?'Resposta calculada para '+p.question:'Resumo inicial.',cloud:{status:p.cloud?'generated':'available',advice:p.cloud?'1. Consulte os relatórios.':null}};
+  return route.fulfill({status:200,headers,contentType:'application/json',body:JSON.stringify(data)});
+ });
+ await page.goto(origin+'/__intel-test');await expect(page.getByTestId('intelligence-page')).toBeVisible();await expect(page.getByRole('button',{name:'Consultar com Groq'})).toBeVisible();
+ return calls;
+}
+test('conversation retains bounded context and resets explicitly',async({page})=>{
+ const calls=await fixture(page);
+ const question=page.getByLabel('Pergunta (não inclua dados pessoais)');
+ await question.fill('Qual foi a receita?');await page.getByRole('button',{name:'Consultar',exact:true}).click();
+ await expect(page.getByText('Resposta calculada para Qual foi a receita?',{exact:true})).toBeVisible();
+ await question.fill('E como melhorar?');await page.getByRole('button',{name:'Consultar com Groq'}).click();
+ await expect(page.getByText('1. Consulte os relatórios.',{exact:true})).toBeVisible();
+ expect(calls.at(-1)).toMatchObject({shopId,contextTopic:'finance',cloud:true,question:'E como melhorar?'});
+ await page.getByRole('button',{name:'Nova conversa'}).click();await expect(page.getByText('Resposta calculada para Qual foi a receita?',{exact:true})).toHaveCount(0);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+});
+test('audio is not uploaded until explicit consent and transcript is editable, not executed',async({page})=>{
+ const calls=await fixture(page);
+ await page.getByRole('button',{name:'Gravar pergunta'}).click();
+ await page.getByRole('button',{name:'Terminar gravação'}).click();
+ expect(calls.filter(c=>c.action==='voice')).toHaveLength(0);
+ await page.getByRole('button',{name:'Enviar áudio à Groq e transcrever'}).click();
+ await expect(page.getByLabel('Pergunta (não inclua dados pessoais)')).toHaveValue('Como melhorar a agenda?');
+ expect(calls.filter(c=>c.action==='voice')).toHaveLength(1);
+ expect(calls.at(-1)).toMatchObject({shopId,action:'voice',consent:true,mime:'audio/webm'});
+ expect(calls.filter(c=>c.question)).toHaveLength(0);
+ expect(await page.evaluate(()=>window.__audioReleased)).toBe(true);
+});
+test('setup guide reads the step without changing configuration',async({page})=>{
+ const calls=await fixture(page);
+ await page.getByRole('button',{name:'Ajuda inteligente de configuração'}).click();
+ await page.getByRole('button',{name:'Como posso verificar?'}).click();
+ await expect(page.getByText('Confirme a disponibilidade oficial.',{exact:true})).toBeVisible();
+ expect(calls.at(-1)).toMatchObject({shopId,action:'setup_guide',step:6,intent:'verify'});
+});

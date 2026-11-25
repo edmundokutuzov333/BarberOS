@@ -51,6 +51,7 @@ async function fixture(page) {
     if (req.method()==='OPTIONS') return route.fulfill({ status:204,headers:{'access-control-allow-origin':'*','access-control-allow-headers':'*'} });
     if (req.url().includes('/functions/v1/barber-intelligence')) {
       const payload=req.postDataJSON();
+      if(payload.action==='mail_intent'){state.classifications??=[];state.classifications.push(payload);return route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({version:1,kind:'reschedule',ambiguous:false})});}
       state.drafts??=[];state.drafts.push(payload);
       return route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({version:1,kind:payload.kind,subject:'Assunto sugerido',body:'Rascunho de teste para revisão.'})});
     }
@@ -248,4 +249,16 @@ test('management writing assistant previews, protects existing text and never se
   await expect(page.getByLabel('Assunto',{exact:true})).toHaveValue('Assunto sugerido');
   await expect(page.getByLabel('Mensagem',{exact:true})).toHaveValue('Rascunho de teste para revisão.');
   expect(state.sends).toHaveLength(0);
+});
+
+test('private purpose classification is explicit and never sends mail',async({page})=>{
+ const state=await fixture(page);
+ await expect(page.getByTestId('gmail-thread').locator('article')).toHaveCount(1);
+ await page.getByRole('button',{name:'Assistente de escrita'}).click();
+ expect(state.classifications).toBeUndefined();
+ await page.getByRole('button',{name:'Identificar finalidade da última mensagem'}).click();
+ await expect(page.getByLabel('Finalidade')).toHaveValue('reschedule');
+ expect(state.classifications).toHaveLength(1);
+ expect(state.classifications[0]).toMatchObject({action:'mail_intent',topic:'communications',text:'Conteúdo controlado.'});
+ expect(state.sends).toHaveLength(0);
 });
