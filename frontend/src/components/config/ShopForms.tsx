@@ -88,7 +88,7 @@ export function ProfileForm({ onDone, compact }: { onDone?: () => void; compact?
       </div>
       {!compact && (
         <>
-          <Field data-testid="profile-instagram-input" label="Instagram" name="p_instagram" prefix="@" className="!pl-10" value={f.instagram.replace(/^@/, '')} onChange={set('instagram')} placeholder="abarbearia" />
+          <Field data-testid="profile-instagram-input" label="Instagram" name="p_instagram" prefix="@" value={f.instagram.replace(/^@/, '')} onChange={set('instagram')} placeholder="abarbearia" />
           <Field data-testid="profile-address-input" label="Morada" name="p_address" value={f.address} onChange={set('address')} placeholder="Av. Julius Nyerere, 123, Maputo" />
           <Field data-testid="profile-maps-input" label="Link do Google Maps" name="p_maps" type="url" value={f.maps_url} onChange={set('maps_url')} placeholder="https://maps.app.goo.gl/..." />
         </>
