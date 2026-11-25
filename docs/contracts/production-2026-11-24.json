@@ -895,6 +895,16 @@
       "authenticated_execute": true
     },
     {
+      "name": "get_intelligence_cloud_config",
+      "returns": "jsonb",
+      "anon_execute": false,
+      "definition_md5": "3dc07c28af3bd074c48a84653c732902",
+      "input_arguments": [],
+      "identity_arguments": "",
+      "authenticated_execute": false,
+      "required_argument_count": 0
+    },
+    {
       "name": "get_notification_automation_status",
       "returns": "TABLE(dispatcher_active boolean, dispatcher_last_run_at timestamp with time zone, dispatcher_last_run_status text, dispatcher_last_run_message text)",
       "anon_execute": false,
@@ -2068,9 +2078,9 @@
     {
       "name": "barber-intelligence",
       "status": "ACTIVE",
-      "version": 5,
+      "version": 6,
       "verify_jwt": true,
-      "bundle_sha256": "bdf115e2d1459d82a08bd30ce042c9f299b0bb8fc902ba164070286ad98043ae"
+      "bundle_sha256": "6685a8a69404936013cbcd9fe74da0115aeca3fd28d7ccfad87372c937a8b872"
     },
     {
       "name": "booking-create",
@@ -2188,8 +2198,20 @@
     "source": "Supabase management API list_edge_functions",
     "project_ref": "alseiinjzwjdiwtvkdzy",
     "edge": "barber-intelligence",
-    "version": 5,
-    "bundle_sha256": "bdf115e2d1459d82a08bd30ce042c9f299b0bb8fc902ba164070286ad98043ae",
-    "scope": "Deployment metadata only; authenticated HTTP and UI acceptance remain separate."
+    "version": 6,
+    "bundle_sha256": "6685a8a69404936013cbcd9fe74da0115aeca3fd28d7ccfad87372c937a8b872",
+    "scope": "Production deployment metadata; actual authenticated Groq generation verified in staging."
+  },
+  "intelligence_groq_capture": {
+    "captured_on": "2026-11-25",
+    "credential_storage": "Supabase Vault",
+    "service_role_execute": true,
+    "anon_execute": false,
+    "authenticated_execute": false,
+    "staging_authenticated_generation": "HTTP 200; cloud.status generated",
+    "provider_model": "openai/gpt-oss-20b",
+    "observed_rpd": 1000,
+    "observed_tpm": 8000,
+    "production_activation": "Vault configuration present; edge active; production authenticated browser not yet certified"
   }
 }

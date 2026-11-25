@@ -160,7 +160,8 @@
     "20261124110000_booking_catalog_relationships.sql",
     "20261124110100_booking_service_composition.sql",
     "20261124110200_booking_catalog_production_hardening.sql",
-    "20261124110300_booking_catalog_fk_indexes.sql"
+    "20261124110300_booking_catalog_fk_indexes.sql",
+    "20261125095933_intelligence_groq_vault_boundary.sql"
   ],
   "projects": {
     "production": {
@@ -802,6 +803,10 @@
         {
           "version": "20261124100531",
           "name": "booking_catalog_fk_indexes"
+        },
+        {
+          "version": "20261125100135",
+          "name": "intelligence_groq_vault_boundary"
         }
       ]
     },
@@ -1396,6 +1401,10 @@
         {
           "version": "20261124100525",
           "name": "booking_catalog_fk_indexes"
+        },
+        {
+          "version": "20261125095933",
+          "name": "intelligence_groq_vault_boundary"
         }
       ]
     }
@@ -1766,5 +1775,11 @@
       "20261124110300_booking_catalog_fk_indexes.sql"
     ],
     "production_history_preserved": true
+  },
+  "intelligence_groq_capture": {
+    "source_file": "20261125095933_intelligence_groq_vault_boundary.sql",
+    "staging_version": "20261125095933",
+    "production_version": "20261125100135",
+    "evidence": "Supabase migration history and live privilege verification on both projects; same migration SQL, timestamp alias in production."
   }
 }
