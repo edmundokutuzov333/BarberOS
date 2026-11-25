@@ -87,8 +87,8 @@ begin
   ) returning id into v_product;
 
   insert into public.shop_product_variants(
-    barbershop_id, product_id, label, unit_label, price_minor, is_active
-  ) values (v_shop, v_product, 'Unidade QA', 'unidade', 1234, true)
+    barbershop_id, product_id, label, unit_label, price_minor, regular_price_minor, cost_minor, is_active
+  ) values (v_shop, v_product, 'Unidade QA', 'unidade', 1234, 1500, 700, true)
   returning id into v_variant;
 
   perform public.record_shop_inventory_movement(v_shop, v_variant, 5, 'opening_balance', 'Fase 4 rollback fixture');
@@ -101,6 +101,7 @@ begin
   update public.shop_products set is_active = true where id = v_product;
   perform set_config('request.jwt.claim.role','service_role',true);
 
+  if not exists(select 1 from jsonb_array_elements(public.get_public_shop_catalog(v_slug)->'products') p cross join lateral jsonb_array_elements(p->'variants') v where v->>'id'=v_variant::text and (v->>'price_minor')::bigint=1234 and (v->'attributes'->>'regular_price_minor')::bigint=1500 and not(v?'cost_minor') and not(v->'attributes'?'cost_minor')) then raise exception 'FAIL promo public contract';end if;
   v_items := jsonb_build_array(jsonb_build_object(
     'variant_id', v_variant,
     'qty', 2,
@@ -133,7 +134,7 @@ begin
     where i.order_id = v_order and i.barbershop_id = v_shop
       and i.product_id = v_product and i.variant_id = v_variant
       and i.product_name_snapshot = 'Produto Fase 4 QA'
-      and i.unit_price_snapshot = 1234 and i.qty = 2
+      and i.unit_price_snapshot = 1234 and i.unit_cost_snapshot=700 and i.qty = 2
       and i.line_total_snapshot = 2468
       and i.options->'preferences' = '["Sem açúcar"]'::jsonb
       and i.options->>'fulfilment_mode' = 'consume_here'
@@ -237,7 +238,10 @@ begin
     where order_id = v_order and variant_id = v_variant and status = 'released' and released_at is not null
   ) then raise exception 'FAIL: appointment cancellation did not release reserved stock'; end if;
 
+  update public.shop_product_variants set cost_minor=900 where id=v_variant;
+  if not exists(select 1 from public.appointment_product_order_items where order_id=v_order and unit_cost_snapshot=700) then raise exception 'FAIL historical cost drift';end if;
   v_order_json := public.get_shop_order_by_manage_token(v_manage_token);
+  if v_order_json::text like '%unit_cost_snapshot%' then raise exception 'FAIL public cost leak';end if;
   if v_order_json->>'status' <> 'cancelled'
      or (v_order_json->>'subtotal_minor')::bigint <> 2468
      or jsonb_array_length(v_order_json->'items') <> 1 then
