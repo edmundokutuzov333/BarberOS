@@ -58,7 +58,7 @@ export const MAX_AUDIO_BYTES=8*1024*1024;
 export const MAX_QUESTION_CHARS=12000;
 export async function transcribeQuestion(shopId:string,audio:string,mime:string){
  const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'voice',days:7,topic:'overview',audio,mime,consent:true}});
- if(error){const status=error.context?.status;if(status===429)throw new Error('VOICE_QUOTA');if(status===413)throw new Error('VOICE_SIZE');throw new Error('VOICE_UNAVAILABLE');}return z.object({version:z.literal(1),text:z.string().min(1).max(MAX_QUESTION_CHARS)}).parse(data);
+ if(error){const status='context' in error?(error.context as Response|undefined)?.status:undefined;if(status===429)throw new Error('VOICE_QUOTA');if(status===413)throw new Error('VOICE_SIZE');throw new Error('VOICE_UNAVAILABLE');}return z.object({version:z.literal(1),text:z.string().min(1).max(MAX_QUESTION_CHARS)}).parse(data);
 }
 export async function classifyCommunication(shopId:string,text:string){
  const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'mail_intent',days:7,topic:'communications',text:text.slice(0,2000)}});

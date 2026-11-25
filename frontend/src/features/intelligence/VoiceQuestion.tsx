@@ -11,8 +11,8 @@ export default function VoiceQuestion({shopId,disabled,onText,onBusy,compact=fal
  useEffect(()=>{onBusy(status!=='idle');return()=>onBusy(false)},[status,onBusy]);
  const release=()=>{stream.current?.getTracks().forEach(t=>t.stop());stream.current=null};
  const clearAudio=()=>{audio.current=null;if(url.current)URL.revokeObjectURL(url.current);url.current=null};
- useEffect(()=>{active.current=true;return()=>{active.current=false;const r=recorder.current;if(r){r.onstop=null;r.ondataavailable=null;r.onerror=null;if(r.state!=='inactive')r.stop()}release();clearAudio()}},[]);
- const discard=()=>{const r=recorder.current;if(r){r.onstop=null;r.ondataavailable=null;r.onerror=null;if(r.state!=='inactive')r.stop()}recorder.current=null;release();clearAudio();locked.current=false;setPreview(null);setError('');setStatus('idle')};
+ useEffect(()=>{active.current=true;return()=>{active.current=false;const r=recorder.current;if(r){r.onstop=null;r.ondataavailable=null;r.onerror=null;if(r.state!=='inactive'){try{r.stop()}catch{/* already released */}}}release();clearAudio()}},[]);
+ const discard=()=>{const r=recorder.current;if(r){r.onstop=null;r.ondataavailable=null;r.onerror=null;if(r.state!=='inactive'){try{r.stop()}catch{/* already released */}}}recorder.current=null;release();clearAudio();locked.current=false;setPreview(null);setError('');setStatus('idle')};
  const stop=()=>{const r=recorder.current;if(r?.state==='recording')r.stop();release()};
  async function start(){
   if(!supported||disabled||status!=='idle'||locked.current)return;locked.current=true;setError('');setStatus('starting');
@@ -23,7 +23,7 @@ export default function VoiceQuestion({shopId,disabled,onText,onBusy,compact=fal
    if(!mime)throw Error('unsupported');
    const r=new MediaRecorder(s,{mimeType:mime,audioBitsPerSecond:64000});recorder.current=r;const chunks:Blob[]=[];let size=0,limit=false;
    r.ondataavailable=e=>{if(!e.data.size||limit)return;size+=e.data.size;if(size>MAX_AUDIO_BYTES){limit=true;if(r.state==='recording')r.stop();release();return}chunks.push(e.data)};
-   r.onerror=()=>{r.onstop=null;release();if(active.current){setError('Não foi possível gravar. Tente novamente ou escreva a pergunta.');locked.current=false;setStatus('idle')}};
+   r.onerror=()=>{r.onstop=null;r.ondataavailable=null;if(r.state!=='inactive'){try{r.stop()}catch{/* device released */}}release();if(active.current){setError('Não foi possível gravar. Tente novamente ou escreva a pergunta.');locked.current=false;setStatus('idle')}};
    r.onstop=()=>{release();if(!active.current)return;locked.current=false;const b=new Blob(chunks,{type:r.mimeType.split(';')[0]});if(limit||!b.size){setError(limit?'O áudio excedeu o tamanho máximo de 8 MiB. Grave em partes para não perder conteúdo.':'Gravação vazia. Tente novamente.');setStatus('idle');return}audio.current=b;url.current=URL.createObjectURL(b);setPreview(url.current);setStatus('review')};
    r.start(1000);setStatus('recording'); // No time-based automatic stop.
   }catch{release();if(active.current){locked.current=false;setStatus('idle');setError('Microfone indisponível. Verifique as permissões ou escreva a pergunta.')}}

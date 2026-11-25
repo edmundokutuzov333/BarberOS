@@ -134,7 +134,7 @@ test('every theme changes the three quick questions without consuming a cloud re
 });
 test('recording stays active beyond the former timer and can be cancelled without upload',async({page})=>{
  const calls=await fixture(page);
- await page.clock.install();
+ await page.clock.install({time:new Date('2026-11-25T12:00:00Z')});
  await page.getByRole('button',{name:'Gravar pergunta'}).click();
  await expect(page.getByRole('button',{name:'Terminar gravação',exact:true})).toBeVisible();
  await page.clock.fastForward(25000);
@@ -148,4 +148,18 @@ test('wordmark uses exact brand case and reduced motion disables orbital animati
  await page.emulateMedia({reducedMotion:'reduce'});await fixture(page);
  await expect(page.locator('.bi-core strong')).toHaveText('BarberOS');
  expect(await page.locator('.bi-core-rim').evaluate(el=>getComputedStyle(el).animationName)).toBe('none');
+});
+
+test('transcription errors retain the recording for review and explicit discard',async({page})=>{
+ const calls=await fixture(page);
+ await page.route('https://*.supabase.co/functions/v1/barber-intelligence',async route=>{
+  const req=route.request();if(req.method()==='POST'&&req.postDataJSON()?.action==='voice')return route.fulfill({status:503,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({error:'VOICE_UNAVAILABLE'})});return route.fallback();
+ });
+ await page.getByRole('button',{name:'Gravar pergunta'}).click();await page.getByRole('button',{name:'Terminar gravação',exact:true}).click();
+ await page.getByRole('button',{name:'Enviar áudio à Groq e transcrever'}).click();
+ await expect(page.getByRole('alert').filter({hasText:'A gravação continua disponível'})).toBeVisible();
+ await expect(page.locator('audio[aria-label="Ouvir gravação"]')).toBeVisible();
+ await page.getByRole('button',{name:'Descartar áudio'}).click();
+ await expect(page.locator('audio[aria-label="Ouvir gravação"]')).toHaveCount(0);
+ expect(calls.filter(c=>c.question)).toHaveLength(0);
 });
