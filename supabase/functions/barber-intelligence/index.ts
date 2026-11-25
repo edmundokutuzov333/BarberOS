@@ -7,6 +7,7 @@ import { operationalPlan, draftKinds, prepareDraft } from "./operations.mjs";
 import { inventoryIntelligence, reviewIntelligence } from "./quality.mjs";
 import { financialIntelligence } from "./finance.mjs";
 import { customerIntelligence } from "./customer.mjs";
+import { metricQuestion, metricAnswer, metricSource } from "./answers.mjs";
 import { resolveIntent, classifyMail, setupGuide } from "./conversation.mjs";
 import { credentialFromVault, genericAdvice, decodeAudio, transcribeAudio } from "./provider.mjs";
 
@@ -71,7 +72,7 @@ Deno.serve(async (req:Request)=>{
     const params={p_shop:shopId,p_from:range.from,p_to:range.to};
     const rpc=async(name:string,args:Record<string,unknown>)=>{const {data,error}=await client.rpc(name,args);if(error||data===null)throw new Error("DATA_UNAVAILABLE");return data};
     const first=(v:unknown)=>{if(!Array.isArray(v)||!v[0]||typeof v[0]!=="object")throw new Error("DATA_UNAVAILABLE");return v[0]};
-    if(body.action==="finance"){
+    const loadFinance=async()=>{
       const [current,previous,services,barbers,staff,store]=await Promise.all([
         rpc("get_report_summary",params).then(first),
         rpc("get_report_summary",{p_shop:shopId,p_from:range.previousFrom,p_to:range.previousTo}).then(first),
@@ -79,27 +80,31 @@ Deno.serve(async (req:Request)=>{
         rpc("get_staff_earnings",{...params,p_offset:0}).catch(()=>null),
         shop.shop_enabled?rpc("get_shop_phase6_report",{p_barbershop_id:shopId,p_from:range.from,p_to:range.to}).catch(()=>null):Promise.resolve(null)
       ]);
-      return json(financialIntelligence(current,previous,services,barbers,staff,store,range));
-    }
-    if(body.action==="reviews"){
-      const rows=await rpc("get_reviews",{p_shop:shopId,p_published:"all",p_limit:100,p_offset:0});
-      return json(reviewIntelligence(rows));
-    }
-    if(body.action==="inventory"){
-      if(!shop.shop_enabled)return json({error:"SHOP_DISABLED"},409);
+      return financialIntelligence(current,previous,services,barbers,staff,store,range);
+    };
+    const loadReviews=async()=>reviewIntelligence(await rpc("get_reviews",{p_shop:shopId,p_published:"all",p_limit:100,p_offset:0}));
+    const loadInventory=async()=>{
+      if(!shop.shop_enabled)throw new Error("SHOP_DISABLED");
       const now=new Date(),start=new Date(now.getTime()-30*86400000).toISOString();
       const results=await Promise.all([
         client.from("shop_products").select("id,name,track_stock,is_active,created_at",{count:"exact"}).eq("barbershop_id",shopId).eq("track_stock",true).eq("is_active",true).limit(1000),
         client.from("shop_product_variants").select("id,product_id,label,is_active,stock_on_hand,low_stock_threshold,created_at",{count:"exact"}).eq("barbershop_id",shopId).eq("is_active",true).limit(1000),
         client.from("inventory_movements").select("id,variant_id,delta_qty,reason,created_at",{count:"exact"}).eq("barbershop_id",shopId).eq("reason","sale").gte("created_at",start).lt("created_at",now.toISOString()).limit(1000)
       ]);
-      if(results.some(r=>r.error||!Array.isArray(r.data)||r.count!==r.data.length))return json({error:"INVENTORY_ANALYSIS_UNAVAILABLE"},503);
-      return json(inventoryIntelligence(results[0].data!,results[1].data!,results[2].data!,now));
-    }
-    if(body.action==="operations"){
+      if(results.some(r=>r.error||!Array.isArray(r.data)||r.count!==r.data.length))throw new Error("INVENTORY_ANALYSIS_UNAVAILABLE");
+      return inventoryIntelligence(results[0].data!,results[1].data!,results[2].data!,now);
+    };
+    const loadPlan=async()=>{
       const [history,future]=await Promise.all([rpc("get_report_daily",{p_shop:shopId,p_from:range.historyFrom,p_to:range.to}),rpc("get_report_daily",{p_shop:shopId,p_from:shift(range.today,1),p_to:shift(range.today,7)})]);
-      return json(operationalPlan(history,future,range.today,shop.onboarding_step));
+      return operationalPlan(history,future,range.today,shop.onboarding_step);
+    };
+    if(body.action==="finance")return json(await loadFinance());
+    if(body.action==="reviews")return json(await loadReviews());
+    if(body.action==="inventory"){
+      if(!shop.shop_enabled)return json({error:"SHOP_DISABLED"},409);
+      try{return json(await loadInventory())}catch{return json({error:"INVENTORY_ANALYSIS_UNAVAILABLE"},503)}
     }
+    if(body.action==="operations")return json(await loadPlan());
     if(body.action==="customer"){
       const args={p_shop:shopId,p_customer:body.customerId};
       const {data:customer,error:ce}=await client.rpc("get_customer",args);
@@ -119,9 +124,17 @@ Deno.serve(async (req:Request)=>{
       rpc("get_report_daily",{p_shop:shopId,p_from:range.historyFrom,p_to:range.to}),
       shop.shop_enabled?rpc("get_shop_phase6_report",{p_barbershop_id:shopId,p_from:range.from,p_to:range.to}).catch(()=>null):Promise.resolve(null)
     ]);
+    const specific=metricQuestion(body.question);
     const resolved=resolveIntent(body.question,body.topic,body.contextTopic,topicFor);
+    if(specific){resolved.topic=specific.topic;resolved.recognized=true}
     const topic=resolved.topic;
     const result=analyze({current,previous,dashboard,crm,wait,notifications,services,barbers,history,store},range,topic);
+    if(specific){
+      const source=metricSource(specific.target);
+      const loaders={finance:loadFinance,reviews:loadReviews,inventory:loadInventory,plan:loadPlan};
+      const details=source?{[source]:await loaders[source as keyof typeof loaders]().catch(()=>null)}:{};
+      result.answer=metricAnswer(specific.target,result,details);
+    }
     if(!resolved.recognized)result.answer="Não identifiquei o tema da pergunta. Escolha uma das áreas disponíveis. "+result.answer;
     if(resolved.recognized&&resolved.intent==="next"){const relevant=result.insights.filter(i=>i.category===topic||topic==="overview").slice(0,3);if(relevant.length)result.answer+="\n\nPróximos passos:\n"+relevant.map(i=>i.detail).join("\n");}
     if(resolved.recognized&&resolved.intent==="explain"){
