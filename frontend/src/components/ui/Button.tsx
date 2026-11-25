@@ -13,9 +13,9 @@ const variants: Record<Variant, string> = {
 };
 
 const sizes: Record<Size, string> = {
-  sm: 'min-h-10 h-10 px-3.5 text-xs',
-  md: 'min-h-11 h-11 px-5 text-sm',
-  lg: 'min-h-12 h-12 px-6 text-base',
+  sm: 'min-h-10 px-3.5 py-2 text-xs',
+  md: 'min-h-11 px-5 py-2.5 text-sm',
+  lg: 'min-h-12 px-6 py-3 text-base',
 };
 
 export interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'ref'> {
@@ -38,8 +38,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         aria-busy={loading || undefined}
         className={cn(
-          'inline-flex items-center justify-center gap-2 select-none whitespace-nowrap transition-[background-color,color,border-color,filter,box-shadow,opacity] duration-150',
-          'disabled:opacity-50 disabled:pointer-events-none',
+          'inline-flex items-center justify-center gap-2 select-none min-w-0 max-w-full whitespace-normal break-words text-center leading-snug transition-[background-color,color,border-color,filter,box-shadow,opacity] duration-150',
+          'disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft focus-visible:ring-offset-2 focus-visible:ring-offset-black [&>svg]:shrink-0',
           pill ? 'rounded-full' : 'rounded-2xl',
           variants[variant],
           sizes[size],
@@ -50,7 +50,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading && (
           <span
-            className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin opacity-70"
+            className="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-current border-t-transparent animate-spin opacity-70"
             aria-hidden="true"
           />
         )}
