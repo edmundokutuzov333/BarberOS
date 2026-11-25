@@ -21,7 +21,7 @@ const TABS = [
 
 export default function Definicoes() {
   const { tab } = useParams();
-  const { role } = useShop();
+  const { role, shop } = useShop();
   const tabs = TABS.filter((item) => item.key !== 'pagamentos' && item.key !== 'utilizadores'
     ? true
     : item.key === 'pagamentos'
@@ -31,19 +31,19 @@ export default function Definicoes() {
   if (!t) return <Navigate to={tabs[0] ? `/app/definicoes/${tabs[0].key}` : '/app'} replace />;
 
   return (
-    <Page testId="definicoes-page" title="Definições">
-      <nav className="flex gap-1 overflow-x-auto no-scrollbar mb-5 -mx-1 px-1" aria-label="Secções">
+    <Page testId="definicoes-page" title="Definições" subtitle="Gerir a identidade, as regras e os acessos da barbearia.">
+      <nav className="flex flex-wrap gap-2 mb-6" aria-label="Secções">
         {tabs.map((x) => (
           <NavLink key={x.key} to={`/app/definicoes/${x.key}`} data-testid={`settings-tab-${x.key}`}
-            className={({ isActive }) => cn('rounded-full px-4 h-9 inline-flex items-center text-xs whitespace-nowrap border transition-colors', isActive ? 'bg-accent-soft text-accent-ink border-transparent font-medium' : 'border-white/10 text-ink-mid hover:text-ink-hi')}>
+            className={({ isActive }) => cn('rounded-full px-4 min-h-11 inline-flex items-center text-sm whitespace-nowrap border transition-colors', isActive ? 'bg-accent-soft text-accent-ink border-transparent font-medium' : 'border-white/10 text-ink-mid hover:text-ink-hi')}>
             {x.label}
           </NavLink>
         ))}
       </nav>
-      <Panel testId={`settings-panel-${t.key}`} className="max-w-3xl">
+      <Panel testId={`settings-panel-${t.key}`} className={t.key==='perfil'?'max-w-5xl':'max-w-3xl'}>
         <h2 className="t-card">{t.title}</h2>
         <p className="t-body text-ink-mid mt-1 mb-6">{t.body}</p>
-        {t.key === 'perfil' && <ProfileForm key="perfil" />}
+        {t.key === 'perfil' && <ProfileForm key={shop?.id ?? 'perfil'} />}
         {t.key === 'pagina' && <ThemePicker key="pagina" />}
         {t.key === 'regras' && <RulesForm key="regras" />}
         {t.key === 'sinal' && <DepositForm key="sinal" />}
