@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {createServer} from 'vite';
+import {quickPrompts} from '../../../supabase/functions/barber-intelligence/quick-prompts.mjs';
 let server,origin;
 const shopId='11111111-1111-4111-8111-111111111111';
 test.beforeAll(async()=>{
@@ -30,7 +31,7 @@ async function fixture(page){
   let data;
   if(p.action==='voice')data={version:1,text:'Como melhorar a agenda?'};
   else if(p.action==='setup_guide')data={version:1,step:6,progress:3,title:'Horários',answer:'Confirme a disponibilidade oficial.',review:'Verifique a agenda.'};
-  else data={version:1,range:{today:'2026-11-25',from:'2026-11-18',to:'2026-11-24',previousFrom:'2026-11-11',previousTo:'2026-11-17',historyFrom:'2026-09-30'},topic:p.question?.includes('receita')?'finance':p.contextTopic??p.topic,metrics:{today:24,appointments:32,completed:21,noShow:null,occupancy:78,revenue:1250000,revenueChange:24,waiting:0,failedNotifications:0,customers:0,recentCustomers:0,lowStock:0},insights:[],forecast:[],answer:p.question?'Resposta calculada para '+p.question:'Resumo inicial.',cloud:{status:p.cloud?'generated':'available',advice:p.cloud?'1. Consulte os relatórios.':null}};
+  else data={suggestions:quickPrompts,version:1,range:{today:'2026-11-25',from:'2026-11-18',to:'2026-11-24',previousFrom:'2026-11-11',previousTo:'2026-11-17',historyFrom:'2026-09-30'},topic:p.question?.includes('receita')?'finance':p.contextTopic??p.topic,metrics:{today:24,appointments:32,completed:21,noShow:null,occupancy:78,revenue:1250000,revenueChange:24,waiting:0,failedNotifications:0,customers:0,recentCustomers:0,lowStock:0},insights:[],forecast:[],answer:p.question?'Resposta calculada para '+p.question:'Resumo inicial.',cloud:{status:p.cloud?'generated':'available',advice:p.cloud?'1. Consulte os relatórios.':null}};
   return route.fulfill({status:200,headers,contentType:'application/json',body:JSON.stringify(data)});
  });
  await page.goto(origin+'/__intel-test');await expect(page.getByTestId('intelligence-page')).toBeVisible();await expect(page.getByRole('button',{name:'Consultar IA'})).toBeVisible();
@@ -116,4 +117,35 @@ test('reference desktop geometry and icon semantics',async({page})=>{
  await expect(page.getByTestId('intelligence-kpis').locator('article')).toHaveCount(4);
  await page.screenshot({path:test.info().outputPath('intelligence-reference-desktop.png'),fullPage:false,animations:'disabled'});
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:test.info().outputPath('intelligence-reference-mobile.png'),fullPage:true,animations:'disabled'});
+});
+
+test('every theme changes the three quick questions without consuming a cloud request',async({page})=>{
+ const calls=await fixture(page);const prompts=page.getByTestId('quick-suggestions');const names={overview:'Visão geral',agenda:'Agenda e procura',finance:'Receitas',customers:'Clientes',team:'Equipa',stock:'Loja e stock',communications:'Comunicações',marketing:'Marketing'};
+ for(const [topic,label] of Object.entries(names)){
+  await page.locator('.bi-topics').getByRole('button',{name:label,exact:true}).click();
+  await expect(prompts.getByRole('button')).toHaveCount(3);
+  for(const q of quickPrompts[topic])await expect(prompts.getByRole('button',{name:q,exact:true})).toBeVisible();
+  await prompts.getByRole('button',{name:quickPrompts[topic][0],exact:true}).click();
+  await expect(page.getByLabel('Pergunta (não inclua dados pessoais)')).toHaveValue(quickPrompts[topic][0]);
+ }
+ expect(calls.filter(c=>c.cloud)).toHaveLength(0);
+ await page.getByRole('button',{name:'Consultar IA',exact:true}).click();
+ await expect.poll(()=>calls.filter(c=>c.question).at(-1)).toMatchObject({topic:'marketing',question:quickPrompts.marketing[0]});
+});
+test('recording stays active beyond the former timer and can be cancelled without upload',async({page})=>{
+ const calls=await fixture(page);
+ await page.clock.install();
+ await page.getByRole('button',{name:'Gravar pergunta'}).click();
+ await expect(page.getByRole('button',{name:'Terminar gravação',exact:true})).toBeVisible();
+ await page.clock.fastForward(25000);
+ await expect(page.getByRole('button',{name:'Terminar gravação',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Cancelar',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Gravar pergunta'})).toBeVisible();
+ expect(calls.filter(c=>c.action==='voice')).toHaveLength(0);
+ expect(await page.evaluate(()=>window.__audioReleased)).toBe(true);
+});
+test('wordmark uses exact brand case and reduced motion disables orbital animation',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});await fixture(page);
+ await expect(page.locator('.bi-core strong')).toHaveText('BarberOS');
+ expect(await page.locator('.bi-core-rim').evaluate(el=>getComputedStyle(el).animationName)).toBe('none');
 });

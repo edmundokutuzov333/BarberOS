@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Sparkles, BrainCircuit, RefreshCw, CalendarDays, ChevronDown, ChevronRight, TrendingUp, TrendingDown, Users, Target, Coins, ArrowUpRight, BarChart3, CalendarCheck, type LucideIcon } from 'lucide-react';
+import { Sparkles, BrainCircuit, RefreshCw, CalendarDays, ChevronDown, ChevronRight, TrendingUp, TrendingDown, Users, Target, Coins, ArrowUpRight, BarChart3, CalendarCheck, MessageCircle, Package, Megaphone, Settings, type LucideIcon } from 'lucide-react';
 import { Page } from '@/components/layout/Page';
 import { Skeleton, ErrorState } from '@/components/ui/States';
 import { useShop } from '@/lib/shop';
 import { useAuth } from '@/lib/auth';
 import { formatMT } from '@/lib/utils';
-import { loadIntelligence, labels, type Topic, type Intelligence } from '@/features/intelligence/api';
+import { loadIntelligence, labels, MAX_QUESTION_CHARS, type Topic, type Intelligence } from '@/features/intelligence/api';
 import IntelligenceHub from '@/features/intelligence/IntelligenceHub';
 import VoiceQuestion from '@/features/intelligence/VoiceQuestion';
 import FinancialIntelligence from '@/features/intelligence/FinancialIntelligence';
@@ -15,11 +15,7 @@ import OperationalPlan from '@/features/intelligence/OperationalPlan';
 import '@/features/intelligence/intelligence.css';
 
 const mainTopics:Topic[]=['overview','agenda','finance','customers','team','stock','communications','marketing'];
-const quick: {label:string; question:string; topic:Topic; icon:LucideIcon}[]=[
- {label:'Como posso aumentar a ocupação da agenda?',question:'Como posso aumentar a ocupação da agenda?',topic:'agenda',icon:TrendingUp},
- {label:'Que dias são melhores para campanhas?',question:'Que dias da próxima semana são melhores para campanhas?',topic:'marketing',icon:CalendarDays},
- {label:'Como posso melhorar a fidelização de clientes?',question:'Como posso melhorar a fidelização de clientes?',topic:'customers',icon:Users}
-];
+const quickIcons:Record<Topic,LucideIcon>={overview:Target,agenda:CalendarDays,finance:Coins,customers:Users,team:Users,stock:Package,communications:MessageCircle,marketing:Megaphone,setup:Settings};
 const fmt=(v:number|null)=>v===null?'—':new Intl.NumberFormat('pt-PT',{maximumFractionDigits:1}).format(v);
 const pct=(v:number|null)=>v===null?'—':fmt(v)+'%';
 type Turn={question:string;answer:string;advice:string|null;topic:Topic;cloud: Intelligence['cloud']['status']};
@@ -52,7 +48,8 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
  const reset=()=>{ask.reset();setHistory([]);setQuestion('')};
  const selectTopic=(next:Topic,focus=false)=>{if(busy)return;reset();setTopic(next);if(focus)input.current?.focus({preventScroll:true})};
  const submit=()=>{if(busy||!data)return;ask.mutate({question:question.trim()||undefined,topic,context:contextTopic,cloud:data.cloud.status!=='disabled'})};
- const chooseQuick=(item:typeof quick[number])=>{if(busy)return;reset();setTopic(item.topic);setQuestion(item.question);input.current?.focus()};
+ const chooseQuick=(text:string)=>{if(busy)return;reset();setQuestion(text);input.current?.focus()};
+ const QuickIcon=quickIcons[topic];
  return <Page testId="intelligence-page" className="bi-page" title="Inteligência de gestão" subtitle="IA especializada na gestão da sua barbearia. Análises, previsões e recomendações com dados reais." actions={<div className="bi-toolbar">
   <label className="bi-period"><CalendarDays size={17} aria-hidden="true"/><span className="sr-only">Período de análise</span><select value={days} disabled={busy} onChange={e=>{reset();setDays(Number(e.target.value)===7?7:30)}}><option value={30}>Últimos 30 dias</option><option value={7}>Últimos 7 dias</option></select><ChevronDown size={15} aria-hidden="true"/></label>
   <button className="bi-outline" type="button" disabled={busy||q.isFetching} onClick={()=>void q.refetch()}><RefreshCw size={17} className={q.isFetching?'bi-spin':undefined} aria-hidden="true"/>Actualizar</button>
@@ -65,7 +62,7 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
     <div className="bi-topics" aria-label="Temas de gestão">{[mainTopics.slice(0,4),mainTopics.slice(4)].map((row,i)=><div className="bi-topic-row" key={i}>{row.map(t=><button key={t} type="button" aria-pressed={topic===t} disabled={busy} onClick={()=>selectTopic(t)}>{labels[t]}</button>)}</div>)}</div>
     <form className="bi-form" onSubmit={e=>{e.preventDefault();submit()}}>
      <label className="sr-only" htmlFor="intelligence-question">Pergunta (não inclua dados pessoais)</label>
-     <div className="bi-input"><textarea ref={input} id="intelligence-question" rows={2} maxLength={300} value={question} disabled={busy} onChange={e=>setQuestion(e.target.value)} placeholder="Faça uma pergunta sobre a sua barbearia..." onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();submit()}}}/>{data&&data.cloud.status!=='disabled'&&<VoiceQuestion compact shopId={shopId} disabled={ask.isPending||Boolean(question.trim())} onText={setQuestion} onBusy={setVoiceBusy}/>}</div>
+     <div className="bi-input"><textarea ref={input} id="intelligence-question" rows={2} maxLength={MAX_QUESTION_CHARS} value={question} disabled={busy} onChange={e=>setQuestion(e.target.value)} placeholder="Faça uma pergunta sobre a sua barbearia..." onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();submit()}}}/>{data&&data.cloud.status!=='disabled'&&<VoiceQuestion compact shopId={shopId} disabled={ask.isPending||Boolean(question.trim())} onText={text=>{setQuestion(text);input.current?.focus()}} onBusy={setVoiceBusy}/>}</div>
      <button type="submit" className="bi-submit" disabled={busy||!data} aria-busy={ask.isPending}><Sparkles size={19} aria-hidden="true"/>{ask.isPending?'A consultar…':'Consultar IA'}</button>
     </form>
     {ask.isError&&<div role="alert" className="bi-message">Não foi possível concluir a consulta. <button type="button" className="bi-text-button" disabled={busy} onClick={()=>submit()}>Tentar novamente</button></div>}
@@ -75,7 +72,7 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
      <div className="bi-conversation-header"><h3>Conversa</h3><button type="button" className="bi-text-button" onClick={()=>{reset();input.current?.focus()}} disabled={busy}>Nova conversa</button></div>
      <div ref={turns} className="bi-turns" aria-live="polite" aria-relevant="additions text" role="log">{history.map((turn,i)=><article className="bi-turn" key={i}><p className="bi-question">{turn.question}</p><p className="bi-answer">{turn.answer}</p>{turn.advice&&<><span className="bi-advice-label">Recomendações</span><p className="bi-answer">{turn.advice}</p></>}{['quota','unavailable'].includes(turn.cloud)&&<p className="bi-message">IA externa indisponível. Análise própria apresentada.</p>}</article>)}</div>
     </section>}
-    <div className="bi-quick"><h3>Sugestões rápidas</h3>{quick.map(item=><button key={item.label} type="button" disabled={busy} onClick={()=>chooseQuick(item)}><item.icon size={20} aria-hidden="true"/><span>{item.label}</span><ChevronRight size={16} aria-hidden="true"/></button>)}</div>
+    <div className="bi-quick" data-testid="quick-suggestions"><h3>Sugestões rápidas</h3>{data?.suggestions[topic].map(text=><button key={text} type="button" disabled={busy} onClick={()=>chooseQuick(text)}><QuickIcon size={19} aria-hidden="true"/><span>{text}</span><ChevronRight size={16} aria-hidden="true"/></button>)}</div>
     
    </section>
   </section>

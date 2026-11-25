@@ -7,6 +7,7 @@ import { operationalPlan, draftKinds, prepareDraft } from "./operations.mjs";
 import { inventoryIntelligence, reviewIntelligence } from "./quality.mjs";
 import { financialIntelligence } from "./finance.mjs";
 import { customerIntelligence } from "./customer.mjs";
+import { quickPrompts, resolveQuick } from "./quick-prompts.mjs";
 import { metricQuestion, metricAnswer, metricSource } from "./answers.mjs";
 import { resolveIntent, classifyMail, setupGuide } from "./conversation.mjs";
 import { credentialFromVault, genericAdvice, decodeAudio, transcribeAudio } from "./provider.mjs";
@@ -27,11 +28,11 @@ Deno.serve(async (req:Request)=>{
     const reader=req.body?.getReader();
     if(!reader)return json({error:"INVALID_REQUEST"},400);
     let size=0; const decoder=new TextDecoder();let raw="";
-    while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>440000){await reader.cancel();return json({error:"INVALID_REQUEST"},413)}raw+=decoder.decode(value,{stream:true})}
+    while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>11200000){await reader.cancel();return json({error:"INVALID_REQUEST"},413)}raw+=decoder.decode(value,{stream:true})}
     raw+=decoder.decode();
     let body;try{body=JSON.parse(raw)}catch{return json({error:"INVALID_REQUEST"},400)}
-    if(size>8192&&body?.action!=="voice")return json({error:"INVALID_REQUEST"},413);
-    if(!body||typeof body!=="object"||Array.isArray(body)||typeof body.shopId!=="string"||!uuid.test(body.shopId)||![7,30].includes(body.days)||!topics.includes(body.topic)||("question" in body&&(typeof body.question!=="string"||body.question.length>300))||("cloud" in body&&typeof body.cloud!=="boolean"))return json({error:"INVALID_REQUEST"},400);
+    if(size>65536&&body?.action!=="voice")return json({error:"INVALID_REQUEST"},413);
+    if(!body||typeof body!=="object"||Array.isArray(body)||typeof body.shopId!=="string"||!uuid.test(body.shopId)||![7,30].includes(body.days)||!topics.includes(body.topic)||("question" in body&&(typeof body.question!=="string"||body.question.length>12000))||("cloud" in body&&typeof body.cloud!=="boolean"))return json({error:"INVALID_REQUEST"},400);
     if(("action" in body&&!["customer","operations","draft","inventory","reviews","finance","voice","mail_intent","setup_guide"].includes(body.action))||(body.action==="customer"&&(typeof body.customerId!=="string"||!uuid.test(body.customerId)||body.cloud===true)))return json({error:"INVALID_REQUEST"},400);
     if(body.action==="draft"&&(!draftKinds.includes(body.kind)||body.cloud===true))return json({error:"INVALID_REQUEST"},400);
     if(["operations","inventory","reviews","finance"].includes(body.action)&&body.cloud===true)return json({error:"INVALID_REQUEST"},400);
@@ -124,8 +125,9 @@ Deno.serve(async (req:Request)=>{
       rpc("get_report_daily",{p_shop:shopId,p_from:range.historyFrom,p_to:range.to}),
       shop.shop_enabled?rpc("get_shop_phase6_report",{p_barbershop_id:shopId,p_from:range.from,p_to:range.to}).catch(()=>null):Promise.resolve(null)
     ]);
-    const specific=metricQuestion(body.question);
-    const resolved=resolveIntent(body.question,body.topic,body.contextTopic,topicFor);
+    const quick=resolveQuick(body.topic,body.question);
+    const specific=quick??metricQuestion(body.question);
+    const resolved=quick??resolveIntent(body.question,body.topic,body.contextTopic,topicFor);
     if(specific){resolved.topic=specific.topic;resolved.recognized=true}
     const topic=resolved.topic;
     const result=analyze({current,previous,dashboard,crm,wait,notifications,services,barbers,history,store},range,topic);
@@ -156,6 +158,6 @@ Deno.serve(async (req:Request)=>{
         cloud={status:advice?"generated":"unavailable",advice};
       }else cloud={status:"quota",advice:null};
     }
-    return json({...result,cloud});
+    return json({...result,cloud,suggestions:quickPrompts});
   }catch{return json({error:"INTELLIGENCE_UNAVAILABLE"},503)}
 });

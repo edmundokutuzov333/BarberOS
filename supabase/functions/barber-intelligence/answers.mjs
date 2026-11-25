@@ -1,4 +1,5 @@
 // Deterministic, tenant-scoped metric selection. Never send question text or values to a provider.
+import { prepareDraft } from './operations.mjs';
 const rules=[
  ['profit','finance',/\b(lucro[s]?|rentabilidade|resultado liquido)\b/],
  ['tips','finance',/\b(gorjeta[s]?)\b/],
@@ -31,6 +32,17 @@ export function metricAnswer(target,result,details={}){
  const r=result.range,m=result.metrics,f=details.finance,inv=details.inventory,rev=details.reviews,plan=details.plan;
  const unavailable='Não foi possível obter os dados necessários para esta consulta. Consulte o módulo correspondente ou tente novamente.';
  switch(target){
+ case 'summary':return 'Marcações hoje: '+num(m.today)+'. Atendimentos concluídos: '+num(m.completed)+'. Ocupação: '+percent(m.occupancy)+'. Receita estimada: '+money(m.revenue)+'. '+period(r)+' Não é lucro nem fluxo de caixa.';
+ case 'priorities':return result.insights.length?'Prioridades identificadas:\n'+result.insights.slice(0,5).map(i=>i.title+': '+i.detail).join('\n'):'Sem alertas nos indicadores analisados. Continue a acompanhar a agenda e os relatórios.';
+ case 'agenda_summary':return 'Ocupação: '+percent(m.occupancy)+'. Marcações: '+num(m.appointments)+'. '+period(r)+' Consulte a capacidade e a disponibilidade oficial antes de alterar horários.';
+ case 'revenue':return 'Receita estimada: '+money(m.revenue)+'. Variação face ao período anterior equivalente: '+percent(m.revenueChange)+'. '+period(r)+' Não é lucro nem pagamento confirmado.';
+ case 'customer_activity':return 'Clientes registados: '+num(m.customers)+'. Clientes com visita nos últimos 30 dias: '+num(m.recentCustomers)+'. Janela móvel de 30 dias, independente do período seleccionado.';
+ case 'customer_absent':return 'Clientes sem visita registada nos últimos 30 dias: '+num(Number.isInteger(m.customers)&&Number.isInteger(m.recentCustomers)&&m.customers>=m.recentCustomers?m.customers-m.recentCustomers:null)+'. Este grupo inclui clientes novos e não confirma abandono. Consulte o histórico e as próximas marcações de cada cliente antes de contactar, respeitando o consentimento.';
+ case 'team_occupancy':case 'team_completed':case 'team_commission':return f?(f.team.length?'Equipa (até 30 profissionais):\n'+f.team.map(t=>t.name+': '+(target==='team_occupancy'?percent(t.occupancy)+' de ocupação':target==='team_completed'?num(t.completed)+' atendimentos concluídos':money(t.commission)+' de comissão histórica reconciliada')).join('\n'):'Sem profissionais no relatório.')+'\n'+period(r)+' Considere horários e tipos de serviço; não é uma classificação de qualidade.':unavailable;
+ case 'campaign':return plan?(plan.campaign?plan.campaign.title+'. '+plan.campaign.reason:'Não há uma oportunidade de campanha identificada com histórico suficiente. Consulte a agenda antes de publicar.'):unavailable;
+ case 'campaign_copy':return plan?(plan.campaign?plan.campaign.body+'\n\n'+plan.campaign.reason+'\nRascunho para revisão, não publicado.':'Sem oportunidade identificada. Confirme a disponibilidade real antes de preparar uma campanha.'):unavailable;
+ case 'draft_confirmation':case 'draft_feedback':case 'draft_return':{const d=prepareDraft(target.slice(6));return d.subject+'\n\n'+d.body+'\n\nRascunho para revisão. Não foi enviada nenhuma mensagem.';}
+
  case 'profit':return 'O BarberOS não calcula lucro líquido a partir destes relatórios: faltam despesas operacionais completas. '+(f?'Receita estimada de serviços: '+money(f.revenue)+'. Receita após comissões conhecidas: '+money(f.afterCommission)+'. ':'')+'Estes valores não são lucro, saldo de caixa ou dinheiro recebido. '+period(r);
  case 'commission':return f?'Comissões históricas conhecidas: '+money(f.commissionKnown)+'. Atendimentos sem comissão conhecida: '+num(f.commissionUnknown)+'. Não são estimadas comissões em falta. '+period(r):unavailable;
  case 'tips':return f?'Gorjetas registadas: '+money(f.tips)+'. São apresentadas separadamente da receita e das comissões. '+period(r):unavailable;
@@ -51,9 +63,9 @@ export function metricAnswer(target,result,details={}){
  }
 }
 export function metricSource(target){
- if(['profit','tips','residual','commission','ticket','services','store_margin'].includes(target))return 'finance';
+ if(['profit','tips','residual','commission','ticket','services','store_margin','team_occupancy','team_completed','team_commission'].includes(target))return 'finance';
  if(target==='reviews')return 'reviews';
  if(target==='inventory')return 'inventory';
- if(['week','setup'].includes(target))return 'plan';
+ if(['week','setup','campaign','campaign_copy'].includes(target))return 'plan';
  return null;
 }

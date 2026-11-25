@@ -66,6 +66,8 @@ try{
  assert.equal((await call(barber.token,{...payload,action:'setup_guide',step:6,intent:'verify'})).status,403);
  const specific=ok(await call(manager.token,{...payload,question:'Quanto em gorjetas?'}));assert.equal(specific.topic,'finance');assert.match(specific.answer,/Gorjetas registadas/);
  const rev=ok(await call(owner.token,{...payload,question:'Como estão as avaliações?'}));assert.match(rev.answer,/Ainda não há avaliações/);
+ const menu=ok(await call(owner.token,payload));assert.equal(Object.keys(menu.suggestions).length,9);assert.equal(menu.suggestions.team.length,3);
+ const prompt=ok(await call(manager.token,{...payload,topic:'communications',question:menu.suggestions.communications[1]}));assert.equal(prompt.topic,'communications');assert.match(prompt.answer,/Rascunho para revisão/);
  const c={...payload,action:'customer',customerId:customer};
  const result=ok(await call(owner.token,c));assert.equal(result.returnStatus,'insufficient');assert.equal(result.draft,null);
  assert.equal((await call(manager.token,c)).status,200);

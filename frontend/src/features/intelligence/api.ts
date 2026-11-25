@@ -6,7 +6,9 @@ export type Topic=typeof topics[number];
 export const labels:Record<Topic,string>={overview:'Visão geral',agenda:'Agenda e procura',finance:'Receitas',customers:'Clientes',team:'Equipa',stock:'Loja e stock',communications:'Comunicações',marketing:'Marketing',setup:'Configuração'};
 const date=z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const paths=z.enum(['/app/agenda','/app/horarios','/app/marcacoes','/app/lista-espera','/app/relatorios','/app/clientes','/app/loja/produtos','/app/notificacoes','/app/barbeiros']);
-const contract=z.object({version:z.literal(1),range:z.object({today:date,from:date,to:date,previousFrom:date,previousTo:date,historyFrom:date}),topic:z.enum(topics),metrics:z.object({today:n,appointments:n,completed:n,noShow:n,occupancy:n,revenue:n,revenueChange:n,waiting:n,failedNotifications:n,customers:n,recentCustomers:n,lowStock:n}),insights:z.array(z.object({id:z.string(),category:z.enum(topics),title:z.string(),detail:z.string(),href:paths,priority:z.enum(['high','normal'])})),forecast:z.array(z.object({date,expected:z.number(),low:z.number(),high:z.number(),samples:z.number().int().min(4)})).max(7),answer:z.string(),cloud:z.object({status:z.enum(['available','disabled','generated','unavailable','quota']),advice:z.string().nullable()})});
+const suggestionList=z.array(z.string().min(1).max(150)).length(3);
+const suggestions=z.object(Object.fromEntries(topics.map(t=>[t,suggestionList])) as Record<Topic,typeof suggestionList>);
+const contract=z.object({suggestions,version:z.literal(1),range:z.object({today:date,from:date,to:date,previousFrom:date,previousTo:date,historyFrom:date}),topic:z.enum(topics),metrics:z.object({today:n,appointments:n,completed:n,noShow:n,occupancy:n,revenue:n,revenueChange:n,waiting:n,failedNotifications:n,customers:n,recentCustomers:n,lowStock:n}),insights:z.array(z.object({id:z.string(),category:z.enum(topics),title:z.string(),detail:z.string(),href:paths,priority:z.enum(['high','normal'])})),forecast:z.array(z.object({date,expected:z.number(),low:z.number(),high:z.number(),samples:z.number().int().min(4)})).max(7),answer:z.string(),cloud:z.object({status:z.enum(['available','disabled','generated','unavailable','quota']),advice:z.string().nullable()})});
 export type Intelligence= z.infer<typeof contract>;
 export async function loadIntelligence(shopId:string,days:7|30,topic:Topic,question?:string,cloud=false,contextTopic?:Topic){
   const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,days,topic,question,cloud,contextTopic}});
@@ -52,9 +54,11 @@ export async function loadFinancialIntelligence(shopId:string,days:7|30){
  if(error)throw new Error('INTELLIGENCE_FINANCE_UNAVAILABLE');return financeContract.parse(data);
 }
 
+export const MAX_AUDIO_BYTES=8*1024*1024;
+export const MAX_QUESTION_CHARS=12000;
 export async function transcribeQuestion(shopId:string,audio:string,mime:string){
  const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'voice',days:7,topic:'overview',audio,mime,consent:true}});
- if(error)throw new Error('VOICE_UNAVAILABLE');return z.object({version:z.literal(1),text:z.string().min(1).max(300)}).parse(data);
+ if(error){const status=error.context?.status;if(status===429)throw new Error('VOICE_QUOTA');if(status===413)throw new Error('VOICE_SIZE');throw new Error('VOICE_UNAVAILABLE');}return z.object({version:z.literal(1),text:z.string().min(1).max(MAX_QUESTION_CHARS)}).parse(data);
 }
 export async function classifyCommunication(shopId:string,text:string){
  const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'mail_intent',days:7,topic:'communications',text:text.slice(0,2000)}});

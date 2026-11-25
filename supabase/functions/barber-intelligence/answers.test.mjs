@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {metricQuestion,metricAnswer,metricSource} from './answers.mjs';
+import {quickPrompts,resolveQuick} from './quick-prompts.mjs';
 const result={range:{today:'2026-11-25',from:'2026-11-18',to:'2026-11-24'},metrics:{today:3,noShow:12.5,waiting:2,failedNotifications:0},forecast:[],answer:'base'};
 test('specific administrative questions map to existing authoritative sources',()=>{
  for(const [q,t,s] of [['Quanto paguei em comissões?','commission','finance'],['Quanto sobrou depois das comissões?','residual','finance'],['Quanto em gorjetas?','tips','finance'],['Qual o lucro?','profit','finance'],['Margem dos produtos da loja','store_margin','finance'],['Quais produtos devo repor?','inventory','inventory'],['Como estão as avaliações?','reviews','reviews'],['Como está a próxima semana?','week','plan'],['Qual o progresso da configuração?','setup','plan'],['Quantas marcações hoje?','today',null]]){const x=metricQuestion(q);assert.equal(x?.target,t,q);assert.equal(metricSource(t),s)}
@@ -22,4 +23,14 @@ test('quality, inventory, forecast and current metrics remain bounded',()=>{
 test('service reconciliation and partial shop margins are respected',()=>{
  assert.match(metricAnswer('services',result,{finance:{serviceConsistent:false,services:[]}}),/não coincidem/);
  assert.match(metricAnswer('store_margin',result,{finance:{store:{knownGrossMargin:-200,knownCost:500,knownUnits:1,unknownUnits:1,complete:false}}}),/Margem parcial/);
+});
+
+test('each category exposes three unique questions, exact topic routing and a real answer',()=>{
+ const expanded={...result,metrics:{...result.metrics,customers:12,recentCustomers:5,completed:8,appointments:10,occupancy:60,revenue:120000,revenueChange:5},insights:[]};
+ const details={finance:{commissionKnown:100,commissionUnknown:0,ticket:15000,ticketChange:0,team:[{name:'QA',occupancy:50,completed:8,commission:100}],store:{knownGrossMargin:100,knownCost:200,knownUnits:1,unknownUnits:0,complete:true}},inventory:{trackedCount:1,alertCount:0,estimatedCount:0,rows:[]},plan:{days:[],campaign:null,setup:{step:3,next:'Serviços',complete:false}}};
+ for(const [topic,list] of Object.entries(quickPrompts)){assert.equal(list.length,3);assert.equal(new Set(list).size,3);for(const question of list){const q=resolveQuick(topic,question);assert.equal(q.topic,topic);assert.equal(q.recognized,true);assert.notEqual(metricAnswer(q.target,expanded,details),expanded.answer);assert.equal(resolveQuick(topic,question+' alteração'),null);}}
+ assert.equal(Object.keys(quickPrompts).length,9);
+ assert.equal(resolveQuick('finance',quickPrompts.marketing[0]),null);
+ assert.match(metricAnswer('customer_absent',expanded),/7/);
+ assert.match(metricAnswer('draft_return',expanded),/Não foi enviada/);
 });

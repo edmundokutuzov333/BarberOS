@@ -200,3 +200,39 @@
 
 @media(max-width:1023px){.bi-shell>aside[data-intelligence]{display:none;}}
 @container(max-width:480px){.bi-core{top:auto;left:auto;}}
+
+/* Restrained optical depth, using the official noir/brass canvas instead of a separate brown stage. */
+.bi-page::before{background:radial-gradient(ellipse at 86% 5%,rgba(var(--brand-accent-rgb),.035),transparent 62%);}
+.bi-hub{isolation:isolate;overflow:hidden;}
+.bi-atmosphere{position:absolute;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 50% 52%,rgba(var(--brand-accent-rgb),.08),transparent 42%),radial-gradient(ellipse at 48% 8%,#ffffff03,transparent 58%);animation:bi-atmosphere 9s ease-in-out infinite alternate;}
+.bi-orbit-lines{opacity:.48;}
+.bi-connections{z-index:1;stroke:#8c7957;stroke-width:1;stroke-dasharray:3 8;opacity:.75;}
+.bi-connections .bi-line-active{stroke:var(--bi-gold);stroke-width:1.6;stroke-dasharray:5 7;animation:bi-signal 2.8s linear infinite;opacity:1;}
+.bi-core{isolation:isolate;overflow:visible;z-index:2;border:1px solid #bf9c64;background:radial-gradient(ellipse at 43% 6%,#2b2924 0%,#171614 40%,#0e0e0e 78%);box-shadow:0 20px 48px #0008,0 0 28px #b68e4524,inset 0 0 28px #bc96531a;}
+.bi-core-rim{position:absolute;inset:-7px;border-radius:50%;pointer-events:none;border:1px solid #b9955540;box-shadow:0 0 0 9px #b995550b,0 0 0 20px #b9955506;animation:bi-breathe 6s ease-in-out infinite;}
+.bi-core-rim::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:1px solid transparent;border-top-color:#e9c584;border-right-color:#bc934b66;animation:bi-orbit 24s linear infinite;}
+.bi-core-reflection{position:absolute;inset:2px;border-radius:50%;background:radial-gradient(ellipse at 36% 0%,#f2e2c118,transparent 45%);pointer-events:none;}
+.bi-core-wordmark{position:relative;display:flex;flex-direction:column;align-items:center;gap:9px;}
+.bi-core strong{font-weight:650;letter-spacing:-.04em;font-size:clamp(24px,2.8vw,43px);line-height:1.05;color:var(--text-hi,#f2eee6);text-transform:none;text-shadow:0 2px 10px #0008;}
+.bi-core span{font-size:clamp(8px,.85vw,12px);letter-spacing:.28em;color:#c5a56c;}
+.bi-node{z-index:3;background:linear-gradient(150deg,#23221e,#171614 60%,#131312);border:1px solid #665334;box-shadow:inset 0 1px 0 #f2d8a10d,0 8px 18px #0003;transition:border-color .24s,background .24s,box-shadow .24s,translate .24s;}
+.bi-node[aria-pressed=true]{background:linear-gradient(150deg,#302719,#1b1812);border-color:#c5a36a;box-shadow:0 0 18px #c5a36a17,inset 0 1px 0 #f7d38d20;}
+.bi-node:hover:not(:disabled){translate:0 -2px;}
+.bi-quick button{animation:bi-quick-in .24s ease-out;}
+.bi-voice-trigger{transition:background .2s,border-color .2s,box-shadow .2s;}
+.bi-voice-compact[data-status=recording] .bi-voice-trigger{color:#f2a7a0;border-color:#b96e66;background:#4b2724;box-shadow:0 0 0 3px #e48a8220;}
+.bi-voice-popover{width:min(320px,76vw);background:linear-gradient(145deg,#24211c,#151412);border-color:#6e5738;padding:15px;gap:11px;box-shadow:0 14px 34px #000a;}
+.bi-voice-heading{display:flex;align-items:center;gap:9px;color:var(--bi-gold-light);font-size:13px;}
+.bi-voice-popover audio{display:block;width:100%;height:42px;}
+.bi-voice-popover button{white-space:normal;text-align:center;min-height:40px;height:auto;}
+.bi-recording-status{display:flex;align-items:center;gap:8px;font-size:12px;color:#e6dcd1;}
+.bi-recording-dot{width:8px;height:8px;background:#e58d84;border-radius:50%;flex-shrink:0;animation:bi-record-pulse 1.6s ease-in-out infinite;}
+@media(min-width:1024px){.bi-shell{background:radial-gradient(120% 80% at 50% 100%,var(--brand-canvas-glow-a) 0%,transparent 60%),radial-gradient(90% 60% at 15% 0%,rgba(var(--brand-accent-rgb),.045) 0%,transparent 55%),radial-gradient(70% 55% at 100% 0%,var(--brand-canvas-glow-b) 0%,transparent 70%),var(--brand-canvas-void,#10100e);}}
+@container(max-width:480px){.bi-core strong{font-size:25px;}.bi-core span{font-size:8px;}.bi-core-rim{inset:-4px;box-shadow:0 0 0 6px #b995550b;}.bi-core-wordmark{gap:5px;}.bi-voice-popover{width:min(280px,76vw);}}
+@keyframes bi-atmosphere{from{opacity:.55}to{opacity:1}}
+@keyframes bi-signal{to{stroke-dashoffset:-24}}
+@keyframes bi-breathe{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes bi-orbit{to{transform:rotate(360deg)}}
+@keyframes bi-quick-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+@keyframes bi-record-pulse{50%{opacity:.45;transform:scale(.85)}}
+@media(prefers-reduced-motion:reduce){.bi-page .bi-atmosphere,.bi-page .bi-line-active,.bi-page .bi-core-rim,.bi-page .bi-core-rim::after,.bi-page .bi-quick button,.bi-page .bi-recording-dot{animation:none!important;}.bi-node:hover:not(:disabled){translate:none;}}

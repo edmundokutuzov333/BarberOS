@@ -10,10 +10,10 @@ const nodes:{label:string;topic:Topic;icon:LucideIcon;x:number;y:number}[]=[
  {label:'Loja',topic:'stock',icon:ShoppingBag,x:72.4,y:85.2}
 ];
 export default function IntelligenceHub({topic,disabled,onSelect}:{topic:Topic;disabled:boolean;onSelect:(topic:Topic)=>void}){
- return <div className="bi-hub" data-testid="intelligence-hub">
-  <div className="bi-orbit-lines" aria-hidden="true"/>
-  <svg className="bi-connections" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">{nodes.map(node=><line key={node.topic} x1="50" y1="51.2" x2={node.x} y2={node.y} vectorEffect="non-scaling-stroke"/>)}</svg>
-  <div className="bi-core" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" className="bi-core-star"><path d="M32 1 40 24 63 32 40 40 32 63 24 40 1 32 24 24 32 1Z" fill="currentColor"/></svg><strong>BARBEROS</strong><span>INTELLIGENCE</span></div>
+ return <div className="bi-hub" data-testid="intelligence-hub" data-topic={topic}>
+  <div className="bi-orbit-lines" aria-hidden="true"/><div className="bi-atmosphere" aria-hidden="true"/>
+  <svg className="bi-connections" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">{nodes.map(node=><line key={node.topic} className={topic===node.topic?'bi-line-active':undefined} x1="50" y1="51.2" x2={node.x} y2={node.y} vectorEffect="non-scaling-stroke"/>)}</svg>
+  <div className="bi-core" aria-label="BarberOS Intelligence"><div className="bi-core-rim" aria-hidden="true"/><div className="bi-core-reflection" aria-hidden="true"/><div className="bi-core-wordmark"><strong>BarberOS</strong><span>INTELLIGENCE</span></div></div>
   <div className="bi-nodes">{nodes.map(({label,topic:t,icon:Icon,x,y})=><button className="bi-node" key={t} style={{left:x+'%',top:y+'%'}} type="button" disabled={disabled} aria-pressed={topic===t} onClick={()=>onSelect(t)}><Icon size={24} aria-hidden="true"/><span>{label}</span></button>)}</div>
  </div>
 }
