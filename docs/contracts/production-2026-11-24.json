@@ -2078,9 +2078,9 @@
     {
       "name": "barber-intelligence",
       "status": "ACTIVE",
-      "version": 8,
+      "version": 9,
       "verify_jwt": true,
-      "bundle_sha256": "157daf93a5750cbddc9cec4ead1da651664c3c2526ecef8172033a26b0313401"
+      "bundle_sha256": "2c5c0ab9c22fc4237e6c5adf434b8564fa5f39d2f177075d2533d1ce5231197f"
     },
     {
       "name": "booking-create",
@@ -2198,9 +2198,9 @@
     "source": "Supabase management API list_edge_functions",
     "project_ref": "alseiinjzwjdiwtvkdzy",
     "edge": "barber-intelligence",
-    "version": 8,
-    "bundle_sha256": "157daf93a5750cbddc9cec4ead1da651664c3c2526ecef8172033a26b0313401",
-    "scope": "Production/staging deployment metadata only; latest authenticated and browser CI acceptance separate."
+    "version": 9,
+    "bundle_sha256": "2c5c0ab9c22fc4237e6c5adf434b8564fa5f39d2f177075d2533d1ce5231197f",
+    "scope": "Production/staging deployment metadata; authenticated HTTP, browser and live voice acceptance separate."
   },
   "intelligence_groq_capture": {
     "captured_on": "2026-11-25",
@@ -2237,6 +2237,22 @@
     "unit_harness": "4 passed",
     "previous_release_frontend_ci": "success",
     "previous_release_authenticated_intelligence": "success",
+    "live_voice": "not verified",
+    "current_release_ci": "pending"
+  },
+  "intelligence_contextual_voice_capture": {
+    "captured_on": "2026-11-25",
+    "production_edge_version": 9,
+    "staging_edge_version": 11,
+    "bundle_sha256": "2c5c0ab9c22fc4237e6c5adf434b8564fa5f39d2f177075d2533d1ce5231197f",
+    "prompt_topics": 9,
+    "prompts": 27,
+    "unit_harness": "15 passed; isolated JS with mocked transport",
+    "previous_frontend_ci": "success",
+    "previous_full_verification": "success",
+    "audio_file_bytes": 8388608,
+    "question_chars": 12000,
+    "time_cutoff": null,
     "live_voice": "not verified",
     "current_release_ci": "pending"
   }
