@@ -45,3 +45,9 @@ export async function loadReviewIntelligence(shopId:string){
  const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'reviews',days:30,topic:'overview'}});
  if(error)throw new Error('INTELLIGENCE_REVIEWS_UNAVAILABLE');return reviewContract.parse(data);
 }
+
+const financeContract=z.object({version:z.literal(1),from:date,to:date,previousFrom:date,previousTo:date,revenue:n,previousRevenue:n,revenueChange:n,completed:n,completedChange:n,ticket:n,ticketChange:n,occupancy:n,commissionKnown:n,commissionUnknown:n,tips:n,afterCommission:n,serviceConsistent:z.boolean(),services:z.array(z.object({id:z.string(),name:z.string(),completed:n,revenue:n,share:n,ticket:n})).max(20),team:z.array(z.object({id:z.string(),name:z.string(),completed:n,revenue:n,capacity:n,occupancy:n,commission:n,afterCommission:n})).max(30),store:z.object({knownUnits:n,unknownUnits:n,knownCost:n,knownGrossMargin:n,complete:z.boolean()}).nullable(),insights:z.array(z.object({id:z.string(),text:z.string()}))});
+export async function loadFinancialIntelligence(shopId:string,days:7|30){
+ const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'finance',days,topic:'finance'}});
+ if(error)throw new Error('INTELLIGENCE_FINANCE_UNAVAILABLE');return financeContract.parse(data);
+}

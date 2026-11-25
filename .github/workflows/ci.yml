@@ -81,7 +81,7 @@ jobs:
       - name: Typecheck integrations and signed webhook runtime
         run: deno check --node-modules-dir=auto supabase/functions/payment-simulator/index.ts supabase/functions/admin-credential-manager/index.ts supabase/functions/gmail-integration/index.ts supabase/functions/google-calendar/index.ts supabase/functions/resend-webhook/index.ts supabase/functions/notify-dispatch/index.ts
       - name: Test management intelligence engine
-        run: node --test supabase/functions/barber-intelligence/engine.test.mjs supabase/functions/barber-intelligence/customer.test.mjs supabase/functions/barber-intelligence/operations.test.mjs supabase/functions/barber-intelligence/quality.test.mjs
+        run: node --test supabase/functions/barber-intelligence/engine.test.mjs supabase/functions/barber-intelligence/customer.test.mjs supabase/functions/barber-intelligence/operations.test.mjs supabase/functions/barber-intelligence/quality.test.mjs supabase/functions/barber-intelligence/finance.test.mjs
       - name: Typecheck management intelligence edge
         run: deno check --node-modules-dir=auto supabase/functions/barber-intelligence/index.ts
       - name: Test Calendar provider deadlines and idempotent event writes

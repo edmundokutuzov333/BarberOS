@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import FinancialIntelligence from '@/features/intelligence/FinancialIntelligence';
 import OperationalPlan from '@/features/intelligence/OperationalPlan';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -57,6 +58,7 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
         </Panel>
       </>}
       <OperationalPlan shopId={shopId} userId={userId}/>
+      <FinancialIntelligence shopId={shopId} userId={userId}/>
       <p className="t-label text-ink-mid">A inteligência não altera marcações, preços, pagamentos ou contactos. As decisões são tomadas pela equipa.</p>
     </div>
   </Page>

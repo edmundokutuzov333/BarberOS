@@ -52,6 +52,9 @@ try{
  sql("begin; select set_config('request.jwt.claim.role','service_role',true); update public.barbershops set shop_enabled=true where id="+q(shop)+"; commit;");
  const inventory=ok(await call(manager.token,{...payload,action:'inventory'}));assert.equal(inventory.trackedCount,0);assert.equal(inventory.rows.length,0);
  assert.equal((await call(barber.token,{...payload,action:'inventory'})).status,403);
+ const finances=ok(await call(manager.token,{...payload,action:'finance'}));assert.equal(finances.revenue,0);assert.equal(finances.ticket,null);assert.equal(finances.afterCommission,0);
+ assert.equal((await call(barber.token,{...payload,action:'finance'})).status,403);
+ assert.equal((await call(manager.token,{...payload,action:'finance',shopId:other})).status,403);
  const c={...payload,action:'customer',customerId:customer};
  const result=ok(await call(owner.token,c));assert.equal(result.returnStatus,'insufficient');assert.equal(result.draft,null);
  assert.equal((await call(manager.token,c)).status,200);

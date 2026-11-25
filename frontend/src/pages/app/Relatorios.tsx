@@ -7,6 +7,8 @@ import { Page } from '@/components/layout/Page';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { useShop } from '@/lib/shop';
+import { useAuth } from '@/lib/auth';
+import FinancialIntelligence from '@/features/intelligence/FinancialIntelligence';
 import StaffEarningsPanel from '@/features/staff-earnings/StaffEarningsPanel';
 import { formatMT, fmt, nowTz, humanError } from '@/lib/utils';
 import { useReportData, type ReportBarberRow, type ReportDailyRow, type ReportHaircutRow, type ReportRange, type ReportServiceRow } from '@/features/reports/api';
@@ -296,6 +298,7 @@ function ReportTable({ title, subtitle, icon: Icon, headers, rows, emptyTitle, e
 
 export default function Relatorios() {
   const { shop, role } = useShop();
+  const { user } = useAuth();
   const [range, setRange] = useState<ReportRange>(initialRange);
   const [fromInput, setFromInput] = useState(range.from);
   const [toInput, setToInput] = useState(range.to);
@@ -391,6 +394,7 @@ export default function Relatorios() {
         </div>
       </Panel>
 
+      {view==='overview'&&shop&&user&&(role==='owner'||role==='manager')&&<FinancialIntelligence key={user.id+':'+shop.id} shopId={shop.id} userId={user.id}/>}
       {report.isLoading && <div className="space-y-3"><Skeleton className="h-40" /><Skeleton className="h-56" /><Skeleton className="h-56" /></div>}
       {report.error && !report.isLoading && <ErrorState message={humanError(report.error)} onRetry={()=>void report.refetch()} />}
       {report.data && view==='overview' && <Overview summary={report.data.summary as any} />}
