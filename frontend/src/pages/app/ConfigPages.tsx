@@ -32,7 +32,7 @@ export function BarbeirosPage() {
 
 export function HorariosPage() {
   return (
-    <Page testId="horarios-page" title="Horários" subtitle="Horário base da barbearia, excepções por barbeiro e bloqueios.">
+    <Page testId="horarios-page" title="Horários" subtitle="Horário base, pausas semanais, excepções por barbeiro e bloqueios pontuais.">
       <div className="space-y-4">
         <Panel title="Horário semanal"><HoursEditor /></Panel>
         <ScheduleOverridesEditor />

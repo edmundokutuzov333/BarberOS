@@ -76,6 +76,8 @@ type Variant = {
   attributes: Record<string, unknown>;
   unit_label: string;
   price_minor: number;
+  regular_price_minor?: number|null;
+  cost_minor?: number|null;
   stock_on_hand: number;
   low_stock_threshold: number;
   is_active: boolean;
@@ -108,6 +110,8 @@ type VariantForm = {
   sku: string;
   unit_label: string;
   price: string;
+  promo: string;
+  cost: string;
   threshold: string;
 };
 type CategoryForm = {
@@ -134,6 +138,8 @@ const emptyVariant: VariantForm = {
   sku: "",
   unit_label: "unidade",
   price: "",
+  promo: "",
+  cost: "",
   threshold: "0",
 };
 const emptyCategory: CategoryForm = {
@@ -154,6 +160,7 @@ function feedback(error: unknown) {
   return error instanceof CatalogInputError ? error.message : humanError(error);
 }
 function minor(value: string) {
+  if(!/^\d+(?:[.,]\d{1,2})?$/.test(value.trim()))throw new CatalogInputError("Introduza um valor em MT com até duas casas decimais.");
   const n = Number(value.trim().replace(",", "."));
   if (!Number.isFinite(n) || n < 0 || n > 10000000)
     throw new CatalogInputError("Introduza um preço válido em MT.");
@@ -248,6 +255,8 @@ function CatalogWorkspace() {
       return r.data as unknown as Variant[];
     },
   });
+  const pricingQ=useQuery({queryKey:['catalog-pricing-contract',shop?.id],enabled:allowed&&!!shop?.id,retry:false,queryFn:async()=>{const r=await supabase.from('shop_product_variants').select('regular_price_minor,cost_minor').eq('barbershop_id',shop!.id).limit(1);if(r.error){if(['42703','PGRST204'].includes(r.error.code))return false;throw r.error;}return true;}});
+  const pricingAvailable=pricingQ.data===true;
   const auditQ = useQuery({
     queryKey: ["shop-audit", shop?.id],
     enabled: allowed && !!shop?.id && tab === "history",
@@ -301,6 +310,8 @@ function CatalogWorkspace() {
       qc.invalidateQueries({ queryKey: ["shop-variants", shop?.id] }),
       qc.invalidateQueries({ queryKey: ["shop-audit", shop?.id] }),
       qc.invalidateQueries({ queryKey: ["shop-movements", shop?.id] }),
+      qc.invalidateQueries({queryKey:["public-shop-catalog",shop?.slug]}),
+      qc.invalidateQueries({queryKey:["shop-phase6-report",shop?.id]}),
     ]);
   };
   const openProduct = (p?: Product) => {
@@ -354,7 +365,9 @@ function CatalogWorkspace() {
             label: v.label,
             sku: v.sku ?? "",
             unit_label: v.unit_label,
-            price: (v.price_minor / 100).toFixed(2),
+            price: ((v.regular_price_minor??v.price_minor) / 100).toFixed(2),
+            promo: v.regular_price_minor==null?"":(v.price_minor/100).toFixed(2),
+            cost: v.cost_minor==null?"":(v.cost_minor/100).toFixed(2),
             threshold: String(v.low_stock_threshold),
           }
         : emptyVariant,
@@ -416,13 +429,16 @@ function CatalogWorkspace() {
         );
       if (vf.sku.trim().length > 80)
         throw new CatalogInputError("O SKU pode ter até 80 caracteres.");
-      const price = minor(vf.price),
-        threshold = integer(vf.threshold);
+      const price = minor(vf.price), threshold = integer(vf.threshold);
+      const promo=pricingAvailable&&vf.promo.trim()?minor(vf.promo):null;
+      const cost=pricingAvailable&&vf.cost.trim()?minor(vf.cost):null;
+      if(promo!==null&&promo>=price)throw new CatalogInputError("O preço promocional deve ser inferior ao preço de venda.");
       const row = {
         label,
         sku: vf.sku.trim() || null,
         unit_label: vf.unit_label.trim() || "unidade",
-        price_minor: price,
+        price_minor: promo??price,
+        ...(pricingAvailable?{regular_price_minor:promo===null?null:price,cost_minor:cost}:{}),
         low_stock_threshold: threshold,
         is_active: variantEdit?.is_active ?? false,
       };
@@ -432,13 +448,15 @@ function CatalogWorkspace() {
             .update(row)
             .eq("id", variantEdit.id)
             .eq("barbershop_id", shop!.id)
+            .eq("updated_at",variantEdit.updated_at).select("id").single()
         : await supabase.from("shop_product_variants").insert({
             ...row,
             product_id: variantProduct,
             barbershop_id: shop!.id,
             attributes: {},
-          });
+          }).select("id").single();
       if (r.error) throw r.error;
+      if(!r.data?.id)throw new CatalogInputError("O servidor não confirmou a gravação. Actualize antes de tentar novamente.");
     },
     onSuccess: async () => {
       setVariantOpen(false);
@@ -581,9 +599,8 @@ function CatalogWorkspace() {
             label: "Stock baixo",
             value: variants.filter(
               (v) =>
-                v.is_active &&
-                v.stock_on_hand <= v.low_stock_threshold &&
-                (v.stock_on_hand > 0 || v.low_stock_threshold > 0),
+                v.is_active && products.some(p=>p.id===v.product_id&&p.track_stock) &&
+                v.stock_on_hand <= v.low_stock_threshold,
             ).length,
             sub: "Com base no saldo real",
           },
@@ -718,7 +735,7 @@ function CatalogWorkspace() {
                               key={v.id}
                               className="text-xs rounded-lg bg-white/5 px-2 py-1"
                             >
-                              {v.label}: {formatMT(v.price_minor)} · stock{" "}
+                              {v.label}: {v.regular_price_minor!=null&&<span className="line-through mr-2">{formatMT(v.regular_price_minor)}</span>}{formatMT(v.price_minor)} · stock{" "}
                               {v.stock_on_hand}
                             </span>
                           ))}
@@ -1108,7 +1125,8 @@ function CatalogWorkspace() {
               </Select>
             </div>
             <Textarea
-              className="resize-none"
+              className="!resize-y"
+              rows={5}
               error={productErrors.description}
               label="Descrição"
               name="product-description"
@@ -1150,13 +1168,11 @@ function CatalogWorkspace() {
               ratio={4 / 3}
               value={pf.image_url || null}
               onChange={(url) =>
-                setPf({
-                  ...pf,
+                setPf(prev=>({
+                  ...prev,
                   image_url: url,
-                  image_source_note:
-                    pf.image_source_note ||
-                    "Fotografia carregada pela barbearia; utilização confirmada pelo gestor.",
-                })
+                  image_source_note: prev.image_source_note,
+                }))
               }
               label="Fotografia do produto"
               testId="shop-product-image-upload"
@@ -1291,6 +1307,7 @@ function CatalogWorkspace() {
       </Modal>
       <Modal
         open={variantOpen}
+        busy={saveVariant.isPending}
         onOpenChange={setVariantOpen}
         title={variantEdit ? "Editar variante" : "Nova variante"}
         testId="shop-variant-modal"
@@ -1317,7 +1334,7 @@ function CatalogWorkspace() {
           />
           <div className="grid grid-cols-2 gap-3">
             <Field
-              label="Preço (MT)"
+              label="Preço de venda normal (MT)"
               name="variant-price"
               value={vf.price}
               onChange={(e) => setVf({ ...vf, price: e.target.value })}
@@ -1332,6 +1349,7 @@ function CatalogWorkspace() {
               required
             />
           </div>
+          {pricingAvailable?<><div className="grid sm:grid-cols-2 gap-3"><Field label="Preço promocional (MT)" name="variant-promo" inputMode="decimal" value={vf.promo} onChange={e=>setVf(prev=>({...prev,promo:e.target.value}))} hint="Opcional. O checkout utiliza este preço quando definido."/><Field label="Preço de custo (MT)" name="variant-cost" inputMode="decimal" value={vf.cost} onChange={e=>setVf(prev=>({...prev,cost:e.target.value}))} hint="Opcional. Visível apenas à gestão; não inclui outros custos da operação."/></div>{vf.cost.trim()&&/^\d+(?:[.,]\d{1,2})?$/.test(vf.cost.trim())&&/^\d+(?:[.,]\d{1,2})?$/.test((vf.promo||vf.price).trim())&&<div className="rounded-xl border border-white/10 p-3"><p className="t-label text-ink-mid">Margem bruta unitária estimada</p><p className="t-card">{formatMT(Math.round((Number((vf.promo||vf.price).replace(",","."))-Number(vf.cost.replace(",",".")))*100))}</p></div>}</>:pricingQ.isError?<ErrorState message="Não foi possível verificar a disponibilidade da precificação avançada." onRetry={()=>void pricingQ.refetch()}/>:pricingQ.data===false?<p role="status" className="t-label text-ink-mid">Custo e preço promocional aguardam a actualização da base de dados.</p>:null}
           <div className="grid grid-cols-2 gap-3">
             <Field
               label="SKU (opcional)"
@@ -1358,7 +1376,7 @@ function CatalogWorkspace() {
             <Button variant="secondary" onClick={() => setVariantOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit" loading={saveVariant.isPending}>
+            <Button type="submit" loading={saveVariant.isPending} disabled={pricingQ.isLoading||pricingQ.isError}>
               Guardar variante
             </Button>
           </div>
@@ -1416,7 +1434,7 @@ function CatalogWorkspace() {
                     className="flex justify-between gap-3 text-sm"
                   >
                     <span>{v.label}</span>
-                    <span>{formatMT(v.price_minor)}</span>
+                    <span>{v.regular_price_minor!=null&&<span className="line-through mr-2 text-ink-mid">{formatMT(v.regular_price_minor)}</span>}{formatMT(v.price_minor)}</span>
                   </div>
                 ))}
             </div>

@@ -14,11 +14,15 @@ import { Modal, Switch, Select } from '@/components/ui/Primitives';
 import { Skeleton, EmptyState, ErrorState, Panel } from '@/components/ui/States';
 import { useBarbers } from './BarbersEditor';
 
-type Row = { weekday: number; opens_at: string; closes_at: string; is_closed: boolean };
+type Row = { weekday: number; opens_at: string; closes_at: string; is_closed: boolean; break_start: string|null; break_end: string|null };
 const ORDER = [1, 2, 3, 4, 5, 6, 0];
 const t5 = (t: string) => t.slice(0, 5);
 
 export function HoursEditor() {
+  const {shop}=useShop();
+  return <HoursWorkspace key={shop?.id??'none'}/>;
+}
+function HoursWorkspace(){
   const { shop } = useShop();
   const qc = useQueryClient();
   const barbers = useBarbers(shop!.id);
@@ -28,6 +32,8 @@ export function HoursEditor() {
     queryKey: key,
     queryFn: async () => { const { data, error } = await supabase.from('working_hours').select('*').eq('barbershop_id', shop!.id); if (error) throw error; return data as WorkingHour[]; },
   });
+  const breaksQ=useQuery({queryKey:['working-hours-break-contract',shop!.id],queryFn:async()=>{const r=await supabase.from('working_hours').select('break_start,break_end').eq('barbershop_id',shop!.id).limit(1);if(r.error){if(['42703','PGRST204'].includes(r.error.code))return false;throw r.error;}return true;},retry:false});
+  const breaksAvailable=breaksQ.data===true;
   const [rows, setRows] = useState<Row[]>([]);
   const scoped = q.data?.filter((h) => (barberId ? h.barber_id === barberId : h.barber_id === null)) ?? [];
   const hasOverride = barberId ? scoped.length > 0 : true;
@@ -35,7 +41,7 @@ export function HoursEditor() {
   useEffect(() => {
     const base = q.data?.filter((h) => h.barber_id === null) ?? [];
     const src = scoped.length ? scoped : base;
-    setRows(ORDER.map((d) => { const h = src.find((x) => x.weekday === d); return h ? { weekday: d, opens_at: t5(h.opens_at), closes_at: t5(h.closes_at), is_closed: h.is_closed } : { weekday: d, opens_at: '09:00', closes_at: '19:00', is_closed: d === 0 }; }));
+    setRows(ORDER.map((d) => { const h = src.find((x) => x.weekday === d); return h ? { weekday: d, opens_at: t5(h.opens_at), closes_at: t5(h.closes_at), is_closed: h.is_closed, break_start:h.break_start?t5(h.break_start):null, break_end:h.break_end?t5(h.break_end):null } : { weekday: d, opens_at: '09:00', closes_at: '19:00', is_closed: d === 0,break_start:null,break_end:null }; }));
   }, [q.data, barberId]);
 
   const save = useMutation({
@@ -44,16 +50,17 @@ export function HoursEditor() {
         if (!r.is_closed && r.closes_at <= r.opens_at) {
           throw new Error(`${WEEKDAYS[r.weekday]}: a hora de fecho tem de ser depois da abertura.`);
         }
+        if(!r.is_closed&&(r.break_start||r.break_end)&&(!r.break_start||!r.break_end||r.break_start<r.opens_at||r.break_end>r.closes_at||r.break_start>=r.break_end))throw new Error(WEEKDAYS[r.weekday]+': a pausa tem de estar dentro do horário e terminar depois de começar.');
       }
-
+      const payload=rows.map(({break_start,break_end,...r})=>breaksAvailable?{...r,break_start:r.is_closed?null:break_start,break_end:r.is_closed?null:break_end}:r);
       const params = barberId
-        ? { p_shop: shop!.id, p_rows: rows as unknown as Json, p_barber_id: barberId }
-        : { p_shop: shop!.id, p_rows: rows as unknown as Json };
+        ? { p_shop: shop!.id, p_rows: payload as unknown as Json, p_barber_id: barberId }
+        : { p_shop: shop!.id, p_rows: payload as unknown as Json };
 
       const { error } = await supabase.rpc('replace_working_hours', params);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: key }); toast.success('Horário guardado'); },
+    onSuccess: async () => { await Promise.all([qc.invalidateQueries({ queryKey: key }),qc.invalidateQueries({queryKey:['availability']}),qc.invalidateQueries({queryKey:['agenda']}),qc.invalidateQueries({queryKey:['public-barbershop',shop!.slug]})]); toast.success('Horário guardado'); },
     onError: (e) => toast.error(e instanceof Error && e.message.includes(':') ? e.message : humanError(e)),
   });
   const clearOverride = useMutation({
@@ -65,7 +72,7 @@ export function HoursEditor() {
       });
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: key }); toast.success('Este barbeiro volta a seguir o horário da barbearia'); },
+    onSuccess: async () => { await Promise.all([qc.invalidateQueries({ queryKey: key }),qc.invalidateQueries({queryKey:['availability']}),qc.invalidateQueries({queryKey:['agenda']}),qc.invalidateQueries({queryKey:['public-barbershop',shop!.slug]})]); toast.success('Este barbeiro volta a seguir o horário da barbearia'); },
     onError: (e) => toast.error(humanError(e)),
   });
   const set = (i: number, patch: Partial<Row>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
@@ -83,19 +90,21 @@ export function HoursEditor() {
         {barberId && hasOverride && <Button data-testid="hours-clear-override-btn" variant="ghost" size="sm" onClick={() => clearOverride.mutate()}>Seguir horário da barbearia</Button>}
       </div>
       {barberId && !hasOverride && <p className="t-body text-ink-mid">Este barbeiro segue o horário da barbearia. Ao guardares, crias um horário próprio.</p>}
+      {breaksAvailable?<p className="t-body text-ink-mid">As pausas repetem-se todas as semanas. A pausa da barbearia aplica-se a toda a equipa; cada barbeiro pode ter uma pausa adicional. Marcações que atravessam qualquer pausa não são oferecidas.</p>:breaksQ.isError?<ErrorState message="Não foi possível verificar a disponibilidade de pausas semanais." onRetry={()=>void breaksQ.refetch()}/>:breaksQ.data===false?<p role="status" className="t-label text-ink-mid">Pausas recorrentes aguardam a actualização da base de dados. Pode usar bloqueios pontuais abaixo.</p>:null}
       <div data-testid="hours-grid" className="glass p-2 sm:p-3 divide-y divide-white/5">
         {rows.map((r, i) => (
-          <div key={r.weekday} data-testid={`hours-row-${r.weekday}`} className="grid grid-cols-[1fr_auto] sm:grid-cols-[120px_1fr_1fr_auto] items-center gap-3 px-3 py-2.5">
+          <div key={r.weekday} data-testid={`hours-row-${r.weekday}`} className="grid grid-cols-2 lg:grid-cols-[minmax(100px,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-3 px-3 py-3">
             <span className="text-sm font-normal">{WEEKDAYS[r.weekday]}</span>
             <div className="sm:contents contents">
-              <input data-testid={`hours-open-${r.weekday}`} type="time" step={900} className="field !py-2 disabled:opacity-40 col-start-1 sm:col-start-auto" disabled={r.is_closed} value={r.opens_at} onChange={(e) => set(i, { opens_at: e.target.value })} aria-label={`Abre ${WEEKDAYS[r.weekday]}`} />
+              <input data-testid={`hours-open-${r.weekday}`} type="time" step={900} className="field !py-2 disabled:opacity-40" disabled={r.is_closed} value={r.opens_at} onChange={(e) => set(i, { opens_at: e.target.value })} aria-label={`Abre ${WEEKDAYS[r.weekday]}`} />
               <input data-testid={`hours-close-${r.weekday}`} type="time" step={900} className="field !py-2 disabled:opacity-40" disabled={r.is_closed} value={r.closes_at} onChange={(e) => set(i, { closes_at: e.target.value })} aria-label={`Fecha ${WEEKDAYS[r.weekday]}`} />
             </div>
-            <Switch testId={`hours-open-switch-${r.weekday}`} checked={!r.is_closed} onCheckedChange={(v) => set(i, { is_closed: !v })} label={r.is_closed ? 'Fechado' : 'Aberto'} />
+            <Switch testId={`hours-open-switch-${r.weekday}`} checked={!r.is_closed} onCheckedChange={(v) => set(i, v?{is_closed:false}:{is_closed:true,break_start:null,break_end:null})} label={r.is_closed ? 'Fechado' : 'Aberto'} />
+            {breaksAvailable&&!r.is_closed&&<div className="col-span-2 lg:col-span-4 grid grid-cols-2 gap-3 border-t border-white/5 pt-3"><Field label="Início da pausa" data-testid={`hours-break-start-${r.weekday}`} type="time" value={r.break_start??''} onChange={e=>set(i,{break_start:e.target.value||null})}/><Field label="Fim da pausa" data-testid={`hours-break-end-${r.weekday}`} type="time" value={r.break_end??''} onChange={e=>set(i,{break_end:e.target.value||null})}/>{(r.break_start||r.break_end)&&<Button className="col-span-2 justify-self-start" size="sm" variant="ghost" onClick={()=>set(i,{break_start:null,break_end:null})}>Remover pausa</Button>}</div>}
           </div>
         ))}
       </div>
-      <div className="flex justify-end"><Button data-testid="hours-save-btn" loading={save.isPending} onClick={() => save.mutate()}>Guardar horário</Button></div>
+      <div className="flex justify-end"><Button data-testid="hours-save-btn" loading={save.isPending} disabled={breaksQ.isLoading||breaksQ.isError||rows.length!==7} onClick={() => save.mutate()}>Guardar horário</Button></div>
     </div>
   );
 }

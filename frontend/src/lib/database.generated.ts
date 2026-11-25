@@ -45,6 +45,7 @@ export type Database = {
           product_name_snapshot: string
           qty: number
           status: Database["public"]["Enums"]["shop_order_item_status"]
+          unit_cost_snapshot: number | null
           unit_price_snapshot: number
           updated_at: string
           variant_id: string
@@ -62,6 +63,7 @@ export type Database = {
           product_name_snapshot: string
           qty: number
           status?: Database["public"]["Enums"]["shop_order_item_status"]
+          unit_cost_snapshot?: number | null
           unit_price_snapshot: number
           updated_at?: string
           variant_id: string
@@ -79,6 +81,7 @@ export type Database = {
           product_name_snapshot?: string
           qty?: number
           status?: Database["public"]["Enums"]["shop_order_item_status"]
+          unit_cost_snapshot?: number | null
           unit_price_snapshot?: number
           updated_at?: string
           variant_id?: string
@@ -1957,6 +1960,7 @@ export type Database = {
         Row: {
           attributes: Json
           barbershop_id: string
+          cost_minor: number | null
           created_at: string
           created_by: string | null
           id: string
@@ -1965,6 +1969,7 @@ export type Database = {
           low_stock_threshold: number
           price_minor: number
           product_id: string
+          regular_price_minor: number | null
           sku: string | null
           stock_on_hand: number
           unit_label: string
@@ -1974,6 +1979,7 @@ export type Database = {
         Insert: {
           attributes?: Json
           barbershop_id: string
+          cost_minor?: number | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -1982,6 +1988,7 @@ export type Database = {
           low_stock_threshold?: number
           price_minor: number
           product_id: string
+          regular_price_minor?: number | null
           sku?: string | null
           stock_on_hand?: number
           unit_label?: string
@@ -1991,6 +1998,7 @@ export type Database = {
         Update: {
           attributes?: Json
           barbershop_id?: string
+          cost_minor?: number | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -1999,6 +2007,7 @@ export type Database = {
           low_stock_threshold?: number
           price_minor?: number
           product_id?: string
+          regular_price_minor?: number | null
           sku?: string | null
           stock_on_hand?: number
           unit_label?: string
@@ -2338,6 +2347,8 @@ export type Database = {
         Row: {
           barber_id: string | null
           barbershop_id: string
+          break_end: string | null
+          break_start: string | null
           closes_at: string
           id: string
           is_closed: boolean
@@ -2347,6 +2358,8 @@ export type Database = {
         Insert: {
           barber_id?: string | null
           barbershop_id: string
+          break_end?: string | null
+          break_start?: string | null
           closes_at: string
           id?: string
           is_closed?: boolean
@@ -2356,6 +2369,8 @@ export type Database = {
         Update: {
           barber_id?: string | null
           barbershop_id?: string
+          break_end?: string | null
+          break_start?: string | null
           closes_at?: string
           id?: string
           is_closed?: boolean

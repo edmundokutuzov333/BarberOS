@@ -348,6 +348,7 @@ export function ShopCatalogueStep({
                               </p>
                             )}
                             <p className="t-card text-ink-hi mt-1">
+                              {typeof variant.attributes.regular_price_minor==="number"&&variant.attributes.regular_price_minor>variant.price_minor&&<span className="block text-xs line-through text-ink-mid" aria-label="Preço normal">{formatMT(variant.attributes.regular_price_minor)}</span>}
                               {formatMT(variant.price_minor)}
                             </p>
                             {variant.available &&

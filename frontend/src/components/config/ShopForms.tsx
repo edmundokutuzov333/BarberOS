@@ -1,7 +1,7 @@
 import { PAYMENTS_AVAILABLE } from '@/features/payments/availability';
 import { PaymentsUnavailableNotice } from '@/features/payments/PaymentsUnavailableNotice';
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { useShop, type Shop } from '@/lib/shop';
@@ -14,13 +14,16 @@ import { Switch, Select, Textarea, ImageUpload } from '@/components/ui/Primitive
 
 export function useUpdateShop(onDone?: () => void) {
   const { shop, refresh } = useShop();
+  const qc=useQueryClient();
   return useMutation({
     mutationFn: async (patch: Partial<Shop>) => {
-      const r = await supabase.from('barbershops').update(patch).eq('id', shop!.id);
+      if(!shop?.id)throw new Error('SHOP_REQUIRED');
+      const r = await supabase.from('barbershops').update(patch).eq('id', shop.id).select('id').single();
       if (r.error) throw r.error;
+      if(r.data?.id!==shop.id)throw new Error('SHOP_UPDATE_NOT_CONFIRMED');
     },
     onSuccess: async () => {
-      await refresh();
+      await Promise.all([refresh(),qc.invalidateQueries({queryKey:['public-barbershop',shop?.slug]}),qc.invalidateQueries({queryKey:['public-barbershops']}),qc.invalidateQueries({queryKey:['public-shop-catalog',shop?.slug]}),qc.invalidateQueries({queryKey:['availability']}),qc.invalidateQueries({queryKey:['agenda']})]);
       toast.success('Guardado');
       onDone?.();
     },
@@ -192,7 +195,8 @@ export function RulesForm({ onDone }: { onDone?: () => void }) {
   const m = useUpdateShop(onDone);
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    const slot = parseInt(f.slot, 10), lead = parseInt(f.lead, 10), adv = parseInt(f.advance, 10);
+    const slot = Number(f.slot), lead = Number(f.lead), adv = Number(f.advance);
+    if(!/^\d+$/.test(f.lead.trim())||!/^\d+$/.test(f.advance.trim()))return toast.error('Introduza números inteiros para os prazos.');
     if (![5, 10, 15, 20, 30, 60].includes(slot)) return toast.error('Intervalo entre 5 e 60 minutos.');
     if (!(lead >= 0 && lead <= 1440)) return toast.error('Antecedência mínima entre 0 e 1440 minutos.');
     if (!(adv >= 1 && adv <= 180)) return toast.error('Antecedência máxima entre 1 e 180 dias.');
@@ -202,9 +206,10 @@ export function RulesForm({ onDone }: { onDone?: () => void }) {
     <form onSubmit={submit} className="space-y-5" data-testid="rules-form">
       <div className="grid sm:grid-cols-3 gap-3">
         <Select data-testid="rules-slot-select" label="Intervalo da grelha" value={f.slot} onChange={(e) => setF({ ...f, slot: e.target.value })}>{[5, 10, 15, 20, 30, 60].map((n) => <option key={n} value={n}>{n} min</option>)}</Select>
-        <Field data-testid="rules-lead-input" label="Antecedência mínima (min)" name="r_lead" inputMode="numeric" value={f.lead} onChange={(e) => setF({ ...f, lead: e.target.value })} />
-        <Field data-testid="rules-advance-input" label="Marcar até (dias)" name="r_adv" inputMode="numeric" value={f.advance} onChange={(e) => setF({ ...f, advance: e.target.value })} />
+        <Field data-testid="rules-lead-input" label="Antecedência mínima (min)" name="r_lead" inputMode="numeric" hint="Tempo mínimo entre agora e o início de uma nova marcação." value={f.lead} onChange={(e) => setF({ ...f, lead: e.target.value })} />
+        <Field data-testid="rules-advance-input" label="Marcar até (dias)" name="r_adv" inputMode="numeric" hint="Janela futura que o cliente pode consultar e reservar." value={f.advance} onChange={(e) => setF({ ...f, advance: e.target.value })} />
       </div>
+      <p className="t-body text-ink-mid">A grelha determina de quantos em quantos minutos surgem opções de início. A duração de cada serviço continua a ser definida no respectivo serviço.</p>
       <div>
         <span className="t-label text-ink-mid mb-2 block">Regra de cancelamento e remarcação</span>
         <div className="grid sm:grid-cols-2 gap-2">
