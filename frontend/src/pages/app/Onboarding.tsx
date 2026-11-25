@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import SetupAssistant from '@/features/intelligence/SetupAssistant';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -64,7 +65,7 @@ function CreateShop() {
 
 export default function Onboarding() {
   const nav = useNavigate();
-  const { shop, refresh } = useShop();
+  const { shop, refresh, role } = useShop();
   const { signOut } = useAuth();
   const [params, setParams] = useSearchParams();
   const step = shop ? Math.min(8, Math.max(1, parseInt(params.get('passo') ?? '', 10) || Math.max(1, shop.onboarding_step))) : 0;
@@ -96,6 +97,7 @@ export default function Onboarding() {
             <div><h1 className="t-title">{STEPS[step].title}</h1><p className="t-body text-ink-mid mt-1.5">{STEPS[step].body}</p></div>
             {step > 1 && <button type="button" data-testid="onboarding-back" onClick={() => go(step - 1)} className="t-label text-ink-mid hover:text-ink-hi transition-colors shrink-0">Anterior</button>}
           </div>
+          {shop&&step>0&&(role==='owner'||role==='manager')&&<SetupAssistant key={shop.id+":"+step} shopId={shop.id} step={step}/>}
           <div className="mt-7" data-testid={`onboarding-step-${step}`}>
             {step === 0 && <CreateShop />}
             {step === 1 && <ProfileForm key={step} compact onDone={next} />}

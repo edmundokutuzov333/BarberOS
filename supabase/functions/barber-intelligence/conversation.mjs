@@ -40,3 +40,20 @@ export function classifyMail(text){
  const matches=rules.filter(([,re])=>re.test(q)).map(([id])=>id);
  return {version:1,kind:matches.length===1?matches[0]:'acknowledgement',ambiguous:matches.length!==1};
 }
+
+const setupSteps=[
+ ['Criar a barbearia','Escolha o nome e endereço público que identificam o negócio.','O endereço permite encontrar a página pública de marcações.','Confirme o nome, endereço e contacto antes de criar.'],
+ ['Perfil','Preencha o perfil com os contactos, localização e descrição correctos.','O perfil ajuda o cliente a reconhecer e contactar a barbearia.','Confirme a informação apresentada no perfil e reveja a página pública.'],
+ ['Tema','Escolha um tema legível e adequado à identidade da barbearia.','A apresentação deve facilitar a leitura e as marcações em qualquer ecrã.','Verifique o contraste, os textos e a experiência em telemóvel.'],
+ ['Serviços','Configure os serviços que a equipa efectivamente realiza, com preços e durações correctos.','Os serviços permitem compor marcações e determinar o tempo necessário.','Confirme que existe pelo menos um serviço utilizável, com duração e preço revistos.'],
+ ['Cortes','Organize os cortes e respectivos exemplos visuais.','Um catálogo coerente ajuda os clientes a escolher o resultado pretendido.','Confirme os cortes publicados, imagens e associações aos serviços.'],
+ ['Barbeiros','Adicione os profissionais e reveja os serviços que podem realizar.','A agenda depende da equipa e das capacidades registadas.','Confirme pelo menos um profissional activo e a configuração da equipa.'],
+ ['Horários','Defina dias de trabalho, horários, pausas e excepções reais.','A disponibilidade oficial é calculada a partir da configuração da agenda.','Confirme que o motor de disponibilidade devolve horários adequados.'],
+ ['Regras','Reveja as regras de marcação, cancelamento e lembretes que o negócio pretende aplicar.','As regras ajudam a reduzir conflitos e dão clareza à operação.','Confirme as políticas e teste uma marcação em condições controladas.'],
+ ['Link e QR','Reveja e partilhe a ligação pública ou QR da barbearia.','O link é o ponto de entrada para as marcações públicas.','Abra a página em telemóvel e confirme perfil, equipa, serviços e horários.']
+];
+export function setupGuide(step,progress,question){
+ if(!Number.isInteger(step)||step<1||step>8||!Number.isInteger(progress)||progress<0||progress>9||!['what','why','verify'].includes(question))throw new Error('INVALID_SETUP_GUIDE');
+ const [title,what,why,verify]=setupSteps[step];
+ return {version:1,step,progress,title,answer:{what,why,verify}[question],review:verify};
+}

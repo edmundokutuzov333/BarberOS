@@ -7,7 +7,7 @@ import { operationalPlan, draftKinds, prepareDraft } from "./operations.mjs";
 import { inventoryIntelligence, reviewIntelligence } from "./quality.mjs";
 import { financialIntelligence } from "./finance.mjs";
 import { customerIntelligence } from "./customer.mjs";
-import { resolveIntent, classifyMail } from "./conversation.mjs";
+import { resolveIntent, classifyMail, setupGuide } from "./conversation.mjs";
 import { credentialFromVault, genericAdvice, decodeAudio, transcribeAudio } from "./provider.mjs";
 
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -31,11 +31,12 @@ Deno.serve(async (req:Request)=>{
     let body;try{body=JSON.parse(raw)}catch{return json({error:"INVALID_REQUEST"},400)}
     if(size>8192&&body?.action!=="voice")return json({error:"INVALID_REQUEST"},413);
     if(!body||typeof body!=="object"||Array.isArray(body)||typeof body.shopId!=="string"||!uuid.test(body.shopId)||![7,30].includes(body.days)||!topics.includes(body.topic)||("question" in body&&(typeof body.question!=="string"||body.question.length>300))||("cloud" in body&&typeof body.cloud!=="boolean"))return json({error:"INVALID_REQUEST"},400);
-    if(("action" in body&&!["customer","operations","draft","inventory","reviews","finance","voice","mail_intent"].includes(body.action))||(body.action==="customer"&&(typeof body.customerId!=="string"||!uuid.test(body.customerId)||body.cloud===true)))return json({error:"INVALID_REQUEST"},400);
+    if(("action" in body&&!["customer","operations","draft","inventory","reviews","finance","voice","mail_intent","setup_guide"].includes(body.action))||(body.action==="customer"&&(typeof body.customerId!=="string"||!uuid.test(body.customerId)||body.cloud===true)))return json({error:"INVALID_REQUEST"},400);
     if(body.action==="draft"&&(!draftKinds.includes(body.kind)||body.cloud===true))return json({error:"INVALID_REQUEST"},400);
     if(["operations","inventory","reviews","finance"].includes(body.action)&&body.cloud===true)return json({error:"INVALID_REQUEST"},400);
     if("contextTopic" in body&&!topics.includes(body.contextTopic))return json({error:"INVALID_REQUEST"},400);
     if(body.action==="mail_intent"&&(typeof body.text!=="string"||!body.text.trim()||body.text.length>2000||body.cloud===true))return json({error:"INVALID_REQUEST"},400);
+    if(body.action==="setup_guide"&&(!Number.isInteger(body.step)||body.step<1||body.step>8||!["what","why","verify"].includes(body.intent)||body.cloud===true))return json({error:"INVALID_REQUEST"},400);
     const audio=body.action==="voice"&&body.consent===true?decodeAudio(body.audio,body.mime):null;
     if(body.action==="voice"&&(!audio||body.cloud===true))return json({error:"INVALID_REQUEST"},400);
     const userId=auth.user.id,shopId=body.shopId;
@@ -61,6 +62,7 @@ Deno.serve(async (req:Request)=>{
     }
     const {data:shop,error:se}=await admin.from("barbershops").select("timezone,shop_enabled,onboarding_step").eq("id",shopId).maybeSingle();
     if(se||!shop)return json({error:"DATA_UNAVAILABLE"},503);
+    if(body.action==="setup_guide")return json(setupGuide(body.step,shop.onboarding_step,body.intent));
     const key=Deno.env.get("SUPABASE_ANON_KEY");const url=Deno.env.get("SUPABASE_URL");
     if(!key||!url)return json({error:"DATA_UNAVAILABLE"},503);
     // Business reads use the caller JWT, never service_role. Existing RPC tenant checks remain authoritative.
@@ -122,9 +124,18 @@ Deno.serve(async (req:Request)=>{
     const result=analyze({current,previous,dashboard,crm,wait,notifications,services,barbers,history,store},range,topic);
     if(!resolved.recognized)result.answer="Não identifiquei o tema da pergunta. Escolha uma das áreas disponíveis. "+result.answer;
     if(resolved.recognized&&resolved.intent==="next"){const relevant=result.insights.filter(i=>i.category===topic||topic==="overview").slice(0,3);if(relevant.length)result.answer+="\n\nPróximos passos:\n"+relevant.map(i=>i.detail).join("\n");}
+    if(resolved.recognized&&resolved.intent==="explain"){
+      const relevant=result.insights.filter(i=>i.category===topic||topic==="overview").slice(0,3);
+      if(relevant.length)result.answer+="\n\nSinais que justificam a análise:\n"+relevant.map(i=>i.title+": "+i.detail).join("\n");
+      else result.answer+="\n\nNão existe um sinal suficiente nestes indicadores para identificar uma causa. Reveja os dados no módulo correspondente.";
+    }
+    if(resolved.recognized&&resolved.intent==="compare"){
+      result.answer+="\n\nPeríodos comparados: "+range.from+" a "+range.to+" e "+range.previousFrom+" a "+range.previousTo+".";
+      if(topic!=="finance")result.answer+=" A comparação detalhada encontra-se nos relatórios; este tema não possui uma série comparativa própria nesta consulta.";
+    }
     const groqKey=await cloudKey();
     let cloud:{status:string;advice:string|null}={status:groqKey?"available":"disabled",advice:null};
-    if(body.cloud===true&&cloud.status==="available"){
+    if(body.cloud===true&&resolved.recognized&&cloud.status==="available"){
       const shopBucket=await sha256Hex(salt+":intelligence:cloud:shop:"+shopId);
       const globalBucket=await sha256Hex(salt+":intelligence:cloud:global");
       if((await consume(admin,shopBucket,5,86400)).allowed&&(await consume(admin,globalBucket,100,86400)).allowed){

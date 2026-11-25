@@ -62,6 +62,8 @@ try{
  assert.equal((await call(barber.token,{...payload,action:'mail_intent',text:'Preciso reagendar'})).status,403);
  assert.equal((await call(owner.token,{...payload,action:'voice',audio:'invalid',mime:'audio/webm',consent:true})).status,400);
  const follow=ok(await call(owner.token,{...payload,question:'E como melhorar?',contextTopic:'finance'}));assert.equal(follow.topic,'finance');
+ const guide=ok(await call(manager.token,{...payload,action:'setup_guide',step:6,intent:'verify'}));assert.equal(guide.step,6);assert.equal(guide.title,'Horários');
+ assert.equal((await call(barber.token,{...payload,action:'setup_guide',step:6,intent:'verify'})).status,403);
  const c={...payload,action:'customer',customerId:customer};
  const result=ok(await call(owner.token,c));assert.equal(result.returnStatus,'insufficient');assert.equal(result.draft,null);
  assert.equal((await call(manager.token,c)).status,200);

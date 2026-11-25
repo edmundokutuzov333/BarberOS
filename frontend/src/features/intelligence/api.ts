@@ -60,3 +60,10 @@ export async function classifyCommunication(shopId:string,text:string){
  const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'mail_intent',days:7,topic:'communications',text:text.slice(0,2000)}});
  if(error)throw new Error('MAIL_INTENT_UNAVAILABLE');return z.object({version:z.literal(1),kind:z.enum(draftKinds),ambiguous:z.boolean()}).parse(data);
 }
+
+export type SetupQuestion='what'|'why'|'verify';
+export async function loadSetupGuide(shopId:string,step:number,intent:SetupQuestion){
+ const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'setup_guide',days:7,topic:'setup',step,intent}});
+ if(error)throw new Error('SETUP_GUIDE_UNAVAILABLE');
+ return z.object({version:z.literal(1),step:z.number().int().min(1).max(8),progress:z.number().int().min(0).max(9),title:z.string(),answer:z.string(),review:z.string()}).parse(data);
+}

@@ -3,9 +3,10 @@ import { Mic, Square } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { transcribeQuestion } from './api';
 
-export default function VoiceQuestion({shopId,disabled,onText}:{shopId:string;disabled:boolean;onText:(text:string)=>void}){
+export default function VoiceQuestion({shopId,disabled,onText,onBusy}:{shopId:string;disabled:boolean;onText:(text:string)=>void;onBusy:(busy:boolean)=>void}){
  const [status,setStatus]=useState<'idle'|'starting'|'recording'|'review'|'uploading'>('idle');
  const [error,setError]=useState('');
+ useEffect(()=>{onBusy(status!=='idle');return()=>onBusy(false)},[status,onBusy]);
  const recorder=useRef<MediaRecorder|null>(null),stream=useRef<MediaStream|null>(null),timer=useRef<number|null>(null),audio=useRef<Blob|null>(null),active=useRef(true);
  const supported=typeof MediaRecorder!=='undefined'&&!!navigator.mediaDevices?.getUserMedia;
  const release=()=>{if(timer.current!==null){window.clearTimeout(timer.current);timer.current=null}stream.current?.getTracks().forEach(t=>t.stop());stream.current=null};
