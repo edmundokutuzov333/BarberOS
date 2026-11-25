@@ -8,13 +8,13 @@ export function Skeleton({ className, lines = 3, style }: { className?: string; 
       aria-busy="true"
       aria-label="A carregar conteúdo"
       role="status"
-      className={cn('glass overflow-hidden p-6', className)}
+      className={cn('glass min-w-0 overflow-hidden p-4 sm:p-6', className)}
       style={style}
     >
       <div className="aurora-sweep animate-aurora" aria-hidden="true" />
       <div className="space-y-3 opacity-40" aria-hidden="true">
         {Array.from({ length: lines }).map((_, i) => (
-          <div key={i} className="h-3 rounded-full bg-white/10" style={{ width: `${85 - i * 18}%` }} />
+          <div key={i} className="h-3 rounded-full bg-white/10" style={{ width: `${Math.max(28, 85 - (i % 4) * 18)}%` }} />
         ))}
       </div>
     </div>
@@ -26,11 +26,11 @@ export function EmptyState({ title, body, action, testId }: { title: string; bod
     <div
       data-testid={testId ?? 'empty-state'}
       role="status"
-      className="rounded-2xl border border-dashed border-white/10 p-8 text-center"
+      className="rounded-2xl border border-dashed border-white/10 p-5 sm:p-8 text-center min-w-0 break-words"
     >
       <p className="t-card text-ink-hi">{title}</p>
       {body && <p className="t-body text-ink-mid mt-1.5 max-w-sm mx-auto">{body}</p>}
-      {action && <div className="mt-5 flex justify-center">{action}</div>}
+      {action && <div className="mt-5 flex flex-wrap justify-center gap-2">{action}</div>}
     </div>
   );
 }
@@ -43,7 +43,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
       aria-live="assertive"
       className="rounded-2xl border border-st-noshow/30 bg-st-noshow/10 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
     >
-      <p className="t-body text-ink-hi">{message}</p>
+      <p className="t-body text-ink-hi min-w-0 break-words">{message}</p>
       {onRetry && (
         <button
           data-testid="error-retry-btn"
@@ -65,12 +65,12 @@ export function Panel({ children, className, title, aside, testId }: { children:
     <section
       data-testid={testId}
       aria-labelledby={title ? titleId : undefined}
-      className={cn('glass p-5 sm:p-6', className)}
+      className={cn('glass min-w-0 p-4 sm:p-6', className)}
     >
       {(title || aside) && (
-        <header className="flex items-center justify-between gap-3 mb-4">
-          {title && <h2 id={titleId} className="t-card text-ink-hi">{title}</h2>}
-          {aside}
+        <header className="flex flex-wrap items-center justify-between gap-3 mb-4 min-w-0">
+          {title && <h2 id={titleId} className="t-card text-ink-hi min-w-0 break-words">{title}</h2>}
+          {aside && <div className="min-w-0 max-w-full flex flex-wrap items-center gap-2">{aside}</div>}
         </header>
       )}
       {children}
