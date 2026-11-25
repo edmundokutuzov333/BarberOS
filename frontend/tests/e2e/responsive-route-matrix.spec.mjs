@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 
 const viewports = [1440,1280,768,390,360].map(width=>({width,height:width<=390?780:900}));
 const publicRoutes = [
-  '/', '/sobre', '/privacidade', '/termos', '/entrar', '/registar', '/recuperar',
+  '/', '/marcar', '/sobre', '/privacidade', '/termos', '/entrar', '/registar', '/recuperar', '/b/oryon',
   '/barbearia/oryon', '/barbearia/oryon/marcar', '/demonstracao-loja',
 ];
 const protectedRoutes = [
@@ -38,7 +38,7 @@ for(const viewport of viewports){
         const errors=[];page.on('pageerror',error=>errors.push(error.message));
         const response=await page.goto(route);
         expect(response?.status()).toBeLessThan(400);
-        if(route.endsWith('/marcar'))await expect(page.getByTestId('booking-step-service')).toBeVisible({timeout:20000});
+        if(route==='/barbearia/oryon/marcar')await expect(page.getByTestId('booking-step-service')).toBeVisible({timeout:20000});
         else await expect(page.locator('h1:visible').first()).toBeVisible({timeout:20000});
         await assertViewport(page);
         await testInfo.attach('viewport',{body:await page.screenshot({animations:'disabled',fullPage:true}),contentType:'image/png'});
@@ -49,6 +49,17 @@ for(const viewport of viewports){
         }
       });
     }
+    test('invalid public links and not-found states fit the viewport',async({page},testInfo)=>{
+      for(const route of ['/marcacao/qa-invalid','/marcacao/qa-invalid/avaliar','/vaga/qa-invalid','/qa-unknown']){
+        await page.goto(route);
+        if(route==='/qa-unknown')await expect(page.getByTestId('not-found-page')).toBeVisible();
+        else await expect(page.getByTestId('error-state')).toBeVisible({timeout:20000});
+        await assertViewport(page);
+        await testInfo.attach(route.replaceAll('/','-'),{body:await page.screenshot({animations:'disabled',fullPage:true}),contentType:'image/png'});
+      }
+      await page.goto('/alterar-palavra-passe');
+      await expect(page).toHaveURL(/\/entrar(?:\?|$)/);
+    });
     // Authentication guard only: these are not authenticated interior screenshots.
     test('all protected route entries enforce login',async({page})=>{
       test.setTimeout(180000);
