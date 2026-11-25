@@ -64,7 +64,7 @@ function OrderWorkspace(){
      {o.needs_confirmation_reason&&<p className="text-sm text-amber-300 mt-2">A confirmar: {o.needs_confirmation_reason}</p>}
     </article>)}</div>}
   </Panel>
-  <Modal open={!!pendingAction} onOpenChange={open=>{if(!open&&!busy)setPendingAction(null);}} title={pendingAction?.title??'Actualizar pedido'} testId="shop-order-action-modal">
+  <Modal busy={busy} open={!!pendingAction} onOpenChange={open=>{if(!open&&!busy)setPendingAction(null);}} title={pendingAction?.title??'Actualizar pedido'} testId="shop-order-action-modal">
    <form className="space-y-4" onSubmit={e=>{e.preventDefault();submitAction();}}>
     {pendingAction?.action==='deliver'?<Field label="Quantidade entregue" type="number" min={1} max={pendingAction.maxQty} step={1} value={actionValue} onChange={e=>setActionValue(e.target.value)} required/>:<Textarea label="Motivo" rows={4} className="!min-h-[120px] !resize-y" value={actionValue} onChange={e=>setActionValue(e.target.value)} required/>}
     <div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="secondary" disabled={busy} onClick={()=>setPendingAction(null)}>Voltar</Button><Button type="submit" loading={busy}>Confirmar</Button></div>

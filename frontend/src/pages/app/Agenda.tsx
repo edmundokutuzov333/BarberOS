@@ -163,7 +163,7 @@ function AppointmentCard({
         {canDrag&&height>=28&&<Move size={13} className="shrink-0 text-accent-soft" aria-hidden/>}
       </button>
     </article>
-    <Modal open={detailsOpen} onOpenChange={setDetailsOpen} title="Detalhes da marcação" testId="agenda-appointment-details">
+    <Modal busy={busy} open={detailsOpen} onOpenChange={setDetailsOpen} title="Detalhes da marcação" testId="agenda-appointment-details">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-sm font-medium text-ink-hi break-words">{appointment.customer_name}</p>
@@ -511,7 +511,7 @@ function AgendaWorkspace() {
           )}
         </>
       )}
-      <Modal open={!!cancelTarget} onOpenChange={open=>{if(!open&&!busyId)setCancelTarget(null);}} title="Cancelar marcação" testId="agenda-cancel-modal">
+      <Modal busy={!!busyId} open={!!cancelTarget} onOpenChange={open=>{if(!open&&!busyId)setCancelTarget(null);}} title="Cancelar marcação" testId="agenda-cancel-modal">
         <form className="space-y-4" onSubmit={event=>{event.preventDefault();if(cancelTarget)void handleAction('cancel',cancelTarget,cancelReason.trim()||null,true);}}>
           <p className="t-body text-ink-mid">Confirma o cancelamento da marcação de {cancelTarget?.customer_name}?</p>
           <Textarea label="Motivo (opcional)" maxLength={500} rows={4} value={cancelReason} onChange={event=>setCancelReason(event.target.value)}/>

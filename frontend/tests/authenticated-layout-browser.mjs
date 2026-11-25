@@ -52,6 +52,39 @@ export async function certifyAuthenticatedLayout({browser,origin,owner,admin,sho
    for(const width of widths){
     await page.setViewportSize({width,height:width<=390?780:900});
     for(const route of routes)await check(page,route,width,role);
+    if(role==='admin'){
+     for(const scenario of ['shop-status','reset-credential']){
+      try{
+       let trigger,dialog;
+       if(scenario==='shop-status'){
+        await page.goto(origin+'/admin/barbearias/'+shopId);
+        const select=page.locator('#admin-shop-status');
+        await expect(select).toBeVisible();
+        const original=await select.inputValue();
+        await select.selectOption(original==='suspended'?'cancelled':'suspended');
+        trigger=page.getByRole('button',{name:'Guardar estado'});
+        await trigger.click();
+        dialog=page.getByTestId('admin-shop-status-dialog');
+       }else{
+        await page.goto(origin+'/admin/utilizadores');
+        const row=page.getByRole('row').filter({hasText:owner.email});
+        trigger=row.getByRole('button',{name:'Repor acesso'});
+        await trigger.click();
+        dialog=page.getByTestId('admin-reset-confirm-dialog');
+       }
+       await expect(dialog).toBeVisible();
+       await expect(dialog.getByRole('button',{name:'Voltar'})).toBeFocused();
+       await page.keyboard.press('Tab');
+       assert.ok(await dialog.evaluate(el=>el.contains(document.activeElement)));
+       await page.screenshot({path:output+'admin-'+width+'-'+scenario+'.png',animations:'disabled'});
+       await dialog.getByRole('button',{name:'Voltar'}).click();
+       await expect(dialog).toHaveCount(0);
+       await expect(trigger).toBeFocused();
+       if(scenario==='reset-credential')await expect(page.getByTestId('temporary-password')).toHaveCount(0);
+       findings.push({role,width,route:scenario,status:'pass'});
+      }catch(error){findings.push({role,width,route:scenario,status:'fail',message:String(error).slice(0,800)});}
+     }
+    }
     if(role==='owner'&&width<1024){
      try{
       await page.goto(origin+'/app');
