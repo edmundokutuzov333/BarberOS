@@ -7,7 +7,8 @@ import { operationalPlan, draftKinds, prepareDraft } from "./operations.mjs";
 import { inventoryIntelligence, reviewIntelligence } from "./quality.mjs";
 import { financialIntelligence } from "./finance.mjs";
 import { customerIntelligence } from "./customer.mjs";
-import { cloudEnabled, credentialFromVault, genericAdvice } from "./provider.mjs";
+import { resolveIntent, classifyMail } from "./conversation.mjs";
+import { credentialFromVault, genericAdvice, decodeAudio, transcribeAudio } from "./provider.mjs";
 
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 Deno.serve(async (req:Request)=>{
@@ -25,13 +26,18 @@ Deno.serve(async (req:Request)=>{
     const reader=req.body?.getReader();
     if(!reader)return json({error:"INVALID_REQUEST"},400);
     let size=0; const decoder=new TextDecoder();let raw="";
-    while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>4096){await reader.cancel();return json({error:"INVALID_REQUEST"},413)}raw+=decoder.decode(value,{stream:true})}
+    while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>440000){await reader.cancel();return json({error:"INVALID_REQUEST"},413)}raw+=decoder.decode(value,{stream:true})}
     raw+=decoder.decode();
     let body;try{body=JSON.parse(raw)}catch{return json({error:"INVALID_REQUEST"},400)}
+    if(size>8192&&body?.action!=="voice")return json({error:"INVALID_REQUEST"},413);
     if(!body||typeof body!=="object"||Array.isArray(body)||typeof body.shopId!=="string"||!uuid.test(body.shopId)||![7,30].includes(body.days)||!topics.includes(body.topic)||("question" in body&&(typeof body.question!=="string"||body.question.length>300))||("cloud" in body&&typeof body.cloud!=="boolean"))return json({error:"INVALID_REQUEST"},400);
-    if(("action" in body&&!["customer","operations","draft","inventory","reviews","finance"].includes(body.action))||(body.action==="customer"&&(typeof body.customerId!=="string"||!uuid.test(body.customerId)||body.cloud===true)))return json({error:"INVALID_REQUEST"},400);
+    if(("action" in body&&!["customer","operations","draft","inventory","reviews","finance","voice","mail_intent"].includes(body.action))||(body.action==="customer"&&(typeof body.customerId!=="string"||!uuid.test(body.customerId)||body.cloud===true)))return json({error:"INVALID_REQUEST"},400);
     if(body.action==="draft"&&(!draftKinds.includes(body.kind)||body.cloud===true))return json({error:"INVALID_REQUEST"},400);
     if(["operations","inventory","reviews","finance"].includes(body.action)&&body.cloud===true)return json({error:"INVALID_REQUEST"},400);
+    if("contextTopic" in body&&!topics.includes(body.contextTopic))return json({error:"INVALID_REQUEST"},400);
+    if(body.action==="mail_intent"&&(typeof body.text!=="string"||!body.text.trim()||body.text.length>2000||body.cloud===true))return json({error:"INVALID_REQUEST"},400);
+    const audio=body.action==="voice"&&body.consent===true?decodeAudio(body.audio,body.mime):null;
+    if(body.action==="voice"&&(!audio||body.cloud===true))return json({error:"INVALID_REQUEST"},400);
     const userId=auth.user.id,shopId=body.shopId;
     const [{data:profile,error:pe},{data:member,error:me}]=await Promise.all([
       admin.from("profiles").select("password_change_required").eq("id",userId).maybeSingle(),
@@ -44,6 +50,15 @@ Deno.serve(async (req:Request)=>{
     const bucket=await sha256Hex(salt+":intelligence:"+shopId+":"+userId);
     if(!(await consume(admin,bucket,12,60)).allowed)return json({error:"RATE_LIMITED"},429);
     if(body.action==="draft")return json(prepareDraft(body.kind));
+    if(body.action==="mail_intent")return json(classifyMail(body.text));
+    const cloudKey=async()=>{const {data,error}=await admin.rpc("get_intelligence_cloud_config");return error?null:credentialFromVault(data)};
+    if(body.action==="voice"){
+      const groqKey=await cloudKey();if(!groqKey)return json({error:"VOICE_UNAVAILABLE"},503);
+      const sb=await sha256Hex(salt+":intelligence:voice:shop:"+shopId),gb=await sha256Hex(salt+":intelligence:voice:global");
+      if(!(await consume(admin,sb,2,86400)).allowed||!(await consume(admin,gb,30,86400)).allowed)return json({error:"VOICE_QUOTA"},429);
+      const text=await transcribeAudio(audio,groqKey);
+      return text?json({version:1,text}):json({error:"VOICE_UNAVAILABLE"},503);
+    }
     const {data:shop,error:se}=await admin.from("barbershops").select("timezone,shop_enabled,onboarding_step").eq("id",shopId).maybeSingle();
     if(se||!shop)return json({error:"DATA_UNAVAILABLE"},503);
     const key=Deno.env.get("SUPABASE_ANON_KEY");const url=Deno.env.get("SUPABASE_URL");
@@ -102,22 +117,18 @@ Deno.serve(async (req:Request)=>{
       rpc("get_report_daily",{p_shop:shopId,p_from:range.historyFrom,p_to:range.to}),
       shop.shop_enabled?rpc("get_shop_phase6_report",{p_barbershop_id:shopId,p_from:range.from,p_to:range.to}).catch(()=>null):Promise.resolve(null)
     ]);
-    const detected=body.question?topicFor(body.question):body.topic;
-    const topic=detected??body.topic;
+    const resolved=resolveIntent(body.question,body.topic,body.contextTopic,topicFor);
+    const topic=resolved.topic;
     const result=analyze({current,previous,dashboard,crm,wait,notifications,services,barbers,history,store},range,topic);
-    if(!detected)result.answer="Não identifiquei o tema da pergunta. Escolha uma das áreas disponíveis. "+result.answer;
-    // Never include the credential in a response or log. Vault allows rotation without deploying the edge.
-    let groqKey=cloudEnabled(Deno.env.get.bind(Deno.env))?Deno.env.get("BARBEROS_AI_GROQ_KEY")!:null;
-    if(!groqKey){
-      const {data:config,error:configError}=await admin.rpc("get_intelligence_cloud_config");
-      if(!configError)groqKey=credentialFromVault(config);
-    }
+    if(!resolved.recognized)result.answer="Não identifiquei o tema da pergunta. Escolha uma das áreas disponíveis. "+result.answer;
+    if(resolved.recognized&&resolved.intent==="next"){const relevant=result.insights.filter(i=>i.category===topic||topic==="overview").slice(0,3);if(relevant.length)result.answer+="\n\nPróximos passos:\n"+relevant.map(i=>i.detail).join("\n");}
+    const groqKey=await cloudKey();
     let cloud:{status:string;advice:string|null}={status:groqKey?"available":"disabled",advice:null};
     if(body.cloud===true&&cloud.status==="available"){
       const shopBucket=await sha256Hex(salt+":intelligence:cloud:shop:"+shopId);
       const globalBucket=await sha256Hex(salt+":intelligence:cloud:global");
       if((await consume(admin,shopBucket,5,86400)).allowed&&(await consume(admin,globalBucket,100,86400)).allowed){
-        const advice=await genericAdvice(topic,groqKey!,fetch,result.insights.filter(i=>topic==="overview"||i.category===topic).map(i=>i.id));
+        const advice=await genericAdvice(topic,groqKey!,fetch,result.insights.filter(i=>topic==="overview"||i.category===topic).map(i=>i.id),resolved.intent);
         cloud={status:advice?"generated":"unavailable",advice};
       }else cloud={status:"quota",advice:null};
     }

@@ -8,8 +8,8 @@ const date=z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const paths=z.enum(['/app/agenda','/app/horarios','/app/marcacoes','/app/lista-espera','/app/relatorios','/app/clientes','/app/loja/produtos','/app/notificacoes','/app/barbeiros']);
 const contract=z.object({version:z.literal(1),range:z.object({today:date,from:date,to:date,previousFrom:date,previousTo:date,historyFrom:date}),topic:z.enum(topics),metrics:z.object({today:n,appointments:n,completed:n,noShow:n,occupancy:n,revenue:n,revenueChange:n,waiting:n,failedNotifications:n,customers:n,recentCustomers:n,lowStock:n}),insights:z.array(z.object({id:z.string(),category:z.enum(topics),title:z.string(),detail:z.string(),href:paths,priority:z.enum(['high','normal'])})),forecast:z.array(z.object({date,expected:z.number(),low:z.number(),high:z.number(),samples:z.number().int().min(4)})).max(7),answer:z.string(),cloud:z.object({status:z.enum(['available','disabled','generated','unavailable','quota']),advice:z.string().nullable()})});
 export type Intelligence= z.infer<typeof contract>;
-export async function loadIntelligence(shopId:string,days:7|30,topic:Topic,question?:string,cloud=false){
-  const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,days,topic,question,cloud}});
+export async function loadIntelligence(shopId:string,days:7|30,topic:Topic,question?:string,cloud=false,contextTopic?:Topic){
+  const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,days,topic,question,cloud,contextTopic}});
   if(error)throw new Error('Não foi possível consultar a inteligência de gestão. Confirme a sessão e tente novamente.');
   return contract.parse(data);
 }
@@ -50,4 +50,13 @@ const financeContract=z.object({version:z.literal(1),from:date,to:date,previousF
 export async function loadFinancialIntelligence(shopId:string,days:7|30){
  const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'finance',days,topic:'finance'}});
  if(error)throw new Error('INTELLIGENCE_FINANCE_UNAVAILABLE');return financeContract.parse(data);
+}
+
+export async function transcribeQuestion(shopId:string,audio:string,mime:string){
+ const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'voice',days:7,topic:'overview',audio,mime,consent:true}});
+ if(error)throw new Error('VOICE_UNAVAILABLE');return z.object({version:z.literal(1),text:z.string().min(1).max(300)}).parse(data);
+}
+export async function classifyCommunication(shopId:string,text:string){
+ const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'mail_intent',days:7,topic:'communications',text:text.slice(0,2000)}});
+ if(error)throw new Error('MAIL_INTENT_UNAVAILABLE');return z.object({version:z.literal(1),kind:z.enum(draftKinds),ambiguous:z.boolean()}).parse(data);
 }

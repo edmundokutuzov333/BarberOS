@@ -457,7 +457,7 @@ export default function Comunicacoes() {
                       ))}
                     </div>
                     <form noValidate className="mt-4 space-y-3 border-t border-white/10 pt-4" onSubmit={(event) => void sendReply(event)}>
-                      {canUseDraft && <CommunicationDraft key={shopId+":"+selectedThreadId} shopId={shopId} disabled={busyAction} hasText={Boolean(replyBody.trim())} onApply={(_s,b)=>setReplyBody(b)}/>}
+                      {canUseDraft && <CommunicationDraft key={shopId+":"+selectedThreadId+":"+(messages.at(-1)?.id??"")} shopId={shopId} messageText={messages.at(-1)?.body??undefined} disabled={busyAction} hasText={Boolean(replyBody.trim())} onApply={(_s,b)=>setReplyBody(b)}/>}
                       <Textarea className="resize-none" disabled={busyAction} label="Responder nesta conversa" name="gmail-reply" value={replyBody} onChange={(event) => setReplyBody(event.target.value)} rows={4} maxLength={50000} required placeholder="Escreva a sua resposta..." />
                       <div className="flex justify-end">
                         <Button type="submit" loading={busyAction} disabled={!replyBody.trim()}><Send size={15} /> Enviar resposta</Button>

@@ -19,9 +19,9 @@ test.beforeAll(async () => {
           if (id.endsWith("/src/lib/auth.tsx")) return "export const useAuth=()=>({user:{id:'44444444-4444-4444-8444-444444444444'}});";
           if (id.endsWith("/src/lib/shop.tsx"))
             return `
- import {useState,useEffect} from 'react';
+ import {useSyncExternalStore} from 'react';
  const first={id:'${shopId}',name:'Loja A',shop_enabled:false};
- export function useShop(){const [shop,setShop]=useState(first);const [role,setRole]=useState('owner');useEffect(()=>{window.__catalogShop=()=>setShop({id:'${otherId}',name:'Loja B',shop_enabled:false});window.__catalogRole=setRole;window.__enableCatalog=()=>setShop(v=>({...v,shop_enabled:true}));return()=>{delete window.__catalogShop;delete window.__catalogRole;delete window.__enableCatalog}},[]);return {shop,role};}`;
+ let snapshot={shop:first,role:'owner'};const listeners=new Set();const subscribe=fn=>{listeners.add(fn);return()=>listeners.delete(fn)};const update=patch=>{snapshot={...snapshot,...patch};listeners.forEach(fn=>fn())};window.__catalogShop=()=>update({shop:{id:'${otherId}',name:'Loja B',shop_enabled:false}});window.__catalogRole=role=>update({role});window.__enableCatalog=()=>update({shop:{...snapshot.shop,shop_enabled:true}});export function useShop(){return useSyncExternalStore(subscribe,()=>snapshot)}`;
         },
         configureServer(vite) {
           vite.middlewares.use("/__catalog-test", async (_req, res, next) => {
