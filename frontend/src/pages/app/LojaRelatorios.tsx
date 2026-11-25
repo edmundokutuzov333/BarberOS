@@ -14,6 +14,7 @@ type Report = {
  from:string;to:string;orders_received:number;orders_accepted:number;orders_ready:number;orders_delivered:number;orders_cancelled:number;
  items_requested:number;items_delivered:number;low_stock_variants:number;unread_internal_alerts:number;external_provider_failures:number;
  paid_revenue_minor:number|null;paid_revenue_status:string;payment_records_count:number;payment_note:string;
+ delivered_cost_known_units?:number;delivered_cost_unknown_units?:number;delivered_known_cost_minor?:number|null;delivered_known_gross_margin_minor?:number|null;
 };
 type Alert = {id:string;order_id:string|null;event_type:string;title:string;body:string;delivery_channel:string;delivery_status:string;occurred_at:string;read_at:string|null};
 type IncidentEvent = {id:string;event_type:string;actor_id:string|null;previous_state:Record<string,unknown>|null;next_state:Record<string,unknown>;created_at:string};
@@ -115,6 +116,7 @@ export default function LojaRelatorios(){
     <p className="mt-2 text-sm text-ink-mid">{report.data.payment_records_count?fmt(report.data.payment_records_count)+' registo(s) de recebimento confirmados pela equipa. ':'Sem pagamentos de produtos registados neste período. '}A confirmação não representa reconciliação automática com M-Pesa, e-Mola, POS ou banco. Entrega não significa pagamento.</p>
     <p className="mt-2 text-xs text-ink-low">{report.data.payment_note}</p>
    </Panel>
+   {report.data.delivered_cost_known_units!==undefined&&<Panel title="Margem bruta dos artigos entregues"><div className="grid sm:grid-cols-2 gap-4"><div><p className="t-label text-ink-mid">Custo histórico dos artigos com custo registado</p><p className="text-xl font-medium mt-2">{report.data.delivered_known_cost_minor==null?'—':formatMT(report.data.delivered_known_cost_minor)}</p></div><div><p className="t-label text-ink-mid">Margem bruta dos artigos com custo registado</p><p className="text-xl font-medium mt-2">{report.data.delivered_known_gross_margin_minor==null?'—':formatMT(report.data.delivered_known_gross_margin_minor)}</p></div></div><p className="t-body text-ink-mid mt-3">{fmt(report.data.delivered_cost_known_units)} unidades com custo conhecido · {fmt(report.data.delivered_cost_unknown_units??0)} sem custo histórico. Considera as entregas dos pedidos criados neste período, não o dinheiro recebido, nem despesas gerais.</p></Panel>}
   </>}
   <Panel><div className="flex items-center gap-2"><Bell size={18}/><h2 className="font-semibold text-ink-hi">Alertas internos recentes</h2></div>
    {alerts.isLoading?<Skeleton/>:alerts.isError?<ErrorState message={'Não foi possível carregar alertas: '+humanError(alerts.error)} onRetry={()=>void alerts.refetch()}/>:!alerts.data?.length?<EmptyState title="Sem alertas" body="Os novos pedidos e as transições operacionais aparecem aqui quando a Loja estiver activa."/>:

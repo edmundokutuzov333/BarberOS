@@ -2044,6 +2044,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          gallery: Json
           id: string
           image_alt: string | null
           image_authorized_at: string | null
@@ -2053,6 +2054,7 @@ export type Database = {
           image_source_url: string | null
           image_url: string | null
           is_active: boolean
+          is_featured: boolean
           name: string
           order_options: Json
           product_kind: Database["public"]["Enums"]["shop_product_kind"]
@@ -2074,6 +2076,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          gallery?: Json
           id?: string
           image_alt?: string | null
           image_authorized_at?: string | null
@@ -2083,6 +2086,7 @@ export type Database = {
           image_source_url?: string | null
           image_url?: string | null
           is_active?: boolean
+          is_featured?: boolean
           name: string
           order_options?: Json
           product_kind?: Database["public"]["Enums"]["shop_product_kind"]
@@ -2104,6 +2108,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          gallery?: Json
           id?: string
           image_alt?: string | null
           image_authorized_at?: string | null
@@ -2113,6 +2118,7 @@ export type Database = {
           image_source_url?: string | null
           image_url?: string | null
           is_active?: boolean
+          is_featured?: boolean
           name?: string
           order_options?: Json
           product_kind?: Database["public"]["Enums"]["shop_product_kind"]
@@ -3324,6 +3330,7 @@ export type Database = {
         }[]
       }
       get_public_shop_catalog: { Args: { p_slug: string }; Returns: Json }
+      get_public_shop_catalog_v2: { Args: { p_slug: string }; Returns: Json }
       get_report_barbers: {
         Args: {
           p_barber_id?: string
@@ -3903,6 +3910,17 @@ export type Database = {
         Args: {
           p_barbershop_id: string
           p_expected_updated_at?: string
+          p_payload: Json
+          p_product_id: string
+        }
+        Returns: Json
+      }
+      save_shop_catalog_product_presentation: {
+        Args: {
+          p_barbershop_id: string
+          p_expected_updated_at?: string
+          p_featured: boolean
+          p_gallery: Json
           p_payload: Json
           p_product_id: string
         }

@@ -22,6 +22,8 @@ const publicProductSchema = z.object({
   product_kind: z.enum(['consume_here', 'takeaway', 'both']),
   sort_order: z.number().int(),
   order_options: z.array(z.string().min(1).max(80)).max(10),
+  is_featured:z.boolean().optional(),
+  gallery:z.array(z.object({url:z.string().url(),alt:z.string().min(1)}).strict()).max(4).optional(),
   variants: z.array(publicVariantSchema),
 }).strict();
 
@@ -44,7 +46,8 @@ export async function getPublicShopCatalog(slug?: string): Promise<PublicShopCat
   const normalized = slug?.trim().toLowerCase() ?? '';
   if (!normalized) throw new Error('BARBERSHOP_NOT_FOUND');
 
-  const { data, error } = await supabase.rpc('get_public_shop_catalog', { p_slug: normalized });
+  const versioned=await supabase.rpc('get_public_shop_catalog_v2',{p_slug:normalized});
+  const {data,error}=versioned.error&&['PGRST202','42883'].includes(versioned.error.code)?await supabase.rpc('get_public_shop_catalog',{p_slug:normalized}):versioned;
   if (error) throw error;
 
   const parsed = publicCatalogSchema.safeParse(data);

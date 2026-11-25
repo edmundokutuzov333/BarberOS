@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import type { Tables } from "@/lib/database.types";
 
 export type CatalogProduct = Tables<"shop_products">;
+export type GalleryEntry={id:string;url:string;alt:string;source_note:string};
 export type ProductForm = {
   name: string;
   brand: string;
@@ -15,6 +16,8 @@ export type ProductForm = {
   image_source_url: string;
   image_source_note: string;
   order_options: string;
+  gallery?: GalleryEntry[];
+  featured?: boolean;
 };
 const https = z
   .string()
@@ -46,6 +49,8 @@ export const productFormSchema = z
     image_alt: z.string().trim().max(250, "Use até 250 caracteres."),
     image_source_url: https,
     image_source_note: z.string().trim().max(500, "Use até 500 caracteres."),
+    gallery:z.array(z.object({url:https.refine(Boolean,"Carregue a fotografia.").refine(v=>v.length<=2048,"URL demasiado longo."),alt:z.string().trim().min(1,"Descreva a fotografia.").max(250),source_note:z.string().trim().min(1,"Confirme a origem e autorização.").max(500)})).max(4).optional(),
+    featured:z.boolean().optional(),
     order_options: z
       .string()
       .transform((value) =>
@@ -63,6 +68,7 @@ export const productFormSchema = z
       ),
   })
   .superRefine((value, context) => {
+    if(value.gallery&&new Set(value.gallery.map(g=>g.url)).size!==value.gallery.length)context.addIssue({code:"custom",path:["gallery"],message:"Não repita fotografias na galeria."});
     if (value.image_url) {
       for (const key of ["image_alt", "image_source_note"] as const) {
         if (!value[key])
@@ -99,9 +105,10 @@ export async function saveCatalogProduct(
   productId: string,
   form: ProductForm,
   version?: string,
+  presentation=false,
 ) {
-  const value = productFormSchema.parse(form);
-  const { data, error } = await supabase.rpc("save_shop_catalog_product", {
+  const {gallery,featured,...value} = productFormSchema.parse(form);
+  const args = {
     p_barbershop_id: shopId,
     p_product_id: productId,
     p_payload: {
@@ -115,7 +122,8 @@ export async function saveCatalogProduct(
       image_source_note: value.image_source_note || null,
     },
     ...(version ? { p_expected_updated_at: version } : {}),
-  });
+  };
+  const {data,error}=presentation?await supabase.rpc("save_shop_catalog_product_presentation",{...args,p_gallery:gallery??[],p_featured:featured??false}):await supabase.rpc("save_shop_catalog_product",args);
   if (error) throw error;
   const result = savedProduct.parse(data);
   if (result.id !== productId || result.barbershop_id !== shopId)

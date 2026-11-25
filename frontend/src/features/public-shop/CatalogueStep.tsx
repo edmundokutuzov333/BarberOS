@@ -303,11 +303,12 @@ export function ShopCatalogueStep({
                     {product.brand && (
                       <p className="t-label text-ink-mid">{product.brand}</p>
                     )}
+                    {product.is_featured&&<span className="inline-flex rounded-full bg-accent-soft/10 text-accent-soft px-2 py-1 text-xs mb-1">Em destaque</span>}
                     <h3 className="font-medium text-ink-hi break-words">
                       {product.name}
                     </h3>
                     {product.description && (
-                      <p className="t-body text-ink-mid mt-1 line-clamp-3">
+                      <p className="t-body text-ink-mid mt-1 break-words">
                         {product.description}
                       </p>
                     )}
@@ -320,6 +321,7 @@ export function ShopCatalogueStep({
                     </p>
                   </div>
                 </div>
+                {!!product.gallery?.length&&<details className="mt-3"><summary className="cursor-pointer text-sm text-accent-soft min-h-11 flex items-center focus-visible:ring-2 focus-visible:ring-accent-soft">Ver mais fotografias ({product.gallery.length})</summary><div className="grid grid-cols-2 gap-2">{product.gallery.map(g=><ProductImage key={g.url} src={g.url} alt={g.alt}/>)}</div></details>}
                 <div className="mt-4 space-y-3">
                   {product.variants.map((variant) => {
                     const selected = cart[variant.id] ?? {

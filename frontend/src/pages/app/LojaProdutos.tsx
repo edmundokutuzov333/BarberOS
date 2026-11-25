@@ -34,6 +34,7 @@ import {
   publishCatalogProduct,
   saveCatalogProduct,
   type ProductForm,
+  type GalleryEntry,
 } from "@/features/shop-catalog/api";
 
 type Category = {
@@ -57,6 +58,9 @@ type Product = {
   image_alt: string | null;
   image_source_url: string | null;
   image_source_note: string | null;
+  gallery?: Omit<GalleryEntry,"id">[];
+  is_featured?: boolean;
+  catalog_verified_at?: string|null;
   order_options: string[];
   product_kind: "consume_here" | "takeaway" | "both";
   track_stock: boolean;
@@ -132,6 +136,8 @@ const emptyProduct: ProductForm = {
   image_source_url: "",
   image_source_note: "",
   order_options: "",
+  gallery:[],
+  featured:false,
 };
 const emptyVariant: VariantForm = {
   label: "",
@@ -242,6 +248,8 @@ function CatalogWorkspace() {
       return r.data as unknown as Product[];
     },
   });
+  const presentationQ=useQuery({queryKey:["catalog-presentation-contract",shop?.id],enabled:allowed&&!!shop?.id,retry:false,queryFn:async()=>{const r=await supabase.from("shop_products").select("gallery,is_featured").eq("barbershop_id",shop!.id).limit(1);if(r.error){if(["42703","PGRST204"].includes(r.error.code))return false;throw r.error;}return true;}});
+  const presentationAvailable=presentationQ.data===true;
   const variantsQ = useQuery({
     queryKey: ["shop-variants", shop?.id],
     enabled: allowed && !!shop?.id,
@@ -332,6 +340,8 @@ function CatalogWorkspace() {
             image_alt: p.image_alt ?? "",
             image_source_url: p.image_source_url ?? "",
             image_source_note: p.image_source_note ?? "",
+            gallery:Array.isArray(p.gallery)?p.gallery.map(g=>({...g,id:crypto.randomUUID()})):[],
+            featured:p.is_featured??false,
             order_options: Array.isArray(p.order_options)
               ? p.order_options.join("\n")
               : "",
@@ -408,7 +418,7 @@ function CatalogWorkspace() {
   });
   const saveProduct = useMutation({
     mutationFn: async () =>
-      saveCatalogProduct(shop!.id, productId, pf, productEdit?.updated_at),
+      saveCatalogProduct(shop!.id, productId, pf, productEdit?.updated_at,presentationAvailable),
     onSuccess: async () => {
       setProductOpen(false);
       await refresh();
@@ -646,7 +656,7 @@ function CatalogWorkspace() {
               <Switch
                 checked={showDrafts}
                 onCheckedChange={setShowDrafts}
-                label="Mostrar rascunhos"
+                label="Mostrar não publicados"
               />
               <Button size="sm" pill onClick={() => openProduct()}>
                 <Plus size={14} />
@@ -703,9 +713,10 @@ function CatalogWorkspace() {
                         <div className="flex gap-2 flex-wrap">
                           <h3 className="font-medium">{p.name}</h3>
                           <span className="text-xs rounded-full px-2 py-1 bg-white/5">
-                            {p.is_active ? "Publicado" : "Rascunho"}
+                            {p.is_active ? "Publicado" : p.catalog_verified_at ? "Inactivo" : "Rascunho"}
                           </span>
                         </div>
+                        {p.is_featured&&<p className="t-label text-accent-soft mt-1">Em destaque na vitrine</p>}
                         {p.catalog_verification_mode === "reference_online" && (
                           <p className="t-label text-ink-mid mt-2">
                             Catálogo inicial com origem documentada ·
@@ -1206,6 +1217,7 @@ function CatalogWorkspace() {
               }
               maxLength={500}
             />
+            {presentationAvailable?<section className="border-t border-white/10 pt-4 space-y-4" aria-label="Apresentação na vitrine"><div><h3 className="t-card">Apresentação na vitrine</h3><p className="t-body text-ink-mid mt-1">A fotografia principal aparece na listagem. Adicione até quatro vistas complementares.</p></div><Switch checked={pf.featured??false} onCheckedChange={featured=>setPf(prev=>({...prev,featured}))} label="Destacar este produto na vitrine"/>{(pf.gallery??[]).map((entry,index)=><div key={entry.id} className="rounded-xl border border-white/10 p-3 space-y-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="t-label">Fotografia {index+2}</p><Button size="sm" variant="ghost" onClick={()=>setPf(prev=>({...prev,gallery:(prev.gallery??[]).filter(g=>g.id!==entry.id)}))}>Remover</Button></div><ImageUpload bucket="shop-photos" shopId={shop.id} ratio={4/3} value={entry.url||null} onChange={url=>setPf(prev=>({...prev,gallery:(prev.gallery??[]).map(g=>g.id===entry.id?{...g,url}:g)}))} label={`Fotografia complementar ${index+1}`} testId={`shop-gallery-upload-${index}`}/><Field label="Descrição da fotografia" value={entry.alt} maxLength={250} onChange={e=>setPf(prev=>({...prev,gallery:(prev.gallery??[]).map(g=>g.id===entry.id?{...g,alt:e.target.value}:g)}))}/><Field label="Origem e autorização" value={entry.source_note} maxLength={500} onChange={e=>setPf(prev=>({...prev,gallery:(prev.gallery??[]).map(g=>g.id===entry.id?{...g,source_note:e.target.value}:g)}))}/></div>)}{(pf.gallery?.length??0)<4&&<Button variant="secondary" size="sm" onClick={()=>setPf(prev=>({...prev,gallery:[...(prev.gallery??[]),{id:crypto.randomUUID(),url:"",alt:"",source_note:""}]}))}><Plus size={14}/>Adicionar fotografia</Button>}{productErrors.gallery&&<p role="alert" className="t-label text-st-noshow">{productErrors.gallery}</p>}</section>:presentationQ.isError?<ErrorState message="Não foi possível verificar a disponibilidade da galeria." onRetry={()=>void presentationQ.refetch()}/>:presentationQ.data===false?<p role="status" className="t-label text-ink-mid">Galeria e destaque aguardam a actualização da base de dados.</p>:null}
             {saveError && (
               <div
                 role="alert"
@@ -1236,7 +1248,7 @@ function CatalogWorkspace() {
               >
                 Cancelar
               </Button>
-              <Button type="submit" loading={saveProduct.isPending}>
+              <Button type="submit" loading={saveProduct.isPending} disabled={presentationQ.isLoading||presentationQ.isError}>
                 Guardar produto
               </Button>
             </div>
@@ -1410,6 +1422,7 @@ function CatalogWorkspace() {
               <p className="t-label text-ink-mid">{preview.brand}</p>
             )}
             <p className="t-body text-ink-mid mt-2">{preview.description}</p>
+            {!!preview.gallery?.length&&<div className="grid grid-cols-2 gap-2 mt-3">{preview.gallery.map(g=><img key={g.url} src={g.url} alt={g.alt} loading="lazy" className="aspect-square w-full rounded-lg object-contain"/>)}</div>}
             {(preview.order_options ?? []).length > 0 && (
               <div className="mt-3">
                 <p className="t-label text-ink-mid">Preferências disponíveis</p>
