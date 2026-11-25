@@ -191,7 +191,7 @@ export function ThemePicker({ onDone }: { onDone?: () => void }) {
 export function RulesForm({ onDone }: { onDone?: () => void }) {
   const { shop } = useShop();
   const s = shop!;
-  const [f, setF] = useState({ slot: String(s.slot_interval_min), lead: String(s.min_lead_time_min), advance: String(s.max_advance_days), rule: s.cancellation_rule, buffer: String(s.service_buffer_min ?? 0), grace: String(s.late_grace_min ?? 0) });
+  const [f, setF] = useState({ slot: String(s.slot_interval_min), lead: String(s.min_lead_time_min), advance: String(s.max_advance_days), rule: s.cancellation_rule, buffer: String(s.service_buffer_min ?? 0), grace: String(s.late_grace_min ?? 0), reminder24:s.reminder_24h_enabled??true, reminder1:s.reminder_1h_enabled??true });
   const m = useUpdateShop(onDone);
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -206,7 +206,7 @@ export function RulesForm({ onDone }: { onDone?: () => void }) {
     const grace=Number(f.grace);
     const graceAvailable=typeof s.late_grace_min==='number';
     if(graceAvailable&&(!/^\d+$/.test(f.grace.trim())||grace>120))return toast.error('Tolerância entre 0 e 120 minutos.');
-    m.mutate({ ...(graceAvailable?{late_grace_min:grace}:{}), slot_interval_min: slot, min_lead_time_min: lead, max_advance_days: adv, cancellation_rule: f.rule, ...(bufferAvailable?{service_buffer_min:buffer}:{}) });
+    m.mutate({ ...(graceAvailable?{late_grace_min:grace}:{}), ...(typeof s.reminder_24h_enabled==='boolean'?{reminder_24h_enabled:f.reminder24,reminder_1h_enabled:f.reminder1}:{}), slot_interval_min: slot, min_lead_time_min: lead, max_advance_days: adv, cancellation_rule: f.rule, ...(bufferAvailable?{service_buffer_min:buffer}:{}) });
   };
   return (
     <form onSubmit={submit} className="space-y-5" data-testid="rules-form">
@@ -229,6 +229,7 @@ export function RulesForm({ onDone }: { onDone?: () => void }) {
           ))}
         </div>
       </div>
+      {typeof s.reminder_24h_enabled==='boolean'&&<section className="space-y-2 border-t border-white/10 pt-4"><h3 className="t-card">Lembretes automáticos</h3><p className="t-body text-ink-mid">Desactivar retira os lembretes pendentes da fila. Reactivar aplica-se às próximas marcações ou remarcações; não reenvia mensagens antigas. A entrega depende dos canais disponíveis.</p><Switch checked={f.reminder24} onCheckedChange={v=>setF(prev=>({...prev,reminder24:v}))} label="Lembrete 24 horas antes"/><Switch checked={f.reminder1} onCheckedChange={v=>setF(prev=>({...prev,reminder1:v}))} label="Lembrete 1 hora antes"/></section>}
       <div className="flex justify-end"><Button data-testid="rules-save-btn" type="submit" loading={m.isPending}>{onDone ? 'Guardar e continuar' : 'Guardar regras'}</Button></div>
     </form>
   );

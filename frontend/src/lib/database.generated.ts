@@ -508,6 +508,8 @@ export type Database = {
           onboarding_step: number
           phone: string | null
           plan_id: string | null
+          reminder_1h_enabled: boolean
+          reminder_24h_enabled: boolean
           service_buffer_min: number
           shop_enabled: boolean
           slot_interval_min: number
@@ -540,6 +542,8 @@ export type Database = {
           onboarding_step?: number
           phone?: string | null
           plan_id?: string | null
+          reminder_1h_enabled?: boolean
+          reminder_24h_enabled?: boolean
           service_buffer_min?: number
           shop_enabled?: boolean
           slot_interval_min?: number
@@ -572,6 +576,8 @@ export type Database = {
           onboarding_step?: number
           phone?: string | null
           plan_id?: string | null
+          reminder_1h_enabled?: boolean
+          reminder_24h_enabled?: boolean
           service_buffer_min?: number
           shop_enabled?: boolean
           slot_interval_min?: number

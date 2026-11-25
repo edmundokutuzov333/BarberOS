@@ -148,6 +148,7 @@ jobs:
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/operational_settings_catalog_pricing.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/service_preparation_buffer.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/operational_grace_and_capacity.sql
+          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/tenant_reminder_policy.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/catalog_presentation_and_gross_margin.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/shop_catalog_atomic_management.sql
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/shop_reference_catalog_provisioning.sql
