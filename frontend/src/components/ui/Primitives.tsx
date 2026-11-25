@@ -6,15 +6,17 @@ import { cn } from '@/lib/utils';
 import { uploadImage, type Bucket } from '@/lib/storage';
 import { toast } from 'sonner';
 
-export function Modal({ open, onOpenChange, title, children, testId }: { open: boolean; onOpenChange: (o: boolean) => void; title: string; children: ReactNode; testId?: string }) {
+export function Modal({ open, onOpenChange, title, children, testId, busy = false, preventOutsideDismiss = false, closeLabel = 'Fechar' }: { open: boolean; onOpenChange: (o: boolean) => void; title: string; children: ReactNode; testId?: string; busy?: boolean; preventOutsideDismiss?: boolean; closeLabel?: string }) {
   const returnFocus = useRef<HTMLElement | null>(null);
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root open={open} onOpenChange={value=>{if(!busy||value)onOpenChange(value);}}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm" />
         <Dialog.Content
           data-testid={testId}
           aria-describedby={undefined}
+          onEscapeKeyDown={event=>{if(busy)event.preventDefault();}}
+          onInteractOutside={event=>{if(busy||preventOutsideDismiss)event.preventDefault();}}
           onOpenAutoFocus={() => {
             returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
           }}
@@ -31,7 +33,8 @@ export function Modal({ open, onOpenChange, title, children, testId }: { open: b
             <Dialog.Title className="t-title min-w-0 break-words">{title}</Dialog.Title>
             <Dialog.Close
               data-testid="modal-close"
-              aria-label="Fechar"
+              aria-label={closeLabel}
+              disabled={busy}
               className="icon-button shrink-0 -mr-1 -mt-1 focus-visible:ring-2 focus-visible:ring-accent-soft"
             >
               <X size={18} aria-hidden />

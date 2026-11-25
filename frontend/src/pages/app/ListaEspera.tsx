@@ -3,6 +3,7 @@ import { BellRing, CalendarClock, ChevronLeft, ChevronRight, Clock3, Hourglass, 
 import { toast } from 'sonner';
 import { Page } from '@/components/layout/Page';
 import { Button } from '@/components/ui/Button';
+import { ConfirmAction } from '@/components/ui/ConfirmAction';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { useShop } from '@/lib/shop';
 import { fmt, formatMT, humanError } from '@/lib/utils';
@@ -65,6 +66,10 @@ function remainingLabel(value: string | null): string {
 }
 
 export default function ListaEspera() {
+  const {shop}=useShop();
+  return <WaitlistWorkspace key={shop?.id??'none'}/>;
+}
+function WaitlistWorkspace(){
   const { shop } = useShop();
   const [view, setView] = useState<WaitlistView>('active');
   const [search, setSearch] = useState('');
@@ -73,16 +78,19 @@ export default function ListaEspera() {
   const metrics = useWaitlistMetrics(shop?.id);
   const entries = useWaitlist(shop?.id, view, deferredSearch, page, PAGE_SIZE);
   const cancel = useCancelWaitlist();
+  const [cancelTarget,setCancelTarget]=useState<{entryId:string;customerName:string}|null>(null);
 
   useEffect(() => setPage(0), [deferredSearch, view]);
 
   const totalCount = entries.data?.[0]?.total_count ?? 0;
   const totalPages = Math.max(1, Math.ceil(Number(totalCount) / PAGE_SIZE));
 
-  const cancelEntry = async (entryId: string, customerName: string) => {
-    if (!window.confirm('Cancelar a entrada de ' + customerName + ' da lista de espera?')) return;
+  const cancelEntry = (entryId:string,customerName:string)=>{if(!shop||cancel.isPending)return;cancel.reset();setCancelTarget({entryId,customerName});};
+  const confirmCancel=async()=>{
+    if(!shop||!cancelTarget||cancel.isPending)return;
     try {
-      await cancel.mutateAsync({ shopId: shop!.id, entryId });
+      await cancel.mutateAsync({ shopId: shop.id, entryId:cancelTarget.entryId });
+      setCancelTarget(null);
       toast.success('Entrada removida da lista.');
     } catch (error) {
       toast.error(humanError(error));
@@ -255,6 +263,7 @@ export default function ListaEspera() {
           )}
         </>
       )}
+      <ConfirmAction open={!!cancelTarget} onCancel={()=>setCancelTarget(null)} onConfirm={()=>void confirmCancel()} title="Cancelar entrada" description={'Confirma a remoção de '+(cancelTarget?.customerName??'')+' da lista de espera?'} confirmLabel="Cancelar entrada" busy={cancel.isPending} error={cancel.error?humanError(cancel.error):undefined} testId="waitlist-cancel-dialog"/>
     </Page>
   );
 }

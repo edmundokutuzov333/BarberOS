@@ -3,6 +3,7 @@ import { ArrowLeft, Check, ExternalLink, RefreshCw, Save, ShieldCheck } from 'lu
 import { Link, useParams } from 'react-router-dom';
 import { Page } from '@/components/layout/Page';
 import { Button } from '@/components/ui/Button';
+import { ConfirmAction } from '@/components/ui/ConfirmAction';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { fmt, formatMT, humanError } from '@/lib/utils';
 import { useAdminPlans, useAdminShopDetail, useAssignAdminShopPlan, useSetAdminShopStatus, type ShopStatus } from '@/features/admin/api';
@@ -18,13 +19,15 @@ export default function AdminBarbeariaDetalhe() {
   const planMutation=useAssignAdminShopPlan();
   const [status,setStatus]=useState<ShopStatus>('trial');
   const [planId,setPlanId]=useState('');
+  const [statusTarget,setStatusTarget]=useState<ShopStatus|null>(null);
   const shop=useMemo(()=>q.data?.shop as {id:string;name:string;slug:string;status:ShopStatus;description:string|null;phone:string|null;whatsapp:string|null;instagram:string|null;address:string|null;timezone:string;created_at:string} | undefined,[q.data]);
   useEffect(()=>{if(shop){setStatus(shop.status);setPlanId(q.data?.plan?.id??'');}},[shop,q.data?.plan?.id]);
-  const saveStatus=async()=>{
-    if(!shopId||status===shop?.status)return;
-    if((status==='suspended'||status==='cancelled')&&!window.confirm('Confirmar a alteração do estado desta barbearia para '+status+'?'))return;
+  const saveStatus=async(next:ShopStatus=status,confirmed=false)=>{
+    if(!shopId||!shop||next===shop.status||statusMutation.isPending)return;
+    if(!confirmed&&(next==='suspended'||next==='cancelled')){statusMutation.reset();setStatusTarget(next);return;}
     try {
-      await statusMutation.mutateAsync({ shopId, status });
+      await statusMutation.mutateAsync({ shopId, status:next });
+      setStatusTarget(null);
     } catch {
       // Keep the mutation error in the page so the administrator can retry safely.
     }
@@ -38,7 +41,7 @@ export default function AdminBarbeariaDetalhe() {
     }
   };
 
-  return <Page title={shop?.name??'Barbearia'} subtitle={shop?'/barbearia/'+shop.slug:undefined} actions={<div className="flex gap-2"><Link to="/admin/barbearias"><Button variant="secondary" size="sm"><ArrowLeft size={14}/>Voltar</Button></Link>{shop&&<a href={'/barbearia/'+shop.slug} target="_blank" rel="noreferrer"><Button variant="secondary" size="sm"><ExternalLink size={14}/>Página pública</Button></a>}</div>}>
+  return <Page title={shop?.name??'Barbearia'} subtitle={shop?'/barbearia/'+shop.slug:undefined} actions={<div className="flex flex-wrap gap-2"><Link className="inline-flex items-center gap-2 min-h-10 px-3 rounded-2xl border border-white/10 text-xs focus-visible:ring-2 focus-visible:ring-accent-soft" to="/admin/barbearias"><ArrowLeft size={14}/>Voltar</Link>{shop&&<a className="inline-flex items-center gap-2 min-h-10 px-3 rounded-2xl border border-white/10 text-xs focus-visible:ring-2 focus-visible:ring-accent-soft" href={'/barbearia/'+shop.slug} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Página pública</a>}</div>}>
     {q.isLoading?<><Skeleton className="h-40"/><Skeleton className="h-72 mt-3"/></>:q.error?<ErrorState message={humanError(q.error)} onRetry={()=>void q.refetch()}/>:q.data&&shop?<>
       <section className="grid grid-cols-2 xl:grid-cols-4 gap-3">
         {Object.entries(q.data.stats).map(([k,v])=><Panel key={k} className="p-4"><p className="t-label text-ink-lo">{({barbers:'Barbeiros',active_barbers:'Barbeiros activos',customers:'Clientes',appointments:'Marcações',completed_appointments:'Concluídas',reviews:'Avaliações',payments:'Pagamentos'})[k]??k}</p><p className="text-2xl font-medium text-ink-hi mt-2">{Number(v)}</p></Panel>)}
@@ -61,5 +64,6 @@ export default function AdminBarbeariaDetalhe() {
       {(statusMutation.error||planMutation.error)&&<div className="mt-4"><ErrorState message={humanError(statusMutation.error||planMutation.error)}/></div>}
       <p className="t-label text-ink-lo mt-4 flex items-center gap-2"><ShieldCheck size={14}/>As alterações administrativas são executadas no PostgreSQL e registadas em auditoria.</p>
     </>:null}
+    <ConfirmAction open={!!statusTarget} onCancel={()=>setStatusTarget(null)} onConfirm={()=>{if(statusTarget)void saveStatus(statusTarget,true);}} title="Alterar estado da barbearia" description={'Confirma que pretende deixar '+(shop?.name??'esta barbearia')+(statusTarget==='suspended'?' suspensa?':' cancelada?')} confirmLabel="Confirmar alteração" busy={statusMutation.isPending} error={statusMutation.error?humanError(statusMutation.error):undefined} testId="admin-shop-status-dialog"/>
   </Page>;
 }

@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Check, Copy, KeyRound, RefreshCw, Search, ShieldCheck, X } from 'lucide-react';
+import { Check, Copy, KeyRound, RefreshCw, Search, ShieldCheck } from 'lucide-react';
 import { Page } from '@/components/layout/Page';
 import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Primitives';
+import { ConfirmAction } from '@/components/ui/ConfirmAction';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { fmt, humanError } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
@@ -17,6 +19,8 @@ export default function AdminUtilizadores() {
   const [offset, setOffset] = useState(0);
   const [credential, setCredential] = useState<AdminPasswordResetResult | null>(null);
   const [copied, setCopied] = useState(false);
+  const [resetTarget,setResetTarget]=useState<{id:string;email:string}|null>(null);
+  const [copyError,setCopyError]=useState('');
   const q = useAdminUsers({ search: applied, limit: PAGE_SIZE, offset });
   const events = useAdminCredentialEvents();
   const reset = useResetAdminUserPassword();
@@ -25,19 +29,20 @@ export default function AdminUtilizadores() {
 
   const requestReset = (target: NonNullable<typeof q.data>[number]) => {
     if (!target.id || !target.email || target.is_platform_admin || target.id === actor?.id || Number(target.shop_count) < 1) return;
-    const accepted = window.confirm(
-      'A palavra-passe actual de ' + target.email + ' será substituída. Será gerada uma palavra-passe temporária que só aparece uma vez. A conta terá de definir uma nova palavra-passe antes de entrar na plataforma. Continuar?'
-    );
-    if (!accepted) return;
-    setCredential(null);
+    if(reset.isPending)return;
+    reset.reset();setResetTarget({id:target.id,email:target.email});
+  };
+  const confirmReset=()=>{
+    if(!resetTarget||reset.isPending)return;
+    setCredential(null);setCopyError('');
     setCopied(false);
-    reset.mutate(target.id, {
+    reset.mutate(resetTarget.id, {
       onSuccess: (result) => {
+        setResetTarget(null);
         setCredential(result);
         void q.refetch();
         void events.refetch();
       },
-      onError: (error) => window.alert(humanError(error)),
     });
   };
 
@@ -45,16 +50,16 @@ export default function AdminUtilizadores() {
     if (!credential) return;
     try {
       await navigator.clipboard.writeText(credential.temporaryPassword);
-      setCopied(true);
+      setCopied(true);setCopyError('');
     } catch {
       setCopied(false);
-      window.alert('Não foi possível copiar automaticamente. Seleccione a palavra-passe e copie-a manualmente.');
+      setCopyError('Não foi possível copiar automaticamente. Seleccione a palavra-passe e copie-a manualmente.');
     }
   };
 
   const clearCredential = () => {
     setCredential(null);
-    setCopied(false);
+    setCopied(false);setCopyError('');
     reset.reset();
   };
 
@@ -116,23 +121,24 @@ export default function AdminUtilizadores() {
         ) : <EmptyState title="Ainda não há alterações de acesso." body="As reposições futuras ficam registadas aqui, sem guardar a palavra-passe gerada."/>}
       </Panel>
 
-      {credential && <div className="fixed inset-0 z-[100] grid place-items-center bg-black/80 p-4" onMouseDown={e => { if (e.target === e.currentTarget) clearCredential(); }}>
-        <section role="dialog" aria-modal="true" aria-labelledby="temporary-password-title" className="glass w-full max-w-lg rounded-3xl border border-white/15 p-6 sm:p-8">
+      <ConfirmAction open={!!resetTarget} onCancel={()=>setResetTarget(null)} onConfirm={confirmReset} title="Repor palavra-passe" description={'A palavra-passe actual de '+(resetTarget?.email??'')+' será substituída. A credencial temporária aparece uma única vez e o utilizador terá de definir uma nova palavra-passe.'} confirmLabel="Gerar palavra-passe temporária" busy={reset.isPending} error={reset.error?humanError(reset.error):undefined} testId="admin-reset-confirm-dialog"/>
+      <Modal open={!!credential} onOpenChange={open=>{if(!open)clearCredential();}} title="Acesso actualizado" testId="admin-credential-dialog" preventOutsideDismiss closeLabel="Fechar e limpar palavra-passe">
+        {credential&&<div>
           <div className="flex items-start gap-3">
             <div className="h-11 w-11 rounded-2xl bg-accent-soft/15 text-accent-soft grid place-items-center shrink-0"><KeyRound size={20}/></div>
-            <div className="min-w-0 flex-1"><p className="t-label text-ink-mid">Credencial temporária</p><h2 id="temporary-password-title" className="text-xl font-semibold text-ink-hi mt-1">Acesso actualizado</h2><p className="t-body text-ink-mid mt-1">{credential.email}</p></div>
-            <button type="button" onClick={clearCredential} className="p-2 rounded-xl text-ink-mid hover:text-ink-hi" aria-label="Fechar e limpar palavra-passe"><X size={18}/></button>
+            <div className="min-w-0 flex-1"><p className="t-label text-ink-mid">Credencial temporária</p><p className="t-body text-ink-mid mt-1 break-all">{credential.email}</p></div>
           </div>
           <div className="mt-5 rounded-2xl border border-accent-soft/25 bg-accent-soft/5 p-4">
             <p className="t-label text-ink-mid mb-2">Palavra-passe temporária, apresentada apenas agora</p>
             <code className="block select-all break-all font-mono text-base text-ink-hi" data-testid="temporary-password">{credential.temporaryPassword}</code>
             <Button className="mt-4 w-full" onClick={() => void copyTemporaryPassword()}>{copied ? <Check size={15}/> : <Copy size={15}/>} {copied ? 'Copiada' : 'Copiar palavra-passe'}</Button>
           </div>
+          {copyError&&<p role="alert" className="t-body text-st-noshow mt-3">{copyError}</p>}
           <p className="t-body text-ink-mid mt-4">Entregue esta palavra-passe por um canal seguro. No primeiro acesso, o utilizador será obrigado a definir uma palavra-passe própria. Fechar esta janela remove a palavra-passe da interface. Se a copiou, limpe também a área de transferência depois de a partilhar.</p>
           {!credential.auditLogged && <p role="alert" className="t-label text-st-noshow mt-3">{credential.warning ?? 'A reposição foi feita, mas o histórico não foi registado.'}</p>}
           <Button variant="secondary" className="mt-5 w-full" onClick={clearCredential}>Fechar e limpar</Button>
-        </section>
-      </div>}
+        </div>}
+      </Modal>
     </Page>
   );
 }
