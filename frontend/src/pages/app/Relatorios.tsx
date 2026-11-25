@@ -7,6 +7,7 @@ import { Page } from '@/components/layout/Page';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { useShop } from '@/lib/shop';
+import StaffEarningsPanel from '@/features/staff-earnings/StaffEarningsPanel';
 import { formatMT, fmt, nowTz, humanError } from '@/lib/utils';
 import { useReportData, type ReportBarberRow, type ReportDailyRow, type ReportHaircutRow, type ReportRange, type ReportServiceRow } from '@/features/reports/api';
 
@@ -396,7 +397,7 @@ export default function Relatorios() {
       {report.data && view==='daily' && <DailyView rows={report.data.daily} />}
       {report.data && view==='services' && <ServiceTable rows={report.data.services} />}
       {report.data && view==='haircuts' && <HaircutTable rows={report.data.haircuts} />}
-      {report.data && view==='barbers' && <BarberTable rows={report.data.barbers} />}
+      {report.data && view==='barbers' && <><BarberTable rows={report.data.barbers} /><StaffEarningsPanel range={range}/></>}
       {report.data && !report.isLoading && <p className="sr-only">Visão activa: {currentTitle}.</p>}
     </Page>
   );

@@ -62,5 +62,50 @@
         "authenticated": true
       }
     ]
+  },
+  "staff_earnings": {
+    "captured_at": "2026-11-25",
+    "migration": "20261125091557_staff_commission_and_tip_ledger.sql",
+    "functions": [
+      {
+        "name": "get_staff_earnings",
+        "input_arguments": [
+          "p_shop",
+          "p_from",
+          "p_to",
+          "p_offset"
+        ],
+        "required_argument_count": 3,
+        "return_type": "jsonb",
+        "anon": false,
+        "authenticated": true
+      },
+      {
+        "name": "record_staff_tip",
+        "input_arguments": [
+          "p_shop",
+          "p_appointment",
+          "p_tip_minor",
+          "p_expected_tip_minor",
+          "p_reason"
+        ],
+        "required_argument_count": 5,
+        "return_type": "jsonb",
+        "anon": false,
+        "authenticated": true
+      },
+      {
+        "name": "set_staff_commission_rate",
+        "input_arguments": [
+          "p_shop",
+          "p_barber",
+          "p_rate_bps"
+        ],
+        "required_argument_count": 3,
+        "return_type": "jsonb",
+        "anon": false,
+        "authenticated": true
+      }
+    ]
   }
 }

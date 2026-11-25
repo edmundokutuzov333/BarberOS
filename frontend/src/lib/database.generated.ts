@@ -3559,6 +3559,7 @@ export type Database = {
         Args: { p_barbershop_id: string }
         Returns: Json
       }
+      get_staff_earnings: { Args: { p_shop: string; p_from: string; p_to: string; p_offset?: number }; Returns: Json }
       get_waitlist: {
         Args: {
           p_limit?: number
@@ -3811,6 +3812,7 @@ export type Database = {
         }
         Returns: Json
       }
+      record_staff_tip: { Args: { p_shop: string; p_appointment: string; p_tip_minor: number; p_expected_tip_minor: number; p_reason: string }; Returns: Json }
       recover_stuck_notifications: {
         Args: { p_after?: string }
         Returns: number
@@ -3943,6 +3945,7 @@ export type Database = {
         Returns: boolean
       }
       seed_haircut_catalogue: { Args: { p_shop: string }; Returns: number }
+      set_staff_commission_rate: { Args: { p_shop: string; p_barber: string; p_rate_bps: number }; Returns: Json }
       set_payment_provider_account: {
         Args: {
           p_account_reference: string

@@ -9,6 +9,9 @@ export function compareFrontendContracts(source, remote, staging = null) {
   const stagedAdapters={
     get_public_shop_catalog_v2:'frontend/src/features/public-shop/catalog.ts',
     save_shop_catalog_product_presentation:'frontend/src/features/shop-catalog/api.ts',
+    get_staff_earnings:'frontend/src/features/staff-earnings/api.ts',
+    set_staff_commission_rate:'frontend/src/features/staff-earnings/api.ts',
+    record_staff_tip:'frontend/src/features/staff-earnings/api.ts',
   };
   const staging_rpcs=[];
   function rpcMatches(name) {
@@ -16,7 +19,7 @@ export function compareFrontendContracts(source, remote, staging = null) {
     if(deployed.length)return deployed;
     const adapter=Object.hasOwn(stagedAdapters,name)?stagedAdapters[name]:null;
     const calls=source.calls.filter(c=>c.kind==='rpc'&&c.names.includes(name));
-    const candidate=staging?.catalog_evolution?.functions?.find(f=>f.name===name&&f.authenticated===true&&f.anon===(name==='get_public_shop_catalog_v2')&&Array.isArray(f.input_arguments)&&Number.isInteger(f.required_argument_count)&&f.return_type==='jsonb');
+    const candidate=[...(staging?.catalog_evolution?.functions??[]),...(staging?.staff_earnings?.functions??[])].find(f=>f.name===name&&f.authenticated===true&&f.anon===(name==='get_public_shop_catalog_v2')&&Array.isArray(f.input_arguments)&&Number.isInteger(f.required_argument_count)&&f.return_type==='jsonb');
     if(adapter&&staging?.environment==='staging'&&staging.project_ref==='asikuyxaapcmayptimxi'&&candidate&&calls.length&&calls.every(c=>c.file===adapter)){
       if(!staging_rpcs.includes(name))staging_rpcs.push(name);
       return [candidate];

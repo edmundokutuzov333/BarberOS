@@ -3,6 +3,7 @@ import { Page } from '@/components/layout/Page';
 import { Panel } from '@/components/ui/States';
 import { ProfileForm, ThemePicker, RulesForm, DepositForm } from '@/components/config/ShopForms';
 import { MembersEditor } from '@/components/config/MembersEditor';
+import StaffEarningsPanel from '@/features/staff-earnings/StaffEarningsPanel';
 import { LinkQr } from '@/components/config/LinkQr';
 import PaymentSettingsForm from '@/features/payments/PaymentSettingsForm';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,7 @@ const TABS = [
   { key: 'sinal', label: 'Sinal', title: 'Sinal', body: 'Reserva com pagamento antecipado para reduzir faltas.' },
   { key: 'pagamentos', label: 'Pagamentos', title: 'Pagamentos', body: 'Ligue M-Pesa e e-Mola para receber sinais de forma automática.' },
   { key: 'utilizadores', label: 'Utilizadores', title: 'Equipa com acesso', body: 'Donos gerem tudo, gerentes operam, barbeiros vêem a sua agenda.' },
+  { key: 'comissoes', label: 'Comissões', title: 'Comissões e gorjetas', body: 'Taxas por barbeiro e registo operacional dos atendimentos concluídos.' },
   { key: 'link', label: 'Link e QR', title: 'Link e QR', body: 'O momento de contacto físico é onde a adopção acontece.' },
 ] as const;
 
@@ -50,6 +52,7 @@ export default function Definicoes() {
         {t.key === 'sinal' && <DepositForm key="sinal" />}
         {t.key === 'pagamentos' && <PaymentSettingsForm />}
         {t.key === 'utilizadores' && <MembersEditor />}
+        {t.key === 'comissoes' && <StaffEarningsPanel settings/>}
         {t.key === 'link' && <LinkQr />}
       </Panel>
     </Page>
