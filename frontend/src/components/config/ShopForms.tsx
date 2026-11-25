@@ -44,7 +44,7 @@ export function ProfileForm({ onDone, compact }: { onDone?: () => void; compact?
   });
   const m = useUpdateShop(onDone);
   const norm = (p: string) => {
-    const d = p.replace(/D/g, '');
+    const d = p.replace(/\D/g, '');
     return d ? (d.startsWith('258') ? `+${d}` : `+258${d}`) : null;
   };
   const submit = (e: FormEvent) => {
@@ -63,30 +63,40 @@ export function ProfileForm({ onDone, compact }: { onDone?: () => void; compact?
     });
   };
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setF({ ...f, [k]: e.target.value });
+    setF(prev => ({ ...prev, [k]: e.target.value }));
 
   return (
-    <form onSubmit={submit} className="space-y-4" data-testid="profile-form">
-      <div className="grid grid-cols-[120px_1fr] gap-4">
-        <ImageUpload testId="profile-logo-upload" shape="circle" bucket="shop-logos" shopId={s.id} ratio={1} value={f.logo_url} onChange={(u) => setF({ ...f, logo_url: u })} label="Logo" />
-        <ImageUpload testId="profile-cover-upload" bucket="shop-photos" shopId={s.id} ratio={16 / 9} value={f.cover_url} onChange={(u) => setF({ ...f, cover_url: u })} label="Capa 16:9" />
+    <form onSubmit={submit} className="space-y-6" data-testid="profile-form">
+      <section className="space-y-4" aria-label="Identidade visual">
+      <div><h3 className="t-card">Identidade visual</h3><p className="t-body text-ink-mid mt-1">Imagens que identificam a barbearia na página pública.</p></div>
+      <div className="grid grid-cols-1 sm:grid-cols-[120px_minmax(0,1fr)] gap-4 sm:gap-6 items-start">
+        <ImageUpload testId="profile-logo-upload" shape="circle" bucket="shop-logos" shopId={s.id} ratio={1} value={f.logo_url} onChange={(u) => setF(prev => ({ ...prev, logo_url: u }))} label="Logo" />
+        <ImageUpload testId="profile-cover-upload" bucket="shop-photos" shopId={s.id} ratio={16 / 9} value={f.cover_url} onChange={(u) => setF(prev => ({ ...prev, cover_url: u }))} label="Capa 16:9" />
       </div>
-      <p className="text-xs leading-5 text-ink-mid">O logótipo e a capa iniciais são elementos de demonstração. Substitua-os por imagens reais da sua barbearia antes de divulgar a página aos clientes.</p>
+      <p className="text-xs leading-5 text-ink-mid">Se estiver a utilizar imagens de demonstração, substitua-as pelas imagens reais da barbearia antes de divulgar a página.</p>
+      </section>
+      <section className="space-y-4 border-t border-white/10 pt-6" aria-label="Informação pública">
+      <div><h3 className="t-card">Informação pública</h3><p className="t-body text-ink-mid mt-1">Apresente a sua barbearia aos clientes.</p></div>
       <Field data-testid="profile-name-input" label="Nome" name="p_name" value={f.name} onChange={set('name')} />
-      <Textarea data-testid="profile-description-input" label="Descrição curta" value={f.description} onChange={set('description')} placeholder="O que faz a tua barbearia diferente, em duas frases." />
-      <div className="grid sm:grid-cols-2 gap-3">
+      <Textarea data-testid="profile-description-input" label="Descrição curta" rows={5} className="!min-h-[144px] !h-auto !resize-y" value={f.description} onChange={set('description')} placeholder="O que faz a tua barbearia diferente, em duas frases." />
+      </section>
+      <section className="space-y-4 border-t border-white/10 pt-6" aria-label="Contactos e localização">
+      <div><h3 className="t-card">Contactos e localização</h3><p className="t-body text-ink-mid mt-1">Mantenha os dados de contacto e a morada actualizados.</p></div>
+      <div className="grid sm:grid-cols-2 gap-4">
         <Field data-testid="profile-phone-input" label="Telemóvel" name="p_phone" type="tel" prefix="+258" value={f.phone.startsWith('+258') ? f.phone.slice(4) : f.phone} onChange={set('phone')} placeholder="84 000 0000" />
         <Field data-testid="profile-whatsapp-input" label="WhatsApp" name="p_whatsapp" type="tel" prefix="+258" value={f.whatsapp.startsWith('+258') ? f.whatsapp.slice(4) : f.whatsapp} onChange={set('whatsapp')} placeholder="84 000 0000" />
       </div>
       {!compact && (
         <>
-          <Field data-testid="profile-instagram-input" label="Instagram" name="p_instagram" prefix="@" value={f.instagram} onChange={set('instagram')} placeholder="abarbearia" />
+          <Field data-testid="profile-instagram-input" label="Instagram" name="p_instagram" prefix="@" className="!pl-10" value={f.instagram.replace(/^@/, '')} onChange={set('instagram')} placeholder="abarbearia" />
           <Field data-testid="profile-address-input" label="Morada" name="p_address" value={f.address} onChange={set('address')} placeholder="Av. Julius Nyerere, 123, Maputo" />
           <Field data-testid="profile-maps-input" label="Link do Google Maps" name="p_maps" type="url" value={f.maps_url} onChange={set('maps_url')} placeholder="https://maps.app.goo.gl/..." />
         </>
       )}
-      <div className="flex justify-end">
-        <Button data-testid="profile-save-btn" type="submit" loading={m.isPending}>
+      </section>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-white/10 pt-5">
+        <p className="t-label text-ink-mid">As alterações guardadas reflectem-se no perfil da barbearia.</p>
+        <Button className="w-full sm:w-auto" data-testid="profile-save-btn" type="submit" loading={m.isPending}>
           {onDone ? 'Guardar e continuar' : 'Guardar'}
         </Button>
       </div>
