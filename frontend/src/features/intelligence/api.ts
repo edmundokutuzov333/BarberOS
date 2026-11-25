@@ -34,3 +34,14 @@ export async function loadCommunicationDraft(shopId:string,kind:DraftKind){
  const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'draft',kind,days:7,topic:'communications'}});
  if(error)throw new Error('INTELLIGENCE_DRAFT_UNAVAILABLE');return draftContract.parse(data);
 }
+
+const inventoryContract=z.object({version:z.literal(1),asOf:z.string(),windowDays:z.literal(30),trackedCount:z.number().int().nonnegative(),alertCount:z.number().int().nonnegative(),estimatedCount:z.number().int().nonnegative(),rows:z.array(z.object({id:z.string().uuid(),product:z.string(),variant:z.string(),stock:z.number().int().nonnegative(),threshold:z.number().int().nonnegative(),sold:z.number().int().nonnegative(),saleDays:z.number().int().nonnegative(),dailyRate:n,coverDays:n,suggestedUnits:n,signal:z.enum(['out','low','watch','ok'])})).max(50)});
+const reviewContract=z.object({version:z.literal(1),sampleCount:z.number().int().nonnegative(),commentCount:z.number().int().nonnegative(),average:n,negative:z.number().int().nonnegative(),neutral:z.number().int().nonnegative(),positive:z.number().int().nonnegative(),stars:z.array(z.object({rating:z.number().int().min(1).max(5),count:z.number().int().nonnegative()})).length(5),topics:z.array(z.object({id:z.string(),label:z.string(),mentions:z.number().int().nonnegative(),lowRated:z.number().int().nonnegative()})),reply:z.string().nullable()});
+export async function loadInventoryIntelligence(shopId:string){
+ const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'inventory',days:30,topic:'stock'}});
+ if(error)throw new Error('INTELLIGENCE_INVENTORY_UNAVAILABLE');return inventoryContract.parse(data);
+}
+export async function loadReviewIntelligence(shopId:string){
+ const {data,error}=await supabase.functions.invoke('barber-intelligence',{body:{shopId,action:'reviews',days:30,topic:'overview'}});
+ if(error)throw new Error('INTELLIGENCE_REVIEWS_UNAVAILABLE');return reviewContract.parse(data);
+}

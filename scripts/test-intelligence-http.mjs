@@ -45,6 +45,9 @@ try{
  const draft=ok(await call(manager.token,{...payload,action:'draft',kind:'feedback'}));assert.equal(draft.kind,'feedback');assert.ok(draft.body);
  assert.equal((await call(barber.token,{...payload,action:'draft',kind:'feedback'})).status,403);
  assert.equal((await call(owner.token,{...payload,action:'draft',kind:'__proto__'})).status,400);
+ const reviews=ok(await call(owner.token,{...payload,action:'reviews'}));assert.equal(reviews.sampleCount,0);assert.equal(reviews.average,null);
+ assert.equal((await call(barber.token,{...payload,action:'reviews'})).status,403);
+ assert.equal((await call(owner.token,{...payload,action:'inventory',shopId:other})).status,403);
  const c={...payload,action:'customer',customerId:customer};
  const result=ok(await call(owner.token,c));assert.equal(result.returnStatus,'insufficient');assert.equal(result.draft,null);
  assert.equal((await call(manager.token,c)).status,200);

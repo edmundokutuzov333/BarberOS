@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {test} from 'node:test';
+import {inventoryIntelligence,reviewIntelligence} from './quality.mjs';
+const now=new Date('2026-11-25T10:00:00Z'),old='2026-08-01T10:00:00Z';
+const p={id:'p',name:'Pomada',track_stock:true,is_active:true,created_at:old};
+const v={id:'v',product_id:'p',label:'100g',is_active:true,stock_on_hand:3,low_stock_threshold:2,created_at:old};
+const m=(id,day,qty=-5,reason='sale')=>({id,variant_id:'v',created_at:'2026-11-'+day+'T09:00:00Z',delta_qty:qty,reason});
+const sales=[m('1','01'),m('2','02'),m('3','03')];
+test('gross sale exits only, duplicate ignored, cover and reorder',()=>{const a=inventoryIntelligence([p],[v],[...sales,sales[0],m('4','05',-99,'waste'),m('5','06',5,'return')],now).rows[0];assert.equal(a.sold,15);assert.equal(a.coverDays,6);assert.equal(a.suggestedUnits,4);assert.equal(a.signal,'watch')});
+test('cold start, no data, disabled products and zero threshold',()=>{const a=inventoryIntelligence([p],[{...v,created_at:'2026-11-20T00:00:00Z',stock_on_hand:0,low_stock_threshold:0}],sales,now).rows[0];assert.equal(a.signal,'out');assert.equal(a.coverDays,null);assert.equal(a.suggestedUnits,null);assert.equal(inventoryIntelligence([{...p,track_stock:false}],[v],sales,now).trackedCount,0);assert.equal(inventoryIntelligence([p],[v],[],now).rows[0].coverDays,null)});
+test('out-of-window and non-sale records excluded',()=>{const x=inventoryIntelligence([p],[v],[...sales,{...m('4','01'),created_at:old},{...m('5','01'),created_at:now.toISOString()}],now);assert.equal(x.rows[0].sold,15)});
+test('review groups and keyword mentions not inferred sentiment',()=>{const a=reviewIntelligence([{review_id:'a',rating:1,comment:'A espera foi longa e o corte bom'},{review_id:'b',rating:5,comment:'Óptimo atendimento e corte'},{review_id:'c',rating:3,comment:null}]);assert.equal(a.average,3);assert.equal(a.negative,1);assert.equal(a.positive,1);assert.equal(a.neutral,1);assert.equal(a.topics.find(t=>t.id==='service').mentions,2);assert.equal(a.topics.find(t=>t.id==='service').lowRated,1);assert.ok(a.reply)});
+test('empty reviews, invalid ratings and duplicate IDs',()=>{const a=reviewIntelligence([{review_id:'a',rating:6},{review_id:'b',rating:4},{review_id:'b',rating:4}]);assert.equal(a.sampleCount,1);assert.equal(a.average,4);assert.equal(reviewIntelligence([]).average,null);assert.equal(reviewIntelligence([]).reply,null)});

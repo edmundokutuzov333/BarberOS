@@ -4,6 +4,7 @@ import { adminClient, consume, corsHeaders, rateLimitSalt, sha256Hex } from "../
 import { accountAccessFailure } from "../_shared/account.ts";
 import { analyze, ranges, shift, topics, topicFor } from "./engine.mjs";
 import { operationalPlan, draftKinds, prepareDraft } from "./operations.mjs";
+import { inventoryIntelligence, reviewIntelligence } from "./quality.mjs";
 import { customerIntelligence } from "./customer.mjs";
 import { cloudEnabled, genericAdvice } from "./provider.mjs";
 
@@ -27,9 +28,9 @@ Deno.serve(async (req:Request)=>{
     raw+=decoder.decode();
     let body;try{body=JSON.parse(raw)}catch{return json({error:"INVALID_REQUEST"},400)}
     if(!body||typeof body!=="object"||Array.isArray(body)||typeof body.shopId!=="string"||!uuid.test(body.shopId)||![7,30].includes(body.days)||!topics.includes(body.topic)||("question" in body&&(typeof body.question!=="string"||body.question.length>300))||("cloud" in body&&typeof body.cloud!=="boolean"))return json({error:"INVALID_REQUEST"},400);
-    if(("action" in body&&!["customer","operations","draft"].includes(body.action))||(body.action==="customer"&&(typeof body.customerId!=="string"||!uuid.test(body.customerId)||body.cloud===true)))return json({error:"INVALID_REQUEST"},400);
+    if(("action" in body&&!["customer","operations","draft","inventory","reviews"].includes(body.action))||(body.action==="customer"&&(typeof body.customerId!=="string"||!uuid.test(body.customerId)||body.cloud===true)))return json({error:"INVALID_REQUEST"},400);
     if(body.action==="draft"&&(!draftKinds.includes(body.kind)||body.cloud===true))return json({error:"INVALID_REQUEST"},400);
-    if(body.action==="operations"&&body.cloud===true)return json({error:"INVALID_REQUEST"},400);
+    if(["operations","inventory","reviews"].includes(body.action)&&body.cloud===true)return json({error:"INVALID_REQUEST"},400);
     const userId=auth.user.id,shopId=body.shopId;
     const [{data:profile,error:pe},{data:member,error:me}]=await Promise.all([
       admin.from("profiles").select("password_change_required").eq("id",userId).maybeSingle(),
@@ -52,6 +53,21 @@ Deno.serve(async (req:Request)=>{
     const params={p_shop:shopId,p_from:range.from,p_to:range.to};
     const rpc=async(name:string,args:Record<string,unknown>)=>{const {data,error}=await client.rpc(name,args);if(error||data===null)throw new Error("DATA_UNAVAILABLE");return data};
     const first=(v:unknown)=>{if(!Array.isArray(v)||!v[0]||typeof v[0]!=="object")throw new Error("DATA_UNAVAILABLE");return v[0]};
+    if(body.action==="reviews"){
+      const rows=await rpc("get_reviews",{p_shop:shopId,p_published:"all",p_limit:100,p_offset:0});
+      return json(reviewIntelligence(rows));
+    }
+    if(body.action==="inventory"){
+      if(!shop.shop_enabled)return json({error:"SHOP_DISABLED"},409);
+      const now=new Date(),start=new Date(now.getTime()-30*86400000).toISOString();
+      const results=await Promise.all([
+        client.from("shop_products").select("id,name,track_stock,is_active,created_at",{count:"exact"}).eq("barbershop_id",shopId).eq("track_stock",true).eq("is_active",true).limit(1000),
+        client.from("shop_product_variants").select("id,product_id,label,is_active,stock_on_hand,low_stock_threshold,created_at",{count:"exact"}).eq("barbershop_id",shopId).eq("is_active",true).limit(1000),
+        client.from("inventory_movements").select("id,variant_id,delta_qty,reason,created_at",{count:"exact"}).eq("barbershop_id",shopId).eq("reason","sale").gte("created_at",start).lt("created_at",now.toISOString()).limit(1000)
+      ]);
+      if(results.some(r=>r.error||!Array.isArray(r.data)||r.count!==r.data.length))return json({error:"INVENTORY_ANALYSIS_UNAVAILABLE"},503);
+      return json(inventoryIntelligence(results[0].data!,results[1].data!,results[2].data!,now));
+    }
     if(body.action==="operations"){
       const [history,future]=await Promise.all([rpc("get_report_daily",{p_shop:shopId,p_from:range.historyFrom,p_to:range.to}),rpc("get_report_daily",{p_shop:shopId,p_from:shift(range.today,1),p_to:shift(range.today,7)})]);
       return json(operationalPlan(history,future,range.today,shop.onboarding_step));

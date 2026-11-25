@@ -5,6 +5,8 @@ import { Page } from '@/components/layout/Page';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, ErrorState, Panel, Skeleton } from '@/components/ui/States';
 import { useShop } from '@/lib/shop';
+import { useAuth } from '@/lib/auth';
+import { ReviewIntelligence } from '@/features/intelligence/QualityPanels';
 import { humanError, fmt } from '@/lib/utils';
 import { useReviews, useSetReviewPublication, type ReviewListArgs } from '@/features/reviews/api';
 
@@ -26,6 +28,7 @@ const tabs: { value: NonNullable<ReviewListArgs['p_published']>; label: string }
 
 export default function Avaliacoes() {
   const { shop, role } = useShop();
+  const { user } = useAuth();
   const [published, setPublished] = useState<NonNullable<ReviewListArgs['p_published']>>('all');
   const [page, setPage] = useState(0);
   const reviews = useReviews(shop?.id, published, page, PAGE_SIZE);
@@ -44,6 +47,7 @@ export default function Avaliacoes() {
       subtitle="Acompanhe o feedback dos clientes e controle o que aparece na página pública."
       actions={<Button variant="secondary" size="sm" onClick={() => void reviews.refetch()}><RefreshCw size={14} />Actualizar</Button>}
     >
+      {canModerate&&shop&&user&&<ReviewIntelligence key={user.id+":"+shop.id} shopId={shop.id} userId={user.id}/>}
       <section className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
         <Panel className="p-4"><p className="t-label text-ink-mid">Avaliações encontradas</p><p className="text-2xl text-ink-hi mt-2">{reviews.isLoading ? '…' : total}</p></Panel>
         <Panel className="p-4"><p className="t-label text-ink-mid">Escopo</p><p className="text-sm text-ink-hi mt-2">{role === 'barber' ? 'As suas avaliações' : 'Toda a barbearia'}</p></Panel>

@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/Primitives";
 import { supabase } from "@/lib/supabase";
 import { useShop } from "@/lib/shop";
+import { useAuth } from "@/lib/auth";
+import { InventoryIntelligence } from "@/features/intelligence/QualityPanels";
 import { formatMT, humanError } from "@/lib/utils";
 import {
   catalogError,
@@ -194,6 +196,7 @@ export default function LojaProdutos() {
 }
 function CatalogWorkspace() {
   const { shop, role } = useShop();
+  const { user } = useAuth();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("products");
   const [showDrafts, setShowDrafts] = useState(true);
@@ -318,6 +321,7 @@ function CatalogWorkspace() {
       qc.invalidateQueries({ queryKey: ["shop-variants", shop?.id] }),
       qc.invalidateQueries({ queryKey: ["shop-audit", shop?.id] }),
       qc.invalidateQueries({ queryKey: ["shop-movements", shop?.id] }),
+      qc.invalidateQueries({queryKey:["intelligence-inventory",shop?.id]}),
       qc.invalidateQueries({queryKey:["public-shop-catalog",shop?.slug]}),
       qc.invalidateQueries({queryKey:["shop-phase6-report",shop?.id]}),
     ]);
@@ -875,6 +879,7 @@ function CatalogWorkspace() {
           )}
         </Panel>
       )}
+      {tab === "stock" && allowed && shop.shop_enabled && user && <InventoryIntelligence key={user.id+":"+shop.id} shopId={shop.id} userId={user.id}/>}
       {tab === "stock" && (
         <div className="space-y-4">
           <Panel title="Ajuste de stock">
