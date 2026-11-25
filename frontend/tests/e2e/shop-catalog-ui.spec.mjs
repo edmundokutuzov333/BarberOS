@@ -16,11 +16,12 @@ test.beforeAll(async () => {
         name: "catalog-tenant-boundary",
         enforce: "pre",
         transform(_source, id) {
+          if (id.endsWith("/src/lib/auth.tsx")) return "export const useAuth=()=>({user:{id:'44444444-4444-4444-8444-444444444444'}});";
           if (id.endsWith("/src/lib/shop.tsx"))
             return `
  import {useState,useEffect} from 'react';
  const first={id:'${shopId}',name:'Loja A',shop_enabled:false};
- export function useShop(){const [shop,setShop]=useState(first);const [role,setRole]=useState('owner');useEffect(()=>{window.__catalogShop=()=>setShop({id:'${otherId}',name:'Loja B',shop_enabled:false});window.__catalogRole=setRole;return()=>{delete window.__catalogShop;delete window.__catalogRole}},[]);return {shop,role};}`;
+ export function useShop(){const [shop,setShop]=useState(first);const [role,setRole]=useState('owner');useEffect(()=>{window.__catalogShop=()=>setShop({id:'${otherId}',name:'Loja B',shop_enabled:false});window.__catalogRole=setRole;window.__enableCatalog=()=>setShop(v=>({...v,shop_enabled:true}));return()=>{delete window.__catalogShop;delete window.__catalogRole;delete window.__enableCatalog}},[]);return {shop,role};}`;
         },
         configureServer(vite) {
           vite.middlewares.use("/__catalog-test", async (_req, res, next) => {
@@ -91,6 +92,10 @@ async function fixture(page, { product = false } = {}) {
           "access-control-allow-headers": "*",
         },
       });
+    if (path.endsWith("/functions/v1/barber-intelligence")) {
+      const payload=req.postDataJSON();state.intelligence??=[];state.intelligence.push(payload);
+      result={version:1,asOf:version,windowDays:30,trackedCount:1,alertCount:1,estimatedCount:0,rows:[{id:productId,product:"Pomada QA",variant:"100g",stock:0,threshold:2,sold:0,saleDays:0,dailyRate:null,coverDays:null,suggestedUnits:null,signal:"out"}]};
+    }
     if (path.endsWith("/shop_products"))
       result = req.url().includes(otherId) ? [] : state.products;
     if (path.endsWith("/rpc/save_shop_catalog_product") || path.endsWith("/rpc/save_shop_catalog_product_presentation")) {
@@ -274,4 +279,20 @@ test("featured catalogue presentation survives save and reload", async ({page}) 
   expect(state.save[0].p_gallery).toEqual([]);
   await page.reload();
   await expect(page.getByText("Em destaque na vitrine",{exact:true})).toBeVisible();
+});
+
+test("inventory intelligence is opt-in, tenant scoped and never changes stock",async({page})=>{
+ const state=await fixture(page);
+ await page.evaluate(()=>window.__enableCatalog());
+ await page.getByTestId("shop-tab-stock").click();
+ const panel=page.getByTestId("inventory-intelligence");
+ await expect(panel.getByRole("button",{name:"Analisar stock"})).toBeVisible();
+ expect(state.intelligence).toBeUndefined();
+ await panel.getByRole("button",{name:"Analisar stock"}).click();
+ await expect(panel.getByText("Pomada QA · 100g")).toBeVisible();
+ await expect(panel.getByText("Sem stock",{exact:true})).toBeVisible();
+ expect(state.intelligence).toEqual([{shopId,action:"inventory",days:30,topic:"stock"}]);
+ expect(state.save).toHaveLength(0);expect(state.publish).toHaveLength(0);
+ await page.evaluate(()=>window.__catalogShop());
+ await expect(panel).toHaveCount(0);
 });
