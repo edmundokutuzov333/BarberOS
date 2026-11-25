@@ -257,6 +257,10 @@ textarea.field{
   padding-inline-start:.75rem;
 }
 .field-prefix-layout:focus-within .field-prefix{border-color:var(--accent);}
+.field-select-layout > select.field{padding-inline-end:2.5rem;}
+.icon-button:focus-visible{outline:2px solid var(--accent-soft);outline-offset:2px;}
+.page-actions > *{max-width:100%;min-width:0;}
+.t-body,.t-label{overflow-wrap:break-word;}
 @media (max-width:767px){
   .field{font-size:16px;}
 }
