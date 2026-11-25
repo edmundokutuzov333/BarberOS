@@ -133,7 +133,7 @@ export function AnimatedOutlet() {
 export function AppShell() {
   const { shop, role, loading, error, refresh } = useShop();
   const { pathname } = useLocation();
-  const desktop = useMediaQuery('(min-width: 768px)');
+  const desktop = useMediaQuery('(min-width: 1024px)');
 
   if (loading) return <FullSkeleton />;
   if (error) return <main className="min-h-screen p-6 grid place-items-center" data-testid="shop-state-error"><ErrorState message="Não foi possível carregar as suas barbearias. Tente novamente." onRetry={() => { void refresh(); }} /></main>;
@@ -151,11 +151,11 @@ export function AppShell() {
   }
 
   return (
-    <div className="barber-shell min-h-screen md:flex md:gap-6 md:p-6 md:pr-8">
+    <div className="barber-shell min-h-screen lg:flex lg:gap-6 lg:p-6 lg:pr-8">
       
       <SkipLink />
       {desktop && <Sidebar />}
-      <main id="main-content" tabIndex={-1} aria-label="Conteúdo principal" className="flex-1 min-w-0 px-4 pt-5 pb-28 md:p-0 max-w-[1400px]">
+      <main id="main-content" tabIndex={-1} aria-label="Conteúdo principal" className="flex-1 min-w-0 px-4 pt-5 pb-28 lg:p-0 max-w-[1400px]">
         <AnimatedOutlet />
       </main>
       {!desktop && <MobileDock />}
