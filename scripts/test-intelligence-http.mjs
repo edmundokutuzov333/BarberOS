@@ -35,6 +35,7 @@ try{
  let initial;
  for(let i=0;i<4;i++){try{initial=await call(owner.token);if(initial.status===200)break}catch{}await new Promise(r=>setTimeout(r,1000))}
  assert.equal(ok(initial).metrics.completed,0);
+ const noCloud=ok(await call(manager.token,{...payload,cloud:true}));assert.equal(noCloud.cloud.status,'disabled');assert.equal(noCloud.cloud.reason,'configuration');
  assert.equal(ok(await call(manager.token)).metrics.completed,0);
  assert.equal((await call(barber.token)).status,403);
  assert.equal((await call(outsider.token)).status,403);

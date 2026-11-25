@@ -26,8 +26,9 @@ export function renderSelection(topic,value){
  return ids.map((id,i)=>(i+1)+'. '+actions[topic][id]).join('\n\n');
 }
 export function selectionSchema(topic){
- const allowed=['none',...Object.keys(actions[topic])];
- return {type:'json_schema',json_schema:{name:'barberos_recommendations',strict:true,schema:{type:'object',additionalProperties:false,properties:Object.fromEntries(['first','second','third'].map(k=>[k,{type:'string',enum:allowed}])),required:['first','second','third']}}};
+ const required=Object.keys(actions[topic]);
+ const allowed=['none',...required];
+ return {type:'json_schema',json_schema:{name:'barberos_recommendations',strict:true,schema:{type:'object',additionalProperties:false,properties:Object.fromEntries(['first','second','third'].map(k=>[k,{type:'string',enum:k==='first'?required:allowed}])),required:['first','second','third']}}};
 }
 export function classifyMail(text){
  const q=typeof text==='string'?text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase():'';

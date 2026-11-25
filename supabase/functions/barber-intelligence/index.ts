@@ -10,7 +10,7 @@ import { customerIntelligence } from "./customer.mjs";
 import { quickPrompts, resolveQuick } from "./quick-prompts.mjs";
 import { metricQuestion, metricAnswer, metricSource } from "./answers.mjs";
 import { resolveIntent, classifyMail, setupGuide } from "./conversation.mjs";
-import { credentialFromVault, genericAdvice, decodeAudio, transcribeAudio, MAX_AUDIO_BYTES, MAX_QUESTION_CHARS } from "./provider.mjs";
+import { credentialFromVault, requestAdvice, decodeAudio, transcribeAudio, MAX_AUDIO_BYTES, MAX_QUESTION_CHARS } from "./provider.mjs";
 
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 Deno.serve(async (req:Request)=>{
@@ -140,7 +140,7 @@ Deno.serve(async (req:Request)=>{
       const details=source?{[source]:await loaders[source as keyof typeof loaders]().catch(()=>null)}:{};
       result.answer=metricAnswer(specific.target,result,details);
     }
-    if(!resolved.recognized)result.answer="Não identifiquei o tema da pergunta. Escolha uma das áreas disponíveis. "+result.answer;
+    if(!resolved.recognized)result.answer="Não identifiquei uma consulta específica para esta pergunta. Segue uma análise do tema seleccionado; reformule se precisar de outro indicador. "+result.answer;
     if(resolved.recognized&&resolved.intent==="next"){const relevant=result.insights.filter(i=>i.category===topic||topic==="overview").slice(0,3);if(relevant.length)result.answer+="\n\nPróximos passos:\n"+relevant.map(i=>i.detail).join("\n");}
     if(resolved.recognized&&resolved.intent==="explain"){
       const relevant=result.insights.filter(i=>i.category===topic||topic==="overview").slice(0,3);
@@ -152,14 +152,27 @@ Deno.serve(async (req:Request)=>{
       if(topic!=="finance")result.answer+=" A comparação detalhada encontra-se nos relatórios; este tema não possui uma série comparativa própria nesta consulta.";
     }
     const groqKey=await cloudKey();
-    let cloud:{status:string;advice:string|null}={status:groqKey?"available":"disabled",advice:null};
-    if(body.cloud===true&&resolved.recognized&&cloud.status==="available"){
+    let cloud:{status:string;advice:string|null;reason:string|null;retryAfter:number|null}={status:groqKey?"available":"disabled",advice:null,reason:groqKey?null:"configuration",retryAfter:null};
+    if(body.cloud===true&&groqKey){
       const shopBucket=await sha256Hex(salt+":intelligence:cloud:shop:"+shopId);
       const globalBucket=await sha256Hex(salt+":intelligence:cloud:global");
-      if((await consume(admin,shopBucket,5,86400)).allowed&&(await consume(admin,globalBucket,100,86400)).allowed){
-        const advice=await genericAdvice(topic,groqKey!,fetch,result.insights.filter(i=>topic==="overview"||i.category===topic).map(i=>i.id),resolved.intent);
-        cloud={status:advice?"generated":"unavailable",advice};
-      }else cloud={status:"quota",advice:null};
+      const reserve=async()=>{
+        const shopLimit=await consume(admin,shopBucket,20,86400);
+        if(!shopLimit.allowed)return shopLimit;
+        return await consume(admin,globalBucket,100,86400);
+      };
+      const signalIds=result.insights.filter(i=>topic==="overview"||i.category===topic).map(i=>i.id);
+      for(let attempt=0;attempt<2;attempt++){
+        const quota=await reserve();
+        if(!quota.allowed){cloud={status:"quota",advice:null,reason:"internal_quota",retryAfter:quota.retryAfter};break;}
+        const response=await requestAdvice(topic,groqKey,fetch,signalIds,resolved.intent);
+        if(response.advice){cloud={status:"generated",advice:response.advice,reason:null,retryAfter:null};break;}
+        const reason=response.reason??"invalid_response";
+        cloud={status:reason==="provider_quota"?"quota":"unavailable",advice:null,reason,retryAfter:null};
+        // No raw question, metric, credential or tenant identifier in diagnostic logs.
+        console.warn(JSON.stringify({event:"intelligence_cloud_failure",provider:"groq",topic,reason,attempt:attempt+1}));
+        if(!["timeout","transport","provider_error","invalid_response"].includes(reason))break;
+      }
     }
     return json({...result,cloud,suggestions:quickPrompts});
   }catch{return json({error:"INTELLIGENCE_UNAVAILABLE"},503)}

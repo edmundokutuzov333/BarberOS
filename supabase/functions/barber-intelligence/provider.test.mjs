@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {credentialFromVault,freeTierHeaders,genericAdvice,decodeAudio,transcribeAudio,MAX_AUDIO_BYTES,MAX_QUESTION_CHARS} from './provider.mjs';
-import {resolveIntent,renderSelection,classifyMail,setupGuide} from './conversation.mjs';
+import {credentialFromVault,freeTierHeaders,genericAdvice,requestAdvice,decodeAudio,transcribeAudio,MAX_AUDIO_BYTES,MAX_QUESTION_CHARS} from './provider.mjs';
+import {resolveIntent,renderSelection,classifyMail,setupGuide,actions,selectionSchema} from './conversation.mjs';
 import {topicFor} from './engine.mjs';
 const headers=new Headers({'x-ratelimit-limit-requests':'1000','x-ratelimit-limit-tokens':'8000'});
 const key='synthetic-test-credential-not-real';
@@ -25,4 +25,33 @@ test('long audio and transcripts no longer use the old fifteen-second or 300-cha
  const fake=t=>async()=>new Response(JSON.stringify({text:t}),{headers:{'x-ratelimit-limit-requests':'2000'}});
  assert.equal(await transcribeAudio(audio,key,fake(text)),text.trim());
  assert.equal(await transcribeAudio(audio,key,fake('x'.repeat(MAX_QUESTION_CHARS+1))),null);
+});
+
+test('all nine topics require a real primary recommendation, even without signals',async()=>{
+ for(const topic of Object.keys(actions)){
+  const schema=selectionSchema(topic).json_schema.schema;
+  assert.equal(schema.properties.first.enum.includes('none'),false);
+  assert.equal(schema.properties.second.enum.includes('none'),true);
+  const id=Object.keys(actions[topic])[0];
+  const answer=await requestAdvice(topic,key,async(_url,opts)=>{
+   const b=JSON.parse(opts.body);assert.match(b.messages[0].content,/obrigatoriamente/);assert.equal(b.max_completion_tokens,600);
+   return completion({first:id,second:'none',third:'none'});
+  });
+  assert.equal(answer.reason,null);assert.equal(answer.advice,'1. '+actions[topic][id]);
+ }
+});
+test('repeated optional selections retain the valid primary action without inventing content',async()=>{
+ const a=await requestAdvice('agenda',key,async()=>completion({first:'review_capacity',second:'review_capacity',third:'review_waitlist'}));
+ assert.equal(a.reason,null);assert.match(a.advice,/2\. Consulte a Lista/);
+ assert.equal((await requestAdvice('stock',key,async()=>completion({first:'none',second:'none',third:'none'}))).reason,'invalid_response');
+ assert.equal((await requestAdvice('stock',key,async()=>completion({first:'verify_stock',second:'review_waitlist',third:'none'}))).reason,'invalid_response');
+});
+test('provider quota, invalid credentials, non-free policy, malformed and transient responses remain distinguishable',async()=>{
+ for(const [status,reason] of [[429,'provider_quota'],[401,'credential'],[403,'credential'],[503,'provider_error'],[400,'provider_rejected']]){
+  assert.deepEqual(await requestAdvice('agenda',key,async()=>completion(selected,'openai/gpt-oss-20b',headers,status)),{advice:null,reason});
+ }
+ assert.equal((await requestAdvice('agenda',key,async()=>completion(selected,'openai/gpt-oss-20b',{}))).reason,'free_policy');
+ assert.equal((await requestAdvice('agenda',key,async()=>{throw Object.assign(Error('timeout'),{name:'TimeoutError'})})).reason,'timeout');
+ assert.equal((await requestAdvice('agenda',key,async()=>{throw Error('network')})).reason,'transport');
+ assert.equal((await requestAdvice('agenda',key,async()=>new Response(JSON.stringify({model:'openai/gpt-oss-20b',choices:[{finish_reason:'length',message:{content:'{}'}}]}),{headers}))).reason,'invalid_response');
 });

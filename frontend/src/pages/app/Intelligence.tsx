@@ -17,7 +17,15 @@ import '@/features/intelligence/intelligence.css';
 
 const fmt=(v:number|null)=>v===null?'—':new Intl.NumberFormat('pt-PT',{maximumFractionDigits:1}).format(v);
 const pct=(v:number|null)=>v===null?'—':fmt(v)+'%';
-type Turn={question:string;answer:string;advice:string|null;topic:Topic;cloud: Intelligence['cloud']['status']};
+type Turn={question:string;answer:string;advice:string|null;topic:Topic;cloud: Intelligence['cloud']};
+function cloudMessage(cloud:Intelligence['cloud']){
+ if(cloud.status==='generated'||cloud.status==='available')return null;
+ if(cloud.status==='quota')return cloud.reason==='provider_quota'?'A Groq atingiu o limite gratuito. Tente novamente mais tarde.':'Limite diário de consultas gratuitas atingido. A análise de gestão continua disponível.';
+ if(cloud.reason==='credential'||cloud.reason==='configuration'||cloud.status==='disabled')return 'A IA externa necessita de configuração. A análise apresentada foi calculada pelo BarberOS.';
+ if(cloud.reason==='free_policy')return 'A resposta não confirmou os limites gratuitos. A IA externa foi bloqueada para proteger os custos.';
+ if(cloud.reason==='invalid_response')return 'A Groq não devolveu recomendações válidas. A análise de gestão continua disponível.';
+ return 'Não foi possível obter recomendações da Groq neste momento. Pode voltar a consultar.';
+}
 function Metric({label,value,icon:Icon,delta,caption}:{label:string;value:string;icon:LucideIcon;delta?:number|null;caption:string}){
  return <article className="bi-metric">
   <span className="bi-metric-icon"><Icon size={23} aria-hidden="true"/></span>
@@ -39,14 +47,14 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
  // The overview always uses the selected period; choosing a topic does not spend a cloud request.
  const q=useQuery({queryKey:['intelligence',userId,shopId,days,'overview'],queryFn:()=>loadIntelligence(shopId,days,'overview'),staleTime:60_000,retry:false});
  const ask=useMutation({mutationFn:(request:{question?:string;topic:Topic;context?:Topic;cloud:boolean})=>loadIntelligence(shopId,days,request.topic,request.question,request.cloud,request.context),retry:false,onSuccess:(response,request)=>{
-  setHistory(h=>[...h,{question:request.question||labels[request.topic],answer:response.answer,advice:response.cloud.advice,topic:response.topic,cloud:response.cloud.status}].slice(-12));
+  setHistory(h=>[...h,{question:request.question||labels[request.topic],answer:response.answer,advice:response.cloud.advice,topic:response.topic,cloud:response.cloud}].slice(-12));
   setQuestion('');setTopic(response.topic);
  }});
  const data=q.data;
  const busy=ask.isPending||voiceBusy;
  const reset=()=>{ask.reset();setHistory([]);setQuestion('')};
  const selectTopic=(next:Topic,focus=false)=>{if(busy)return;if(next!==topic){reset();setTopic(next)}if(focus)input.current?.focus({preventScroll:true})};
- const submit=()=>{if(busy||!data)return;ask.mutate({question:question.trim()||undefined,topic,context:contextTopic,cloud:data.cloud.status!=='disabled'})};
+ const submit=()=>{if(busy||!data)return;ask.mutate({question:question.trim()||undefined,topic,context:contextTopic,cloud:true})};
  const chooseQuick=(text:string)=>{if(busy)return;reset();setQuestion(text);input.current?.focus()};
  const QuickIcon=topicIcon(topic);
  return <Page testId="intelligence-page" className="bi-page" title="Inteligência de gestão" subtitle="IA especializada na gestão da sua barbearia. Análises, previsões e recomendações com dados reais." actions={<div className="bi-toolbar">
@@ -66,10 +74,10 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
     </form>
     {ask.isError&&<div role="alert" className="bi-message">Não foi possível concluir a consulta. <button type="button" className="bi-text-button" disabled={busy} onClick={()=>submit()}>Tentar novamente</button></div>}
     {q.isError&&<div role="alert" className="bi-message">Não foi possível carregar os indicadores. <button className="bi-text-button" type="button" onClick={()=>void q.refetch()}>Actualizar</button></div>}
-    {data?.cloud.status==='disabled'&&<p className="bi-message">Modo de análise própria activo.</p>}
+    {data?.cloud.status==='disabled'&&<p className="bi-message">A IA externa não está configurada neste momento. Pode voltar a consultar após a activação.</p>}
     {history.length>0&&<section className="bi-conversation" aria-label="Conversa">
      <div className="bi-conversation-header"><h3>Conversa</h3><button type="button" className="bi-text-button" onClick={()=>{reset();input.current?.focus()}} disabled={busy}>Nova conversa</button></div>
-     <div ref={turns} className="bi-turns" aria-live="polite" aria-relevant="additions text" role="log">{history.map((turn,i)=><article className="bi-turn" key={i}><p className="bi-question">{turn.question}</p><p className="bi-answer">{turn.answer}</p>{turn.advice&&<><span className="bi-advice-label">Recomendações</span><p className="bi-answer">{turn.advice}</p></>}{['quota','unavailable'].includes(turn.cloud)&&<p className="bi-message">IA externa indisponível. Análise própria apresentada.</p>}</article>)}</div>
+     <div ref={turns} className="bi-turns" aria-live="polite" aria-relevant="additions text" role="log">{history.map((turn,i)=><article className="bi-turn" key={i}><p className="bi-question">{turn.question}</p><p className="bi-answer">{turn.answer}</p>{turn.advice&&<><span className="bi-advice-label">Recomendações · Groq</span><p className="bi-answer">{turn.advice}</p></>}{cloudMessage(turn.cloud)&&<p className="bi-message" role="status">{cloudMessage(turn.cloud)}</p>}</article>)}</div>
     </section>}
     <div className="bi-quick" data-testid="quick-suggestions"><h3>Sugestões rápidas <span className="bi-quick-context">{labels[topic]}</span></h3>{data?.suggestions[topic].map(text=><button key={text} type="button" disabled={busy} onClick={()=>chooseQuick(text)}><QuickIcon size={19} aria-hidden="true"/><span>{text}</span><ChevronRight size={16} aria-hidden="true"/></button>)}</div>
     

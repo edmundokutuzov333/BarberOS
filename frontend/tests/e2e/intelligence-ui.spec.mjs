@@ -31,7 +31,7 @@ async function fixture(page){
   let data;
   if(p.action==='voice')data={version:1,text:'Como melhorar a agenda?'};
   else if(p.action==='setup_guide')data={version:1,step:6,progress:3,title:'Horários',answer:'Confirme a disponibilidade oficial.',review:'Verifique a agenda.'};
-  else data={suggestions:quickPrompts,version:1,range:{today:'2026-11-25',from:'2026-11-18',to:'2026-11-24',previousFrom:'2026-11-11',previousTo:'2026-11-17',historyFrom:'2026-09-30'},topic:p.question?.includes('receita')?'finance':p.contextTopic??p.topic,metrics:{today:24,appointments:32,completed:21,noShow:null,occupancy:78,revenue:1250000,revenueChange:24,waiting:0,failedNotifications:0,customers:0,recentCustomers:0,lowStock:0},insights:[],forecast:[],answer:p.question?'Resposta calculada para '+p.question:'Resumo inicial.',cloud:{status:p.cloud?'generated':'available',advice:p.cloud?'1. Consulte os relatórios.':null}};
+  else data={suggestions:quickPrompts,version:1,range:{today:'2026-11-25',from:'2026-11-18',to:'2026-11-24',previousFrom:'2026-11-11',previousTo:'2026-11-17',historyFrom:'2026-09-30'},topic:p.question?.includes('receita')?'finance':p.contextTopic??p.topic,metrics:{today:24,appointments:32,completed:21,noShow:null,occupancy:78,revenue:1250000,revenueChange:24,waiting:0,failedNotifications:0,customers:0,recentCustomers:0,lowStock:0},insights:[],forecast:[],answer:p.question?'Resposta calculada para '+p.question:'Resumo inicial.',cloud:{status:p.cloud?'generated':'available',advice:p.cloud?'1. Consulte os relatórios.':null,reason:null,retryAfter:null}};
   return route.fulfill({status:200,headers,contentType:'application/json',body:JSON.stringify(data)});
  });
  await page.goto(origin+'/__intel-test');await expect(page.getByTestId('intelligence-page')).toBeVisible();await expect(page.getByRole('button',{name:'Consultar IA'})).toBeVisible();
@@ -204,4 +204,20 @@ test('hub categories never overlap each other or escape the hub across viewport 
   for(let i=0;i<geometry.boxes.length;i++)for(let j=i+1;j<geometry.boxes.length;j++){const a=geometry.boxes[i],b=geometry.boxes[j];expect(Math.min(a.right,b.right)-Math.max(a.x,b.x)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y)>1,a.name+' overlaps '+b.name+' at '+width).toBe(false);}
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
  }
+});
+
+test('cloud failures retain real analysis and distinguish quota from invalid output',async({page})=>{
+ await fixture(page);let reason='provider_quota';
+ await page.route('https://*.supabase.co/functions/v1/barber-intelligence',async route=>{
+  const req=route.request();if(req.method()!=='POST'||!req.postDataJSON()?.cloud)return route.fallback();
+  const p=req.postDataJSON();return route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({suggestions:quickPrompts,version:1,range:{today:'2026-11-25',from:'2026-11-18',to:'2026-11-24',previousFrom:'2026-11-11',previousTo:'2026-11-17',historyFrom:'2026-09-30'},topic:p.topic,metrics:{today:24,appointments:32,completed:21,noShow:null,occupancy:78,revenue:1250000,revenueChange:24,waiting:0,failedNotifications:0,customers:0,recentCustomers:0,lowStock:0},insights:[],forecast:[],answer:'Análise verificada do servidor.',cloud:{status:reason==='provider_quota'?'quota':reason==='invalid_response'?'unavailable':'generated',advice:reason===null?'1. Recomendações verificadas.':null,reason,retryAfter:null}})});
+ });
+ const input=page.getByLabel('Pergunta (não inclua dados pessoais)');
+ await input.fill('Quanto em comissões?');await page.getByRole('button',{name:'Consultar IA',exact:true}).click();
+ await expect(page.getByText('A Groq atingiu o limite gratuito.',{exact:false})).toBeVisible();
+ await expect(page.getByText('Análise verificada do servidor.',{exact:true})).toBeVisible();
+ reason='invalid_response';await input.fill('Qual o ticket médio?');await page.getByRole('button',{name:'Consultar IA',exact:true}).click();
+ await expect(page.getByText('A Groq não devolveu recomendações válidas.',{exact:false})).toBeVisible();
+ reason=null;await input.fill('Como evoluíram as receitas?');await page.getByRole('button',{name:'Consultar IA',exact:true}).click();
+ await expect(page.getByText('Recomendações · Groq',{exact:true})).toBeVisible();
 });
