@@ -34,7 +34,7 @@ test('all nine topics require a real primary recommendation, even without signal
   assert.equal(schema.properties.second.enum.includes('none'),true);
   const id=Object.keys(actions[topic])[0];
   const answer=await requestAdvice(topic,key,async(_url,opts)=>{
-   const b=JSON.parse(opts.body);assert.match(b.messages[0].content,/obrigatoriamente/);assert.equal(b.max_completion_tokens,600);
+   const b=JSON.parse(opts.body);assert.match(b.messages[0].content,/obrigatoriamente/);assert.equal(b.max_completion_tokens,256);
    return completion({first:id,second:'none',third:'none'});
   });
   assert.equal(answer.reason,null);assert.equal(answer.advice,'1. '+actions[topic][id]);
@@ -48,10 +48,17 @@ test('repeated optional selections retain the valid primary action without inven
 });
 test('provider quota, invalid credentials, non-free policy, malformed and transient responses remain distinguishable',async()=>{
  for(const [status,reason] of [[429,'provider_quota'],[401,'credential'],[403,'credential'],[503,'provider_error'],[400,'provider_rejected']]){
-  assert.deepEqual(await requestAdvice('agenda',key,async()=>completion(selected,'openai/gpt-oss-20b',headers,status)),{advice:null,reason});
+  assert.deepEqual(await requestAdvice('agenda',key,async()=>completion(selected,'openai/gpt-oss-20b',headers,status)),{advice:null,reason,...(status===429?{retryAfter:null}:{})});
  }
  assert.equal((await requestAdvice('agenda',key,async()=>completion(selected,'openai/gpt-oss-20b',{}))).reason,'free_policy');
  assert.equal((await requestAdvice('agenda',key,async()=>{throw Object.assign(Error('timeout'),{name:'TimeoutError'})})).reason,'timeout');
  assert.equal((await requestAdvice('agenda',key,async()=>{throw Error('network')})).reason,'transport');
  assert.equal((await requestAdvice('agenda',key,async()=>new Response(JSON.stringify({model:'openai/gpt-oss-20b',choices:[{finish_reason:'length',message:{content:'{}'}}]}),{headers}))).reason,'invalid_response');
+});
+
+test('provider rate limit Retry-After is parsed without trusting arbitrary header strings',async()=>{
+ for(const [header,expected] of [['2',2],['1.9725',2],['0',1],['120',120],['tomorrow',null],['-1',null],['1e9',null]]){
+  const h=new Headers({'retry-after':header});const r=await requestAdvice('agenda',key,async()=>completion(selected,'openai/gpt-oss-20b',h,429));
+  assert.equal(r.reason,'provider_quota');assert.equal(r.retryAfter,expected);
+ }
 });

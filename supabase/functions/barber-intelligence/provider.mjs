@@ -5,15 +5,20 @@ const signals={empty:'histórico de marcações vazio',capacity:'capacidade suba
 export function cloudEnabled(env){return env('BARBEROS_AI_GROQ_FREE_CONFIRMED')==='true'&&Boolean(env('BARBEROS_AI_GROQ_KEY')?.trim())}
 export function credentialFromVault(value){return value?.free_confirmed===true&&typeof value.key==='string'&&value.key.trim().length>20?value.key.trim():null}
 export function freeTierHeaders(headers){return headers?.get('x-ratelimit-limit-requests')==='1000'&&headers?.get('x-ratelimit-limit-tokens')==='8000'}
-// The caller reserves one quota unit per outbound request. Never retry quota or auth errors.
+// The caller reserves one quota unit per outbound request; only short provider cooldowns may be retried.
 export async function requestAdvice(topic,key,fetcher=fetch,insightIds=[],intent='summary'){
  if(!Object.hasOwn(subjects,topic)||!key)return {advice:null,reason:'configuration'};
  const safe=[...new Set(Array.isArray(insightIds)?insightIds:[])].filter(id=>typeof id==='string'&&Object.hasOwn(signals,id)).slice(0,5).map(id=>signals[id]);
  try{
-  const response=await fetcher('https://api.groq.com/openai/v1/chat/completions',{method:'POST',redirect:'error',signal:AbortSignal.timeout(15000),headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,messages:[{role:'system',content:'Escolhe obrigatoriamente uma acção válida para first, mesmo sem sinais: nesse caso escolhe uma revisão preventiva. Selecciona até duas outras acções distintas se úteis. Usa none apenas para second ou third. Não inventes acções.'},{role:'user',content:JSON.stringify({tema:subjects[topic],intencao:intents.includes(intent)?intent:'summary',sinais:safe,acoes:actions[topic]})}],response_format:selectionSchema(topic),max_completion_tokens:600,reasoning_effort:'low',temperature:0.1})});
-  if(!response.ok)return {advice:null,reason:response.status===429?'provider_quota':response.status===401||response.status===403?'credential':response.status>=500?'provider_error':'provider_rejected'};
+  const response=await fetcher('https://api.groq.com/openai/v1/chat/completions',{method:'POST',redirect:'error',signal:AbortSignal.timeout(15000),headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,messages:[{role:'system',content:'Escolhe obrigatoriamente uma acção válida para first, mesmo sem sinais: nesse caso escolhe uma revisão preventiva. Selecciona até duas outras acções distintas se úteis. Usa none apenas para second ou third. Não inventes acções.'},{role:'user',content:JSON.stringify({tema:subjects[topic],intencao:intents.includes(intent)?intent:'summary',sinais:safe,acoes:actions[topic]})}],response_format:selectionSchema(topic),max_completion_tokens:256,reasoning_effort:'low',temperature:0.1})});
+  if(response.status===429){
+   const raw=response.headers?.get('retry-after');
+   const seconds=raw&&/^\d+(?:\.\d+)?$/.test(raw.trim())?Number(raw):null;
+   return {advice:null,reason:'provider_quota',retryAfter:seconds!==null&&Number.isFinite(seconds)&&seconds>=0?Math.max(1,Math.ceil(seconds)):null};
+  }
+  if(!response.ok)return {advice:null,reason:response.status===401||response.status===403?'credential':response.status>=500?'provider_error':'provider_rejected'};
   if(!freeTierHeaders(response.headers))return {advice:null,reason:'free_policy'};
-  const data=await response.json();
+  let data;try{data=await response.json()}catch{return {advice:null,reason:'invalid_response'}}
   if(data?.model!==MODEL||data?.choices?.[0]?.finish_reason!=='stop')return {advice:null,reason:'invalid_response'};
   let selection;
   try{selection=JSON.parse(data.choices[0].message.content)}catch{return {advice:null,reason:'invalid_response'}}

@@ -10,6 +10,7 @@ import { customerIntelligence } from "./customer.mjs";
 import { quickPrompts, resolveQuick } from "./quick-prompts.mjs";
 import { metricQuestion, metricAnswer, metricSource } from "./answers.mjs";
 import { resolveIntent, classifyMail, setupGuide } from "./conversation.mjs";
+import { consultCloud } from "./cloud.mjs";
 import { credentialFromVault, requestAdvice, decodeAudio, transcribeAudio, MAX_AUDIO_BYTES, MAX_QUESTION_CHARS } from "./provider.mjs";
 
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -152,28 +153,18 @@ Deno.serve(async (req:Request)=>{
       if(topic!=="finance")result.answer+=" A comparação detalhada encontra-se nos relatórios; este tema não possui uma série comparativa própria nesta consulta.";
     }
     const groqKey=await cloudKey();
-    let cloud:{status:string;advice:string|null;reason:string|null;retryAfter:number|null}={status:groqKey?"available":"disabled",advice:null,reason:groqKey?null:"configuration",retryAfter:null};
-    if(body.cloud===true&&groqKey){
-      const shopBucket=await sha256Hex(salt+":intelligence:cloud:shop:"+shopId);
-      const globalBucket=await sha256Hex(salt+":intelligence:cloud:global");
-      const reserve=async()=>{
+    const shopBucket=await sha256Hex(salt+":intelligence:cloud:shop:"+shopId);
+    const globalBucket=await sha256Hex(salt+":intelligence:cloud:global");
+    const cloud=await consultCloud({
+      enabled:!!groqKey,requested:body.cloud===true,
+      reserve:async()=>{
         const shopLimit=await consume(admin,shopBucket,20,86400);
         if(!shopLimit.allowed)return shopLimit;
         return await consume(admin,globalBucket,100,86400);
-      };
-      const signalIds=result.insights.filter(i=>topic==="overview"||i.category===topic).map(i=>i.id);
-      for(let attempt=0;attempt<2;attempt++){
-        const quota=await reserve();
-        if(!quota.allowed){cloud={status:"quota",advice:null,reason:"internal_quota",retryAfter:quota.retryAfter};break;}
-        const response=await requestAdvice(topic,groqKey,fetch,signalIds,resolved.intent);
-        if(response.advice){cloud={status:"generated",advice:response.advice,reason:null,retryAfter:null};break;}
-        const reason=response.reason??"invalid_response";
-        cloud={status:reason==="provider_quota"?"quota":"unavailable",advice:null,reason,retryAfter:null};
-        // No raw question, metric, credential or tenant identifier in diagnostic logs.
-        console.warn(JSON.stringify({event:"intelligence_cloud_failure",provider:"groq",topic,reason,attempt:attempt+1}));
-        if(!["timeout","transport","provider_error","invalid_response"].includes(reason))break;
-      }
-    }
+      },
+      request:()=>requestAdvice(topic,groqKey!,fetch,result.insights.filter(i=>topic==="overview"||i.category===topic).map(i=>i.id),resolved.intent),
+      observe:(reason:string,attempt:number)=>console.warn(JSON.stringify({event:"intelligence_cloud_failure",provider:"groq",topic,reason,attempt}))
+    });
     return json({...result,cloud,suggestions:quickPrompts});
   }catch{return json({error:"INTELLIGENCE_UNAVAILABLE"},503)}
 });

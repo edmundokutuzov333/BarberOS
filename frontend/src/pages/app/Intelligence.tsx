@@ -20,7 +20,11 @@ const pct=(v:number|null)=>v===null?'—':fmt(v)+'%';
 type Turn={question:string;answer:string;advice:string|null;topic:Topic;cloud: Intelligence['cloud']};
 function cloudMessage(cloud:Intelligence['cloud']){
  if(cloud.status==='generated'||cloud.status==='available')return null;
- if(cloud.status==='quota')return cloud.reason==='provider_quota'?'A Groq atingiu o limite gratuito. Tente novamente mais tarde.':'Limite diário de consultas gratuitas atingido. A análise de gestão continua disponível.';
+ if(cloud.status==='quota'){
+  const wait=cloud.retryAfter&&cloud.retryAfter<=60?' Pode voltar a tentar em cerca de '+Math.ceil(cloud.retryAfter)+' s.':' Tente novamente mais tarde.';
+  return cloud.reason==='provider_quota'?'A Groq atingiu o limite gratuito.'+wait:'Limite diário de consultas gratuitas atingido. A análise de gestão continua disponível.';
+ }
+ if(cloud.reason==='quota_service')return 'Não foi possível verificar a quota de IA. A análise de gestão continua disponível.';
  if(cloud.reason==='credential'||cloud.reason==='configuration'||cloud.status==='disabled')return 'A IA externa necessita de configuração. A análise apresentada foi calculada pelo BarberOS.';
  if(cloud.reason==='free_policy')return 'A resposta não confirmou os limites gratuitos. A IA externa foi bloqueada para proteger os custos.';
  if(cloud.reason==='invalid_response')return 'A Groq não devolveu recomendações válidas. A análise de gestão continua disponível.';
@@ -41,20 +45,22 @@ function Workspace({shopId,userId}:{shopId:string;userId:string}){
  const [history,setHistory]=useState<Turn[]>([]);
  const [expanded,setExpanded]=useState(false);
  const input=useRef<HTMLTextAreaElement>(null);
+ const submitting=useRef(false);
  const turns=useRef<HTMLDivElement>(null);
  useEffect(()=>{if(turns.current)turns.current.scrollTop=turns.current.scrollHeight},[history]);
  const contextTopic=history.at(-1)?.topic;
  // The overview always uses the selected period; choosing a topic does not spend a cloud request.
  const q=useQuery({queryKey:['intelligence',userId,shopId,days,'overview'],queryFn:()=>loadIntelligence(shopId,days,'overview'),staleTime:60_000,retry:false});
  const ask=useMutation({mutationFn:(request:{question?:string;topic:Topic;context?:Topic;cloud:boolean})=>loadIntelligence(shopId,days,request.topic,request.question,request.cloud,request.context),retry:false,onSuccess:(response,request)=>{
-  setHistory(h=>[...h,{question:request.question||labels[request.topic],answer:response.answer,advice:response.cloud.advice,topic:response.topic,cloud:response.cloud}].slice(-12));
-  setQuestion('');setTopic(response.topic);
- }});
+  const turn={question:request.question||labels[request.topic],answer:response.answer,advice:response.cloud.advice,topic:response.topic,cloud:response.cloud};
+  setHistory(h=>{const last=h.at(-1);return [...(last&&last.cloud.status!=='generated'&&last.question===turn.question&&last.topic===turn.topic?h.slice(0,-1):h),turn].slice(-12)});
+  if(response.cloud.status==='generated')setQuestion('');setTopic(response.topic);
+ },onSettled:()=>{submitting.current=false}});
  const data=q.data;
  const busy=ask.isPending||voiceBusy;
  const reset=()=>{ask.reset();setHistory([]);setQuestion('')};
  const selectTopic=(next:Topic,focus=false)=>{if(busy)return;if(next!==topic){reset();setTopic(next)}if(focus)input.current?.focus({preventScroll:true})};
- const submit=()=>{if(busy||!data)return;ask.mutate({question:question.trim()||undefined,topic,context:contextTopic,cloud:true})};
+ const submit=()=>{if(busy||submitting.current||!data)return;submitting.current=true;ask.mutate({question:question.trim()||undefined,topic,context:contextTopic,cloud:true})};
  const chooseQuick=(text:string)=>{if(busy)return;reset();setQuestion(text);input.current?.focus()};
  const QuickIcon=topicIcon(topic);
  return <Page testId="intelligence-page" className="bi-page" title="Inteligência de gestão" subtitle="IA especializada na gestão da sua barbearia. Análises, previsões e recomendações com dados reais." actions={<div className="bi-toolbar">
