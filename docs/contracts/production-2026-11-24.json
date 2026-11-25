@@ -2068,9 +2068,9 @@
     {
       "name": "barber-intelligence",
       "status": "ACTIVE",
-      "version": 2,
+      "version": 3,
       "verify_jwt": true,
-      "bundle_sha256": "35cb2b861edec22d3f6402c95561fb7c51b7e7adcd4f7960d27f2367651a7511"
+      "bundle_sha256": "82d90f80decb60f6696e67e35a643ef42bc9792c5d164a62c4ff3fec9767d1e4"
     },
     {
       "name": "booking-create",
@@ -2188,8 +2188,8 @@
     "source": "Supabase management API list_edge_functions",
     "project_ref": "alseiinjzwjdiwtvkdzy",
     "edge": "barber-intelligence",
-    "version": 2,
-    "bundle_sha256": "35cb2b861edec22d3f6402c95561fb7c51b7e7adcd4f7960d27f2367651a7511",
+    "version": 3,
+    "bundle_sha256": "82d90f80decb60f6696e67e35a643ef42bc9792c5d164a62c4ff3fec9767d1e4",
     "scope": "Deployment metadata only; local authenticated acceptance and provider tests remain separate."
   }
 }
