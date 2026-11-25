@@ -10,6 +10,7 @@ type AccessRule = {
 };
 
 const ACCESS_RULES: AccessRule[] = [
+  { prefix: '/app/inteligencia', roles: MANAGEMENT_ROLES },
   { prefix: '/app/definicoes/pagamentos', roles: OWNER_ROLES },
   { prefix: '/app/definicoes/utilizadores', roles: OWNER_ROLES },
   { prefix: '/app/definicoes', roles: MANAGEMENT_ROLES },

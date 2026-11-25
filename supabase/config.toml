@@ -50,3 +50,6 @@ verify_jwt = true
 
 [functions.payment-simulator]
 verify_jwt = true
+
+[functions.barber-intelligence]
+verify_jwt = true

@@ -29,6 +29,7 @@ const BookingWizard = lazy(() => import('./pages/BookingWizard'));
 const ShopSimulationDemo = lazy(() => import('./pages/ShopSimulationDemo'));
 const Vaga = lazy(() => import('./pages/Vaga'));
 const ReviewSubmit = lazy(() => import('./pages/ReviewSubmit'));
+const Intelligence = lazy(() => import('./pages/app/Intelligence'));
 const Dashboard = lazy(() => import('./pages/app/Dashboard'));
 const Onboarding = lazy(() => import('./pages/app/Onboarding'));
 const NotYet = lazy(() => import('./pages/app/NotYet').then((m) => ({ default: m.default })));
@@ -129,6 +130,7 @@ export default function App() {
           <Route element={<RequireAuth />}>
             <Route path="/app" element={<AppShell />}>
               <Route index element={<Dashboard />} />
+              <Route path="inteligencia" element={<Intelligence />} />
               <Route path="onboarding" element={<Onboarding />} />
               <Route path="agenda" element={<AgendaPage />} />
               <Route path="marcacoes" element={<Marcacoes />} />

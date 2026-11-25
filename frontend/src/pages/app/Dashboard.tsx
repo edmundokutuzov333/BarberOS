@@ -85,6 +85,7 @@ export default function Dashboard() {
         </div>
       )}
 
+      {canManageShop && <Panel className="mb-4" title="Inteligência de gestão" aside={<Link to="/app/inteligencia" className="text-accent-soft text-sm">Consultar inteligência →</Link>}><p className="t-body text-ink-mid">Prioridades, análise de receitas, agenda e oportunidades de melhoria.</p></Panel>}
       {q.isLoading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-32" lines={2} />)}</div>
       ) : q.error ? (

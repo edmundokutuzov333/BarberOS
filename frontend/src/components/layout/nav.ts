@@ -12,6 +12,7 @@ export interface NavItem {
 
 export const NAV: NavItem[] = [
   { to: '/app', label: 'Início', icon: LayoutDashboard, end: true, testId: 'nav-dashboard' },
+  { to: '/app/inteligencia', label: 'Inteligência', icon: Sparkles, testId: 'nav-intelligence' },
   { to: '/app/agenda', label: 'Agenda', icon: CalendarDays, testId: 'nav-agenda' },
   { to: '/app/marcacoes', label: 'Marcações', icon: ClipboardList, testId: 'nav-marcacoes' },
   { to: '/app/clientes', label: 'Clientes', icon: Users, testId: 'nav-clientes' },

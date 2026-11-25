@@ -2066,6 +2066,13 @@
       "bundle_sha256": "1344f113134cc0cdd271d9e1d2f4e915b687d8ea0dc04ef8c7cc9fc1041b6929"
     },
     {
+      "name": "barber-intelligence",
+      "status": "ACTIVE",
+      "version": 1,
+      "verify_jwt": true,
+      "bundle_sha256": "0c498a1dc2471cb963988041354d7f5b0d677d024194c164cf6a098076974635"
+    },
+    {
       "name": "booking-create",
       "status": "ACTIVE",
       "version": 7,
@@ -2078,48 +2085,6 @@
       "version": 8,
       "verify_jwt": false,
       "bundle_sha256": "72335aaba8998203450c9dfbb4bd28e3989ff403fd6af400d10b8c891a75d244"
-    },
-    {
-      "name": "payments-configure",
-      "status": "ACTIVE",
-      "version": 5,
-      "verify_jwt": true,
-      "bundle_sha256": "cbcecaad78e593231a91c3d01c6da179df712dc60aa37c44a728f5a5b4e1323c"
-    },
-    {
-      "name": "payments-webhook",
-      "status": "ACTIVE",
-      "version": 4,
-      "verify_jwt": false,
-      "bundle_sha256": "243c8eac97a2d2cc918f1bbe1f82eceef664381a76ef3b46749bf90c751fade2"
-    },
-    {
-      "name": "payments-reconcile",
-      "status": "ACTIVE",
-      "version": 4,
-      "verify_jwt": false,
-      "bundle_sha256": "1d382fe743f87462763b2ae53326d7d4d497224c23d40d32b39f927423aed4e5"
-    },
-    {
-      "name": "token-gateway",
-      "status": "ACTIVE",
-      "version": 6,
-      "verify_jwt": false,
-      "bundle_sha256": "3ae55d0b00e3cf437e7c56cedfb205f603980115411832ebeb8ed9c14d152d46"
-    },
-    {
-      "name": "notify-dispatch",
-      "status": "ACTIVE",
-      "version": 7,
-      "verify_jwt": false,
-      "bundle_sha256": "abf4d31ab33055a48a745dde3baa8c28b7e4bdef58dd988a68f510fa95c0c6d7"
-    },
-    {
-      "name": "resend-webhook",
-      "status": "ACTIVE",
-      "version": 3,
-      "verify_jwt": false,
-      "bundle_sha256": "15a18b4431b1e135891d7e03c01111b4c80ab843a56f1a14cc2198303b5ce668"
     },
     {
       "name": "google-calendar",
@@ -2136,11 +2101,18 @@
       "bundle_sha256": "a96c4824e923269210b0424e0f9097da40d61cb4e3420b18ec95065cb8146474"
     },
     {
-      "name": "payments-status",
+      "name": "notify-dispatch",
+      "status": "ACTIVE",
+      "version": 7,
+      "verify_jwt": false,
+      "bundle_sha256": "abf4d31ab33055a48a745dde3baa8c28b7e4bdef58dd988a68f510fa95c0c6d7"
+    },
+    {
+      "name": "payments-configure",
       "status": "ACTIVE",
       "version": 5,
-      "verify_jwt": false,
-      "bundle_sha256": "0c6d9469ee37f46f712e1b393258f355974a0db5d74b8ff5b85bb9893f187298"
+      "verify_jwt": true,
+      "bundle_sha256": "cbcecaad78e593231a91c3d01c6da179df712dc60aa37c44a728f5a5b4e1323c"
     },
     {
       "name": "payments-initiate",
@@ -2148,6 +2120,41 @@
       "version": 5,
       "verify_jwt": false,
       "bundle_sha256": "b9d7087cac62b61dddb31411fb34b8d6f82b70419332fefaa2dcd9c934ce2b1d"
+    },
+    {
+      "name": "payments-reconcile",
+      "status": "ACTIVE",
+      "version": 4,
+      "verify_jwt": false,
+      "bundle_sha256": "1d382fe743f87462763b2ae53326d7d4d497224c23d40d32b39f927423aed4e5"
+    },
+    {
+      "name": "payments-status",
+      "status": "ACTIVE",
+      "version": 5,
+      "verify_jwt": false,
+      "bundle_sha256": "0c6d9469ee37f46f712e1b393258f355974a0db5d74b8ff5b85bb9893f187298"
+    },
+    {
+      "name": "payments-webhook",
+      "status": "ACTIVE",
+      "version": 4,
+      "verify_jwt": false,
+      "bundle_sha256": "243c8eac97a2d2cc918f1bbe1f82eceef664381a76ef3b46749bf90c751fade2"
+    },
+    {
+      "name": "resend-webhook",
+      "status": "ACTIVE",
+      "version": 3,
+      "verify_jwt": false,
+      "bundle_sha256": "15a18b4431b1e135891d7e03c01111b4c80ab843a56f1a14cc2198303b5ce668"
+    },
+    {
+      "name": "token-gateway",
+      "status": "ACTIVE",
+      "version": 6,
+      "verify_jwt": false,
+      "bundle_sha256": "3ae55d0b00e3cf437e7c56cedfb205f603980115411832ebeb8ed9c14d152d46"
     }
   ],
   "catalog_capture": "2026-11-24, after transactional catalog migration; live PostgreSQL metadata",
@@ -2175,5 +2182,14 @@
     "verified_sql_acceptance": true,
     "edge_version": 7,
     "uncovered_foreign_keys": 0
+  },
+  "intelligence_edge_capture": {
+    "captured_on": "2026-11-25",
+    "source": "Supabase management API list_edge_functions",
+    "project_ref": "alseiinjzwjdiwtvkdzy",
+    "edge": "barber-intelligence",
+    "version": 1,
+    "bundle_sha256": "0c498a1dc2471cb963988041354d7f5b0d677d024194c164cf6a098076974635",
+    "scope": "Deployment metadata only; authenticated browser and provider acceptance remain separate."
   }
 }
