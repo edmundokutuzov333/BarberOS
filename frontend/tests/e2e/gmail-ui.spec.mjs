@@ -24,7 +24,7 @@ test.beforeAll(async () => {
           export const useShop=()=>{
             const [shop,setShop]=useState(first);
             useEffect(()=>{window.__gmailSetShop=()=>setShop(second);return()=>{delete window.__gmailSetShop;};},[]);
-            return {shop,shops,setShopId};
+            return {shop,shops,setShopId,role:'owner'};
           };
         `;
       },
@@ -49,6 +49,11 @@ async function fixture(page) {
   await page.route('https://*.supabase.co/**', async route => {
     const req=route.request();
     if (req.method()==='OPTIONS') return route.fulfill({ status:204,headers:{'access-control-allow-origin':'*','access-control-allow-headers':'*'} });
+    if (req.url().includes('/functions/v1/barber-intelligence')) {
+      const payload=req.postDataJSON();
+      state.drafts??=[];state.drafts.push(payload);
+      return route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({version:1,kind:payload.kind,subject:'Assunto sugerido',body:'Rascunho de teste para revisão.'})});
+    }
     if (!req.url().includes('/functions/v1/gmail-integration')) return route.abort();
     const body=req.postDataJSON(); let result={ok:true}; let status=200;
     if(body.action==='status') result={ok:true,configured:true,connection:{connected:state.connected,email:body.shop_id.startsWith('2222')?'second-owner@example.com':'owner@example.com'}};
@@ -224,4 +229,23 @@ test('an account blocked by password rotation hides mail and offers real recover
   await expect(page.getByTestId('gmail-inbox')).toHaveCount(0);
   await expect(page.getByTestId('gmail-thread')).toHaveCount(0);
   await expect(page.getByRole('link',{name:'Definir nova palavra-passe'})).toHaveAttribute('href','/alterar-palavra-passe');
+});
+
+test('management writing assistant previews, protects existing text and never sends automatically',async({page})=>{
+  const state=await fixture(page);
+  await page.getByRole('button',{name:'Nova mensagem',exact:true}).click();
+  await page.getByRole('button',{name:'Assistente de escrita'}).click();
+  await page.getByLabel('Finalidade').selectOption('feedback');
+  await page.getByRole('button',{name:'Preparar rascunho'}).click();
+  await expect(page.getByText('Rascunho de teste para revisão.',{exact:true})).toBeVisible();
+  expect(state.drafts).toHaveLength(1);
+  expect(state.drafts[0]).toEqual({shopId:'11111111-1111-4111-8111-111111111111',action:'draft',kind:'feedback',days:7,topic:'communications'});
+  expect(state.sends).toHaveLength(0);
+  await page.getByLabel('Mensagem',{exact:true}).fill('Texto existente');
+  await expect(page.getByRole('button',{name:'Inserir no rascunho'})).toBeDisabled();
+  await page.getByLabel('Mensagem',{exact:true}).fill('');
+  await page.getByRole('button',{name:'Inserir no rascunho'}).click();
+  await expect(page.getByLabel('Assunto',{exact:true})).toHaveValue('Assunto sugerido');
+  await expect(page.getByLabel('Mensagem',{exact:true})).toHaveValue('Rascunho de teste para revisão.');
+  expect(state.sends).toHaveLength(0);
 });
