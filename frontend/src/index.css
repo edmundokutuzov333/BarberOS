@@ -536,3 +536,19 @@ textarea.field{
 @media (max-width: 767px) {
   .barber-atmosphere--quiet .barber-atmosphere__slats--static { opacity: .16; }
 }
+
+/* The public about page must reflow rather than hide horizontal overflow. */
+@media(max-width:480px){
+ .landing-nav{height:auto;min-height:74px;flex-wrap:wrap;gap:.75rem;padding-top:.85rem;padding-bottom:.85rem}
+ .landing-nav>nav{min-width:0;max-width:100%;flex-wrap:wrap;gap:.35rem;margin-left:auto}
+ .landing-nav>nav>a{min-width:0;max-width:100%}
+ .landing-hero{grid-template-columns:minmax(0,1fr)}
+ .landing-hero-copy,.landing-visual,.landing-feature,.landing-section-heading,.landing-cta-actions{min-width:0;max-width:100%}
+ .landing-title,.landing-section-heading h2,.landing-cta-copy h2{overflow-wrap:anywhere}
+ .landing-hero-actions>a,.landing-cta-actions>a{min-width:0;max-width:100%}
+ .landing-visual-note{margin-inline:.5rem;gap:.5rem;padding:.8rem}
+ .landing-visual-note>div{min-width:0;overflow-wrap:anywhere}
+ .landing-note-icon,.landing-note-status,.landing-proof-mark{flex-shrink:0}
+ .landing-section-heading{grid-template-columns:minmax(0,1fr)}
+ .landing-trust-strip>span,.landing-footer>span{max-width:100%;overflow-wrap:anywhere}
+}
