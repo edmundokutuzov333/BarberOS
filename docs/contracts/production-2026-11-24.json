@@ -2078,9 +2078,9 @@
     {
       "name": "barber-intelligence",
       "status": "ACTIVE",
-      "version": 10,
+      "version": 11,
       "verify_jwt": true,
-      "bundle_sha256": "028e75570d5056724c260f7079fbcdff160c32a94ca6785c20c11a994a69f083"
+      "bundle_sha256": "7a41230942d0c59d346c4391a532dfdffa6694e8af34a48db46d42f91529dc58"
     },
     {
       "name": "booking-create",
@@ -2198,8 +2198,8 @@
     "source": "Supabase management API list_edge_functions",
     "project_ref": "alseiinjzwjdiwtvkdzy",
     "edge": "barber-intelligence",
-    "version": 10,
-    "bundle_sha256": "028e75570d5056724c260f7079fbcdff160c32a94ca6785c20c11a994a69f083",
+    "version": 11,
+    "bundle_sha256": "7a41230942d0c59d346c4391a532dfdffa6694e8af34a48db46d42f91529dc58",
     "scope": "Production/staging deployment metadata; live Groq probes and authenticated browser/HTTP acceptance tracked separately."
   },
   "intelligence_groq_capture": {
@@ -2265,6 +2265,31 @@
     "production_vault_configured": true,
     "live_direct_groq_probes": "9/9 HTTP 200 with valid primary actions, all nine topics, free rate headers 1000 RPD / 8000 TPM",
     "unit_harness": "13 passed; isolated JS with mocked transport",
+    "authenticated_live_edge_generation": "not verified for this release",
+    "ci": "pending"
+  },
+  "intelligence_cloud_recovery_capture": {
+    "captured_on": "2026-11-25",
+    "production_edge_version": 11,
+    "staging_edge_version": 13,
+    "bundle_sha256": "7a41230942d0c59d346c4391a532dfdffa6694e8af34a48db46d42f91529dc58",
+    "live_before": {
+      "attempts": 9,
+      "http_200": 8,
+      "http_429": 1,
+      "reason": "TPM",
+      "retry_after_seconds": 2
+    },
+    "live_after": {
+      "attempts": 9,
+      "http_200": 9,
+      "validated": 9,
+      "completion_tokens_min": 48,
+      "completion_tokens_max": 71
+    },
+    "unit_harness": "19 passed; isolated JS with mocked transport and quota",
+    "previous_frontend_ci": "success",
+    "previous_production_deploy": "success",
     "authenticated_live_edge_generation": "not verified for this release",
     "ci": "pending"
   }
