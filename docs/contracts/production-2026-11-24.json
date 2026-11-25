@@ -2078,9 +2078,9 @@
     {
       "name": "barber-intelligence",
       "status": "ACTIVE",
-      "version": 6,
+      "version": 7,
       "verify_jwt": true,
-      "bundle_sha256": "6685a8a69404936013cbcd9fe74da0115aeca3fd28d7ccfad87372c937a8b872"
+      "bundle_sha256": "e6e0665f8d1eb9cc7f7a8da7a9712a7e77e06a4b138b4912251a59505d7bdcd9"
     },
     {
       "name": "booking-create",
@@ -2198,9 +2198,9 @@
     "source": "Supabase management API list_edge_functions",
     "project_ref": "alseiinjzwjdiwtvkdzy",
     "edge": "barber-intelligence",
-    "version": 6,
-    "bundle_sha256": "6685a8a69404936013cbcd9fe74da0115aeca3fd28d7ccfad87372c937a8b872",
-    "scope": "Production deployment metadata; actual authenticated Groq generation verified in staging."
+    "version": 7,
+    "bundle_sha256": "e6e0665f8d1eb9cc7f7a8da7a9712a7e77e06a4b138b4912251a59505d7bdcd9",
+    "scope": "Production and staging deployment metadata; new structured Groq contract live probe passed, browser and authenticated HTTP acceptance tracked separately."
   },
   "intelligence_groq_capture": {
     "captured_on": "2026-11-25",
@@ -2213,5 +2213,20 @@
     "observed_rpd": 1000,
     "observed_tpm": 8000,
     "production_activation": "Vault configuration present; edge active; production authenticated browser not yet certified"
+  },
+  "intelligence_conversation_capture": {
+    "captured_on": "2026-11-25",
+    "production_edge_version": 7,
+    "staging_edge_version": 9,
+    "bundle_sha256": "e6e0665f8d1eb9cc7f7a8da7a9712a7e77e06a4b138b4912251a59505d7bdcd9",
+    "structured_groq_probe": {
+      "http_status": 200,
+      "model": "openai/gpt-oss-20b",
+      "finish_reason": "stop",
+      "schema_valid": true
+    },
+    "unit_harness": "9 passed",
+    "voice_live_transcription": "not yet verified",
+    "browser_ci": "pending"
   }
 }
